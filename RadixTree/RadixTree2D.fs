@@ -50,13 +50,13 @@ module RadixTree2D =
         member this.root = root
 
         member this.get i j : 'a =
-            get RadixTree2D<'a>.bits this.root i j
+            get RadixTree2D<_>.bits this.root i j
 
         member this.set i j v =
-            RadixTree2D (set RadixTree2D<'a>.bits this.root i j v)
+            RadixTree2D (set RadixTree2D<_>.bits this.root i j v)
 
         static member fromArray arr =
-            RadixTree2D (fromArray RadixTree2D<'a>.bits arr)
+            RadixTree2D (fromArray RadixTree2D<_>.bits arr)
 
         static member init n m f =
-            RadixTree2D (gen RadixTree2D<'a>.bits n m f)
+            RadixTree2D (gen RadixTree2D<_>.bits n m f)

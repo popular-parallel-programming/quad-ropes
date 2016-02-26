@@ -6,7 +6,7 @@ module Bits =
         1 <<< bits
 
     let inline mask bits =
-        1 <<< (bits - 1)
+        (radix bits) - 1
 
     let inline index bits depth i =
         (i >>> (depth * bits)) &&& mask bits

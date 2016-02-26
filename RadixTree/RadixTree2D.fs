@@ -25,6 +25,12 @@ module RadixTree2D =
                 build (depth + 1) (Array2D.map (mkNode depth) (chunk arr))
         build 1 (Array2D.map mkLeaf (chunk arr))
 
+    let fromArray1 bits arr =
+        fromArray bits (Array2D.makeSingleCol arr)
+
+    let fromArray2 bits arr =
+        fromArray bits (Array2D.makeSingleRow arr)
+
     let gen bits n m f =
         (* TODO: This is quite inefficient actually. Allocate trees directly instead! *)
         fromArray bits (Array2D.init n m f)

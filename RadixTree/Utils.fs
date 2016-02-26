@@ -118,24 +118,32 @@ module Array2D =
         let l2 = min (Array2D.length2 ass) (Array2D.length2 bss)
         Array2D.init l1 l2 (fun i j -> f ass.[i, j] bss.[i, j])
 
-    let mapTop f arr =
+    let mapHead1 f arr =
         Array2D.mapi (fun i _ e -> if i = 0 then f e else e)
 
-    let mapBottom f arr  =
-        let bot = Array2D.length1 arr - 1
-        Array2D.mapi (fun i _ e -> if i = bot then f e else e)
+    let mapLast1 f arr  =
+        let last = Array2D.length1 arr - 1
+        Array2D.mapi (fun i _ e -> if i = last then f e else e)
 
-    let mapLeft f arr =
+    let mapHead2 f arr =
         Array2D.mapi (fun _ j e -> if j = 0 then f e else e)
 
-    let mapRight f arr  =
-        let right = Array2D.length2 arr - 1
-        Array2D.mapi (fun _ j e -> if j = right then f e else e)
+    let mapLast2 f arr  =
+        let last = Array2D.length2 arr - 1
+        Array2D.mapi (fun _ j e -> if j = last then f e else e)
 
-    let makeSingleColumn2 a b =
+    let zipLast1 f ass bs =
+        let last = Array2D.length1 ass - 1
+        Array2D.mapi (fun i j e -> if i = last then f e (Array2D.get bs 0 j) else e) ass
+
+    let zipLast2 f ass bs =
+        let last = Array2D.length2 ass - 1
+        Array2D.mapi (fun i j e -> if j = last then f e (Array2D.get bs i 0) else e) ass
+
+    let makeSingleCol2 a b =
         Array2D.init 2 1 (fun i _ -> if i = 0 then a else b)
 
-    let makeSingleColumn arr =
+    let makeSingleCol arr =
         Array2D.init (Array.length arr) 1 (fun i _ -> arr.[i])
 
     let makeSingleRow2 a b =

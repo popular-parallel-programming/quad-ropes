@@ -43,6 +43,16 @@ module RadixTree2D =
             let j0 = Bits.index bits depth j
             get bits ns.[i0, j0] i j
 
+    let rec getCol bits i root =
+        match root with
+        | Leaf vs -> Leaf (Array2D.col vs (i &&& Bits.mask bits))
+        | Node (d, ns) -> Node (d, Array2D.map (getCol bits i) (Array2D.col ns (Bits.index bits d i)))
+
+    let rec getRow bits i root =
+        match root with
+        | Leaf vs -> Leaf (Array2D.row vs (i &&& Bits.mask bits))
+        | Node (d, ns) -> Node (d, Array2D.map (getRow bits i) (Array2D.row ns (Bits.index bits d i)))
+
     let rec set bits root i j v =
         match root with
         | Leaf vs -> Leaf (Array2D.set vs (i &&& Bits.mask bits) (j &&& Bits.mask bits) v)

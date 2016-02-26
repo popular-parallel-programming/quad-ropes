@@ -33,8 +33,8 @@ module Array2D =
             let xmax = (min ((xmin + 1) * n) (width arr))
             let ymax = (min ((ymin + 1) * m) (height arr))
             slice arr (xmin * n) (ymin * m) xmax ymax
-        let w = width arr / n
-        let h = height arr / m
+        let w = width arr / n + 1
+        let h = height arr / m + 1
         Array2D.init w h subArr
 
     let inline isSingleColumn arr =

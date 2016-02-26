@@ -26,15 +26,16 @@ module Array2D =
     let height = Array2D.length2
 
     (* Chunk the array into subarrays of size n * m. The arrays to the
-       right and in the bottom might be smalle r if the width and height
+       right and in the bottom might be smaller if the width and height
        are not multiples of n and m, respectively. *)
     let chunkBySize n m arr =
         let subArr xmin ymin =
             let xmax = (min ((xmin + 1) * n) (width arr))
             let ymax = (min ((ymin + 1) * m) (height arr))
             slice arr (xmin * n) (ymin * m) xmax ymax
-        let w = width arr / n + 1
-        let h = height arr / m + 1
+        (* TODO: Optimize below. *)
+        let w = if width arr <= n then 1 else width arr / n + 1
+        let h = if height arr <= m then 1 else height arr / m + 1
         Array2D.init w h subArr
 
     let inline isSingleColumn arr =

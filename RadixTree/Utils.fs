@@ -64,17 +64,25 @@ module Array2D =
     let inline isSingleton arr =
         Array2D.length1 arr = 1 && Array2D.length2 arr = 1
 
-    let hcat left right =
-        let l1 = min (Array2D.length1 left) (Array2D.length1 right)
-        let l2 = Array2D.length2 left + Array2D.length2 right
-        let l2l = Array2D.length2 left
-        Array2D.init l1 l2 (fun i j -> if j < l2l then left.[i, j] else right.[i, j - l2l])
+    let append1 bss bs =
+        let l1 = Array2D.length1 bss
+        Array2D.init (l1 + 1) (Array2D.length2 bss) (fun i j -> if i < l1 then bss.[i, j] else Array.get bs j)
 
-    let vcat left right =
+    let append2 bss bs =
+        let l2 = Array2D.length2 bss
+        Array2D.init (Array2D.length1 bss) (l2 + 1) (fun i j -> if j < l2 then bss.[i, j] else Array.get bs j)
+
+    let cat1 left right =
         let l1 = Array2D.length1 left + Array2D.length1 right
         let l2 = min (Array2D.length2 left) (Array2D.length2 right)
         let l1l = Array2D.length1 left
         Array2D.init l1 l2 (fun i j -> if i < l1l then left.[i, j] else right.[i - l1l, j])
+
+    let cat2 left right =
+        let l1 = min (Array2D.length1 left) (Array2D.length1 right)
+        let l2 = Array2D.length2 left + Array2D.length2 right
+        let l2l = Array2D.length2 left
+        Array2D.init l1 l2 (fun i j -> if j < l2l then left.[i, j] else right.[i, j - l2l])
 
     let hmerge f left right =
         let l1 = min (Array2D.length1 left) (Array2D.length1 right)

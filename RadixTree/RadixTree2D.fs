@@ -51,6 +51,52 @@ module RadixTree2D =
             let j0 = Bits.index bits depth j
             Node (depth, Array2D.set ns i0 j0 (set bits ns.[i0, j0] i j v))
 
+    let rec private isFull1 bits root =
+        match root with
+        | Leaf vs -> Array2D.length1 vs = Bits.radix bits
+        | Node (_, ns) -> Array2D.length1 ns = Bits.radix bits || isFull1 bits (Array2D.bottomRight ns)
+
+    let rec private isFull2 bits root =
+        match root with
+        | Leaf vs -> Array2D.length2 vs = Bits.radix bits
+        | Node (_, ns) -> Array2D.length2 ns = Bits.radix bits || isFull2 bits (Array2D.bottomRight ns)
+
+    let appendCol bits root col =
+        let radix = Bits.radix bits
+        let full = isFull1 bits
+        let rec app root col =
+            match root, col with
+            | Leaf vs, Leaf _ when full root -> root
+            | Leaf vs, Leaf v -> Leaf (Array2D.cat1 vs v)
+            | Node (d, ns), Node(_, n) ->
+                if full (Array2D.bottomRight ns) then
+                    if not (full root) then
+                        Node (d, Array2D.cat1 ns n)
+                    else
+                        Node (d + 1, Array2D.makeSingleRow2 root col)
+                else
+                    Node (d, Array2D.zipLast1 app ns n)
+            | _ -> failwith "Trees must be of the same size."
+        app root col
+
+    let appendRow bits root col =
+        let radix = Bits.radix bits
+        let full = isFull1 bits
+        let rec app root col =
+            match root, col with
+            | Leaf vs, Leaf _ when full root -> root
+            | Leaf vs, Leaf v -> Leaf (Array2D.cat2 vs v)
+            | Node (d, ns), Node(_, n) ->
+                if full (Array2D.bottomRight ns) then
+                    if not (full root) then
+                        Node (d, Array2D.cat2 ns n)
+                    else
+                        Node (d + 1, Array2D.makeSingleCol2 root col)
+                else
+                    Node (d, Array2D.zipLast2 app ns n)
+            | _ -> failwith "Trees must be of the same size."
+        app root col
+
     type 'a RadixTree2D private (root) =
         static member bits = 2
         member this.root = root

@@ -102,7 +102,7 @@ module Array2D =
                 right.[i - l1l + 1, j]
         Array2D.init l1 l2 merge
 
-    let bottomLeft arr =
+    let bottomRight arr =
         Array2D.get arr (Array2D.length1 arr - 1) (Array2D.length2 arr - 1)
 
     let map2 f ass bss =

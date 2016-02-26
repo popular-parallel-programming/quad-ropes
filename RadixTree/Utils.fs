@@ -48,6 +48,16 @@ module Array2D =
         let l2 = Array2D.length2 arr
         slice arr 0 (Array2D.length1 arr) (l2 - 1) l2
 
+    let col arr i =
+        let l2 = Array2D.length2 arr
+        let c = slice arr i (i + 1) 0 (Array2D.length2 arr)
+        Array.init l2 (Array2D.get arr 0)
+
+    let row arr i =
+        let l1 = Array2D.length1 arr
+        let c = slice arr 0 (Array2D.length1 arr) i (i + 1)
+        Array.init l1 (fun i -> Array2D.get arr i 0)
+
     (* Chunk the array into subarrays of size n * m. The arrays to the
        right and in the bottom might be smaller if the width and height
        are not multiples of n and m, respectively. *)

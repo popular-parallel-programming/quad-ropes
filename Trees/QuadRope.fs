@@ -71,18 +71,18 @@ module QuadRope =
     let fromArray vss =
         init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)
 
-    let inline canCopyH us ls =
+    let inline canCopyV us ls =
         Array2D.length1 us + Array2D.length1 ls <= maxSize
 
     let vcat upper lower =
         if cols upper <> cols lower then failwith "Trees must be of same width!"
         match upper, lower with
-            | Leaf us, Leaf ls when canCopyH us ls ->
+            | Leaf us, Leaf ls when canCopyV us ls ->
                 Leaf (RadTrees.Array2D.cat1 us ls) (* Copying small arrays is ok. *)
 
             | (Node (ud, uh, uw, Leaf unes, Leaf unws, Empty, Empty),
-               Node (ld, lh, lw, Leaf lnes, Leaf lnws, Empty, Empty)) when canCopyH unes lnes
-                                                                        && canCopyH unws lnws ->
+               Node (ld, lh, lw, Leaf lnes, Leaf lnws, Empty, Empty)) when canCopyV unes lnes
+                                                                        && canCopyV unws lnws ->
                 Node (2, uh + lh, uw, Leaf (Array2D.cat1 unes lnes), Leaf (Array2D.cat1 unws lnws),
                       Empty, Empty) (* Unwrap and copy small arrays. *)
 

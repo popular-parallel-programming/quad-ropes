@@ -110,6 +110,25 @@ module QuadRope =
                         else
                             Node (d, h, w, ne, nw, sw, set se i0 j0 v)
 
+    (* Write to a tree location destructively. *)
+    let rec write root i j v =
+        match root with
+            | Empty -> failwith "Empty tree cannot contain values."
+            | Leaf vs -> vs.[i, j] <- v
+            | Node (_, h, w, ne, nw, sw, se) ->
+                if withinRange nw i j then
+                    write nw i j v
+                else
+                    let j0 = j - (cols nw)
+                    if withinRange ne i j0 then
+                        write ne i j0 v
+                    else
+                        let i0 = i - (rows nw)
+                        if withinRange sw i0 j then
+                            write sw i0 j v
+                        else
+                            write se i0 j0 v
+
     let inline canCopyV us ls =
         Array2D.length1 us + Array2D.length1 ls <= maxSize
 

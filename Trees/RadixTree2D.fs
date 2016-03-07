@@ -1,6 +1,6 @@
-﻿namespace RadixTree
+﻿namespace Trees
 
-open RadixTree
+open Trees
 
 module RadixTree2D =
 

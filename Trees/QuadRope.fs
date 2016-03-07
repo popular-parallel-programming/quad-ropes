@@ -91,3 +91,24 @@ module QuadRope =
                 Node (max ud ld, uh + lh, uw, une, unw, lnw, lne) (* Concatenation of two "flat" nodes. *)
 
             | _, _ -> vnode upper lower (* Make a new thin node. *)
+
+    let inline canCopyH us ls =
+        Array2D.length2 us + Array2D.length2 ls <= maxSize
+
+    let hcat left right =
+        if rows left <> rows right then failwith "Trees must be of same width!"
+        match left, right with
+            | Leaf ls, Leaf rs when canCopyV ls rs ->
+                Leaf (RadTrees.Array2D.cat2 ls rs) (* Copying small arrays is ok. *)
+
+            | (Node (ld, lh, lw, Empty, Leaf lnws, Leaf lsws, Empty),
+               Node (rd, rh, rw, Empty, Leaf rnws, Leaf rsws, Empty)) when canCopyH lnws rnws
+                                                                        && canCopyH lsws rsws ->
+                Node (2, rh, lw + rw, Leaf (Array2D.cat2 lnws rnws), Leaf (Array2D.cat2 lsws rsws),
+                      Empty, Empty) (* Unwrap and copy small arrays. *)
+
+            | (Node (ld, lh, lw, lne, lnw, Empty, Empty),
+               Node (rd, rh, rw, rne, rnw, Empty, Empty)) ->
+                Node (max ld rd, lh, lw + rw, lne, lnw, rnw, rne) (* Concatenation of two "flat" nodes. *)
+
+            | _, _ -> hnode left right (* Make a new thin node. *)

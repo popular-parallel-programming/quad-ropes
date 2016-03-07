@@ -92,6 +92,24 @@ module QuadRope =
                         else
                             get se i0 j0 (* Either contains or ends in out-of-bounds. *)
 
+    let rec set root i j v =
+        match root with
+            | Empty -> failwith "Empty tree cannot contain values."
+            | Leaf vs -> Leaf (RadTrees.Array2D.set vs i j v)
+            | Node (d, h, w, ne, nw, sw, se) ->
+                if withinRange nw i j then
+                    Node (d, h, w, ne, set nw i j v, sw, se)
+                else
+                    let j0 = j - (cols nw)
+                    if withinRange ne i j0 then
+                        Node (d, h, w, set ne i j0 v, nw, sw, se)
+                    else
+                        let i0 = i - (rows nw)
+                        if withinRange sw i0 j then
+                            Node (d, h, w, ne, nw, set sw i0 j v, se)
+                        else
+                            Node (d, h, w, ne, nw, sw, set se i0 j0 v)
+
     let inline canCopyV us ls =
         Array2D.length1 us + Array2D.length1 ls <= maxSize
 

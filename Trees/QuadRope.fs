@@ -74,7 +74,7 @@ module QuadRope =
     let inline canCopyH us ls =
         Array2D.length1 us + Array2D.length1 ls <= maxSize
 
-    let hcat upper lower =
+    let vcat upper lower =
         if cols upper <> cols lower then failwith "Trees must be of same width!"
         match upper, lower with
             | Leaf us, Leaf ls when canCopyH us ls ->
@@ -90,4 +90,4 @@ module QuadRope =
                Node (ld, lh, lw, lne, lnw, Empty, Empty)) ->
                 Node (max ud ld, uh + lh, uw, une, unw, lnw, lne) (* Concatenation of two "flat" nodes. *)
 
-            | _, _ -> hnode upper lower (* Make a new thin node. *)
+            | _, _ -> vnode upper lower (* Make a new thin node. *)

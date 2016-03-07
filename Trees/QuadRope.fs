@@ -7,18 +7,22 @@ type 'a QuadRope =
 
 module QuadRope =
 
+    (* The maximal size of a leaf array in any direction. *)
     let maxSize = 4
 
+    (* Number of rows in a rectangular tree. *)
     let rows = function
         | Empty -> 0
         | Leaf vs -> Array2D.length1 vs
         | Node (_, h, _, _, _, _, _) -> h
 
+    (* Number of columns in a rectangular tree. *)
     let cols = function
         | Empty -> 0
         | Leaf vs -> Array2D.length2 vs
         | Node (_, _, w, _, _, _, _) -> w
 
+    (* Depth of a rectangular tree. *)
     let depth = function
         | Empty -> 0
         | Leaf _ -> 1
@@ -44,6 +48,7 @@ module QuadRope =
         let w = cols nw + cols se
         Node (d + 1, h, w, ne, nw, sw, se)
 
+    (* Generate a new tree without any intermediate values. *)
     let init h w f =
         let rec init0 h0 w0 h1 w1 f =
             let h = h1 - h0
@@ -74,6 +79,7 @@ module QuadRope =
     let inline private withinRange root i j =
         i < rows root && j < cols root
 
+    (* Get the value of a location in the tree. *)
     let rec get root i j =
         match root with
             | Empty -> failwith "Empty tree cannot contain values."
@@ -92,6 +98,7 @@ module QuadRope =
                         else
                             get se i0 j0 (* Either contains or ends in out-of-bounds. *)
 
+    (* Update a tree location wihtout modifying the original tree. *)
     let rec set root i j v =
         match root with
             | Empty -> failwith "Empty tree cannot contain values."
@@ -129,9 +136,10 @@ module QuadRope =
                         else
                             write se i0 j0 v
 
-    let inline canCopyV us ls =
+    let inline private canCopyV us ls =
         Array2D.length1 us + Array2D.length1 ls <= maxSize
 
+    (* Concatenate two trees vertically. *)
     let vcat upper lower =
         if cols upper <> cols lower then failwith "Trees must be of same width!"
         match upper, lower with
@@ -150,9 +158,10 @@ module QuadRope =
 
             | _, _ -> vnode upper lower (* Make a new thin node. *)
 
-    let inline canCopyH us ls =
+    let inline private canCopyH us ls =
         Array2D.length2 us + Array2D.length2 ls <= maxSize
 
+    (* Concatenate two trees horizontally. *)
     let hcat left right =
         if rows left <> rows right then failwith "Trees must be of same width!"
         match left, right with

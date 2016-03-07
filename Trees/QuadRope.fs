@@ -51,19 +51,16 @@ module QuadRope =
             let hpiv = h0 + h / 2
             let wpiv = w0 + w / 2
             if maxSize < h && maxSize < w then
-                printfn "maxSize < h = %d && maxSize < w = %d" h w
                 let ne = init0 h0 wpiv hpiv w1 f
                 let nw = init0 h0 w0 hpiv wpiv f
                 let sw = init0 hpiv w0 h1 wpiv f
                 let se = init0 hpiv wpiv h1 w1 f
                 makeNode ne nw sw se
             else if maxSize < h then
-                printfn "maxSize < h = %d, h0 = %d, hpiv = %d, h1 = %d" h h0 hpiv h1
                 let nw = init0 h0 w0 hpiv w1 f
                 let sw = init0 hpiv w0 h1 w1 f
                 hnode nw sw
             else if maxSize < w then
-                printfn "maxSize < w = %d, w0 = %d, wpiv = %d, w1 = %d" w w0 wpiv w1
                 let ne = init0 h0 wpiv h1 w1 f
                 let nw = init0 h0 w0 h1 wpiv f
                 vnode ne nw

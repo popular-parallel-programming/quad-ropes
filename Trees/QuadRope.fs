@@ -179,3 +179,23 @@ module QuadRope =
                 Node (max ld rd, lh, lw + rw, lne, lnw, rnw, rne) (* Concatenation of two "flat" nodes. *)
 
             | _, _ -> hnode left right (* Make a new thin node. *)
+
+    (* Apply a function to every element in the tree. *)
+    let rec map f root =
+        match root with
+            | Empty -> Empty
+            | Leaf vs -> Leaf (Array2D.map f vs)
+            | Node (d, h, w, ne, nw, sw, se) ->
+                Node (d, h, w,
+                      map f ne,
+                      map f nw,
+                      map f sw,
+                      map f se)
+
+    (* Iterate over a tree from the upper left to the lower right in
+       row-first order. *)
+    let rec toSeq = function
+        | Empty -> Seq.empty
+        | Leaf vs -> seq { for v in vs -> v }
+        | Node (_, _, _, ne, nw, sw, se) ->
+            seq { yield! toSeq nw; yield! toSeq ne; yield! toSeq sw; yield! toSeq se }

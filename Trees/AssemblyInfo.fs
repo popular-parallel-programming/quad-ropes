@@ -1,8 +1,8 @@
-﻿namespace RadixTree
+﻿namespace RadTrees
 open System.Reflection
 open System.Runtime.CompilerServices
 
-[<assembly: AssemblyTitle("RadixTree")>]
+[<assembly: AssemblyTitle("RadTrees")>]
 [<assembly: AssemblyDescription("")>]
 [<assembly: AssemblyConfiguration("")>]
 [<assembly: AssemblyCompany("IT University of Copenhagen")>]

@@ -1,4 +1,4 @@
-namespace Trees
+namespace RadTrees
 
 type 'a QuadRope =
     | Empty

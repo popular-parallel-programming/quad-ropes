@@ -1,4 +1,4 @@
-namespace Trees
+namespace RadTrees
 
 module Bits =
 

@@ -71,6 +71,27 @@ module QuadRope =
     let fromArray vss =
         init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)
 
+    let inline private withinRange root i j =
+        i < rows root && j < cols root
+
+    let rec get root i j =
+        match root with
+            | Empty -> failwith "Empty tree cannot contain values."
+            | Leaf vs -> Array2D.get vs i j
+            | Node (_, h, w, ne, nw, sw, se) ->
+                if withinRange nw i j then
+                    get nw i j
+                else
+                    let j0 = j - (cols nw)
+                    if withinRange ne i j0 then
+                        get ne i j0
+                    else
+                        let i0 = i - (rows nw)
+                        if withinRange sw i0 j then
+                            get sw i0 j
+                        else
+                            get se i0 j0 (* Either contains or ends in out-of-bounds. *)
+
     let inline canCopyV us ls =
         Array2D.length1 us + Array2D.length1 ls <= maxSize
 

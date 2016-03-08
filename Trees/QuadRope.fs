@@ -29,18 +29,18 @@ module QuadRope =
         | Node (d, _, _, _, _, _, _) -> d
 
     (* Procudes a "flat" node. *)
-    let vnode ne nw =
-        let h = rows nw
-        let w = cols nw + cols ne
-        let d = max (depth nw) (depth ne)
-        Node (d + 1, h, w, ne, nw, Empty, Empty)
-
-    (* Produces a "thin" node. *)
-    let hnode nw sw =
+    let vnode nw sw =
         let h = rows nw + rows sw
         let w = cols nw
         let d = max (depth nw) (depth sw)
         Node (d + 1, h, w, Empty, nw, sw, Empty)
+
+    (* Produces a "thin" node. *)
+    let hnode nw ne =
+        let w = rows nw
+        let h = cols nw + cols ne
+        let d = max (depth nw) (depth ne)
+        Node (d + 1, h, w, ne, nw, Empty, Empty)
 
     let makeNode ne nw sw se =
         let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se))
@@ -64,11 +64,11 @@ module QuadRope =
             else if maxSize < h then
                 let nw = init0 h0 w0 hpiv w1 f
                 let sw = init0 hpiv w0 h1 w1 f
-                hnode nw sw
+                vnode nw sw
             else if maxSize < w then
                 let ne = init0 h0 wpiv h1 w1 f
                 let nw = init0 h0 w0 h1 wpiv f
-                vnode ne nw
+                hnode ne nw
             else
                 Leaf (Array2D.init h w (fun i j -> f (i + h0) (j + w0)))
         init0 0 0 h w f

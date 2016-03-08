@@ -123,7 +123,6 @@ module QuadRope =
 
     (* Concatenate two trees vertically. *)
     let vcat upper lower =
-        if cols upper <> cols lower then failwith "Trees must be of same width!"
         match upper, lower with
             | Leaf us, Leaf ls when canCopyV us ls ->
                 Leaf (Array2D.cat1 us ls) (* Copying small arrays is ok. *)
@@ -146,7 +145,6 @@ module QuadRope =
 
     (* Concatenate two trees horizontally. *)
     let hcat left right =
-        if rows left <> rows right then failwith "Trees must be of same width!"
         match left, right with
             | Leaf ls, Leaf rs when canCopyH ls rs ->
                 Leaf (RadTrees.Array2D.cat2 ls rs) (* Copying small arrays is ok. *)

@@ -30,17 +30,27 @@ module QuadRope =
 
     (* Produces a "thin" node. *)
     let vnode nw sw =
-        let h = rows nw + rows sw
-        let w = cols nw
-        let d = max (depth nw) (depth sw)
-        Node (d + 1, h, w, Empty, nw, sw, Empty)
+        match nw, sw with
+            | Empty, Empty -> Empty
+            | Empty, _ -> sw
+            | _, Empty -> nw
+            | _ ->
+                let h = rows nw + rows sw
+                let w = cols nw
+                let d = max (depth nw) (depth sw)
+                Node (d + 1, h, w, Empty, nw, sw, Empty)
 
     (* Produces a "flat" node. *)
     let hnode nw ne =
-        let h = rows nw
-        let w = cols nw + cols ne
-        let d = max (depth nw) (depth ne)
-        Node (d + 1, h, w, ne, nw, Empty, Empty)
+        match nw, ne with
+            | Empty, Empty -> Empty
+            | Empty, _ -> ne
+            | _, Empty -> nw
+            | _ ->
+                let h = rows nw
+                let w = cols nw + cols ne
+                let d = max (depth nw) (depth ne)
+                Node (d + 1, h, w, ne, nw, Empty, Empty)
 
     let makeNode ne nw sw se =
         let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se))

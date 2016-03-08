@@ -28,14 +28,14 @@ module QuadRope =
         | Leaf _ -> 1
         | Node (d, _, _, _, _, _, _) -> d
 
-    (* Procudes a "flat" node. *)
+    (* Produces a "thin" node. *)
     let vnode nw sw =
         let h = rows nw + rows sw
         let w = cols nw
         let d = max (depth nw) (depth sw)
         Node (d + 1, h, w, Empty, nw, sw, Empty)
 
-    (* Produces a "thin" node. *)
+    (* Produces a "flat" node. *)
     let hnode nw ne =
         let h = rows nw
         let w = cols nw + cols ne

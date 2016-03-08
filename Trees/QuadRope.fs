@@ -53,10 +53,17 @@ module QuadRope =
                 Node (d + 1, h, w, ne, nw, Empty, Empty)
 
     let makeNode ne nw sw se =
-        let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se))
-        let h = rows nw + rows ne
-        let w = cols nw + cols sw
-        Node (d + 1, h, w, ne, nw, sw, se)
+        match ne, nw, sw, se with
+            | Empty, Empty, Empty, Empty -> Empty
+            | _, _, Empty, Empty -> vnode nw ne
+            | Empty, Empty, _, _ -> vnode sw se
+            | Empty, _, _, Empty -> hnode nw sw
+            | _, Empty, Empty, _ -> hnode ne sw
+            | _ ->
+                let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se))
+                let h = rows nw + rows ne
+                let w = cols nw + cols sw
+                Node (d + 1, h, w, ne, nw, sw, se)
 
     let makeLeaf vs =
         if Array2D.length1 vs = 0 || Array2D.length2 vs = 0 then

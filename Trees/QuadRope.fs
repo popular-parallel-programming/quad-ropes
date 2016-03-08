@@ -52,19 +52,6 @@ module QuadRope =
                 let d = max (depth nw) (depth ne)
                 Node (d + 1, h, w, ne, nw, Empty, Empty)
 
-    let makeNode ne nw sw se =
-        match ne, nw, sw, se with
-            | Empty, Empty, Empty, Empty -> Empty
-            | _, _, Empty, Empty -> vnode nw ne
-            | Empty, Empty, _, _ -> vnode sw se
-            | Empty, _, _, Empty -> hnode nw sw
-            | _, Empty, Empty, _ -> hnode ne sw
-            | _ ->
-                let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se))
-                let h = rows nw + rows ne
-                let w = cols nw + cols sw
-                Node (d + 1, h, w, ne, nw, sw, se)
-
     let makeLeaf vs =
         if Array2D.length1 vs = 0 || Array2D.length2 vs = 0 then
             Empty
@@ -177,6 +164,16 @@ module QuadRope =
                 Node (max ld rd, lh, lw + rw, rnw, lnw, lsw, rsw) (* Concatenation of two "thin" nodes. *)
 
             | _, _ -> hnode left right (* Make a new thin node. *)
+
+    let makeNode ne nw sw se =
+        match ne, nw, sw, se with
+            | Empty, Empty, Empty, Empty -> Empty
+            | _, _, Empty, Empty -> vnode nw ne
+            | Empty, Empty, _, _ -> vnode sw se
+            | Empty, _, _, Empty -> hnode nw sw
+            | _, Empty, Empty, _ -> hnode ne sw
+            | _ ->
+                vcat (hcat nw ne) (hcat sw se)
 
     (* Compute the "subrope" starting from indexes i, j taking h and w
        elements in vertical and horizontal direction. *)

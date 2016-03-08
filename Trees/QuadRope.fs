@@ -199,3 +199,26 @@ module QuadRope =
         | Leaf vs -> seq { for v in vs -> v }
         | Node (_, _, _, ne, nw, sw, se) ->
             seq { yield! toSeq nw; yield! toSeq ne; yield! toSeq sw; yield! toSeq se }
+
+    (* Bulk-operations on quad ropes: *)
+
+    (* Apply a function to every element in the tree and preserves the
+       tree structure. *)
+    let rec map f root =
+        match root with
+            | Empty -> Empty
+            | Leaf vs -> Leaf (Array2D.map f vs)
+            | Node (d, h, w, ne, nw, sw, se) ->
+                Node (d, h, w,
+                      map f ne,
+                      map f nw,
+                      map f sw,
+                      map f se)
+
+    (* Fold from left to right and top-down in row-first order. *)
+    let foldl f state root =
+        Seq.fold f state (toSeq root)
+
+    (* Fold from right to left and bottom-up in row-first order. *)
+    let foldr f root state =
+        Seq.foldBack f (toSeq root) state

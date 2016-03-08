@@ -44,9 +44,15 @@ module QuadRope =
 
     let makeNode ne nw sw se =
         let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se))
-        let h = rows ne + rows sw
-        let w = cols nw + cols se
+        let h = rows nw + rows ne
+        let w = cols nw + cols sw
         Node (d + 1, h, w, ne, nw, sw, se)
+
+    let makeLeaf vs =
+        if Array2D.length1 vs = 0 || Array2D.length2 vs = 0 then
+            Empty
+        else
+            Leaf vs
 
     let inline private withinRange root i j =
         i < rows root && j < cols root

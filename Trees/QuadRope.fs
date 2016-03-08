@@ -144,13 +144,14 @@ module QuadRope =
         if cols upper <> cols lower then failwith "Trees must be of same width!"
         match upper, lower with
             | Leaf us, Leaf ls when canCopyV us ls ->
-                Leaf (RadTrees.Array2D.cat1 us ls) (* Copying small arrays is ok. *)
+                Leaf (Array2D.cat1 us ls) (* Copying small arrays is ok. *)
 
             | (Node (ud, uh, uw, Leaf unes, Leaf unws, Empty, Empty),
                Node (ld, lh, lw, Leaf lnes, Leaf lnws, Empty, Empty)) when canCopyV unes lnes
                                                                         && canCopyV unws lnws ->
-                Node (2, uh + lh, uw, Leaf (Array2D.cat1 unes lnes), Leaf (Array2D.cat1 unws lnws),
-                      Empty, Empty) (* Unwrap and copy small arrays. *)
+                Node (2, uh + lh, uw,
+                      Leaf (Array2D.cat1 unes lnes), (* Unwrap and copy small arrays. *)
+                      Leaf (Array2D.cat1 unws lnws), Empty, Empty)
 
             | (Node (ud, uh, uw, une, unw, Empty, Empty),
                Node (ld, lh, lw, lne, lnw, Empty, Empty)) ->
@@ -171,12 +172,14 @@ module QuadRope =
             | (Node (ld, lh, lw, Empty, Leaf lnws, Leaf lsws, Empty),
                Node (rd, rh, rw, Empty, Leaf rnws, Leaf rsws, Empty)) when canCopyH lnws rnws
                                                                         && canCopyH lsws rsws ->
-                Node (2, rh, lw + rw, Leaf (Array2D.cat2 lnws rnws), Leaf (Array2D.cat2 lsws rsws),
-                      Empty, Empty) (* Unwrap and copy small arrays. *)
+                Node (2, rh, lw + rw, Empty,
+                      Leaf (Array2D.cat2 lnws rnws), (* Unwrap and copy small arrays. *)
+                      Leaf (Array2D.cat2 lsws rsws),
+                      Empty)
 
-            | (Node (ld, lh, lw, lne, lnw, Empty, Empty),
-               Node (rd, rh, rw, rne, rnw, Empty, Empty)) ->
-                Node (max ld rd, lh, lw + rw, lne, lnw, rnw, rne) (* Concatenation of two "flat" nodes. *)
+            | (Node (ld, lh, lw, Empty, lnw, lsw, Empty),
+               Node (rd, rh, rw, Empty, rnw, rsw, Empty)) ->
+                Node (max ld rd, lh, lw + rw, rnw, lnw, lsw, rsw) (* Concatenation of two "thin" nodes. *)
 
             | _, _ -> hnode left right (* Make a new thin node. *)
 

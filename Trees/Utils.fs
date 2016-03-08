@@ -20,10 +20,10 @@ module Array2D =
         arr0
 
     let subArr arr i j h w =
-        if i <= 0 && Array2D.length1 arr <= h && j <= 0 && Array2D.length2 arr <= w then
+        if i <= 0 && Array2D.length1 arr <= i + h && j <= 0 && Array2D.length2 arr <= j + w then
             arr
         else
-            Array2D.init h w (fun i0 j0 -> Array2D.get arr (i0 + i) (j0 + j))
+            Array2D.initBased i j h w (Array2D.get arr)
 
     let slice arr imin jmin imax jmax =
          subArr arr imin jmin (imax - imin) (jmax - jmin)

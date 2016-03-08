@@ -48,34 +48,6 @@ module QuadRope =
         let w = cols nw + cols se
         Node (d + 1, h, w, ne, nw, sw, se)
 
-    (* Generate a new tree without any intermediate values. *)
-    let init h w f =
-        let rec init0 h0 w0 h1 w1 f =
-            let h = h1 - h0
-            let w = w1 - w0
-            let hpiv = h0 + h / 2
-            let wpiv = w0 + w / 2
-            if maxSize < h && maxSize < w then
-                let ne = init0 h0 wpiv hpiv w1 f
-                let nw = init0 h0 w0 hpiv wpiv f
-                let sw = init0 hpiv w0 h1 wpiv f
-                let se = init0 hpiv wpiv h1 w1 f
-                makeNode ne nw sw se
-            else if maxSize < h then
-                let nw = init0 h0 w0 hpiv w1 f
-                let sw = init0 hpiv w0 h1 w1 f
-                vnode nw sw
-            else if maxSize < w then
-                let ne = init0 h0 wpiv h1 w1 f
-                let nw = init0 h0 w0 h1 wpiv f
-                hnode ne nw
-            else
-                Leaf (Array2D.init h w (fun i j -> f (i + h0) (j + w0)))
-        init0 0 0 h w f
-
-    let fromArray vss =
-        init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)
-
     let inline private withinRange root i j =
         i < rows root && j < cols root
 
@@ -183,17 +155,33 @@ module QuadRope =
 
             | _, _ -> hnode left right (* Make a new thin node. *)
 
-    (* Apply a function to every element in the tree. *)
-    let rec map f root =
-        match root with
-            | Empty -> Empty
-            | Leaf vs -> Leaf (Array2D.map f vs)
-            | Node (d, h, w, ne, nw, sw, se) ->
-                Node (d, h, w,
-                      map f ne,
-                      map f nw,
-                      map f sw,
-                      map f se)
+    (* Generate a new tree without any intermediate values. *)
+    let init h w f =
+        let rec init0 h0 w0 h1 w1 f =
+            let h = h1 - h0
+            let w = w1 - w0
+            let hpiv = h0 + h / 2
+            let wpiv = w0 + w / 2
+            if maxSize < h && maxSize < w then
+                let nw = init0 h0 w0 hpiv wpiv f
+                let ne = init0 h0 wpiv hpiv w1 f
+                let sw = init0 hpiv w0 h1 wpiv f
+                let se = init0 hpiv wpiv h1 w1 f
+                makeNode ne nw sw se
+            else if maxSize < h then
+                let nw = init0 h0 w0 hpiv w1 f
+                let sw = init0 hpiv w0 h1 w1 f
+                vcat nw sw
+            else if maxSize < w then
+                let nw = init0 h0 w0 h1 wpiv f
+                let ne = init0 h0 wpiv h1 w1 f
+                hcat nw ne
+            else
+                Leaf (Array2D.init h w (fun i j -> f (i + h0) (j + w0)))
+        init0 0 0 h w f
+
+    let fromArray vss =
+        init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)
 
     (* Iterate over a tree from the upper left to the lower right in
        row-first order. *)

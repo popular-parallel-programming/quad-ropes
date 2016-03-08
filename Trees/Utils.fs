@@ -19,8 +19,14 @@ module Array2D =
         arr0.[i, j] <- v
         arr0
 
+    let subArr arr i j h w =
+        if i <= 0 && Array2D.length1 arr <= h && j <= 0 && Array2D.length2 arr <= w then
+            arr
+        else
+            Array2D.init h w (fun i0 j0 -> Array2D.get arr (i0 + i) (j0 + j))
+
     let slice arr imin jmin imax jmax =
-        Array2D.init (imax - imin) (jmax - jmin) (fun i j -> Array2D.get arr (imin + i) (jmin + j))
+         subArr arr imin jmin (imax - imin) (jmax - jmin)
 
     let head1 arr =
         slice arr 0 1 0 (Array2D.length2 arr)

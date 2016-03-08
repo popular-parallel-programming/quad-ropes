@@ -166,7 +166,7 @@ module QuadRope =
     let hcat left right =
         if rows left <> rows right then failwith "Trees must be of same width!"
         match left, right with
-            | Leaf ls, Leaf rs when canCopyV ls rs ->
+            | Leaf ls, Leaf rs when canCopyH ls rs ->
                 Leaf (RadTrees.Array2D.cat2 ls rs) (* Copying small arrays is ok. *)
 
             | (Node (ld, lh, lw, Empty, Leaf lnws, Leaf lsws, Empty),

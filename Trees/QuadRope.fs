@@ -155,6 +155,29 @@ module QuadRope =
 
             | _, _ -> hnode left right (* Make a new thin node. *)
 
+    (* Compute the "subrope" starting from indexes i, j taking h and w
+       elements in vertical and horizontal direction. *)
+    let rec split root i j h w =
+        if i <= 0 && rows root <= h && j <= 0 && cols root <= w then
+            root
+        else
+            match root with
+                | Empty -> Empty
+                | Leaf vs ->
+                    Leaf (Array2D.subArr vs (max 0 i)
+                                            (max 0 j)
+                                            (min h (Array2D.length1 vs))
+                                            (min w (Array2D.length2 vs)))
+                | Node (_, _, _, ne, nw, sw, se) ->
+                    let nnw = split nw  i             j             h              w
+                    let nne = split ne  i            (j - cols nw)  h             (w - cols nnw)
+                    let nsw = split sw (i - rows nw)  j            (h - rows nnw)  w
+                    let nse = split se (i - rows ne) (j - cols sw) (h - rows nne) (w - cols nsw)
+                    match nne, nsw, nse with
+                        | Empty, _, Empty -> vnode nnw nsw
+                        | _, Empty, Empty -> hnode nnw nne
+                        | _               -> makeNode nne nnw nsw nse
+
     (* Generate a new tree without any intermediate values. *)
     let init h w f =
         let rec init0 h0 w0 h1 w1 f =

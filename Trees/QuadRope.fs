@@ -37,8 +37,8 @@ module QuadRope =
 
     (* Produces a "thin" node. *)
     let hnode nw ne =
-        let w = rows nw
-        let h = cols nw + cols ne
+        let h = rows nw
+        let w = cols nw + cols ne
         let d = max (depth nw) (depth ne)
         Node (d + 1, h, w, ne, nw, Empty, Empty)
 

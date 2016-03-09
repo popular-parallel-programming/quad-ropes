@@ -218,7 +218,9 @@ module QuadRope =
        row-first order. *)
     let rec toSeq = function
         | Empty -> Seq.empty
-        | Leaf vs -> seq { for v in vs -> v }
+        | Leaf vs -> seq { for i in 0..Array2D.length1 vs do
+                           for j in 0..Array2D.length2 vs ->
+                           vs.[i, j] }
         | Node (_, _, _, ne, nw, sw, se) ->
             seq { yield! toSeq nw; yield! toSeq ne; yield! toSeq sw; yield! toSeq se }
 

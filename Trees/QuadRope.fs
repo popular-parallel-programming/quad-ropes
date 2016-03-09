@@ -161,7 +161,7 @@ module QuadRope =
             | _, _ -> hnode left right (* Make a new thin node. *)
 
     let makeNode ne nw sw se =
-        vcat (hcat nw ne) (hcat sw se)
+        vnode (hnode nw ne) (hnode sw se)
 
     (* Compute the "subrope" starting from indexes i, j taking h and w
        elements in vertical and horizontal direction. *)

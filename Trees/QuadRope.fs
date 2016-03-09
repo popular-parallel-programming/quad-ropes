@@ -186,6 +186,18 @@ module QuadRope =
                         | _, Empty, Empty -> hnode nnw nne
                         | _               -> makeNode nne nnw nsw nse
 
+    let rec hrev = function
+        | Empty -> Empty
+        | Leaf vs -> Leaf (Array2D.rev2 vs)
+        | Node (d, h, w, ne, nw, sw, se) ->
+            Node (d, h, w, hrev nw, hrev ne, hrev se, hrev sw)
+
+    let rec vrev = function
+        | Empty -> Empty
+        | Leaf vs -> Leaf (Array2D.rev1 vs)
+        | Node (d, h, w, ne, nw, sw, se) ->
+            Node (d, h, w, vrev se, vrev sw, vrev nw, vrev ne)
+
     (* Generate a new tree without any intermediate values. *)
     let init h w f =
         let rec init0 h0 w0 h1 w1 f =

@@ -172,10 +172,10 @@ module QuadRope =
             match root with
                 | Empty -> Empty
                 | Leaf vs ->
-                    Leaf (Array2D.subArr vs (max 0 i)
-                                            (max 0 j)
-                                            (min h (Array2D.length1 vs))
-                                            (min w (Array2D.length2 vs)))
+                    makeLeaf (Array2D.subArr vs (max 0 i)
+                                                (max 0 j)
+                                                (min h (Array2D.length1 vs))
+                                                (min w (Array2D.length2 vs)))
                 | Node (_, _, _, ne, nw, sw, se) ->
                     let nnw = split nw  i             j             h              w
                     let nne = split ne  i            (j - cols nw)  h             (w - cols nnw)

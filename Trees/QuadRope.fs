@@ -130,9 +130,7 @@ module QuadRope =
             | (Node (ud, uh, uw, Leaf unes, Leaf unws, Empty, Empty),
                Node (ld, lh, lw, Leaf lnes, Leaf lnws, Empty, Empty)) when canCopyV unes lnes
                                                                         && canCopyV unws lnws ->
-                Node (2, uh + lh, uw,
-                      Leaf (Array2D.cat1 unes lnes), (* Unwrap and copy small arrays. *)
-                      Leaf (Array2D.cat1 unws lnws), Empty, Empty)
+                hnode (Leaf (Array2D.cat1 unws lnws)) (Leaf (Array2D.cat1 unes lnes))
 
             | (Node (ud, uh, uw, une, unw, Empty, Empty),
                Node (ld, lh, lw, lne, lnw, Empty, Empty)) ->
@@ -152,10 +150,7 @@ module QuadRope =
             | (Node (ld, lh, lw, Empty, Leaf lnws, Leaf lsws, Empty),
                Node (rd, rh, rw, Empty, Leaf rnws, Leaf rsws, Empty)) when canCopyH lnws rnws
                                                                         && canCopyH lsws rsws ->
-                Node (2, rh, lw + rw, Empty,
-                      Leaf (Array2D.cat2 lnws rnws), (* Unwrap and copy small arrays. *)
-                      Leaf (Array2D.cat2 lsws rsws),
-                      Empty)
+                vnode (Leaf (Array2D.cat2 lnws rnws)) (Leaf (Array2D.cat2 lsws rsws))
 
             | (Node (ld, lh, lw, Empty, lnw, lsw, Empty),
                Node (rd, rh, rw, Empty, rnw, rsw, Empty)) ->

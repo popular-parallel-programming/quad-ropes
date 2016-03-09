@@ -9,6 +9,10 @@ module QuadRope =
 
     (* The maximal size of a leaf array in any direction. *)
     let maxSize = 4
+    let maxDepth = 4
+
+    (* Initialize Fibonacci numbers at module load time. *)
+    ignore (Fibonacci.fib maxDepth)
 
     (* Number of rows in a rectangular tree. *)
     let rows = function

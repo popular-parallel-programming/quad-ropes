@@ -188,9 +188,6 @@ module Fibonacci =
             seq { yield (n, n2); yield! fibr (n + 1) n1 n2 }
         seq { yield (0, 0); yield (1, 1); yield (2, 1); yield! fibr 3 1 1 } |> Seq.cache
 
-    (* Initialize Fibonacci sequence up to 100 when module is loaded. *)
-    ignore (Seq.take 100 fibs)
-
     (* Return the nth Fibonacci number and cache it. *)
     let fib n =
         (Seq.item n >> snd) fibs

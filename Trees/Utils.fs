@@ -179,3 +179,22 @@ module Array2D =
     let rev2 arr =
         let j0  = Array2D.length2 arr - 1
         Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> arr.[i, j0 - j])
+
+module Fibonacci =
+
+    let private fibs =
+        let rec fibr n n0 n1 =
+            let n2 = n0 + n1
+            seq { yield (n, n2); yield! fibr (n + 1) n1 n2 }
+        seq { yield (0, 0); yield (1, 1); yield (2, 1); yield! fibr 3 1 1 } |> Seq.cache
+
+    (* Initialize Fibonacci sequence up to 100 when module is loaded. *)
+    ignore (Seq.take 100 fibs)
+
+    (* Return the nth Fibonacci number and cache it. *)
+    let fib n =
+        (Seq.item n >> snd) fibs
+
+    (* Return the n of the first Fibonacci number that is greater than m. *)
+    let nth m =
+        fst (Seq.find (snd >> ((<) m)) fibs)

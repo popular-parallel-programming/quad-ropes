@@ -171,3 +171,11 @@ module Array2D =
 
     let makeSingleRow arr =
         Array2D.init 1 (Array.length arr) (fun _ j -> arr.[j])
+
+    let rev1 arr =
+        let i0 = Array2D.length1 arr - 1
+        Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> arr.[i0 - i, j])
+
+    let rev2 arr =
+        let j0  = Array2D.length2 arr - 1
+        Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> arr.[i, j0 - j])

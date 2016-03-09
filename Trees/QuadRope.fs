@@ -122,6 +122,40 @@ module QuadRope =
                         else
                             write se i0 j0 v
 
+    let isBalanced = function
+        | Empty
+        | Leaf _ -> true
+        | Node (d, h, w, _, _, _, _) ->
+            if maxDepth < d then
+                false
+            else
+                let n = Fibonacci.fib (d + 1)
+                n <= h && n <= w
+
+    let flatten root =
+        let rec append l r =
+            if Seq.isEmpty l then
+                r
+            else if Seq.isEmpty r then
+                l
+            else
+                seq { yield seq { yield! (Seq.head l); yield! (Seq.head r)};
+                      yield! append (Seq.tail l) (Seq.tail r) }
+        let rec flat0 root =
+            match root with
+                | Empty -> Seq.empty
+                | Leaf vs -> Seq.singleton (Seq.singleton root)
+                | Node (_, _, _, ne, nw, sw, se) ->
+                    let n = append (flat0 nw) (flat0 ne)
+                    let s = append (flat0 sw) (flat0 se)
+                    Seq.append n s
+        flat0 root
+
+    let balance root =
+        let flat = Seq.cache (flatten root)
+        (* TODO: Apply the same approach as with RRB vectors? Split recursively and then rebuild. *)
+        root
+
     let inline private canCopyV us ls =
         Array2D.length1 us + Array2D.length1 ls <= maxSize
 

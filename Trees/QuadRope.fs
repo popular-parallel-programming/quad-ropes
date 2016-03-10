@@ -201,6 +201,10 @@ module QuadRope =
     let makeNode ne nw sw se =
         vnode (hnode nw ne) (hnode sw se)
 
+    let makeSomeNode ne nw sw se =
+        let getOrEmpty = Option.getDefault Empty
+        makeNode (getOrEmpty ne) (getOrEmpty nw) (getOrEmpty sw) (getOrEmpty se)
+
     (* Compute the "subrope" starting from indexes i, j taking h and w
        elements in vertical and horizontal direction. *)
     let rec split root i j h w =

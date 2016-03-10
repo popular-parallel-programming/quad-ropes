@@ -296,3 +296,51 @@ module QuadRope =
     (* Fold from right to left and bottom-up in row-first order. *)
     let foldr f root state =
         Seq.foldBack f (toSeq root) state
+
+    type 'a Path =
+        | Top
+        | NE of 'a Path * 'a QuadRope * 'a QuadRope * 'a QuadRope
+        | NW of 'a QuadRope * 'a Path * 'a QuadRope * 'a QuadRope
+        | SW of 'a QuadRope * 'a QuadRope * 'a Path * 'a QuadRope
+        | SE of 'a QuadRope * 'a QuadRope * 'a QuadRope * 'a Path
+
+    module Path =
+
+        let west (node, path) =
+            match path with
+                | NE (path, nw, sw, se) -> nw, NW (node, path, sw, se)
+                | SE (ne, nw, sw, path) -> sw, SW (ne, nw, path, node)
+                | _ -> node, path
+
+        let east (node, path) =
+            match path with
+                | NW (ne, path, sw, se) -> ne, NE (path, node, sw, se)
+                | SW (ne, nw, path, se) -> se, SE (ne, nw, node, path)
+                | _ -> node, path
+
+        let north (node, path) =
+            match path with
+                | SW (ne, nw, path, se) -> nw, NW (ne, path, node, se)
+                | SE (ne, nw, sw, path) -> ne, NE (path, ne, sw, node)
+                | _ -> node, path
+
+        let south (node, path) =
+            match path with
+                | NE (path, nw, sw, se) -> se, SE (node, nw, sw, path)
+                | NW (ne, path, sw, se) -> sw, SW (ne, node, path, se)
+                | _ -> (node, path)
+
+        let up (node, path) =
+            match path with
+                | NE (path, nw, sw, se) -> (makeNode node nw sw se), path
+                | NW (ne, path, sw, se) -> (makeNode ne node sw se), path
+                | SW (ne, nw, path, se) -> (makeNode ne nw node se), path
+                | SE (ne, nw, sw, path) -> (makeNode ne nw sw node), path
+                | _ -> node, path
+
+        let down (node, path) =
+            match node with
+                | Empty
+                | Leaf _ -> node, path
+                | Node (_, _, _, ne, nw, sw, se) ->
+                    nw, NW (ne, path, sw, se)

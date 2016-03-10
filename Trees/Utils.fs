@@ -195,3 +195,15 @@ module Fibonacci =
     (* Return the n of the first Fibonacci number that is greater than m. *)
     let nth m =
         fst (Seq.find (snd >> ((<) m)) fibs)
+
+module Tuple =
+
+    let tupled f =
+        (fun (x, y) -> f x y)
+
+module Option =
+
+    let getDefault v s =
+        match s with
+            | None -> v
+            | Some s -> s

@@ -325,3 +325,53 @@ module QuadRope =
                 | Leaf _ -> node, path
                 | Node (_, _, _, ne, nw, sw, se) ->
                     nw, NW (ne, path, sw, se)
+
+        type ('a, 'b) Progress =
+            | More of 'a
+            | Done of 'b
+
+        let rec upperLeftMost node path =
+            match node with
+                | Empty
+                | Leaf _ -> node, path
+                | Node (_, _, _, ne, nw, sw, se) ->
+                    upperLeftMost nw (NW (ne, path, sw, se))
+
+        let start rope = upperLeftMost rope Top
+
+        let rec next rope path =
+            match path with
+                | Top -> Done rope
+                | NE (path, nw, sw, se) -> More (upperLeftMost sw (SW (rope, nw, path, se)))
+                | NW (ne, path, sw, se) -> More (upperLeftMost ne (NE (path, rope, sw, se)))
+                | SW (ne, nw, path, se) -> More (upperLeftMost se (SE (ne, nw, rope, path)))
+                | SE (ne, nw, sw, path) -> next (makeNode ne nw sw rope) path
+
+        let iterate rope =
+            let rec it0 rope path =
+                match next rope path with
+                    | Done rope -> Seq.empty
+                    | More (rope, path) -> seq { yield rope; yield! it0 rope path }
+            let rope, path = start rope
+            seq { yield rope; yield! it0 rope path }
+
+    let balance root =
+        let rec makeOneLevel ss =
+            if Seq.isEmpty ss then
+                ss
+            else
+                let nw = Seq.tryHead ss
+                let ne = Seq.tryItem 1 ss
+                let sw = Seq.tryItem 2 ss
+                let se = Seq.tryItem 3 ss
+                match se with
+                    | None -> seq { yield makeSomeNode ne nw sw se }
+                    | _ -> seq { yield makeSomeNode ne nw sw se; yield! makeOneLevel (Seq.skip 4 ss) }
+
+        let rec rebuild ss =
+            let nss = makeOneLevel ss
+            if Seq.length nss = 1 then
+                Seq.head nss
+            else
+                rebuild nss
+        rebuild (Path.iterate root)

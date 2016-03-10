@@ -297,12 +297,13 @@ module QuadRope =
     let foldr f root state =
         Seq.foldBack f (toSeq root) state
 
-    type 'a Path =
+    (* Constructor takes sub-ropes in order NE, NW, SW, SE. *)
+    type ('a, 'b) Path =
         | Top
-        | NE of 'a Path * 'a QuadRope * 'a QuadRope * 'a QuadRope
-        | NW of 'a QuadRope * 'a Path * 'a QuadRope * 'a QuadRope
-        | SW of 'a QuadRope * 'a QuadRope * 'a Path * 'a QuadRope
-        | SE of 'a QuadRope * 'a QuadRope * 'a QuadRope * 'a Path
+        | NW of 'a QuadRope * ('a, 'b) Path * 'a QuadRope * 'a QuadRope
+        | NE of ('a, 'b) Path * 'b QuadRope * 'a QuadRope * 'a QuadRope
+        | SW of 'b QuadRope * 'b QuadRope * ('a, 'b) Path * 'a QuadRope
+        | SE of 'b QuadRope * 'b QuadRope * 'b QuadRope * ('a, 'b) Path
 
     module Path =
 

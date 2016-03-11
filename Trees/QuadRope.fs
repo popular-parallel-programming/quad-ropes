@@ -396,6 +396,7 @@ module QuadRope =
         let rec makeOneLevel = function
             | [] -> []
             | ns :: [] -> makeFromOne ns :: []
+            | ns :: [] :: tail -> makeOneLevel (ns :: tail)
             | ns :: ss :: tail -> makeFromTwo ns ss :: (makeOneLevel tail)
         let rec build = function
             | [] -> Empty

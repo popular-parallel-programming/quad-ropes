@@ -361,7 +361,7 @@ module QuadRope =
                 | NW _
                 | NE _ -> Some (south (node, loc))
                 | SW _ -> Option.map upperLeftMost (walkSouth (up (node, loc)))
-                | SE _ -> Option.map upperLeftMost (Option.map east (walkSouth (up (node, loc))))
+                | SE _ -> Option.map east (walkSouth (up (node, loc)))
 
         let rec walkEast (node, loc) =
             match loc with
@@ -369,7 +369,7 @@ module QuadRope =
                 | NW _
                 | SW _ -> Some (east (node, loc))
                 | NE _ -> Option.map upperLeftMost (walkEast (up (node, loc)))
-                | SE _ -> Option.map upperLeftMost (Option.map south (walkEast (up (node, loc))))
+                | SE _ -> Option.map south (walkEast (up (node, loc)))
 
     let flatten root =
         let step f a =

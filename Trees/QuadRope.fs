@@ -379,6 +379,13 @@ module QuadRope =
         let makeRow = Seq.unfold (step Path.walkEast) >> Seq.map fst
         Seq.map makeRow (Seq.unfold (step Path.walkSouth) (Path.start root))
 
+    (* Balancing first flattens the rope lazily such that every leaf
+       is placed in a list of lists at the same position it would have
+       we'd see the rope from above. This grid contains no empty
+       leaves. We can then pairwise in each direction build new nodes,
+       which results in a new list of lists of nodes. This is
+       performed recursively until only one node is left. This is the
+       new root. *)
     let balance root =
         let rec makeFromOne = function
             | [] -> []

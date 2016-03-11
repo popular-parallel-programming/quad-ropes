@@ -368,8 +368,8 @@ module QuadRope =
                 | Top -> None
                 | NW _
                 | SW _ -> Some (east (node, loc))
-                | NE _
-                | SE _ -> Option.map upperLeftMost (walkEast (up (node, loc)))
+                | NE _ -> Option.map upperLeftMost (walkEast (up (node, loc)))
+                | SE _ -> Option.map upperLeftMost (Option.map south (walkEast (up (node, loc))))
 
     let flatten root =
         let step f a =

@@ -387,13 +387,15 @@ module QuadRope =
         let rec makeFromTwo ns ss =
             match ns, ss with
                 | [], [] -> []
-                | nw :: [], sw :: [] ->
-                    vnode nw sw :: []
-                | nw :: ne :: ns, sw :: se :: ss ->
-                    makeNode ne nw se se :: makeFromTwo ns ss
+                | ns, [] -> ns
+                | [], ss -> ss
+                | [nw]          , [sw]           -> vnode nw sw :: []
+                | nw :: ne :: ns, [sw]           -> vnode nw sw :: ne :: ns
+                | [nw]          , sw :: se :: ss -> vnode nw sw :: se :: ss
+                | nw :: ne :: ns, sw :: se :: ss -> makeNode ne nw se se :: makeFromTwo ns ss
         let rec makeOneLevel = function
             | [] -> []
-            | [n] -> [makeFromOne n]
+            | ns :: [] -> makeFromOne ns :: []
             | ns :: ss :: tail -> makeFromTwo ns ss :: (makeOneLevel tail)
         let rec build = function
             | [] -> Empty

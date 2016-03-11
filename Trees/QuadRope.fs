@@ -355,23 +355,33 @@ module QuadRope =
             let rope, path = start rope
             seq { yield rope; yield! it0 rope path }
 
-    let balance root =
-        let rec makeOneLevel ss =
-            if Seq.isEmpty ss then
-                ss
-            else
-                let nw = Seq.tryHead ss
-                let ne = Seq.tryItem 1 ss
-                let sw = Seq.tryItem 2 ss
-                let se = Seq.tryItem 3 ss
-                match se with
-                    | None -> seq { yield makeSomeNode ne nw sw se }
-                    | _ -> seq { yield makeSomeNode ne nw sw se; yield! makeOneLevel (Seq.skip 4 ss) }
+    let flatten root =
+        let walk dir loc =
+            match dir loc with
+                | Some loc' -> Some (loc, loc')
+                | None -> None
+        (* TODO: Doesn't work because navigation does not automatically walk up the tree again. *)
+        let makeRow = Seq.unfold (walk Path.east) >> Seq.map fst >> Seq.toList
+        Seq.map makeRow (Seq.unfold (walk Path.south) (Path.start root))
 
-        let rec rebuild ss =
-            let nss = makeOneLevel ss
-            if Seq.length nss = 1 then
-                Seq.head nss
+    let balance root =
+        let rec makeFromOne = function
+            | [] -> []
+            | [n] -> [n]
+            | nw :: ne :: tail -> hnode nw ne :: makeFromOne tail
+        let rec makeFromTwo ns ss =
+            match ns, ss with
+                | [], [] -> []
+                | nw :: [], sw :: [] ->
+                    vnode nw sw :: []
+                | nw :: ne :: ns, sw :: se :: ss ->
+                    makeNode ne nw se se :: makeFromTwo ns ss
+        let rec makeOneLevel = function
+            | [n] -> [makeFromOne n]
+            | ns :: ss :: tail -> makeFromTwo ns ss :: (makeOneLevel tail)
+        let rec build nss =
+            if List.length nss = 1 then
+                List.head nss
             else
-                rebuild nss
-        rebuild (Path.iterate root)
+                build (makeOneLevel nss)
+        build (Seq.toList (flatten root))

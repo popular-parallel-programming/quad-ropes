@@ -360,8 +360,8 @@ module QuadRope =
                 | Top -> None
                 | NW _
                 | NE _ -> Some (south (node, loc))
-                | SW _
-                | SE _ -> Option.map upperLeftMost (walkSouth (up (node, loc)))
+                | SW _ -> Option.map upperLeftMost (walkSouth (up (node, loc)))
+                | SE _ -> Option.map upperLeftMost (Option.map east (walkSouth (up (node, loc))))
 
         let rec walkEast (node, loc) =
             match loc with

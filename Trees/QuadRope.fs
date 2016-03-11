@@ -289,42 +289,42 @@ module QuadRope =
 
         let west (node, path) =
             match path with
-                | NE (path, nw, sw, se) -> Some (nw, NW (node, path, sw, se))
-                | SE (ne, nw, sw, path) -> Some (sw, SW (ne, nw, path, node))
-                | _ -> None
+                | NE (path, nw, sw, se) -> nw, NW (node, path, sw, se)
+                | SE (ne, nw, sw, path) -> sw, SW (ne, nw, path, node)
+                | _ -> node, path
 
         let east (node, path) =
             match path with
-                | NW (ne, path, sw, se) -> Some (ne, NE (path, node, sw, se))
-                | SW (ne, nw, path, se) -> Some (se, SE (ne, nw, node, path))
-                | _ -> None
+                | NW (ne, path, sw, se) -> ne, NE (path, node, sw, se)
+                | SW (ne, nw, path, se) -> se, SE (ne, nw, node, path)
+                | _ -> node, path
 
         let north (node, path) =
             match path with
-                | SW (ne, nw, path, se) -> Some (nw, NW (ne, path, node, se))
-                | SE (ne, nw, sw, path) -> Some (ne, NE (path, ne, sw, node))
-                | _ -> None
+                | SW (ne, nw, path, se) -> nw, NW (ne, path, node, se)
+                | SE (ne, nw, sw, path) -> ne, NE (path, ne, sw, node)
+                | _ -> node, path
 
         let south (node, path) =
             match path with
-                | NE (path, nw, sw, se) -> Some (se, SE (node, nw, sw, path))
-                | NW (ne, path, sw, se) -> Some (sw, SW (ne, node, path, se))
-                | _ -> None
+                | NE (path, nw, sw, se) -> se, SE (node, nw, sw, path)
+                | NW (ne, path, sw, se) -> sw, SW (ne, node, path, se)
+                | _ -> (node, path)
 
         let up (node, path) =
             match path with
-                | NE (path, nw, sw, se) -> Some ((makeNode node nw sw se), path)
-                | NW (ne, path, sw, se) -> Some ((makeNode ne node sw se), path)
-                | SW (ne, nw, path, se) -> Some ((makeNode ne nw node se), path)
-                | SE (ne, nw, sw, path) -> Some ((makeNode ne nw sw node), path)
-                | _ -> None
+                | NE (path, nw, sw, se) -> (makeNode node nw sw se), path
+                | NW (ne, path, sw, se) -> (makeNode ne node sw se), path
+                | SW (ne, nw, path, se) -> (makeNode ne nw node se), path
+                | SE (ne, nw, sw, path) -> (makeNode ne nw sw node), path
+                | _ -> node, path
 
         let down (node, path) =
             match node with
                 | Empty
-                | Leaf _ -> None
+                | Leaf _ -> node, path
                 | Node (_, _, _, ne, nw, sw, se) ->
-                    Some (nw, NW (ne, path, sw, se))
+                    nw, NW (ne, path, sw, se)
 
         type ('a, 'b) Progress =
             | More of 'a

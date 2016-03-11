@@ -330,21 +330,21 @@ module QuadRope =
             | More of 'a
             | Done of 'b
 
-        let rec upperLeftMost node path =
+        let rec upperLeftMost (node, path) =
             match node with
                 | Empty
                 | Leaf _ -> node, path
                 | Node (_, _, _, ne, nw, sw, se) ->
-                    upperLeftMost nw (NW (ne, path, sw, se))
+                    upperLeftMost (nw, (NW (ne, path, sw, se)))
 
-        let start rope = upperLeftMost rope Top
+        let start rope = upperLeftMost (rope, Top)
 
         let rec next rope path =
             match path with
                 | Top -> Done rope
-                | NE (path, nw, sw, se) -> More (upperLeftMost sw (SW (rope, nw, path, se)))
-                | NW (ne, path, sw, se) -> More (upperLeftMost ne (NE (path, rope, sw, se)))
-                | SW (ne, nw, path, se) -> More (upperLeftMost se (SE (ne, nw, rope, path)))
+                | NE (path, nw, sw, se) -> More (upperLeftMost (sw, (SW (rope, nw, path, se))))
+                | NW (ne, path, sw, se) -> More (upperLeftMost (ne, (NE (path, rope, sw, se))))
+                | SW (ne, nw, path, se) -> More (upperLeftMost (se, (SE (ne, nw, rope, path))))
                 | SE (ne, nw, sw, path) -> next (makeNode ne nw sw rope) path
 
         let iterate rope =

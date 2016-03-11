@@ -376,7 +376,7 @@ module QuadRope =
             match f a with
                 | None -> None
                 | Some b -> Some (a, b)
-        let makeRow = Seq.unfold (step Path.walkEast) >> Seq.map fst >> Seq.toList
+        let makeRow = Seq.unfold (step Path.walkEast) >> Seq.map fst
         Seq.map makeRow (Seq.unfold (step Path.walkSouth) (Path.start root))
 
     let balance root =
@@ -401,4 +401,5 @@ module QuadRope =
             | [] -> Empty
             | [[n]] -> n
             | ns :: nss -> build (makeOneLevel (ns :: nss))
-        build (Seq.toList (flatten root))
+        let toList = Seq.filter ((<>) Empty) >> Seq.toList
+        build (Seq.toList (Seq.map toList (flatten root)))

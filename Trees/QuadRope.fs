@@ -392,6 +392,7 @@ module QuadRope =
                 | nw :: ne :: ns, sw :: se :: ss ->
                     makeNode ne nw se se :: makeFromTwo ns ss
         let rec makeOneLevel = function
+            | [] -> []
             | [n] -> [makeFromOne n]
             | ns :: ss :: tail -> makeFromTwo ns ss :: (makeOneLevel tail)
         let rec build = function

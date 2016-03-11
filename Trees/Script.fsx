@@ -29,6 +29,7 @@ let flatten = QuadRope.flatten
 
 let a = init 5 5 (*)
 let b = init 5 10 (*)
+let c = init 10 5 (*)
 
 let aStart : int QuadRope * (int, int) QuadRope.Path = start a
 let bStart : int QuadRope * (int, int) QuadRope.Path = start b

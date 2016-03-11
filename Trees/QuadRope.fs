@@ -355,14 +355,29 @@ module QuadRope =
             let rope, path = start rope
             seq { yield rope; yield! it0 rope path }
 
+        let rec walkSouth (node, loc) =
+            match loc with
+                | Top -> None
+                | NW _
+                | NE _ -> Some (south (node, loc))
+                | SW _
+                | SE _ -> Option.map upperLeftMost (walkSouth (up (node, loc)))
+
+        let rec walkEast (node, loc) =
+            match loc with
+                | Top -> None
+                | NW _
+                | SW _ -> Some (east (node, loc))
+                | NE _
+                | SE _ -> Option.map upperLeftMost (walkEast (up (node, loc)))
+
     let flatten root =
-        let walk dir loc =
-            match dir loc with
-                | Some loc' -> Some (loc, loc')
+        let step f a =
+            match f a with
                 | None -> None
-        (* TODO: Doesn't work because navigation does not automatically walk up the tree again. *)
-        let makeRow = Seq.unfold (walk Path.east) >> Seq.map fst >> Seq.toList
-        Seq.map makeRow (Seq.unfold (walk Path.south) (Path.start root))
+                | Some b -> Some (a, b)
+        let makeRow = Seq.unfold (step Path.walkEast) >> Seq.map fst >> Seq.toList
+        Seq.map makeRow (Seq.unfold (step Path.walkSouth) (Path.start root))
 
     let balance root =
         let rec makeFromOne = function

@@ -379,9 +379,8 @@ module QuadRope =
         let rec makeOneLevel = function
             | [n] -> [makeFromOne n]
             | ns :: ss :: tail -> makeFromTwo ns ss :: (makeOneLevel tail)
-        let rec build nss =
-            if List.length nss = 1 then
-                List.head nss
-            else
-                build (makeOneLevel nss)
+        let rec build = function
+            | [] -> Empty
+            | [[n]] -> n
+            | ns :: nss -> build (makeOneLevel (ns :: nss))
         build (Seq.toList (flatten root))

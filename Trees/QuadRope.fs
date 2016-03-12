@@ -326,10 +326,6 @@ module QuadRope =
                 | Node (_, _, _, ne, nw, sw, se) ->
                     nw, NW (ne, path, sw, se)
 
-        type ('a, 'b) Progress =
-            | More of 'a
-            | Done of 'b
-
         let rec upperLeftMost (node, path) =
             match node with
                 | Empty
@@ -338,22 +334,6 @@ module QuadRope =
                     upperLeftMost (nw, (NW (ne, path, sw, se)))
 
         let start rope = upperLeftMost (rope, Top)
-
-        let rec next rope path =
-            match path with
-                | Top -> Done rope
-                | NE (path, nw, sw, se) -> More (upperLeftMost (sw, (SW (rope, nw, path, se))))
-                | NW (ne, path, sw, se) -> More (upperLeftMost (ne, (NE (path, rope, sw, se))))
-                | SW (ne, nw, path, se) -> More (upperLeftMost (se, (SE (ne, nw, rope, path))))
-                | SE (ne, nw, sw, path) -> next (makeNode ne nw sw rope) path
-
-        let iterate rope =
-            let rec it0 rope path =
-                match next rope path with
-                    | Done rope -> Seq.empty
-                    | More (rope, path) -> seq { yield rope; yield! it0 rope path }
-            let rope, path = start rope
-            seq { yield rope; yield! it0 rope path }
 
         let rec walkSouth (node, loc) =
             match loc with
@@ -412,3 +392,44 @@ module QuadRope =
             | nss -> build (mergeAll nss)
         let toList = Seq.filter ((<>) Empty) >> Seq.toList
         build (Seq.toList (Seq.filter (List.isEmpty >> not) (Seq.map toList (flatten root))))
+
+    (* Parallel operations. *)
+    module Parallel =
+        open Path
+
+        type ('a, 'b) Progress =
+            | More of 'a
+            | Done of 'b
+
+        let rec next rope path =
+            match path with
+                | Top -> Done rope
+                | NE (path, nw, sw, se) -> More (upperLeftMost (sw, (SW (rope, nw, path, se))))
+                | NW (ne, path, sw, se) -> More (upperLeftMost (ne, (NE (path, rope, sw, se))))
+                | SW (ne, nw, path, se) -> More (upperLeftMost (se, (SE (ne, nw, rope, path))))
+                | SE (ne, nw, sw, path) -> next (makeNode ne nw sw rope) path
+
+        let rec splitPath p u path =
+            match path with
+                | Top -> p, u
+                | NW (ne, path, sw, se) -> splitPath p (makeNode ne u sw se) path
+                | NE (path, nw, sw, se) -> splitPath (hnode nw p) (vnode u (hnode sw se)) path
+                | SW (ne, nw, path, se) -> splitPath (vnode (hnode nw ne) p) (hnode u se) path
+                | SE (ne, nw, sw, path) -> splitPath (makeNode ne nw sw p) u path
+
+        let mapUntilSeq cond f node =
+            if cond() then
+                More node
+            else
+               Done (map f node)
+
+        let mapUntil cond f rope =
+            let rec cmap node path =
+                match mapUntilSeq cond f node with
+                    | More node -> More (splitPath Empty node path)
+                    | Done propes ->
+                        match next propes path with
+                            | Done rope -> Done rope
+                            | More (node, path) -> cmap node path
+            let node, path = start rope
+            cmap node path

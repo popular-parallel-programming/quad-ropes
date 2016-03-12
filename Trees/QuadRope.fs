@@ -387,27 +387,24 @@ module QuadRope =
        performed recursively until only one node is left. This is the
        new root. *)
     let balance root =
-        let rec makeFromOne = function
+        (* TODO: makeNode does not optimize! *)
+        let rec mergeRow = function
             | [] -> []
             | [n] -> [n]
-            | nw :: ne :: tail -> hnode nw ne :: makeFromOne tail
-        let rec makeFromTwo ns ss =
+            | nw :: ne :: tail -> hnode nw ne :: mergeRow tail
+        let rec mergeRows ns ss =
             match ns, ss with
                 | [], [] -> []
-                | ns, [] -> ns
-                | [], ss -> ss
-                | [nw]          , [sw]           -> vnode nw sw :: []
-                | nw :: ne :: ns, [sw]           -> vnode nw sw :: ne :: ns
-                | [nw]          , sw :: se :: ss -> vnode nw sw :: se :: ss
-                | nw :: ne :: ns, sw :: se :: ss -> makeNode ne nw se se :: makeFromTwo ns ss
-        let rec makeOneLevel = function
+                | nw :: ne :: ntail, sw :: se :: stail ->
+                    makeNode ne nw sw se :: mergeRows ntail stail
+                | nw :: ntail, sw :: stail -> vnode nw sw :: mergeRows ntail stail
+        let rec mergeAll = function
             | [] -> []
-            | ns :: [] -> makeFromOne ns :: []
-            | ns :: [] :: tail -> makeOneLevel (ns :: tail)
-            | ns :: ss :: tail -> makeFromTwo ns ss :: (makeOneLevel tail)
+            | ns :: [] -> mergeRow ns :: []
+            | ns :: ss :: tail -> mergeRows ns ss :: (mergeAll tail)
         let rec build = function
             | [] -> Empty
             | [[n]] -> n
-            | ns :: nss -> build (makeOneLevel (ns :: nss))
+            | nss -> build (mergeAll nss)
         let toList = Seq.filter ((<>) Empty) >> Seq.toList
-        build (Seq.toList (Seq.map toList (flatten root)))
+        build (Seq.toList (Seq.filter (List.isEmpty >> not) (Seq.map toList (flatten root))))

@@ -421,7 +421,7 @@ module QuadRope =
             if cond() then
                 More node
             else
-               Done (map f node)
+                Done (map f node)
 
         let mapUntil cond f rope =
             let rec cmap node path =

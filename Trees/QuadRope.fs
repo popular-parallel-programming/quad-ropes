@@ -387,17 +387,21 @@ module QuadRope =
        performed recursively until only one node is left. This is the
        new root. *)
     let balance root =
-        (* TODO: makeNode does not optimize! *)
+        let inline makeTightNode ne nw sw se =
+            if rows nw + rows sw = rows ne + rows se && cols nw + cols ne = cols sw + cols se then
+                vcat (hcat nw ne) (hcat sw se)
+            else
+                makeNode ne nw se se
         let rec mergeRow = function
             | [] -> []
             | [n] -> [n]
-            | nw :: ne :: tail -> hnode nw ne :: mergeRow tail
+            | nw :: ne :: tail -> hcat nw ne :: mergeRow tail
         let rec mergeRows ns ss =
             match ns, ss with
                 | [], [] -> []
                 | nw :: ne :: ntail, sw :: se :: stail ->
-                    makeNode ne nw sw se :: mergeRows ntail stail
-                | nw :: ntail, sw :: stail -> vnode nw sw :: mergeRows ntail stail
+                    makeTightNode ne nw sw se :: mergeRows ntail stail
+                | nw :: ntail, sw :: stail -> vcat nw sw :: mergeRows ntail stail
         let rec mergeAll = function
             | [] -> []
             | ns :: [] -> mergeRow ns :: []

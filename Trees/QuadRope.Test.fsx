@@ -33,6 +33,10 @@ module Test =
             let rope = QuadRope.init h w (*)
             QuadRope.cols rope = w
 
+        static member ``init produces correct values`` (NonNegativeInt h) (NonNegativeInt w) (NonNegativeInt i) (NonNegativeInt j) =
+            (i < h && j < w) ==>
+            lazy ((QuadRope.get (QuadRope.init h w (*)) i j) = i * j)
+
         static member ``hcat width is equal to width sum`` (a : int QuadRope) (b : int QuadRope)  =
             (QuadRope.rows a = QuadRope.rows b) ==>
             lazy (QuadRope.cols a + QuadRope.cols b = QuadRope.cols (QuadRope.hcat a b))

@@ -6,7 +6,7 @@
     <ProjectGuid>{E9239EB0-500E-4740-A308-B783296DDBD7}</ProjectGuid>
     <OutputType>Library</OutputType>
     <RootNamespace>RadixTree</RootNamespace>
-    <AssemblyName>RadixTree</AssemblyName>
+    <AssemblyName>Trees</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -17,6 +17,12 @@
     <ConsolePause>false</ConsolePause>
     <PlatformTarget>
     </PlatformTarget>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="Build" />
+      </CustomCommands>
+    </CustomCommands>
+    <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugSymbols>false</DebugSymbols>
@@ -29,6 +35,7 @@
     <GenerateTailCalls>true</GenerateTailCalls>
     <PlatformTarget>
     </PlatformTarget>
+    <OtherFlags>--mlcompatibility</OtherFlags>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="mscorlib" />

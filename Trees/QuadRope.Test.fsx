@@ -6,8 +6,8 @@
 open FsCheck
 open RadTrees
 
-module Test =
-    let NonNegativeInt = Arb.Default.NonNegativeInt
+(* Registering QuadRope generator. *)
+module Setup =
 
     let genRope =
         gen { let! h = Gen.choose (1, 10)
@@ -19,6 +19,9 @@ module Test =
             Arb.fromGen genRope
 
     Arb.register<QuadRopeGen>()
+
+(* All test functions are members of QuadRopeTest. *)
+module Test =
 
     type QuadRopeTest =
 

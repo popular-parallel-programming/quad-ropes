@@ -158,7 +158,7 @@ module QuadRope =
 
     (* Concatenate two trees horizontally. *)
     let hcat left right =
-        if rows left <> rows right then failwith "Trees must be of same width!"
+        if rows left <> rows right then failwith "Trees must be of same height!"
         match left, right with
             | Leaf ls, Leaf rs when canCopyH ls rs ->
                 Leaf (RadTrees.Array2D.cat2 ls rs) (* Copying small arrays is ok. *)

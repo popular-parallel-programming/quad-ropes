@@ -374,7 +374,7 @@ module QuadRope =
                 makeNode ne nw se se
         let rec mergeRow = function
             | [] -> []
-            | [n] -> [n]
+            | n :: [] -> n :: []
             | nw :: ne :: tail -> hcat nw ne :: mergeRow tail
         let rec mergeRows ns ss =
             match ns, ss with

@@ -22,8 +22,8 @@ module Parallel =
         match path with
             | Top -> p, u
             | NW (ne, path, sw, se) -> splitPath p (makeNode ne u sw se) path
-            | NE (path, nw, sw, se) -> splitPath (hnode nw p) (vnode u (hnode sw se)) path
-            | SW (ne, nw, path, se) -> splitPath (vnode (hnode nw ne) p) (hnode u se) path
+            | NE (path, nw, sw, se) -> splitPath (hcat nw p) (vcat u (hcat sw se)) path
+            | SW (ne, nw, path, se) -> splitPath (vcat (hcat nw ne) p) (hcat u se) path
             | SE (ne, nw, sw, path) -> splitPath (makeNode ne nw sw p) u path
 
     let mapUntilSeq cond f node =

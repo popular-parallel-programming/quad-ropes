@@ -32,30 +32,6 @@ module QuadRope =
         | Leaf _ -> 1
         | Node (d, _, _, _, _, _, _) -> d
 
-    (* Produces a "thin" node. *)
-    let vnode nw sw =
-        match nw, sw with
-            | Empty, Empty -> Empty
-            | Empty, _ -> sw
-            | _, Empty -> nw
-            | _ ->
-                let h = rows nw + rows sw
-                let w = cols nw
-                let d = max (depth nw) (depth sw)
-                Node (d + 1, h, w, Empty, nw, sw, Empty)
-
-    (* Produces a "flat" node. *)
-    let hnode nw ne =
-        match nw, ne with
-            | Empty, Empty -> Empty
-            | Empty, _ -> ne
-            | _, Empty -> nw
-            | _ ->
-                let h = rows nw
-                let w = cols nw + cols ne
-                let d = max (depth nw) (depth ne)
-                Node (d + 1, h, w, ne, nw, Empty, Empty)
-
     let makeLeaf vs =
         if Array2D.length1 vs = 0 || Array2D.length2 vs = 0 then
             Empty
@@ -132,50 +108,65 @@ module QuadRope =
                 let n = Fibonacci.fib (d + 1)
                 n <= h && n <= w
 
-    let inline private canCopyV us ls =
-        Array2D.length1 us + Array2D.length1 ls <= maxSize
-
     (* Concatenate two trees vertically. *)
     let vcat upper lower =
+        let canCopy us ls = Array2D.length1 us + Array2D.length1 ls <= maxSize
         if cols upper <> cols lower then failwith "Trees must be of same width!"
         match upper, lower with
-            | Leaf us, Leaf ls when canCopyV us ls ->
+            | Leaf us, Leaf ls when canCopy us ls ->
                 Leaf (Array2D.cat1 us ls) (* Copying small arrays is ok. *)
-
             | (Node (ud, uh, uw, Leaf unes, Leaf unws, Empty, Empty),
-               Node (ld, lh, lw, Leaf lnes, Leaf lnws, Empty, Empty)) when canCopyV unes lnes
-                                                                        && canCopyV unws lnws ->
-                hnode (Leaf (Array2D.cat1 unws lnws)) (Leaf (Array2D.cat1 unes lnes))
-
+               Node (ld, lh, lw, Leaf lnes, Leaf lnws, Empty, Empty))
+                when canCopy unes lnes && canCopy unws lnws -> (* Copy small arrays of shallow nodes. *)
+               Node (2, uh + lh, uw,
+                     Leaf (Array2D.cat1 unws lnws),
+                     Leaf (Array2D.cat1 unes lnes), Empty, Empty)
             | (Node (ud, uh, uw, une, unw, Empty, Empty),
                Node (ld, lh, lw, lne, lnw, Empty, Empty)) ->
                 Node (max ud ld, uh + lh, uw, une, unw, lnw, lne) (* Concatenation of two "flat" nodes. *)
-
-            | _, _ -> vnode upper lower (* Make a new thin node. *)
-
-    let inline private canCopyH us ls =
-        Array2D.length2 us + Array2D.length2 ls <= maxSize
+            | _ ->
+                let d = max (depth upper) (depth lower)
+                Node (d + 1, rows upper + rows lower, cols upper, Empty, upper, lower, Empty)
 
     (* Concatenate two trees horizontally. *)
     let hcat left right =
+        let canCopy ls rs = Array2D.length2 ls + Array2D.length2 rs <= maxSize
         if rows left <> rows right then failwith "Trees must be of same height!"
         match left, right with
-            | Leaf ls, Leaf rs when canCopyH ls rs ->
+            | Leaf ls, Leaf rs when canCopy ls rs ->
                 Leaf (Array2D.cat2 ls rs) (* Copying small arrays is ok. *)
-
             | (Node (ld, lh, lw, Empty, Leaf lnws, Leaf lsws, Empty),
-               Node (rd, rh, rw, Empty, Leaf rnws, Leaf rsws, Empty)) when canCopyH lnws rnws
-                                                                        && canCopyH lsws rsws ->
-                vnode (Leaf (Array2D.cat2 lnws rnws)) (Leaf (Array2D.cat2 lsws rsws))
-
+               Node (rd, rh, rw, Empty, Leaf rnws, Leaf rsws, Empty))
+                when canCopy lnws rnws && canCopy lsws rsws -> (* Copy small arrays of shallow nodes. *)
+                Node (2, lh, lw + rw,
+                      Empty,
+                      Leaf (Array2D.cat2 lnws rnws),
+                      Leaf (Array2D.cat2 lsws rsws),
+                      Empty)
             | (Node (ld, lh, lw, Empty, lnw, lsw, Empty),
                Node (rd, rh, rw, Empty, rnw, rsw, Empty)) ->
                 Node (max ld rd, lh, lw + rw, rnw, lnw, lsw, rsw) (* Concatenation of two "thin" nodes. *)
-
-            | _, _ -> hnode left right (* Make a new thin node. *)
+            | _ ->
+                let d = max (depth left) (depth right)
+                Node (d + 1, rows left, cols left + cols right, right, left, Empty, Empty)
 
     let makeNode ne nw sw se =
-        vnode (hnode nw ne) (hnode sw se)
+        match ne, nw, sw, se with
+            | _, Empty, Empty, Empty -> ne
+            | Empty, _, Empty, Empty -> nw
+            | Empty, Empty, _, Empty -> sw
+            | Empty, Empty, Empty, _ -> se
+            | _, _, Empty, Empty -> hcat nw ne
+            | Empty, Empty, _, _ -> hcat sw se
+            | Empty, _, _, Empty -> vcat nw sw
+            | _, Empty, Empty, _ -> vcat ne se
+            | _, Empty, _, Empty -> hcat ne sw
+            | Empty, _, Empty, _ -> vcat nw se
+            | _ when rows nw + rows sw = rows ne + rows se ->
+                hcat (vcat nw sw) (vcat ne se)
+            | _ when cols nw + cols ne = cols sw + cols se ->
+                vcat (hcat nw ne) (hcat sw se)
+            | _ -> failwith "Children must join to a regular rope."
 
     let makeSomeNode ne nw sw se =
         let getOrEmpty = Option.getDefault Empty
@@ -200,8 +191,8 @@ module QuadRope =
                     let nsw = split sw (i - rows nw)  j            (h - rows nnw)  w
                     let nse = split se (i - rows ne) (j - cols sw) (h - rows nne) (w - cols nsw)
                     match nne, nsw, nse with
-                        | Empty, _, Empty -> vnode nnw nsw
-                        | _, Empty, Empty -> hnode nnw nne
+                        | Empty, _, Empty -> vcat nnw nsw
+                        | _, Empty, Empty -> hcat nnw nne
                         | _               -> makeNode nne nnw nsw nse
 
     let rec hrev = function

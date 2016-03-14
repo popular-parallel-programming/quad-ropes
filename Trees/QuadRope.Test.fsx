@@ -27,12 +27,11 @@ let rec maintainsTight = function
         maintainsTight ne && maintainsTight nw && maintainsTight sw && maintainsTight se
 
 let access rope (i, j) =
-    let res = try
-                  ignore (QuadRope.get rope i j)
-                  true
-              with
-                  | _ -> false
-    sprintf "(i, j) = (%d, %d)" i j @| res
+    try
+        ignore (QuadRope.get rope i j)
+        true |@ ""
+    with
+        | e  -> false |@ sprintf "(i, j) = (%d, %d)\nrope = %A\nexception = %A" i j rope e
 
 (* Registering QuadRope generator. *)
 module Setup =
@@ -91,8 +90,7 @@ module Test =
             Seq.forall (fun (i, j) -> QuadRope.get a i j = i * j) (makeIndices h w)
 
         static member ``get is always inside bounds`` (a : int QuadRope) =
-            let access (i, j) = try ignore (QuadRope.get a i j); true with | _ -> false
-            Seq.forall id (Seq.map access (makeIndices (QuadRope.rows a) (QuadRope.cols a)))
+            Seq.reduce (.&.) (Seq.map (access a) (makeIndices (QuadRope.rows a) (QuadRope.cols a)))
 
         (* The width of hcat of two ropes is equal to the sum of their widths. *)
         static member ``hcat width is equal to width sum`` (a : int QuadRope) (b : int QuadRope)  =
@@ -139,6 +137,5 @@ module Test =
             (QuadRope.cols a = QuadRope.cols b) ==>
             lazy (let ab = QuadRope.vcat a b
                   Seq.reduce (.&.) (Seq.map (access ab) (makeIndices (QuadRope.rows ab) (QuadRope.cols ab))))
-
 
     Check.QuickAll<QuadRopeTest>()

@@ -108,7 +108,7 @@ module Test =
                       v .=. QuadRope.get b i (j - QuadRope.cols a))
 
         static member ``get accesses vcat correctly`` (a : int QuadRope) (b : int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
-            let h = QuadRope.rows a + QuadRope.cols b
+            let h = QuadRope.rows a + QuadRope.rows b
             let w = QuadRope.cols a
             (i < h && j < w && QuadRope.cols a = QuadRope.cols b) ==>
             lazy (let ab = QuadRope.vcat a b

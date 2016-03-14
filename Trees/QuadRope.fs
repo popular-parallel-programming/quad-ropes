@@ -74,15 +74,15 @@ module QuadRope =
                 if withinRange nw i j then
                     get nw i j
                 else
-                    let j0 = j - (cols nw)
+                    let j0 = j - cols nw
                     if withinRange ne i j0 then
                         get ne i j0
                     else
-                        let i0 = i - (rows nw)
+                        let i0 = i - rows nw
                         if withinRange sw i0 j then
                             get sw i0 j
                         else
-                            get se i0 j0 (* Either contains or ends in out-of-bounds. *)
+                            get se (i - rows ne) (j - cols sw) (* Either contains or ends in out-of-bounds. *)
 
     (* Update a tree location wihtout modifying the original tree. *)
     let rec set root i j v =
@@ -101,7 +101,7 @@ module QuadRope =
                         if withinRange sw i0 j then
                             Node (d, h, w, ne, nw, set sw i0 j v, se)
                         else
-                            Node (d, h, w, ne, nw, sw, set se i0 j0 v)
+                            Node (d, h, w, ne, nw, sw, set se (i - rows ne) (j - cols sw) v)
 
     (* Write to a tree location destructively. *)
     let rec write root i j v =
@@ -120,7 +120,7 @@ module QuadRope =
                         if withinRange sw i0 j then
                             write sw i0 j v
                         else
-                            write se i0 j0 v
+                            write se (i - rows ne) (j - cols sw) v
 
     let isBalanced = function
         | Empty
@@ -161,7 +161,7 @@ module QuadRope =
         if rows left <> rows right then failwith "Trees must be of same height!"
         match left, right with
             | Leaf ls, Leaf rs when canCopyH ls rs ->
-                Leaf (RadTrees.Array2D.cat2 ls rs) (* Copying small arrays is ok. *)
+                Leaf (Array2D.cat2 ls rs) (* Copying small arrays is ok. *)
 
             | (Node (ld, lh, lw, Empty, Leaf lnws, Leaf lsws, Empty),
                Node (rd, rh, rw, Empty, Leaf rnws, Leaf rsws, Empty)) when canCopyH lnws rnws

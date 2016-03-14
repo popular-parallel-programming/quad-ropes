@@ -39,7 +39,7 @@ module QuadRope =
             Leaf vs
 
     let inline private withinRange root i j =
-        i < rows root && j < cols root
+        0 <= i && i < rows root && 0 <= j && j < cols root
 
     (* Get the value of a location in the tree. *)
     let rec get root i j =

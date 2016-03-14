@@ -113,14 +113,14 @@ module Test =
             let h = QuadRope.rows a
             let w = QuadRope.cols a
             (i < h && j < w) ==>
-            lazy (QuadRope.get (QuadRope.hrev a) i j = QuadRope.get a i (w - j - 1))
+            lazy (QuadRope.get (QuadRope.hrev a) i j .=. QuadRope.get a i ((w - 1) - j))
 
         (* vrec puts values in the correct position and get can access them. *)
         static member ``get accesses vrev correctly`` (a: int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
             let h = QuadRope.rows a
             let w = QuadRope.cols a
             (i < h && j < w) ==>
-            lazy (QuadRope.get (QuadRope.vrev a) i j .=. QuadRope.get a (h - i - 1) j)
+            lazy (QuadRope.get (QuadRope.vrev a) i j .=. QuadRope.get a ((h - 1) - i) j)
 
         static member ``get accesses hcat correctly`` (a : int QuadRope) (b : int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
             let h = QuadRope.rows a

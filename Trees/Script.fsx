@@ -1,6 +1,7 @@
 #load "Utils.fs"
 #load "RadixTree2D.fs"
 #load "QuadRope.fs"
+#load "QuadRope.Parallel.fs"
 
 open RadTrees
 
@@ -16,13 +17,12 @@ let hcat = QuadRope.hcat
 let vcat = QuadRope.vcat
 let isBalanced = QuadRope.isBalanced
 
-let iterate = QuadRope.Path.iterate
 let start = QuadRope.Path.start
 
 let next (a, b) =
-    match QuadRope.Path.next a b with
-        | QuadRope.Path.Done rp -> rp, QuadRope.Top
-        | QuadRope.Path.More (rp, path) -> rp, path
+    match QuadRope.Parallel.next a b with
+        | QuadRope.Parallel.Done rp -> rp, QuadRope.Top
+        | QuadRope.Parallel.More (rp, path) -> rp, path
 
 let balance = QuadRope.balance
 let flatten = QuadRope.flatten

@@ -26,6 +26,14 @@ let rec maintainsTight = function
     | Node (_, _, _, ne, nw, sw, se) ->
         maintainsTight ne && maintainsTight nw && maintainsTight sw && maintainsTight se
 
+let access rope (i, j) =
+    let res = try
+                  ignore (QuadRope.get rope i j)
+                  true
+              with
+                  | _ -> false
+    sprintf "(i, j) = (%d, %d)" i j @| res
+
 (* Registering QuadRope generator. *)
 module Setup =
 
@@ -125,24 +133,12 @@ module Test =
         static member ``get accesses hcat correctly`` (a : int QuadRope) (b : int QuadRope) =
             (QuadRope.rows a = QuadRope.rows b) ==>
             lazy (let ab = QuadRope.hcat a b
-                  let access (i, j) =
-                      let v = QuadRope.get ab i j
-                      if j < QuadRope.cols a then
-                          v .=. QuadRope.get a i j
-                      else
-                          v .=. QuadRope.get b i (j - QuadRope.cols a)
-                  Seq.reduce (.&.) (Seq.map access (makeIndices (QuadRope.rows ab) (QuadRope.cols ab))))
+                  Seq.reduce (.&.) (Seq.map (access ab) (makeIndices (QuadRope.rows ab) (QuadRope.cols ab))))
 
         static member ``get accesses vcat correctly`` (a : int QuadRope) (b : int QuadRope) =
             (QuadRope.cols a = QuadRope.cols b) ==>
             lazy (let ab = QuadRope.vcat a b
-                  let access (i, j) =
-                      let v = QuadRope.get ab i j
-                      if i < QuadRope.rows a then
-                          v .=. QuadRope.get a i j
-                      else
-                          v .=. QuadRope.get b (i - QuadRope.rows a) j
-                  Seq.reduce (.&.) (Seq.map access (makeIndices (QuadRope.rows ab) (QuadRope.cols ab))))
+                  Seq.reduce (.&.) (Seq.map (access ab) (makeIndices (QuadRope.rows ab) (QuadRope.cols ab))))
 
 
     Check.QuickAll<QuadRopeTest>()

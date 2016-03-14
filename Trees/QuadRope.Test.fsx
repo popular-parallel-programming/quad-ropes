@@ -122,27 +122,28 @@ module Test =
             (i < h && j < w) ==>
             lazy (QuadRope.get (QuadRope.vrev a) i j .=. QuadRope.get a (h - i - 1) j)
 
-        static member ``get accesses hcat correctly`` (a : int QuadRope) (b : int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
-            let h = QuadRope.rows a
-            let w = QuadRope.cols a + QuadRope.cols b
-            (i < h && j < w && QuadRope.rows a = QuadRope.rows b) ==>
+        static member ``get accesses hcat correctly`` (a : int QuadRope) (b : int QuadRope) =
+            (QuadRope.rows a = QuadRope.rows b) ==>
             lazy (let ab = QuadRope.hcat a b
-                  let v = QuadRope.get ab i j
-                  if j < QuadRope.cols a then
-                      v .=. QuadRope.get a i j
-                  else
-                      v .=. QuadRope.get b i (j - QuadRope.cols a))
+                  let indices = makeIndices (QuadRope.rows ab) (QuadRope.cols ab)
+                  let access (i, j) =
+                      let v = QuadRope.get ab i j
+                      if j < QuadRope.cols a then
+                          v .=. QuadRope.get a i j
+                      else
+                          v .=. QuadRope.get b i (j - QuadRope.cols a)
+                  Seq.reduce (.&.) (Seq.map access indices))
 
-        static member ``get accesses vcat correctly`` (a : int QuadRope) (b : int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
-            let h = QuadRope.rows a + QuadRope.rows b
-            let w = QuadRope.cols a
-            (i < h && j < w && QuadRope.cols a = QuadRope.cols b) ==>
+        static member ``get accesses vcat correctly`` (a : int QuadRope) (b : int QuadRope) =
+            (QuadRope.cols a = QuadRope.cols b) ==>
             lazy (let ab = QuadRope.vcat a b
-                  let v = QuadRope.get ab i j
-                  if i < QuadRope.rows a then
-                      v .=. QuadRope.get a i j
-                  else
-                      v .=. QuadRope.get b (i - QuadRope.rows a) j)
-
+                  let indices = makeIndices (QuadRope.rows ab) (QuadRope.cols ab)
+                  let access (i, j) =
+                      let v = QuadRope.get ab i j
+                      if i < QuadRope.rows a then
+                          v .=. QuadRope.get a i j
+                      else
+                          v .=. QuadRope.get b (i - QuadRope.rows a) j
+                  Seq.reduce (.&.) (Seq.map access indices))
 
     Check.QuickAll<QuadRopeTest>()

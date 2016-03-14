@@ -207,12 +207,16 @@ module QuadRope =
     let rec hrev = function
         | Empty -> Empty
         | Leaf vs -> Leaf (Array2D.rev2 vs)
+        | Node (d, h, w, Empty, nw, sw, Empty) ->
+            Node (d, h, w, Empty, hrev nw, hrev sw, Empty)
         | Node (d, h, w, ne, nw, sw, se) ->
             Node (d, h, w, hrev nw, hrev ne, hrev se, hrev sw)
 
     let rec vrev = function
         | Empty -> Empty
         | Leaf vs -> Leaf (Array2D.rev1 vs)
+        | Node (d, h, w, ne, nw, Empty, Empty) ->
+            Node (d, h, w, vrev ne, vrev nw, Empty, Empty)
         | Node (d, h, w, ne, nw, sw, se) ->
             Node (d, h, w, vrev se, vrev sw, vrev nw, vrev ne)
 

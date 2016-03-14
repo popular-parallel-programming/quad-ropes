@@ -9,6 +9,11 @@ open RadTrees
 let (.=.) l r =
         l = r |@ sprintf "%A, %A" l r
 
+let makeIndices h w =
+    seq { for i in 0..h - 1 do
+          for j in 0..w - 1 ->
+          i, j }
+
 let rec maintainsTight = function
     | Empty
     | Leaf _ -> true
@@ -73,9 +78,13 @@ module Test =
             QuadRope.cols rope = w
 
         (* Wavefront initialization with multiplication produces correct values at positions. *)
-        static member ``init produces correct values`` (NonNegativeInt h) (NonNegativeInt w) (NonNegativeInt i) (NonNegativeInt j) =
-            (i < h && j < w) ==>
-            lazy ((QuadRope.get (QuadRope.init h w (*)) i j) = i * j)
+        static member ``init produces correct values`` (NonNegativeInt h) (NonNegativeInt w) =
+            let a = QuadRope.init h w (*)
+            Seq.forall (fun (i, j) -> QuadRope.get a i j = i * j) (makeIndices h w)
+
+        static member ``get is always inside bounds`` (a : int QuadRope) =
+            let access (i, j) = try ignore (QuadRope.get a i j); true with | _ -> false
+            Seq.forall id (Seq.map access (makeIndices (QuadRope.rows a) (QuadRope.cols a)))
 
         (* The width of hcat of two ropes is equal to the sum of their widths. *)
         static member ``hcat width is equal to width sum`` (a : int QuadRope) (b : int QuadRope)  =

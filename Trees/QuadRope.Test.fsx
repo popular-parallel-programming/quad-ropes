@@ -9,6 +9,19 @@ open RadTrees
 let (.=.) l r =
         l = r |@ sprintf "%A, %A" l r
 
+let rec maintainsTight a =
+    match a with
+        | Empty
+        | Leaf _ -> true
+        | Node (_, _, _, ne, nw, Empty, Empty) ->
+            maintainsTight ne && maintainsTight nw
+        | Node (_, _, _, Empty, nw, sw, Empty) ->
+            maintainsTight nw && maintainsTight sw
+        | Node (_, _, _, _, Empty, _, _)
+        | Node (_, _, _, _, _, Empty, _) -> false
+        | Node (_, _, _, ne, nw, sw, se) ->
+            maintainsTight ne && maintainsTight nw && maintainsTight sw && maintainsTight se
+
 (* Registering QuadRope generator. *)
 module Setup =
 
@@ -62,6 +75,12 @@ module Test =
         static member ``vcat height is equal to height sum`` (a : int QuadRope) (b : int QuadRope)  =
             (QuadRope.cols a = QuadRope.cols b) ==>
             lazy (QuadRope.rows a + QuadRope.rows b = QuadRope.rows (QuadRope.vcat a b))
+
+        static member ``hrev maintains uper-left invariant`` (a: int QuadRope) =
+            maintainsTight (QuadRope.hrev a)
+
+        static member ``vrev maintains uper-left invariant`` (a: int QuadRope) =
+            maintainsTight (QuadRope.vrev a)
 
         (* hrev puts values in the correct position and get can access them. *)
         static member ``get accesses hrev correctly`` (a: int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =

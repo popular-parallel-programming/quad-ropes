@@ -102,6 +102,12 @@ module Test =
         static member ``vrev maintains uper-left invariant`` (a: int QuadRope) =
             maintainsTight (QuadRope.vrev a)
 
+        static member ``hrev of hrev is identity`` (a : int QuadRope) =
+            a = QuadRope.hrev (QuadRope.hrev a)
+
+        static member ``vrev of vrev is identity`` (a : int QuadRope) =
+            a = QuadRope.vrev (QuadRope.vrev a)
+
         (* hrev puts values in the correct position and get can access them. *)
         static member ``get accesses hrev correctly`` (a: int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
             let h = QuadRope.rows a

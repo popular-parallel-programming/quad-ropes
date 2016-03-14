@@ -6,6 +6,9 @@
 open FsCheck
 open RadTrees
 
+let (.=.) l r =
+        l = r |@ sprintf "%A, %A" l r
+
 (* Registering QuadRope generator. *)
 module Setup =
 

@@ -9,18 +9,17 @@ open RadTrees
 let (.=.) l r =
         l = r |@ sprintf "%A, %A" l r
 
-let rec maintainsTight a =
-    match a with
-        | Empty
-        | Leaf _ -> true
-        | Node (_, _, _, ne, nw, Empty, Empty) ->
-            maintainsTight ne && maintainsTight nw
-        | Node (_, _, _, Empty, nw, sw, Empty) ->
-            maintainsTight nw && maintainsTight sw
-        | Node (_, _, _, _, Empty, _, _)
-        | Node (_, _, _, _, _, Empty, _) -> false
-        | Node (_, _, _, ne, nw, sw, se) ->
-            maintainsTight ne && maintainsTight nw && maintainsTight sw && maintainsTight se
+let rec maintainsTight = function
+    | Empty
+    | Leaf _ -> true
+    | Node (_, _, _, ne, nw, Empty, Empty) ->
+        maintainsTight ne && maintainsTight nw
+    | Node (_, _, _, Empty, nw, sw, Empty) ->
+        maintainsTight nw && maintainsTight sw
+    | Node (_, _, _, _, Empty, _, _)
+    | Node (_, _, _, _, _, Empty, _) -> false
+    | Node (_, _, _, ne, nw, sw, se) ->
+        maintainsTight ne && maintainsTight nw && maintainsTight sw && maintainsTight se
 
 (* Registering QuadRope generator. *)
 module Setup =

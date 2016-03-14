@@ -63,18 +63,41 @@ module Test =
             (QuadRope.cols a = QuadRope.cols b) ==>
             lazy (QuadRope.rows a + QuadRope.rows b = QuadRope.rows (QuadRope.vcat a b))
 
-        static member ``get jumps horizontal leaves correctly`` (a : int QuadRope) (b : int QuadRope) =
-            (QuadRope.rows a = QuadRope.rows b) ==>
-            lazy (let ab = QuadRope.hcat a (QuadRope.vrev b)
-                  let i = QuadRope.cols ab - 1
-                  let j = QuadRope.rows ab - 1
-                  QuadRope.get ab i j)
+        (* hrev puts values in the correct position and get can access them. *)
+        static member ``get accesses hrev correctly`` (a: int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
+            let h = QuadRope.rows a
+            let w = QuadRope.cols a
+            (i < h && j < w) ==>
+            lazy (QuadRope.get (QuadRope.hrev a) i j = QuadRope.get a i (w - j - 1))
 
-        static member ``get jumps vertical leaves correctly`` (a : int QuadRope) (b : int QuadRope) =
-            (QuadRope.cols a = QuadRope.cols b) ==>
-            lazy (let ab = QuadRope.vcat a (QuadRope.hrev b)
-                  let i = QuadRope.cols ab - 1
-                  let j = QuadRope.rows ab - 1
-                  QuadRope.get ab i j)
+        (* vrec puts values in the correct position and get can access them. *)
+        static member ``get accesses vrev correctly`` (a: int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
+            let h = QuadRope.rows a
+            let w = QuadRope.cols a
+            (i < h && j < w) ==>
+            lazy (QuadRope.get (QuadRope.vrev a) i j .=. QuadRope.get a (h - i - 1) j)
+
+        static member ``get accesses hcat correctly`` (a : int QuadRope) (b : int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
+            let h = QuadRope.rows a
+            let w = QuadRope.cols a + QuadRope.cols b
+            (i < h && j < w && QuadRope.rows a = QuadRope.rows b) ==>
+            lazy (let ab = QuadRope.hcat a b
+                  let v = QuadRope.get ab i j
+                  if j < QuadRope.cols a then
+                      v .=. QuadRope.get a i j
+                  else
+                      v .=. QuadRope.get b i (j - QuadRope.cols a))
+
+        static member ``get accesses vcat correctly`` (a : int QuadRope) (b : int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
+            let h = QuadRope.rows a + QuadRope.cols b
+            let w = QuadRope.cols a
+            (i < h && j < w && QuadRope.cols a = QuadRope.cols b) ==>
+            lazy (let ab = QuadRope.vcat a b
+                  let v = QuadRope.get ab i j
+                  if i < QuadRope.rows a then
+                      v .=. QuadRope.get a i j
+                  else
+                      v .=. QuadRope.get b (i - QuadRope.rows a) j)
+
 
     Check.QuickAll<QuadRopeTest>()

@@ -76,18 +76,21 @@ module Test =
 
         (* Hight of generated rope is equal to height parameter. *)
         static member ``init produces correct height`` (NonNegativeInt h) (NonNegativeInt w) =
-            let rope = QuadRope.init h w (*)
-            QuadRope.rows rope = h
+            (0 < h && 0 < w) ==>
+            lazy (let rope = QuadRope.init h w (*)
+                  QuadRope.rows rope = h)
 
         (* Width of generated rope is equal to width parameter. *)
         static member ``init produces correct width`` (NonNegativeInt h) (NonNegativeInt w) =
-            let rope = QuadRope.init h w (*)
-            QuadRope.cols rope = w
+            (0 < h && 0 < w) ==>
+            lazy (let rope = QuadRope.init h w (*)
+                  QuadRope.cols rope = w)
 
         (* Wavefront initialization with multiplication produces correct values at positions. *)
         static member ``init produces correct values`` (NonNegativeInt h) (NonNegativeInt w) =
-            let a = QuadRope.init h w (*)
-            Seq.forall (fun (i, j) -> QuadRope.get a i j = i * j) (makeIndices h w)
+            (0 < h && 0 < w) ==>
+            lazy (let rope = QuadRope.init h w (*)
+                  Seq.forall (fun (i, j) -> QuadRope.get rope i j = i * j) (makeIndices h w))
 
         static member ``get is always inside bounds`` (a : int QuadRope) =
             Seq.reduce (.&.) (Seq.map (access a) (makeIndices (QuadRope.rows a) (QuadRope.cols a)))

@@ -214,28 +214,27 @@ module QuadRope =
 
     (* Generate a new tree without any intermediate values. *)
     let init h w f =
-        let rec init0 h0 w0 h1 w1 f =
+        let rec init0 h0 w0 h1 w1 =
             let h = h1 - h0
             let w = w1 - w0
-            let hpiv = h0 + h / 2
-            let wpiv = w0 + w / 2
-            if maxSize < h && maxSize < w then
-                let nw = init0 h0 w0 hpiv wpiv f
-                let ne = init0 h0 wpiv hpiv w1 f
-                let sw = init0 hpiv w0 h1 wpiv f
-                let se = init0 hpiv wpiv h1 w1 f
-                makeNode ne nw sw se
-            else if maxSize < h then
-                let nw = init0 h0 w0 hpiv w1 f
-                let sw = init0 hpiv w0 h1 w1 f
-                vcat nw sw
-            else if maxSize < w then
-                let nw = init0 h0 w0 h1 wpiv f
-                let ne = init0 h0 wpiv h1 w1 f
-                hcat nw ne
+            if h <= 0 || w <= 0 then
+                Empty
+            else if h <= maxSize && w <= maxSize then
+                Leaf (Array2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
+            else if w <= maxSize then
+                let hpv = h0 + h / 2
+                vcat (init0 h0 w0 hpv w1) (init0 hpv w0 h1 w1)
+            else if h <= maxSize then
+                let wpv = w0 + w / 2
+                hcat (init0 h0 w0 h1 wpv) (init0 h0 wpv h1 w1)
             else
-                Leaf (Array2D.init h w (fun i j -> f (i + h0) (j + w0)))
-        init0 0 0 h w f
+                let hpv = h0 + h / 2
+                let wpv = w0 + w / 2
+                makeNode (init0 h0 wpv hpv w1) (* NE *)
+                         (init0 h0 w0 hpv wpv) (* NW *)
+                         (init0 hpv w0 h1 wpv) (* SW *)
+                         (init0 hpv wpv h1 w1) (* SE *)
+        init0 0 0 h w
 
     let fromArray vss =
         init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)

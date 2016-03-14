@@ -14,11 +14,21 @@ module Setup =
               let! w = Gen.choose (1, 10)
               return QuadRope.init h w (*) }
 
+    let genWeirdRope =
+        Gen.oneof (seq { yield genRope;
+                         yield gen { let! rope = genRope;
+                                     return QuadRope.hrev rope };
+                         yield gen { let! rope = genRope;
+                                     return QuadRope.vrev rope };
+                         yield gen { let! rope = genRope
+                                     return QuadRope.hrev (QuadRope.vrev rope) }})
+
     type QuadRopeGen =
         static member QuadRope () =
-            Arb.fromGen genRope
+            Arb.fromGen genWeirdRope
 
     Arb.register<QuadRopeGen>()
+
 
 (* All test functions are members of QuadRopeTest. *)
 module Test =

@@ -45,4 +45,18 @@ module Test =
             (QuadRope.cols a = QuadRope.cols b) ==>
             lazy (QuadRope.rows a + QuadRope.rows b = QuadRope.rows (QuadRope.vcat a b))
 
+        static member ``get jumps horizontal leaves correctly`` (a : int QuadRope) (b : int QuadRope) =
+            (QuadRope.rows a = QuadRope.rows b) ==>
+            lazy (let ab = QuadRope.hcat a (QuadRope.vrev b)
+                  let i = QuadRope.cols ab - 1
+                  let j = QuadRope.rows ab - 1
+                  QuadRope.get ab i j)
+
+        static member ``get jumps vertical leaves correctly`` (a : int QuadRope) (b : int QuadRope) =
+            (QuadRope.cols a = QuadRope.cols b) ==>
+            lazy (let ab = QuadRope.vcat a (QuadRope.hrev b)
+                  let i = QuadRope.cols ab - 1
+                  let j = QuadRope.rows ab - 1
+                  QuadRope.get ab i j)
+
     Check.QuickAll<QuadRopeTest>()

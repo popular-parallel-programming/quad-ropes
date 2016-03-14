@@ -38,22 +38,27 @@ module Test =
 
     type QuadRopeTest =
 
+        (* Hight of generated rope is equal to height parameter. *)
         static member ``init produces correct height`` (NonNegativeInt h) (NonNegativeInt w) =
             let rope = QuadRope.init h w (*)
             QuadRope.rows rope = h
 
+        (* Width of generated rope is equal to width parameter. *)
         static member ``init produces correct width`` (NonNegativeInt h) (NonNegativeInt w) =
             let rope = QuadRope.init h w (*)
             QuadRope.cols rope = w
 
+        (* Wavefront initialization with multiplication produces correct values at positions. *)
         static member ``init produces correct values`` (NonNegativeInt h) (NonNegativeInt w) (NonNegativeInt i) (NonNegativeInt j) =
             (i < h && j < w) ==>
             lazy ((QuadRope.get (QuadRope.init h w (*)) i j) = i * j)
 
+        (* The width of hcat of two ropes is equal to the sum of their widths. *)
         static member ``hcat width is equal to width sum`` (a : int QuadRope) (b : int QuadRope)  =
             (QuadRope.rows a = QuadRope.rows b) ==>
             lazy (QuadRope.cols a + QuadRope.cols b = QuadRope.cols (QuadRope.hcat a b))
 
+        (* The height of vcat of two ropes is equal to the sum of their heights. *)
         static member ``vcat height is equal to height sum`` (a : int QuadRope) (b : int QuadRope)  =
             (QuadRope.cols a = QuadRope.cols b) ==>
             lazy (QuadRope.rows a + QuadRope.rows b = QuadRope.rows (QuadRope.vcat a b))

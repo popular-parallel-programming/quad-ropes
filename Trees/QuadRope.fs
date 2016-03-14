@@ -119,8 +119,9 @@ module QuadRope =
                Node (ld, lh, lw, Leaf lnes, Leaf lnws, Empty, Empty))
                 when canCopy unes lnes && canCopy unws lnws -> (* Copy small arrays of shallow nodes. *)
                Node (2, uh + lh, uw,
+                     Leaf (Array2D.cat1 unes lnes),
                      Leaf (Array2D.cat1 unws lnws),
-                     Leaf (Array2D.cat1 unes lnes), Empty, Empty)
+                     Empty, Empty)
             | (Node (ud, uh, uw, une, unw, Empty, Empty),
                Node (ld, lh, lw, lne, lnw, Empty, Empty)) ->
                 Node (max ud ld, uh + lh, uw, une, unw, lnw, lne) (* Concatenation of two "flat" nodes. *)

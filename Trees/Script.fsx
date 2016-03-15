@@ -24,8 +24,13 @@ let next (a, b) =
         | QuadRope.Parallel.Done rp -> rp, QuadRope.Top
         | QuadRope.Parallel.More (rp, path) -> rp, path
 
-let balance = QuadRope.balance
-let flatten = QuadRope.flatten
+let walkEast = QuadRope.Path.walkEast
+let walkSouth = QuadRope.Path.walkSouth
+
+let up = QuadRope.Path.up
+let down = QuadRope.Path.down
+let east = QuadRope.Path.east
+let south = QuadRope.Path.south
 
 let a = init 5 5 (*)
 let b = init 5 10 (*)

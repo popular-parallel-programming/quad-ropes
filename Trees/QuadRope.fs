@@ -380,32 +380,3 @@ module QuadRope =
                 | Some b -> Some (a, b)
         let makeRow = Seq.unfold (step Path.walkEast) >> Seq.map fst
         Seq.map makeRow (Seq.unfold (step Path.walkSouth) (Path.start root))
-
-    (* Balancing first flattens the rope lazily such that every leaf
-       is placed in a list of lists at the same position it would have
-       we'd see the rope from above. This grid contains no empty
-       leaves. We can then pairwise in each direction build new nodes,
-       which results in a new list of lists of nodes. This is
-       performed recursively until only one node is left. This is the
-       new root. *)
-    let balance root =
-        let rec mergeRow = function
-            | [] -> []
-            | n :: [] -> n :: []
-            | nw :: ne :: tail -> hcat nw ne :: mergeRow tail
-        let rec mergeRows ns ss =
-            match ns, ss with
-                | [], [] -> []
-                | nw :: ne :: ntail, sw :: se :: stail ->
-                    makeNode ne nw sw se :: mergeRows ntail stail
-                | nw :: ntail, sw :: stail -> vcat nw sw :: mergeRows ntail stail
-        let rec mergeAll = function
-            | [] -> []
-            | ns :: [] -> mergeRow ns :: []
-            | ns :: ss :: tail -> mergeRows ns ss :: (mergeAll tail)
-        let rec build = function
-            | [] -> Empty
-            | [[n]] -> n
-            | nss -> build (mergeAll nss)
-        let toList = Seq.filter ((<>) Empty) >> Seq.toList
-        build (Seq.toList (Seq.filter (List.isEmpty >> not) (Seq.map toList (flatten root))))

@@ -145,38 +145,43 @@ module QuadRope =
 
     (* Concatenate two trees horizontally. *)
     let hcat left right =
-        let canCopy ls rs =
+        let inline canCopy ls rs =
             Array2D.length1 ls = Array2D.length1 rs && Array2D.length2 ls + Array2D.length2 rs <= maxWidth
-        if rows left <> rows right then failwith "Trees must be of same height!"
-        match left, right with
-            (* Copying small arrays is ok. *)
-            | Leaf ls, Leaf rs when canCopy ls rs ->
-                Leaf (Array2D.cat2 ls rs)
-            (* Copy small arrays of shallow nodes. *)
-            | (Node (ld, lh, lw, Empty, Leaf lnws, Leaf lsws, Empty),
-               Node (rd, rh, rw, Empty, Leaf rnws, Leaf rsws, Empty))
-               when canCopy lnws rnws && canCopy lsws rsws ->
-                Node (2, lh, lw + rw,
-                      Empty,
-                      Leaf (Array2D.cat2 lnws rnws),
-                      Leaf (Array2D.cat2 lsws rsws),
-                      Empty)
-            (* Copy outer small arrays. *)
-            | (Node (ld, lh, lw, Leaf lnes, lnw, lsw, Leaf lses),
-               Node (rd, rh, rw, Empty, Leaf rnws, Leaf rsws, Empty))
-               when canCopy lnes rnws && canCopy lses rsws ->
-                Node (ld, lh, lw + rw,
-                      Leaf (Array2D.cat2 lnes rnws),
-                      lnw,
-                      lsw,
-                      Leaf (Array2D.cat2 lses rsws))
-            (* Concatenation of two "thin" nodes. *)
-            | (Node (ld, lh, lw, Empty, lnw, lsw, Empty),
-               Node (rd, rh, rw, Empty, rnw, rsw, Empty)) ->
-                Node (max ld rd, lh, lw + rw, rnw, lnw, lsw, rsw)
-            | _ ->
-                let d = max (depth left) (depth right)
-                Node (d + 1, rows left, cols left + cols right, right, left, Empty, Empty)
+        let rec hcat0 left right =
+            match left, right with
+                | Leaf ls, Leaf rs when canCopy ls rs ->
+                    Leaf (Array2D.cat2 ls rs)
+
+                | Node (ld, lh, lw, lne, lnw, Empty, Empty), r ->
+                        let ne = hcat0 lne r
+                        Node (max ld (depth ne) + 1, lh, lw + cols r, ne, lnw, Empty, Empty)
+
+                | l, Node (rd, rh, rw, rne, rnw, Empty, Empty) ->
+                        let nw = hcat0 l rnw
+                        Node (max rd (depth nw), rh, cols l + rw, rne, nw, Empty, Empty)
+
+                | (Node (ld, lh, lw, lne, lnw, lsw, lse),
+                   Node (rd, rh, rw, Empty, rnw, rsw, Empty))
+                    when rows lne = rows rnw && rows lse = rows rsw ->
+                        Node (max ld rd + 1, lh, lw + rw, hcat0 lne rnw, lnw, lsw, hcat0 lse rsw)
+
+                | (Node (ld, lh, lw, Empty, lnw, lsw, Empty),
+                   Node (rd, rh, rw, rne, rnw, rsw, rse))
+                    when rows lnw = rows rnw && rows lsw = rows rsw ->
+                        Node (max ld rd, lh, lw + rw, rne, hcat0 lnw rnw, hcat0 lsw rsw, rse)
+
+                | (Node (ld, lh, lw, Empty, lnw, lsw, Empty),
+                   Node (rd, rh, rw, Empty, rnw, rsw, Empty)) ->
+                    Node (max ld rd, lh, lw + rw, rnw, lnw, lsw, rsw)
+
+                | _ ->
+                    let d = max (depth left) (depth right)
+                    Node (d + 1, rows left, cols left + cols right, right, left, Empty, Empty)
+
+        if rows left <> rows right then
+            failwith "Trees must be of same height!"
+        else
+            hcat0 left right
 
     let makeNode ne nw sw se =
         match ne, nw, sw, se with

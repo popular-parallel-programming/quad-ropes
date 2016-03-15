@@ -116,15 +116,3 @@ module QuadRopeTest =
             let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
             Seq.reduce (.&.) (Seq.map (fun (i, j) -> QuadRope.get a i j .=. QuadRope.get b i j) indices)
         *)
-
-    let test () =
-        RadTrees.Test.Gen.register() |> ignore
-        Check.QuickAll<QuadRopeTest>()
-
-    [<EntryPoint>]
-    let main args =
-        try
-            test()
-            0
-        with
-            | e -> printfn "%A" e; 1

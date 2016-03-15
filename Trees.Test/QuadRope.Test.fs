@@ -101,18 +101,3 @@ module QuadRopeTest =
             (QuadRope.cols a = QuadRope.cols b) ==>
             lazy (let ab = QuadRope.vcat a b
                   Seq.reduce (.&.) (Seq.map (access ab) (makeIndices (QuadRope.rows ab) (QuadRope.cols ab))))
-
-        static member ``flatten yields correct number of elements`` (a : int QuadRope) =
-            let count = function
-                | Leaf vs -> Array2D.length1 vs * Array2D.length2 vs
-                | _ -> 0
-            let n = Seq.length (QuadRope.toSeq a)
-            let n' = Seq.sum (Seq.map count (Seq.concat (QuadRope.flatten a)))
-            n .=. n'
-
-        (*
-        static member ``balance retains rope structure`` (a : int QuadRope) =
-            let b = QuadRope.balance a
-            let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
-            Seq.reduce (.&.) (Seq.map (fun (i, j) -> QuadRope.get a i j .=. QuadRope.get b i j) indices)
-        *)

@@ -7,7 +7,7 @@ paket:
 update:
 	mono .paket/paket.exe update
 
-test:
-	fsharpi --mlcompatibility --exec Trees/QuadRope.Test.fsx
+test: build
+	mono Trees.Test/bin/Debug/Trees.Test.exe
 
 all: paket build

@@ -115,18 +115,30 @@ module QuadRope =
             Array2D.length2 us = Array2D.length2 ls && Array2D.length1 us + Array2D.length1 ls <= maxHeight
         if cols upper <> cols lower then failwith "Trees must be of same width!"
         match upper, lower with
+            (* Copying small arrays is ok. *)
             | Leaf us, Leaf ls when canCopy us ls ->
-                Leaf (Array2D.cat1 us ls) (* Copying small arrays is ok. *)
+                Leaf (Array2D.cat1 us ls)
+            (* Copy small arrays of shallow nodes. *)
             | (Node (ud, uh, uw, Leaf unes, Leaf unws, Empty, Empty),
                Node (ld, lh, lw, Leaf lnes, Leaf lnws, Empty, Empty))
-                when canCopy unes lnes && canCopy unws lnws -> (* Copy small arrays of shallow nodes. *)
+               when canCopy unes lnes && canCopy unws lnws ->
                Node (2, uh + lh, uw,
                      Leaf (Array2D.cat1 unes lnes),
                      Leaf (Array2D.cat1 unws lnws),
                      Empty, Empty)
+            (* Copy outer small arrays. *)
+            | (Node (ud, uh, uw, une, unw, Leaf usws, Leaf uses),
+               Node (ld, lh, lw, Leaf lnes, Leaf lnws, Empty, Empty))
+               when canCopy usws lnes && canCopy uses lnes ->
+               Node (ud, uh + lh, uw,
+                     une,
+                     unw,
+                     Leaf (Array2D.cat1 usws lnws),
+                     Leaf (Array2D.cat1 uses lnes))
+            (* Concatenation of two "flat" nodes. *)
             | (Node (ud, uh, uw, une, unw, Empty, Empty),
                Node (ld, lh, lw, lne, lnw, Empty, Empty)) ->
-                Node (max ud ld, uh + lh, uw, une, unw, lnw, lne) (* Concatenation of two "flat" nodes. *)
+                Node (max ud ld, uh + lh, uw, une, unw, lnw, lne)
             | _ ->
                 let d = max (depth upper) (depth lower)
                 Node (d + 1, rows upper + rows lower, cols upper, Empty, upper, lower, Empty)
@@ -137,19 +149,31 @@ module QuadRope =
             Array2D.length1 ls = Array2D.length2 rs && Array2D.length2 ls + Array2D.length2 rs <= maxWidth
         if rows left <> rows right then failwith "Trees must be of same height!"
         match left, right with
+            (* Copying small arrays is ok. *)
             | Leaf ls, Leaf rs when canCopy ls rs ->
-                Leaf (Array2D.cat2 ls rs) (* Copying small arrays is ok. *)
+                Leaf (Array2D.cat2 ls rs)
+            (* Copy small arrays of shallow nodes. *)
             | (Node (ld, lh, lw, Empty, Leaf lnws, Leaf lsws, Empty),
                Node (rd, rh, rw, Empty, Leaf rnws, Leaf rsws, Empty))
-                when canCopy lnws rnws && canCopy lsws rsws -> (* Copy small arrays of shallow nodes. *)
+               when canCopy lnws rnws && canCopy lsws rsws ->
                 Node (2, lh, lw + rw,
                       Empty,
                       Leaf (Array2D.cat2 lnws rnws),
                       Leaf (Array2D.cat2 lsws rsws),
                       Empty)
+            (* Copy outer small arrays. *)
+            | (Node (ld, lh, lw, Leaf lnes, lnw, lsw, Leaf lses),
+               Node (rd, rh, rw, Empty, Leaf rnws, Leaf rsws, Empty))
+               when canCopy lnes rnws && canCopy lses rsws ->
+                Node (ld, lh, lw + rw,
+                      Leaf (Array2D.cat2 lnes rnws),
+                      lnw,
+                      lsw,
+                      Leaf (Array2D.cat2 lses rsws))
+            (* Concatenation of two "thin" nodes. *)
             | (Node (ld, lh, lw, Empty, lnw, lsw, Empty),
                Node (rd, rh, rw, Empty, rnw, rsw, Empty)) ->
-                Node (max ld rd, lh, lw + rw, rnw, lnw, lsw, rsw) (* Concatenation of two "thin" nodes. *)
+                Node (max ld rd, lh, lw + rw, rnw, lnw, lsw, rsw)
             | _ ->
                 let d = max (depth left) (depth right)
                 Node (d + 1, rows left, cols left + cols right, right, left, Empty, Empty)

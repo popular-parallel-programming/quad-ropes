@@ -154,21 +154,27 @@ module QuadRope =
 
                 | Node (ld, lh, lw, lne, lnw, Empty, Empty), r ->
                         let ne = hcat0 lne r
-                        Node (max ld (depth ne) + 1, lh, lw + cols r, ne, lnw, Empty, Empty)
+                        Node (max ld (depth ne + 1), lh, lw + cols r, ne, lnw, Empty, Empty)
 
                 | l, Node (rd, rh, rw, rne, rnw, Empty, Empty) ->
                         let nw = hcat0 l rnw
-                        Node (max rd (depth nw), rh, cols l + rw, rne, nw, Empty, Empty)
+                        Node (max rd (depth nw + 1), rh, cols l + rw, rne, nw, Empty, Empty)
 
                 | (Node (ld, lh, lw, lne, lnw, lsw, lse),
                    Node (rd, rh, rw, Empty, rnw, rsw, Empty))
                     when rows lne = rows rnw && rows lse = rows rsw ->
-                        Node (max ld rd + 1, lh, lw + rw, hcat0 lne rnw, lnw, lsw, hcat0 lse rsw)
+                        let ne = hcat0 lne rnw
+                        let se = hcat0 lse rsw
+                        let d = max (depth ne) (depth se)
+                        Node (max ld (d + 1), lh, lw + rw, ne, lnw, lsw, se)
 
                 | (Node (ld, lh, lw, Empty, lnw, lsw, Empty),
                    Node (rd, rh, rw, rne, rnw, rsw, rse))
                     when rows lnw = rows rnw && rows lsw = rows rsw ->
-                        Node (max ld rd, lh, lw + rw, rne, hcat0 lnw rnw, hcat0 lsw rsw, rse)
+                        let nw = hcat0 lnw rnw
+                        let sw = hcat0 lsw rsw
+                        let d = max (depth nw) (depth sw)
+                        Node (max rd (d + 1), lh, lw + rw, rne, nw, sw, rse)
 
                 | (Node (ld, lh, lw, Empty, lnw, lsw, Empty),
                    Node (rd, rh, rw, Empty, rnw, rsw, Empty)) ->

@@ -8,7 +8,8 @@ type 'a QuadRope =
 module QuadRope =
 
     (* The maximal size of a leaf array in any direction. *)
-    let maxSize = 4
+    let maxHeight = 6
+    let maxWidth = 5
     let maxDepth = 4
 
     (* Initialize Fibonacci numbers at module load time. *)
@@ -111,7 +112,7 @@ module QuadRope =
     (* Concatenate two trees vertically. *)
     let vcat upper lower =
         let canCopy us ls =
-            Array2D.length2 us = Array2D.length2 ls && Array2D.length1 us + Array2D.length1 ls <= maxSize
+            Array2D.length2 us = Array2D.length2 ls && Array2D.length1 us + Array2D.length1 ls <= maxHeight
         if cols upper <> cols lower then failwith "Trees must be of same width!"
         match upper, lower with
             | Leaf us, Leaf ls when canCopy us ls ->
@@ -133,7 +134,7 @@ module QuadRope =
     (* Concatenate two trees horizontally. *)
     let hcat left right =
         let canCopy ls rs =
-            Array2D.length1 ls = Array2D.length2 rs && Array2D.length2 ls + Array2D.length2 rs <= maxSize
+            Array2D.length1 ls = Array2D.length2 rs && Array2D.length2 ls + Array2D.length2 rs <= maxWidth
         if rows left <> rows right then failwith "Trees must be of same height!"
         match left, right with
             | Leaf ls, Leaf rs when canCopy ls rs ->
@@ -221,12 +222,12 @@ module QuadRope =
             let w = w1 - w0
             if h <= 0 || w <= 0 then
                 Empty
-            else if h <= maxSize && w <= maxSize then
+            else if h <= maxHeight && w <= maxWidth then
                 Leaf (Array2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
-            else if w <= maxSize then
+            else if w <= maxWidth then
                 let hpv = h0 + h / 2
                 vcat (init0 h0 w0 hpv w1) (init0 hpv w0 h1 w1)
-            else if h <= maxSize then
+            else if h <= maxHeight then
                 let wpv = w0 + w / 2
                 hcat (init0 h0 w0 h1 wpv) (init0 h0 wpv h1 w1)
             else

@@ -146,7 +146,7 @@ module QuadRope =
     (* Concatenate two trees horizontally. *)
     let hcat left right =
         let canCopy ls rs =
-            Array2D.length1 ls = Array2D.length2 rs && Array2D.length2 ls + Array2D.length2 rs <= maxWidth
+            Array2D.length1 ls = Array2D.length1 rs && Array2D.length2 ls + Array2D.length2 rs <= maxWidth
         if rows left <> rows right then failwith "Trees must be of same height!"
         match left, right with
             (* Copying small arrays is ok. *)

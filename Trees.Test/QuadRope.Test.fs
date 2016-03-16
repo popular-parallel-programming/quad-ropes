@@ -101,3 +101,11 @@ module QuadRopeTest =
             (QuadRope.cols a = QuadRope.cols b) ==>
             lazy (let ab = QuadRope.vcat a b
                   Seq.reduce (.&.) (Seq.map (access ab) (makeIndices (QuadRope.rows ab) (QuadRope.cols ab))))
+
+        static member ``hsplit produces ropes correct height`` (a : int QuadRope) (NonNegativeInt j) =
+            j <= QuadRope.rows a ==>
+            lazy (QuadRope.rows (QuadRope.split a 0 0 j (QuadRope.cols a)) .=. j)
+
+        static member ``vsplit produces ropes correct width`` (a : int QuadRope) (NonNegativeInt i) =
+            i <= QuadRope.cols a ==>
+            lazy (QuadRope.cols (QuadRope.split a 0 0 (QuadRope.rows a) i) .=. i)

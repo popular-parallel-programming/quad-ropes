@@ -183,11 +183,12 @@ module QuadRope =
                 | _ ->
                     let d = max (depth left) (depth right)
                     Node (d + 1, rows left, cols left + cols right, right, left, Empty, Empty)
-
-        if rows left <> rows right then
-            failwith "Trees must be of same height!"
-        else
-            hcat0 left right
+        match left, right with
+            | Empty, _ -> right
+            | _, Empty -> left
+            | _ when rows left <> rows right ->
+                    failwith (sprintf "Trees must be of same height! l = %A\nr = %A" left right)
+            | _ -> hcat0 left right
 
     let makeNode ne nw sw se =
         match ne, nw, sw, se with

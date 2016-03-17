@@ -174,7 +174,7 @@ module QuadRope =
                         Node (max rd (depth nw + 1), rh, cols l + rw, rne, nw, Empty, Empty)
 
                 | (Node (ld, lh, lw, lne, lnw, lsw, lse),
-                   Node (rd, rh, rw, Empty, rnw, rsw, Empty))
+                   Node (rd,  _, rw, Empty, rnw, rsw, Empty))
                     when rows lne = rows rnw && rows lse = rows rsw ->
                         let ne = hcat0 lne rnw
                         let se = hcat0 lse rsw
@@ -182,7 +182,7 @@ module QuadRope =
                         Node (max ld (d + 1), lh, lw + rw, ne, lnw, lsw, se)
 
                 | (Node (ld, lh, lw, Empty, lnw, lsw, Empty),
-                   Node (rd, rh, rw, rne, rnw, rsw, rse))
+                   Node (rd,  _, rw, rne, rnw, rsw, rse))
                     when rows lnw = rows rnw && rows lsw = rows rsw ->
                         let nw = hcat0 lnw rnw
                         let sw = hcat0 lsw rsw
@@ -190,7 +190,7 @@ module QuadRope =
                         Node (max rd (d + 1), lh, lw + rw, rne, nw, sw, rse)
 
                 | (Node (ld, lh, lw, Empty, lnw, lsw, Empty),
-                   Node (rd, rh, rw, Empty, rnw, rsw, Empty)) ->
+                   Node (rd,  _, rw, Empty, rnw, rsw, Empty)) ->
                     Node (max ld rd, lh, lw + rw, rnw, lnw, lsw, rsw)
 
                 | _ ->

@@ -231,7 +231,7 @@ module QuadRope =
     let rec split root i j h w =
         if h <= 0 || w <= 0 then
             Empty
-        else if i <= 0 && rows root <= (i + h) && j <= 0 && cols root <= (j + w) then
+        else if i <= 0 && rows root <= h && j <= 0 && cols root <= w then
             root
         else
             match root with

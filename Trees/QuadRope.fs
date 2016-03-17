@@ -196,17 +196,18 @@ module QuadRope =
             | Empty, _, Empty, Empty -> nw
             | Empty, Empty, _, Empty -> sw
             | Empty, Empty, Empty, _ -> se
-            | _, _, Empty, Empty -> hcat nw ne
-            | Empty, Empty, _, _ -> hcat sw se
-            | Empty, _, _, Empty -> vcat nw sw
-            | _, Empty, Empty, _ -> vcat ne se
-            | _, Empty, _, Empty -> hcat ne sw
-            | Empty, _, Empty, _ -> vcat nw se
-            | _ when rows nw + rows sw = rows ne + rows se ->
+            | Empty, _, _, _ -> vcat ne (hcat sw se)
+            | _, Empty, _, _ -> vcat nw (hcat sw se)
+            | _, _, Empty, _ -> vcat (hcat nw ne) se
+            | _, _, _, Empty -> vcat (hcat nw ne) sw
+            | _ when cols nw = cols sw && cols ne = cols se ->
                 hcat (vcat nw sw) (vcat ne se)
-            | _ when cols nw + cols ne = cols sw + cols se ->
+            | _ when rows nw = rows ne && rows sw = rows se ->
                 vcat (hcat nw ne) (hcat sw se)
-            | _ -> failwith "Children must join to a regular rope."
+            | _ -> failwith
+                     (sprintf
+                        "Children must join to a regular rope. ne = %A\nnw = %A\nsw = %A\nse = %A"
+                        ne nw sw se)
 
     let makeSomeNode ne nw sw se =
         let getOrEmpty = Option.getDefault Empty

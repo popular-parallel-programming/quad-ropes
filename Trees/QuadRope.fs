@@ -216,25 +216,20 @@ module QuadRope =
     (* Compute the "subrope" starting from indexes i, j taking h and w
        elements in vertical and horizontal direction. *)
     let rec split root i j h w =
-        if i <= 0 && rows root <= h && j <= 0 && cols root <= w then
+        if h <= 0 || w <= 0 then
+            Empty
+        else if i <= 0 && rows root <= (i + h) && j <= 0 && cols root <= (j + w) then
             root
         else
             match root with
                 | Empty -> Empty
-                | Leaf vs ->
-                    makeLeaf (Array2D.subArr vs (max 0 i)
-                                                (max 0 j)
-                                                (min h (Array2D.length1 vs))
-                                                (min w (Array2D.length2 vs)))
+                | Leaf vs -> Leaf (Array2D.subArr vs i j h w)
                 | Node (_, _, _, ne, nw, sw, se) ->
-                    let nnw = split nw  i             j             h              w
-                    let nne = split ne  i            (j - cols nw)  h             (w - cols nnw)
-                    let nsw = split sw (i - rows nw)  j            (h - rows nnw)  w
-                    let nse = split se (i - rows ne) (j - cols sw) (h - rows nne) (w - cols nsw)
-                    match nne, nsw, nse with
-                        | Empty, _, Empty -> vcat nnw nsw
-                        | _, Empty, Empty -> hcat nnw nne
-                        | _               -> makeNode nne nnw nsw nse
+                    let nw0 = split nw i j h w
+                    let ne0 = split ne i (j - cols nw) h (w - cols nw0)
+                    let sw0 = split sw (i - rows nw) j (h - rows nw0) w
+                    let se0 = split se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
+                    makeNode ne0 nw0 sw0 se0
 
     let rec hrev = function
         | Empty -> Empty

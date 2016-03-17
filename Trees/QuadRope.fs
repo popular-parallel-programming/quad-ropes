@@ -209,8 +209,8 @@ module QuadRope =
             | Empty, _, Empty, Empty -> nw
             | Empty, Empty, _, Empty -> sw
             | Empty, Empty, Empty, _ -> se
-            | Empty, _, _, _ -> vcat ne (hcat sw se)
-            | _, Empty, _, _ -> vcat nw (hcat sw se)
+            | Empty, _, _, _ -> vcat nw (hcat sw se)
+            | _, Empty, _, _ -> vcat ne (hcat sw se)
             | _, _, Empty, _ -> vcat (hcat nw ne) se
             | _, _, _, Empty -> vcat (hcat nw ne) sw
             | _ when cols nw = cols sw && cols ne = cols se ->

@@ -113,35 +113,48 @@ module QuadRope =
     let vcat upper lower =
         let canCopy us ls =
             Array2D.length2 us = Array2D.length2 ls && Array2D.length1 us + Array2D.length1 ls <= maxHeight
-        if cols upper <> cols lower then failwith "Trees must be of same width!"
+        let rec vcat0 upper lower =
+            match upper, lower with
+                | Leaf us, Leaf ls ->
+                    Leaf (Array2D.cat1 us ls)
+
+                | Node (du, hu, wu, Empty, nwu, swu, Empty), l ->
+                    let sw = vcat0 swu l
+                    Node (max du (depth sw + 1), hu + rows l, wu, Empty, nwu, sw, Empty)
+
+                | u, Node (dl, hl, wl, Empty, nwl, swl, Empty) ->
+                    let nw = vcat0 u nwl
+                    Node (max dl (depth nw + 1), hl + rows u, wl, Empty, nw, swl, Empty)
+
+                | (Node (du, hu, wu, neu, nwu, swu, seu),
+                   Node (dl, hl,  _, nel, nwl, Empty, Empty))
+                    when cols swu = cols nwl && cols seu = cols nel ->
+                        let sw = vcat0 swu nwl
+                        let se = vcat0 seu nel
+                        let d = max (depth sw) (depth se)
+                        Node (max du (d + 1), hu + hl, wu, neu, nwu, sw, se)
+
+                | (Node (du, hu, wu, neu, nwu, Empty, Empty),
+                   Node (dl, hl,  _, nel, nwl, swl, sel))
+                    when cols nwu = cols nwl && cols neu = cols nel ->
+                        let nw = vcat0 nwu nwl
+                        let ne = vcat0 neu nel
+                        let d = max (depth nw) (depth ne)
+                        Node (max dl (d + 1), hu + hl, wu, ne, nw, swl, sel)
+
+                | (Node (du, hu, wu, neu, nwu, Empty, Empty),
+                   Node (dl, hl,  _, nel, nwl, Empty, Empty)) ->
+                    Node (max du dl, hu + hl, wu, neu, nwu, nwl, nel)
+
+                | _ ->
+                    let d = max (depth upper) (depth lower)
+                    Node (d + 1, rows upper + rows lower, cols upper, Empty, upper, lower, Empty)
         match upper, lower with
-            (* Copying small arrays is ok. *)
-            | Leaf us, Leaf ls when canCopy us ls ->
-                Leaf (Array2D.cat1 us ls)
-            (* Copy small arrays of shallow nodes. *)
-            | (Node (ud, uh, uw, Leaf unes, Leaf unws, Empty, Empty),
-               Node (ld, lh, lw, Leaf lnes, Leaf lnws, Empty, Empty))
-               when canCopy unes lnes && canCopy unws lnws ->
-               Node (2, uh + lh, uw,
-                     Leaf (Array2D.cat1 unes lnes),
-                     Leaf (Array2D.cat1 unws lnws),
-                     Empty, Empty)
-            (* Copy outer small arrays. *)
-            | (Node (ud, uh, uw, une, unw, Leaf usws, Leaf uses),
-               Node (ld, lh, lw, Leaf lnes, Leaf lnws, Empty, Empty))
-               when canCopy usws lnes && canCopy uses lnes ->
-               Node (ud, uh + lh, uw,
-                     une,
-                     unw,
-                     Leaf (Array2D.cat1 usws lnws),
-                     Leaf (Array2D.cat1 uses lnes))
-            (* Concatenation of two "flat" nodes. *)
-            | (Node (ud, uh, uw, une, unw, Empty, Empty),
-               Node (ld, lh, lw, lne, lnw, Empty, Empty)) ->
-                Node (max ud ld, uh + lh, uw, une, unw, lnw, lne)
-            | _ ->
-                let d = max (depth upper) (depth lower)
-                Node (d + 1, rows upper + rows lower, cols upper, Empty, upper, lower, Empty)
+            | Empty, _ -> lower
+            | _, Empty -> upper
+            | _ when cols upper <> cols lower ->
+                failwith (sprintf "Trees must be of same width! u = %A\nl = %A" upper lower)
+            | _ -> vcat0 upper lower
 
     (* Concatenate two trees horizontally. *)
     let hcat left right =

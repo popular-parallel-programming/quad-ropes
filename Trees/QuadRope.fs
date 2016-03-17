@@ -99,15 +99,28 @@ module QuadRope =
                         else
                             write se (i - rows ne) (j - cols sw) v
 
-    let isBalanced = function
+    let isBalancedH = function
         | Empty
         | Leaf _ -> true
-        | Node (d, h, w, _, _, _, _) ->
+        | Node (d, h, _, _, _, _, _) ->
             if maxDepth < d then
                 false
             else
                 let n = Fibonacci.fib (d + 1)
-                n <= h && n <= w
+                n <= h
+
+    let isBalancedV = function
+        | Empty
+        | Leaf _ -> true
+        | Node (d, _, w, _, _, _, _) ->
+            if maxDepth < d then
+                false
+            else
+                let n = Fibonacci.fib (d + 1)
+                n <= w
+
+    let isBalanced root =
+        isBalancedH root && isBalancedV root
 
     (* Concatenate two trees vertically. *)
     let vcat upper lower =

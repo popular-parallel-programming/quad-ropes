@@ -124,11 +124,9 @@ module QuadRope =
 
     (* Concatenate two trees vertically. *)
     let vcat upper lower =
-        let canCopy us ls =
-            Array2D.length2 us = Array2D.length2 ls && Array2D.length1 us + Array2D.length1 ls <= maxHeight
         let rec vcat0 upper lower =
             match upper, lower with
-                | Leaf us, Leaf ls when canCopy us ls ->
+                | Leaf us, Leaf ls when Array2D.length1 us + Array2D.length1 ls <= maxHeight ->
                     Leaf (Array2D.cat1 us ls)
 
                 | Node (du, hu, wu, Empty, nwu, swu, Empty), l ->
@@ -171,11 +169,9 @@ module QuadRope =
 
     (* Concatenate two trees horizontally. *)
     let hcat left right =
-        let inline canCopy ls rs =
-            Array2D.length1 ls = Array2D.length1 rs && Array2D.length2 ls + Array2D.length2 rs <= maxWidth
         let rec hcat0 left right =
             match left, right with
-                | Leaf ls, Leaf rs when canCopy ls rs ->
+                | Leaf ls, Leaf rs when Array2D.length2 ls + Array2D.length2 rs <= maxWidth ->
                     Leaf (Array2D.cat2 ls rs)
 
                 | Node (ld, lh, lw, lne, lnw, Empty, Empty), r ->

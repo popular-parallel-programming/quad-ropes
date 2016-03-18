@@ -128,7 +128,7 @@ module QuadRope =
             Array2D.length2 us = Array2D.length2 ls && Array2D.length1 us + Array2D.length1 ls <= maxHeight
         let rec vcat0 upper lower =
             match upper, lower with
-                | Leaf us, Leaf ls ->
+                | Leaf us, Leaf ls when canCopy us ls ->
                     Leaf (Array2D.cat1 us ls)
 
                 | Node (du, hu, wu, Empty, nwu, swu, Empty), l ->

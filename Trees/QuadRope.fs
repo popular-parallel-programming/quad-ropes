@@ -404,9 +404,9 @@ module QuadRope =
                 | SE _ -> Option.map (down >> south >> upperLeftMost) (walkEast (up (node, loc)))
 
     let flatten root =
-        let step f a =
-            match f a with
-                | None -> None
-                | Some b -> Some (a, b)
-        let makeRow = Seq.unfold (step Path.walkEast) >> Seq.map fst
-        Seq.map makeRow (Seq.unfold (step Path.walkSouth) (Path.start root))
+        let rec makeRow f (node, path) =
+            seq { yield node, path
+                  match f (node, path) with
+                  | Some (node, path) -> yield! makeRow f (node, path)
+                  | _ -> () }
+        Seq.map ((makeRow Path.walkEast) >> (Seq.map fst)) (makeRow Path.walkSouth (Path.start root))

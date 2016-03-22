@@ -111,3 +111,11 @@ module QuadRopeTest =
             h <= QuadRope.rows a ==>
             lazy (let b = QuadRope.split a 0 0 h (QuadRope.cols a)
                   QuadRope.rows b .=. h |@ sprintf "%A" b)
+
+        static member ``balanceH retains elements and indices`` (a : int QuadRope) =
+            let b = QuadRope.balanceH a
+            let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
+            let stable = QuadRope.depth b <= QuadRope.depth a
+            let values = Seq.reduce (.&.)
+                             (Seq.map (fun (i, j) -> QuadRope.get a i j .=. QuadRope.get b i j) indices)
+            stable .&. values

@@ -208,7 +208,7 @@ module QuadRope =
         makeNode (getOrEmpty ne) (getOrEmpty nw) (getOrEmpty sw) (getOrEmpty se)
 
     let isBal d s =
-        d < 2 || maxDepth < d && Fibonacci.fib (d + 2) <= s
+        d <= 1 || d <= maxDepth && Fibonacci.fib (d + 1) <= s
 
     let isBalancedH = function
         | Empty

@@ -203,46 +203,44 @@ module QuadRope =
                     failwith (sprintf "Trees must be of same height! l = %A\nr = %A" left right)
             | _ -> hcat0 left right
 
-    let isBal d s =
+    let private isBalanced d s =
         d <= 1 || d <= d_max && Fibonacci.fib (d + 1) <= s
 
     let isBalancedH = function
         | Empty
         | Leaf _ -> true
-        | Node (d, h, _, _, _, _, _) -> isBal d h
+        | Node (d, h, _, _, _, _, _) -> isBalanced d h
 
     let isBalancedV = function
         | Empty
         | Leaf _ -> true
-        | Node (d, _, w, _, _, _, _) -> isBal d w
+        | Node (d, _, w, _, _, _, _) -> isBalanced d w
 
-    let isBalanced root =
-        isBalancedH root && isBalancedV root
-
-    let rec balanceH rope =
-        let rec collect rope (rs, n) =
-            match rope with
-                | Empty -> rs, n
-                | Node (_, _, _, ne, nw, Empty, Empty) ->
-                    collect nw (collect ne (rs, n))
-                | Node (_, _, _, ne, nw, sw, se) ->
-                    makeNode (balanceH ne) (balanceH nw) (balanceH sw) (balanceH se) :: rs, n + 1
-                | _ -> rope :: rs, n + 1
+    let balanceH rope =
         let rec rebuild n ns =
             match ns with
                 | [] -> ns
                 | _ :: [] -> ns
                 | nw :: ne :: [] -> makeNode ne nw Empty Empty :: []
                 | _ ->
-                    let nws = List.take (n / 2) ns
-                    let nes = List.skip (n / 2) ns
-                    rebuild (n / 2) nws @ rebuild (n / 2) nes
+                    let n2 = n / 2
+                    let nws, nes = List.splitAt n2 ns
+                    rebuild n2 nws @ rebuild n2 nes
         let rec reduce f = function
             | [] -> Empty
             | n :: [] -> n
             | ns -> reduce f (f ns)
-        let rs, n = collect rope ([], 0)
-        reduce (rebuild n) rs
+        let rec balanceH0 rope =
+            let rs, n = collect rope ([], 0)
+            reduce (rebuild n) rs
+        and collect rope (rs, n) =
+            match rope with
+                | Empty -> rs, n
+                | Node (_, _, _, ne, nw, Empty, Empty) -> collect nw (collect ne (rs, n))
+                | Node (_, _, _, ne, nw, sw, se) ->
+                    makeNode (balanceH0 ne) (balanceH0 nw) (balanceH0 sw) (balanceH0 se) :: rs, n + 1
+                | _ -> rope :: rs, n + 1
+        balanceH0 rope
 
     (* Compute the "subrope" starting from indexes i, j taking h and w
        elements in vertical and horizontal direction. *)

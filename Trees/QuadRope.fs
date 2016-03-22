@@ -39,6 +39,20 @@ module QuadRope =
         else
             Leaf vs
 
+    let rec makeNode ne nw sw se =
+        match ne, nw, sw, se with
+            | _, Empty, Empty, Empty -> ne
+            | Empty, _, Empty, Empty -> nw
+            | Empty, Empty, _, Empty -> sw
+            | Empty, Empty, Empty, _ -> se
+            | Empty, Empty, _, _ -> makeNode se sw Empty Empty
+            | _, Empty, Empty, _ -> makeNode Empty ne se Empty
+            | _ ->
+                let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se)) + 1
+                let h = rows nw + rows sw
+                let w = cols nw + cols ne
+                Node (d, h, w, ne, nw, sw, se)
+
     let inline private withinRange root i j =
         0 <= i && i < rows root && 0 <= j && j < cols root
 
@@ -188,24 +202,6 @@ module QuadRope =
             | _ when rows left <> rows right ->
                     failwith (sprintf "Trees must be of same height! l = %A\nr = %A" left right)
             | _ -> hcat0 left right
-
-    let rec makeNode ne nw sw se =
-        match ne, nw, sw, se with
-            | _, Empty, Empty, Empty -> ne
-            | Empty, _, Empty, Empty -> nw
-            | Empty, Empty, _, Empty -> sw
-            | Empty, Empty, Empty, _ -> se
-            | Empty, Empty, _, _ -> makeNode se sw Empty Empty
-            | _, Empty, Empty, _ -> makeNode Empty ne se Empty
-            | _ ->
-                let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se)) + 1
-                let h = rows nw + rows sw
-                let w = cols nw + cols ne
-                Node (d, h, w, ne, nw, sw, se)
-
-    let makeSomeNode ne nw sw se =
-        let getOrEmpty = Option.getDefault Empty
-        makeNode (getOrEmpty ne) (getOrEmpty nw) (getOrEmpty sw) (getOrEmpty se)
 
     let isBal d s =
         d <= 1 || d <= maxDepth && Fibonacci.fib (d + 1) <= s

@@ -30,7 +30,7 @@ module QuadRope =
     (* Depth of a rectangular tree. *)
     let depth = function
         | Empty -> 0
-        | Leaf _ -> 1
+        | Leaf _ -> 0
         | Node (d, _, _, _, _, _, _) -> d
 
     let makeLeaf vs =

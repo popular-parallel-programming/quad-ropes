@@ -156,6 +156,8 @@ module QuadRope =
     let vcat upper lower =
         let rec vcat0 upper lower =
             match upper, lower with
+                | Empty, _ -> lower
+                | _, Empty -> upper
                 | Leaf us, Leaf ls when Array2D.length1 us + Array2D.length1 ls <= h_max ->
                     Leaf (Array2D.cat1 us ls)
 
@@ -190,17 +192,16 @@ module QuadRope =
                 | _ ->
                     let d = max (depth upper) (depth lower)
                     Node (d + 1, rows upper + rows lower, cols upper, Empty, upper, lower, Empty)
-        match upper, lower with
-            | Empty, _ -> lower
-            | _, Empty -> upper
-            | _ when cols upper <> cols lower ->
-                failwith (sprintf "Trees must be of same width! u = %A\nl = %A" upper lower)
-            | _ -> vcat0 upper lower
+        if cols upper <> cols lower then
+            failwith (sprintf "Trees must be of same width! u = %A\nl = %A" upper lower)
+        vcat0 upper lower
 
     (* Concatenate two trees horizontally. *)
     let hcat left right =
         let rec hcat0 left right =
             match left, right with
+                | Empty, _ -> right
+                | _, Empty -> left
                 | Leaf ls, Leaf rs when Array2D.length2 ls + Array2D.length2 rs <= w_max ->
                     Leaf (Array2D.cat2 ls rs)
 
@@ -235,13 +236,9 @@ module QuadRope =
                 | _ ->
                     let d = max (depth left) (depth right)
                     Node (d + 1, rows left, cols left + cols right, right, left, Empty, Empty)
-        match left, right with
-            | Empty, _ -> right
-            | _, Empty -> left
-            | _ when rows left <> rows right ->
-                    failwith (sprintf "Trees must be of same height! l = %A\nr = %A" left right)
-            | _ -> hcat0 left right
-
+        if rows left <> rows right then
+            failwith (sprintf "Trees must be of same height! l = %A\nr = %A" left right)
+        hcat0 left right
 
     (* Compute the "subrope" starting from indexes i, j taking h and w
        elements in vertical and horizontal direction. *)

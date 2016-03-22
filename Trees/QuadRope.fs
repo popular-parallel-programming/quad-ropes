@@ -99,29 +99,6 @@ module QuadRope =
                         else
                             write se (i - rows ne) (j - cols sw) v
 
-    let isBalancedH = function
-        | Empty
-        | Leaf _ -> true
-        | Node (d, h, _, _, _, _, _) ->
-            if maxDepth < d then
-                false
-            else
-                let n = Fibonacci.fib (d + 1)
-                n <= h
-
-    let isBalancedV = function
-        | Empty
-        | Leaf _ -> true
-        | Node (d, _, w, _, _, _, _) ->
-            if maxDepth < d then
-                false
-            else
-                let n = Fibonacci.fib (d + 1)
-                n <= w
-
-    let isBalanced root =
-        isBalancedH root && isBalancedV root
-
     (* Concatenate two trees vertically. *)
     let vcat upper lower =
         let rec vcat0 upper lower =
@@ -229,6 +206,45 @@ module QuadRope =
     let makeSomeNode ne nw sw se =
         let getOrEmpty = Option.getDefault Empty
         makeNode (getOrEmpty ne) (getOrEmpty nw) (getOrEmpty sw) (getOrEmpty se)
+
+    let isBal d s =
+        d < 2 || maxDepth < d && Fibonacci.fib (d + 2) <= s
+
+    let isBalancedH = function
+        | Empty
+        | Leaf _ -> true
+        | Node (d, h, _, _, _, _, _) -> isBal d h
+
+    let isBalancedV = function
+        | Empty
+        | Leaf _ -> true
+        | Node (d, _, w, _, _, _, _) -> isBal d w
+
+    let isBalanced root =
+        isBalancedH root && isBalancedV root
+
+    let balanceH rope =
+        let rec collect rope (rs, n) =
+            match rope with
+                | Empty -> rs, n
+                | Node (_, _, _, ne, nw, Empty, Empty) ->
+                    collect nw (collect ne (rs, n))
+                | _ -> rope :: rs, n + 1
+        let rec rebuild n ns =
+            match ns with
+                | [] -> ns
+                | _ :: [] -> ns
+                | nw :: ne :: [] -> makeNode ne nw Empty Empty :: []
+                | _ ->
+                    let nws = List.take (n / 2) ns
+                    let nes = List.skip (n / 2) ns
+                    rebuild (n / 2) nws @ rebuild (n / 2) nes
+        let rec reduce f = function
+            | [] -> Empty
+            | n :: [] -> n
+            | ns -> reduce f (f ns)
+        let rs, n = collect rope ([], 0)
+        reduce (rebuild n) rs
 
     (* Compute the "subrope" starting from indexes i, j taking h and w
        elements in vertical and horizontal direction. *)

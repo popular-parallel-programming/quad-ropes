@@ -212,24 +212,19 @@ module QuadRope =
                     failwith (sprintf "Trees must be of same height! l = %A\nr = %A" left right)
             | _ -> hcat0 left right
 
-    let makeNode ne nw sw se =
+    let rec makeNode ne nw sw se =
         match ne, nw, sw, se with
             | _, Empty, Empty, Empty -> ne
             | Empty, _, Empty, Empty -> nw
             | Empty, Empty, _, Empty -> sw
             | Empty, Empty, Empty, _ -> se
-            | Empty, _, _, _ -> vcat nw (hcat sw se)
-            | _, Empty, _, _ -> vcat ne (hcat sw se)
-            | _, _, Empty, _ -> vcat (hcat nw ne) se
-            | _, _, _, Empty -> vcat (hcat nw ne) sw
-            | _ when cols nw = cols sw && cols ne = cols se ->
-                hcat (vcat nw sw) (vcat ne se)
-            | _ when rows nw = rows ne && rows sw = rows se ->
-                vcat (hcat nw ne) (hcat sw se)
-            | _ -> failwith
-                     (sprintf
-                        "Children must join to a regular rope. ne = %A\nnw = %A\nsw = %A\nse = %A"
-                        ne nw sw se)
+            | Empty, Empty, _, _ -> makeNode se sw Empty Empty
+            | _, Empty, Empty, _ -> makeNode Empty ne se Empty
+            | _ ->
+                let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se)) + 1
+                let h = rows nw + rows sw
+                let w = cols nw + cols ne
+                Node (d, h, w, ne, nw, sw, se)
 
     let makeSomeNode ne nw sw se =
         let getOrEmpty = Option.getDefault Empty

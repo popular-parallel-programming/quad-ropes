@@ -223,12 +223,14 @@ module QuadRope =
     let isBalanced root =
         isBalancedH root && isBalancedV root
 
-    let balanceH rope =
+    let rec balanceH rope =
         let rec collect rope (rs, n) =
             match rope with
                 | Empty -> rs, n
                 | Node (_, _, _, ne, nw, Empty, Empty) ->
                     collect nw (collect ne (rs, n))
+                | Node (_, _, _, ne, nw, sw, se) ->
+                    makeNode (balanceH ne) (balanceH nw) (balanceH sw) (balanceH se) :: rs, n + 1
                 | _ -> rope :: rs, n + 1
         let rec rebuild n ns =
             match ns with

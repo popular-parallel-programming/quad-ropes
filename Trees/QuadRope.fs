@@ -8,12 +8,12 @@ type 'a QuadRope =
 module QuadRope =
 
     (* The maximal size of a leaf array in any direction. *)
-    let maxHeight = 6
-    let maxWidth = 5
-    let maxDepth = 4
+    let h_max = 6
+    let w_max = 5
+    let d_max = 4
 
     (* Initialize Fibonacci numbers at module load time. *)
-    ignore (Fibonacci.fib maxDepth)
+    ignore (Fibonacci.fib d_max)
 
     (* Number of rows in a rectangular tree. *)
     let rows = function
@@ -117,7 +117,7 @@ module QuadRope =
     let vcat upper lower =
         let rec vcat0 upper lower =
             match upper, lower with
-                | Leaf us, Leaf ls when Array2D.length1 us + Array2D.length1 ls <= maxHeight ->
+                | Leaf us, Leaf ls when Array2D.length1 us + Array2D.length1 ls <= h_max ->
                     Leaf (Array2D.cat1 us ls)
 
                 | Node (du, hu, wu, Empty, nwu, swu, Empty), l ->
@@ -162,7 +162,7 @@ module QuadRope =
     let hcat left right =
         let rec hcat0 left right =
             match left, right with
-                | Leaf ls, Leaf rs when Array2D.length2 ls + Array2D.length2 rs <= maxWidth ->
+                | Leaf ls, Leaf rs when Array2D.length2 ls + Array2D.length2 rs <= w_max ->
                     Leaf (Array2D.cat2 ls rs)
 
                 | Node (ld, lh, lw, lne, lnw, Empty, Empty), r ->
@@ -204,7 +204,7 @@ module QuadRope =
             | _ -> hcat0 left right
 
     let isBal d s =
-        d <= 1 || d <= maxDepth && Fibonacci.fib (d + 1) <= s
+        d <= 1 || d <= d_max && Fibonacci.fib (d + 1) <= s
 
     let isBalancedH = function
         | Empty
@@ -285,12 +285,12 @@ module QuadRope =
             let w = w1 - w0
             if h <= 0 || w <= 0 then
                 Empty
-            else if h <= maxHeight && w <= maxWidth then
+            else if h <= h_max && w <= w_max then
                 Leaf (Array2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
-            else if w <= maxWidth then
+            else if w <= w_max then
                 let hpv = h0 + h / 2
                 vcat (init0 h0 w0 hpv w1) (init0 hpv w0 h1 w1)
-            else if h <= maxHeight then
+            else if h <= h_max then
                 let wpv = w0 + w / 2
                 hcat (init0 h0 w0 h1 wpv) (init0 h0 wpv h1 w1)
             else

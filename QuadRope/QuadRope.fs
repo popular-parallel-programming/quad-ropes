@@ -359,7 +359,7 @@ module QuadRope =
         let north (node, path) =
             match path with
                 | SW (ne, nw, path, se) -> nw, NW (ne, path, node, se)
-                | SE (ne, nw, sw, path) -> ne, NE (path, ne, sw, node)
+                | SE (ne, nw, sw, path) -> ne, NE (path, nw, sw, node)
                 | _ -> node, path
 
         let south (node, path) =

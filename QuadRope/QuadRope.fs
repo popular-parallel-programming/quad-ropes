@@ -170,14 +170,14 @@ module QuadRope =
                     Node (max dl (depth nw + 1), hl + rows u, wl, Empty, nw, swl, Empty)
 
                 | (Node (du, hu, wu, neu, nwu, swu, seu),
-                   Node (dl, hl,  _, nel, nwl, Empty, Empty))
+                   Node ( _, hl,  _, nel, nwl, Empty, Empty))
                     when cols swu = cols nwl && cols seu = cols nel ->
                         let sw = vcat0 swu nwl
                         let se = vcat0 seu nel
                         let d = max (depth sw) (depth se)
                         Node (max du (d + 1), hu + hl, wu, neu, nwu, sw, se)
 
-                | (Node (du, hu, wu, neu, nwu, Empty, Empty),
+                | (Node ( _, hu, wu, neu, nwu, Empty, Empty),
                    Node (dl, hl,  _, nel, nwl, swl, sel))
                     when cols nwu = cols nwl && cols neu = cols nel ->
                         let nw = vcat0 nwu nwl
@@ -214,14 +214,14 @@ module QuadRope =
                         Node (max rd (depth nw + 1), rh, cols l + rw, rne, nw, Empty, Empty)
 
                 | (Node (ld, lh, lw, lne, lnw, lsw, lse),
-                   Node (rd,  _, rw, Empty, rnw, rsw, Empty))
+                   Node ( _,  _, rw, Empty, rnw, rsw, Empty))
                     when rows lne = rows rnw && rows lse = rows rsw ->
                         let ne = hcat0 lne rnw
                         let se = hcat0 lse rsw
                         let d = max (depth ne) (depth se)
                         Node (max ld (d + 1), lh, lw + rw, ne, lnw, lsw, se)
 
-                | (Node (ld, lh, lw, Empty, lnw, lsw, Empty),
+                | (Node ( _, lh, lw, Empty, lnw, lsw, Empty),
                    Node (rd,  _, rw, rne, rnw, rsw, rse))
                     when rows lnw = rows rnw && rows lsw = rows rsw ->
                         let nw = hcat0 lnw rnw

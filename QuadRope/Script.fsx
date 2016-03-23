@@ -1,40 +1,21 @@
 #load "Utils.fs"
-#load "RadixTree2D.fs"
 #load "QuadRope.fs"
 #load "QuadRope.Parallel.fs"
 
+#nowarn "62"
+
 open RadTrees
-
-let init = QuadRope.init
-let rows = QuadRope.rows
-let cols = QuadRope.cols
-let depth = QuadRope.depth
-let get = QuadRope.get
-let set = QuadRope.set
-let write = QuadRope.write
-let split = QuadRope.split
-let hcat = QuadRope.hcat
-let vcat = QuadRope.vcat
-let isBalanced = QuadRope.isBalanced
-
-let start = QuadRope.Path.start
+open RadTrees.QuadRope
+open RadTrees.QuadRope.Path
 
 let next (a, b) =
     match QuadRope.Parallel.next a b with
-        | QuadRope.Parallel.Done rp -> rp, QuadRope.Top
+        | QuadRope.Parallel.Done rp -> rp, Top
         | QuadRope.Parallel.More (rp, path) -> rp, path
 
-let walkEast = QuadRope.Path.walkEast
-let walkSouth = QuadRope.Path.walkSouth
+let l0 = hcat (init 1 3 (*)) (init 1 5 (*))
+let l1 = hcat (init 1 4 (*)) (init 1 3 (*))
+let l2 = hcat l1 (hcat l1 l0)
+let l = hcat (init 1 3 (*)) l2
 
-let up = QuadRope.Path.up
-let down = QuadRope.Path.down
-let east = QuadRope.Path.east
-let south = QuadRope.Path.south
-
-let a = init 5 5 (*)
-let b = init 5 10 (*)
-let c = init 10 5 (*)
-
-let aStart : int QuadRope * (int, int) QuadRope.Path = start a
-let bStart : int QuadRope * (int, int) QuadRope.Path = start b
+balanceH l

@@ -116,19 +116,23 @@ module QuadRopeTest =
                   QuadRope.rows b .=. h |@ sprintf "%A" b)
 
         static member ``balanceH maintains layout`` (a : int QuadRope) =
-            let b = QuadRope.balanceH a
-            let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
-            Seq.reduce (.&.) (Seq.map (fun (i, j) -> QuadRope.get a i j .=. QuadRope.get b i j) indices)
+            not (QuadRope.isBalancedH a) ==>
+            lazy (let b = QuadRope.balanceH a
+                  let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
+                  Seq.reduce (.&.) (Seq.map (fun (i, j) -> QuadRope.get a i j .=. QuadRope.get b i j) indices))
 
         static member ``balanceH maintains or improves depth`` (a : int QuadRope) =
-            let b = QuadRope.balanceH a
-            QuadRope.depth b .<=. QuadRope.depth a
+            not (QuadRope.isBalancedH a) ==>
+            lazy (let b = QuadRope.balanceH a
+                  QuadRope.depth b .<=. QuadRope.depth a)
 
         static member ``balanceV maintains layout`` (a : int QuadRope) =
-            let b = QuadRope.balanceV a
-            let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
-            Seq.reduce (.&.) (Seq.map (fun (i, j) -> QuadRope.get a i j .=. QuadRope.get b i j) indices)
+            not (QuadRope.isBalancedV a) ==>
+            lazy (let b = QuadRope.balanceV a
+                  let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
+                  Seq.reduce (.&.) (Seq.map (fun (i, j) -> QuadRope.get a i j .=. QuadRope.get b i j) indices))
 
         static member ``balanceV maintains or improves depth`` (a : int QuadRope) =
-            let b = QuadRope.balanceV a
-            QuadRope.depth b .<=. QuadRope.depth a
+            not (QuadRope.isBalancedV a) ==>
+            lazy (let b = QuadRope.balanceV a
+                  QuadRope.depth b .<=. QuadRope.depth a)

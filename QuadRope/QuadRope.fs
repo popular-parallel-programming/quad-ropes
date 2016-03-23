@@ -126,6 +126,11 @@ module QuadRope =
         | Leaf _ -> true
         | Node (d, _, w, _, _, _, _) -> isBalanced d w
 
+    let rec private reduce f = function
+        | [] -> Empty
+        | n :: [] -> n
+        | ns -> reduce f (f ns)
+
     let balanceH rope =
         let rec rebuild = function
             | [] -> []
@@ -134,10 +139,6 @@ module QuadRope =
             | ns ->
                 let nws, nes = List.splitAt ((List.length ns) / 2) ns
                 rebuild nws @ rebuild nes
-        let rec reduce f = function
-            | [] -> Empty
-            | n :: [] -> n
-            | ns -> reduce f (f ns)
         let rec balanceH0 rope =
             let rs = collect rope []
             reduce rebuild rs
@@ -149,6 +150,26 @@ module QuadRope =
                     makeNode (balanceH0 ne) (balanceH0 nw) (balanceH0 sw) (balanceH0 se) :: rs
                 | _ -> rope :: rs
         balanceH0 rope
+
+    let balanceV rope =
+        let rec rebuild = function
+            | [] -> []
+            | n  :: [] -> n :: []
+            | nw :: sw :: [] -> makeNode Empty nw sw Empty :: []
+            | ns ->
+                let nws, sws = List.splitAt ((List.length ns) / 2) ns
+                rebuild nws @ rebuild sws
+        let rec balanceV0 rope =
+            let rs = collect rope []
+            reduce rebuild rs
+        and collect rope rs  =
+            match rope with
+                | Empty -> rs
+                | Node (_, _, _, Empty, nw, sw, Empty) -> collect nw (collect sw rs)
+                | Node (_, _, _, ne, nw, sw, se) ->
+                    makeNode (balanceV0 ne) (balanceV0 nw) (balanceV0 sw) (balanceV0 se) :: rs
+                | _ -> rope :: rs
+        balanceV0 rope
 
     (* Concatenate two trees vertically. *)
     let vcat upper lower =

@@ -135,7 +135,7 @@ module QuadRope =
                 | _ ->
                     let n2 = n / 2
                     let nws, nes = List.take n2 ns, List.skip n2 ns
-                    rebuild n2 nws @ rebuild n2 nes
+                    rebuild n2 nws @ rebuild (n - n2) nes
         let rec reduce f = function
             | [] -> Empty
             | n :: [] -> n

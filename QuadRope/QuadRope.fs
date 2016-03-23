@@ -131,17 +131,19 @@ module QuadRope =
         | n :: [] -> n
         | ns -> reduce f (f ns)
 
+    let rec private rebuild merge = function
+        | [] -> []
+        | x  :: [] -> x :: []
+        | x :: y :: [] -> merge x y :: []
+        | xs ->
+            let lxs, rxs = List.splitAt ((List.length xs) / 2) xs
+            rebuild merge lxs @ rebuild merge rxs
+
     let balanceH rope =
-        let rec rebuild = function
-            | [] -> []
-            | n  :: [] -> n :: []
-            | nw :: ne :: [] -> makeNode ne nw Empty Empty :: []
-            | ns ->
-                let nws, nes = List.splitAt ((List.length ns) / 2) ns
-                rebuild nws @ rebuild nes
+        let reduceH = reduce (rebuild (fun nw ne -> makeNode ne nw Empty Empty))
         let rec balanceH0 rope =
             let rs = collect rope []
-            reduce rebuild rs
+            reduceH rs
         and collect rope rs  =
             match rope with
                 | Empty -> rs
@@ -152,16 +154,10 @@ module QuadRope =
         balanceH0 rope
 
     let balanceV rope =
-        let rec rebuild = function
-            | [] -> []
-            | n  :: [] -> n :: []
-            | nw :: sw :: [] -> makeNode Empty nw sw Empty :: []
-            | ns ->
-                let nws, sws = List.splitAt ((List.length ns) / 2) ns
-                rebuild nws @ rebuild sws
+        let reduceV = reduce (rebuild (fun nw sw -> makeNode Empty nw sw Empty))
         let rec balanceV0 rope =
             let rs = collect rope []
-            reduce rebuild rs
+            reduceV rs
         and collect rope rs  =
             match rope with
                 | Empty -> rs

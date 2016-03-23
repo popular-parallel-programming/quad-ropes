@@ -4,7 +4,7 @@ module Gen =
     open FsCheck
     open RadTrees
 
-    let maxSize = 10
+    let maxSize = 14
     let size = Gen.choose (1, maxSize)
 
     let genRopeOf h w =

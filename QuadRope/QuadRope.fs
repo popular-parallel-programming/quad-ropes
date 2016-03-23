@@ -127,29 +127,28 @@ module QuadRope =
         | Node (d, _, w, _, _, _, _) -> isBalanced d w
 
     let balanceH rope =
-        let rec rebuild n ns =
-            match ns with
-                | [] -> ns
-                | _ :: [] -> ns
-                | nw :: ne :: [] -> makeNode ne nw Empty Empty :: []
-                | _ ->
-                    let n2 = n / 2
-                    let nws, nes = List.take n2 ns, List.skip n2 ns
-                    rebuild n2 nws @ rebuild (n - n2) nes
+        let rec rebuild = function
+            | [] -> []
+            | n  :: [] -> n :: []
+            | nw :: ne :: [] -> makeNode ne nw Empty Empty :: []
+            | ns ->
+                let n2 = (List.length ns) / 2
+                let nws, nes = List.take n2 ns, List.skip n2 ns
+                rebuild nws @ rebuild nes
         let rec reduce f = function
             | [] -> Empty
             | n :: [] -> n
             | ns -> reduce f (f ns)
         let rec balanceH0 rope =
-            let rs, n = collect rope ([], 0)
-            reduce (rebuild n) rs
-        and collect rope (rs, n) =
+            let rs = collect rope []
+            reduce rebuild rs
+        and collect rope rs  =
             match rope with
-                | Empty -> rs, n
-                | Node (_, _, _, ne, nw, Empty, Empty) -> collect nw (collect ne (rs, n))
+                | Empty -> rs
+                | Node (_, _, _, ne, nw, Empty, Empty) -> collect nw (collect ne rs)
                 | Node (_, _, _, ne, nw, sw, se) ->
-                    makeNode (balanceH0 ne) (balanceH0 nw) (balanceH0 sw) (balanceH0 se) :: rs, n + 1
-                | _ -> rope :: rs, n + 1
+                    makeNode (balanceH0 ne) (balanceH0 nw) (balanceH0 sw) (balanceH0 se) :: rs
+                | _ -> rope :: rs
         balanceH0 rope
 
     (* Concatenate two trees vertically. *)

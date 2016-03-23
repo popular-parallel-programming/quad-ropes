@@ -61,7 +61,7 @@ module QuadRope =
         match root with
             | Empty -> failwith "Empty tree cannot contain values."
             | Leaf vs -> Array2D.get vs i j
-            | Node (_, h, w, ne, nw, sw, se) ->
+            | Node (_, _, _, ne, nw, sw, se) ->
                 if withinRange nw i j then
                     get nw i j
                 else
@@ -99,7 +99,7 @@ module QuadRope =
         match root with
             | Empty -> failwith "Empty tree cannot contain values."
             | Leaf vs -> vs.[i, j] <- v
-            | Node (_, h, w, ne, nw, sw, se) ->
+            | Node (_, _, _, ne, nw, sw, se) ->
                 if withinRange nw i j then
                     write nw i j v
                 else

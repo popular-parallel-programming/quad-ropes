@@ -12,3 +12,6 @@ test: build
 	mono QuadRope.Test/bin/Debug/QuadRope.Test.exe
 
 all: paket build
+
+clean:
+	xbuild /t:Clean

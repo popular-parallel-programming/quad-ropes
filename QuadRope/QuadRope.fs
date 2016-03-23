@@ -132,8 +132,7 @@ module QuadRope =
             | n  :: [] -> n :: []
             | nw :: ne :: [] -> makeNode ne nw Empty Empty :: []
             | ns ->
-                let n2 = (List.length ns) / 2
-                let nws, nes = List.take n2 ns, List.skip n2 ns
+                let nws, nes = List.splitAt ((List.length ns) / 2) ns
                 rebuild nws @ rebuild nes
         let rec reduce f = function
             | [] -> Empty

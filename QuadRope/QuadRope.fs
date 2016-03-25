@@ -208,7 +208,7 @@ module QuadRope =
     (* Concatenate two trees horizontally. *)
     let hcat left right =
         let canCopy ls rs =
-            Array2D.length2 ls + Array2D.length2 rs <= w_max
+            Array2D.length1 ls = Array2D.length1 rs && Array2D.length2 ls + Array2D.length2 rs <= w_max
         if rows left <> rows right then
             failwith (sprintf "Trees must be of same height! l = %A\nr = %A" left right)
         match left, right with
@@ -241,9 +241,7 @@ module QuadRope =
                Node (_, _, _, Empty, rnw, rsw, Empty)) ->
                 makeNode rnw lnw lsw rsw
 
-            | _ ->
-                let d = max (depth left) (depth right)
-                Node (d + 1, rows left, cols left + cols right, right, left, Empty, Empty)
+            | _ -> makeNode right left Empty Empty
 
     (* Compute the "subrope" starting from indexes i, j taking h and w
        elements in vertical and horizontal direction. *)

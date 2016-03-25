@@ -213,40 +213,38 @@ module QuadRope =
 
     (* Concatenate two trees horizontally. *)
     let hcat left right =
+        let canCopy ls rs =
+            Array2D.length2 ls + Array2D.length2 rs <= w_max
         let rec hcat0 left right =
             match left, right with
                 | Empty, _ -> right
                 | _, Empty -> left
-                | Leaf ls, Leaf rs when Array2D.length2 ls + Array2D.length2 rs <= w_max ->
+                | Leaf ls, Leaf rs when canCopy ls rs ->
                     Leaf (Array2D.cat2 ls rs)
 
-                | Node (ld, lh, lw, lne, lnw, Empty, Empty), r ->
-                        let ne = hcat0 lne r
-                        Node (max ld (depth ne + 1), lh, lw + cols r, ne, lnw, Empty, Empty)
+                | Node (_, _, _, Leaf lnes, lnw, Empty, Empty), Leaf rs when canCopy lnes rs->
+                    makeNode (Leaf (Array2D.cat2 lnes rs)) lnw Empty Empty
 
-                | l, Node (rd, rh, rw, rne, rnw, Empty, Empty) ->
-                        let nw = hcat0 l rnw
-                        Node (max rd (depth nw + 1), rh, cols l + rw, rne, nw, Empty, Empty)
+                | Leaf ls, Node (_, _, _, rne, Leaf rnws, Empty, Empty) when canCopy ls rnws ->
+                    makeNode rne (Leaf (Array2D.cat2 ls rnws)) Empty Empty
 
-                | (Node (ld, lh, lw, lne, lnw, lsw, lse),
-                   Node ( _,  _, rw, Empty, rnw, rsw, Empty))
-                    when rows lne = rows rnw && rows lse = rows rsw ->
-                        let ne = hcat0 lne rnw
-                        let se = hcat0 lse rsw
-                        let d = max (depth ne) (depth se)
-                        Node (max ld (d + 1), lh, lw + rw, ne, lnw, lsw, se)
+                | (Node (_, _, _, Leaf lnes, lnw, lsw, Leaf lses),
+                   Node (_, _, _, Empty, Leaf rnws, Leaf rsws, Empty))
+                    when canCopy lnes rnws && canCopy lses rsws ->
+                        let ne = Leaf (Array2D.cat2 lnes rnws)
+                        let se = Leaf (Array2D.cat2 lses rsws)
+                        makeNode ne lnw lsw se
 
-                | (Node ( _, lh, lw, Empty, lnw, lsw, Empty),
-                   Node (rd,  _, rw, rne, rnw, rsw, rse))
-                    when rows lnw = rows rnw && rows lsw = rows rsw ->
-                        let nw = hcat0 lnw rnw
-                        let sw = hcat0 lsw rsw
-                        let d = max (depth nw) (depth sw)
-                        Node (max rd (d + 1), lh, lw + rw, rne, nw, sw, rse)
+                | (Node (_, _, _, Empty, Leaf lnws, Leaf lsws, Empty),
+                   Node (_, _, _, rne, Leaf rnws, Leaf rsws, rse))
+                    when canCopy lnws rnws && canCopy lsws rsws ->
+                        let nw = Leaf (Array2D.cat2 lnws rnws)
+                        let sw = Leaf (Array2D.cat2 lsws rsws)
+                        makeNode rne nw sw rse
 
-                | (Node (ld, lh, lw, Empty, lnw, lsw, Empty),
-                   Node (rd,  _, rw, Empty, rnw, rsw, Empty)) ->
-                    Node (max ld rd, lh, lw + rw, rnw, lnw, lsw, rsw)
+                | (Node (_, _, _, Empty, lnw, lsw, Empty),
+                   Node (_, _, _, Empty, rnw, rsw, Empty)) ->
+                    makeNode rnw lnw lsw rsw
 
                 | _ ->
                     let d = max (depth left) (depth right)

@@ -169,47 +169,41 @@ module QuadRope =
 
     (* Concatenate two trees vertically. *)
     let vcat upper lower =
-        let rec vcat0 upper lower =
-            match upper, lower with
-                | Empty, _ -> lower
-                | _, Empty -> upper
-                | Leaf us, Leaf ls when Array2D.length1 us + Array2D.length1 ls <= h_max ->
-                    Leaf (Array2D.cat1 us ls)
-
-                | Node (du, hu, wu, Empty, nwu, swu, Empty), l ->
-                    let sw = vcat0 swu l
-                    Node (max du (depth sw + 1), hu + rows l, wu, Empty, nwu, sw, Empty)
-
-                | u, Node (dl, hl, wl, Empty, nwl, swl, Empty) ->
-                    let nw = vcat0 u nwl
-                    Node (max dl (depth nw + 1), hl + rows u, wl, Empty, nw, swl, Empty)
-
-                | (Node (du, hu, wu, neu, nwu, swu, seu),
-                   Node ( _, hl,  _, nel, nwl, Empty, Empty))
-                    when cols swu = cols nwl && cols seu = cols nel ->
-                        let sw = vcat0 swu nwl
-                        let se = vcat0 seu nel
-                        let d = max (depth sw) (depth se)
-                        Node (max du (d + 1), hu + hl, wu, neu, nwu, sw, se)
-
-                | (Node ( _, hu, wu, neu, nwu, Empty, Empty),
-                   Node (dl, hl,  _, nel, nwl, swl, sel))
-                    when cols nwu = cols nwl && cols neu = cols nel ->
-                        let nw = vcat0 nwu nwl
-                        let ne = vcat0 neu nel
-                        let d = max (depth nw) (depth ne)
-                        Node (max dl (d + 1), hu + hl, wu, ne, nw, swl, sel)
-
-                | (Node (du, hu, wu, neu, nwu, Empty, Empty),
-                   Node (dl, hl,  _, nel, nwl, Empty, Empty)) ->
-                    Node (max du dl, hu + hl, wu, neu, nwu, nwl, nel)
-
-                | _ ->
-                    let d = max (depth upper) (depth lower)
-                    Node (d + 1, rows upper + rows lower, cols upper, Empty, upper, lower, Empty)
+        let canCopy us ls =
+            Array2D.length2 us = Array2D.length2 ls && Array2D.length1 us + Array2D.length1 ls <= h_max
         if cols upper <> cols lower then
             failwith (sprintf "Trees must be of same width! u = %A\nl = %A" upper lower)
-        vcat0 upper lower
+        match upper, lower with
+            | Empty, _ -> lower
+            | _, Empty -> upper
+            | Leaf us, Leaf ls when canCopy us ls ->
+                Leaf (Array2D.cat1 us ls)
+
+            | Node (_, _, _, Empty, nwu, Leaf swus, Empty), Leaf ls when canCopy swus ls->
+                makeNode Empty nwu (Leaf (Array2D.cat1 swus ls)) Empty
+
+            | Leaf us, Node (_, _, _, Empty, Leaf nwls, swl, Empty) when canCopy us nwls ->
+                makeNode Empty (Leaf (Array2D.cat1 us nwls)) swl Empty
+
+            | (Node (_, _, _, neu, nwu, Leaf swus, Leaf seus),
+               Node (_, _, _, Leaf nels, Leaf nwls, Empty, Empty))
+                when canCopy swus nwls && canCopy seus nels ->
+                    let sw = Leaf (Array2D.cat1 swus nwls)
+                    let se = Leaf (Array2D.cat1 seus nels)
+                    makeNode neu nwu sw se
+
+            | (Node (_, _, _, Leaf neus, Leaf nwus, Empty, Empty),
+               Node (_, _, _, Leaf nels, Leaf nwls, swl, sel))
+                when canCopy nwus nwls && canCopy neus nels ->
+                    let nw = Leaf (Array2D.cat1 nwus nwls)
+                    let ne = Leaf (Array2D.cat1 neus nels)
+                    makeNode ne nw swl sel
+
+            | (Node (_, _, _, neu, nwu, Empty, Empty),
+               Node (_, _, _, nel, nwl, Empty, Empty)) ->
+                makeNode neu nwu nwl nel
+
+            | _ -> makeNode Empty upper lower Empty
 
     (* Concatenate two trees horizontally. *)
     let hcat left right =

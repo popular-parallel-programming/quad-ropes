@@ -296,10 +296,10 @@ module QuadRope =
                 Leaf (Array2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
             else if w <= w_max then
                 let hpv = h0 + h / 2
-                vcat (init0 h0 w0 hpv w1) (init0 hpv w0 h1 w1)
+                makeNode Empty (init0 h0 w0 hpv w1) (init0 hpv w0 h1 w1) Empty
             else if h <= h_max then
                 let wpv = w0 + w / 2
-                hcat (init0 h0 w0 h1 wpv) (init0 h0 wpv h1 w1)
+                makeNode (init0 h0 wpv h1 w1) (init0 h0 w0 h1 wpv) Empty Empty
             else
                 let hpv = h0 + h / 2
                 let wpv = w0 + w / 2

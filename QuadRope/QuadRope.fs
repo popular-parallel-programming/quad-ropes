@@ -215,43 +215,41 @@ module QuadRope =
     let hcat left right =
         let canCopy ls rs =
             Array2D.length2 ls + Array2D.length2 rs <= w_max
-        let rec hcat0 left right =
-            match left, right with
-                | Empty, _ -> right
-                | _, Empty -> left
-                | Leaf ls, Leaf rs when canCopy ls rs ->
-                    Leaf (Array2D.cat2 ls rs)
-
-                | Node (_, _, _, Leaf lnes, lnw, Empty, Empty), Leaf rs when canCopy lnes rs->
-                    makeNode (Leaf (Array2D.cat2 lnes rs)) lnw Empty Empty
-
-                | Leaf ls, Node (_, _, _, rne, Leaf rnws, Empty, Empty) when canCopy ls rnws ->
-                    makeNode rne (Leaf (Array2D.cat2 ls rnws)) Empty Empty
-
-                | (Node (_, _, _, Leaf lnes, lnw, lsw, Leaf lses),
-                   Node (_, _, _, Empty, Leaf rnws, Leaf rsws, Empty))
-                    when canCopy lnes rnws && canCopy lses rsws ->
-                        let ne = Leaf (Array2D.cat2 lnes rnws)
-                        let se = Leaf (Array2D.cat2 lses rsws)
-                        makeNode ne lnw lsw se
-
-                | (Node (_, _, _, Empty, Leaf lnws, Leaf lsws, Empty),
-                   Node (_, _, _, rne, Leaf rnws, Leaf rsws, rse))
-                    when canCopy lnws rnws && canCopy lsws rsws ->
-                        let nw = Leaf (Array2D.cat2 lnws rnws)
-                        let sw = Leaf (Array2D.cat2 lsws rsws)
-                        makeNode rne nw sw rse
-
-                | (Node (_, _, _, Empty, lnw, lsw, Empty),
-                   Node (_, _, _, Empty, rnw, rsw, Empty)) ->
-                    makeNode rnw lnw lsw rsw
-
-                | _ ->
-                    let d = max (depth left) (depth right)
-                    Node (d + 1, rows left, cols left + cols right, right, left, Empty, Empty)
         if rows left <> rows right then
             failwith (sprintf "Trees must be of same height! l = %A\nr = %A" left right)
-        hcat0 left right
+        match left, right with
+            | Empty, _ -> right
+            | _, Empty -> left
+            | Leaf ls, Leaf rs when canCopy ls rs ->
+                Leaf (Array2D.cat2 ls rs)
+
+            | Node (_, _, _, Leaf lnes, lnw, Empty, Empty), Leaf rs when canCopy lnes rs->
+                makeNode (Leaf (Array2D.cat2 lnes rs)) lnw Empty Empty
+
+            | Leaf ls, Node (_, _, _, rne, Leaf rnws, Empty, Empty) when canCopy ls rnws ->
+                makeNode rne (Leaf (Array2D.cat2 ls rnws)) Empty Empty
+
+            | (Node (_, _, _, Leaf lnes, lnw, lsw, Leaf lses),
+               Node (_, _, _, Empty, Leaf rnws, Leaf rsws, Empty))
+                when canCopy lnes rnws && canCopy lses rsws ->
+                    let ne = Leaf (Array2D.cat2 lnes rnws)
+                    let se = Leaf (Array2D.cat2 lses rsws)
+                    makeNode ne lnw lsw se
+
+            | (Node (_, _, _, Empty, Leaf lnws, Leaf lsws, Empty),
+               Node (_, _, _, rne, Leaf rnws, Leaf rsws, rse))
+                when canCopy lnws rnws && canCopy lsws rsws ->
+                    let nw = Leaf (Array2D.cat2 lnws rnws)
+                    let sw = Leaf (Array2D.cat2 lsws rsws)
+                    makeNode rne nw sw rse
+
+            | (Node (_, _, _, Empty, lnw, lsw, Empty),
+               Node (_, _, _, Empty, rnw, rsw, Empty)) ->
+                makeNode rnw lnw lsw rsw
+
+            | _ ->
+                let d = max (depth left) (depth right)
+                Node (d + 1, rows left, cols left + cols right, right, left, Empty, Empty)
 
     (* Compute the "subrope" starting from indexes i, j taking h and w
        elements in vertical and horizontal direction. *)

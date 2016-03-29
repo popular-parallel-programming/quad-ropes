@@ -314,8 +314,6 @@ module QuadRope =
         | Node (_, _, _, ne, nw, sw, se) ->
             seq { yield! toSeq nw; yield! toSeq ne; yield! toSeq sw; yield! toSeq se }
 
-    (* Bulk-operations on quad ropes: *)
-
     (* Apply a function to every element in the tree and preserves the
        tree structure. *)
     let rec map f root =
@@ -328,14 +326,6 @@ module QuadRope =
                       map f nw,
                       map f sw,
                       map f se)
-
-    (* Fold from left to right and top-down in row-first order. *)
-    let foldl f state root =
-        Seq.fold f state (toSeq root)
-
-    (* Fold from right to left and bottom-up in row-first order. *)
-    let foldr f root state =
-        Seq.foldBack f (toSeq root) state
 
     (* Constructor takes sub-ropes in order NE, NW, SW, SE. *)
     type ('a, 'b) Path =
@@ -410,11 +400,3 @@ module QuadRope =
                 | SW _ -> Some (east (node, loc))
                 | NE _ -> Option.map upperLeftMost (walkEast (up (node, loc)))
                 | SE _ -> Option.map (down >> south >> upperLeftMost) (walkEast (up (node, loc)))
-
-    let flatten root =
-        let rec makeRow f (node, path) =
-            seq { yield node, path
-                  match f (node, path) with
-                  | Some (node, path) -> yield! makeRow f (node, path)
-                  | _ -> () }
-        Seq.map ((makeRow Path.walkEast) >> (Seq.map fst)) (makeRow Path.walkSouth (Path.start root))

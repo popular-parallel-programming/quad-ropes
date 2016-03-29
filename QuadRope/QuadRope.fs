@@ -375,22 +375,6 @@ module QuadRope =
 
         let start rope = upperLeftMost (rope, Top)
 
-        let rec walkSouth (node, loc) =
-            match loc with
-                | Top -> None
-                | NW _
-                | NE _ -> Some (south (node, loc))
-                | SW _ -> Option.map upperLeftMost (walkSouth (up (node, loc)))
-                | SE _ -> Option.map (down >> east >> upperLeftMost) (walkSouth (up (node, loc)))
-
-        let rec walkEast (node, loc) =
-            match loc with
-                | Top -> None
-                | NW _
-                | SW _ -> Some (east (node, loc))
-                | NE _ -> Option.map upperLeftMost (walkEast (up (node, loc)))
-                | SE _ -> Option.map (down >> south >> upperLeftMost) (walkEast (up (node, loc)))
-
     let toSeq = function
         | Empty -> Seq.empty
         | Leaf vs ->

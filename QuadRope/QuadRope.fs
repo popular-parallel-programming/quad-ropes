@@ -304,16 +304,6 @@ module QuadRope =
     let fromArray vss =
         init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)
 
-    (* Iterate over a tree from the upper left to the lower right in
-       row-first order. *)
-    let rec toSeq = function
-        | Empty -> Seq.empty
-        | Leaf vs -> seq { for i in 0..Array2D.length1 vs - 1 do
-                           for j in 0..Array2D.length2 vs - 1 ->
-                           vs.[i, j] }
-        | Node (_, _, _, ne, nw, sw, se) ->
-            seq { yield! toSeq nw; yield! toSeq ne; yield! toSeq sw; yield! toSeq se }
-
     (* Apply a function to every element in the tree and preserves the
        tree structure. *)
     let rec map f root =
@@ -400,3 +390,12 @@ module QuadRope =
                 | SW _ -> Some (east (node, loc))
                 | NE _ -> Option.map upperLeftMost (walkEast (up (node, loc)))
                 | SE _ -> Option.map (down >> south >> upperLeftMost) (walkEast (up (node, loc)))
+
+    let toSeq = function
+        | Empty -> Seq.empty
+        | Leaf vs ->
+            seq { for i in 0 .. Array2D.length1 vs - 1 ->
+                  seq { for j in 0 .. Array2D.length2 vs - 1 -> vs.[i, j] }}
+        | rope ->
+            seq { for i in 0 .. rows rope - 1 ->
+                  seq { for j in 0 .. cols rope - 1 -> get rope i j }}

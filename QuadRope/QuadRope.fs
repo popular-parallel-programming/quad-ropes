@@ -375,6 +375,8 @@ module QuadRope =
 
         let start rope = upperLeftMost (rope, Top)
 
+    (* TODO: This implementation takes O(n log n), but I would much
+       prefer a O(n) solution using zippers. *)
     let toSeq = function
         | Empty -> Seq.empty
         | Leaf vs ->
@@ -383,3 +385,18 @@ module QuadRope =
         | rope ->
             seq { for i in 0 .. rows rope - 1 ->
                   seq { for j in 0 .. cols rope - 1 -> get rope i j }}
+
+    let ofSeq h w ss =
+        let ss' = Seq.cache ss
+        init h w (fun i j -> Seq.item (i * w + j) ss')
+
+    let fold f s rope =
+        Seq.fold f s (Seq.concat (toSeq rope))
+
+    let scan f s rope =
+        ofSeq (rows rope) (cols rope) (Seq.scan f s (Seq.concat (toSeq rope)))
+
+    let zip f lope rope =
+        if rows lope <> rows rope || cols lope <> cols rope then
+            failwith "QuadRopes must have same shape."
+        init (rows lope) (cols lope) (fun i j -> f (get lope i j) (get lope i j))

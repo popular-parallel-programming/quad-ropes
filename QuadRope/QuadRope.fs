@@ -379,9 +379,6 @@ module QuadRope =
        prefer a O(n) solution using zippers. *)
     let toSeq = function
         | Empty -> Seq.empty
-        | Leaf vs ->
-            seq { for i in 0 .. Array2D.length1 vs - 1 ->
-                  seq { for j in 0 .. Array2D.length2 vs - 1 -> vs.[i, j] }}
         | rope ->
             seq { for i in 0 .. rows rope - 1 ->
                   seq { for j in 0 .. cols rope - 1 -> get rope i j }}

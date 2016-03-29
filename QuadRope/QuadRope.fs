@@ -320,43 +320,50 @@ module QuadRope =
     (* Constructor takes sub-ropes in order NE, NW, SW, SE. *)
     type ('a, 'b) Path =
         | Top
-        | NW of 'a QuadRope * ('a, 'b) Path * 'a QuadRope * 'a QuadRope
-        | NE of ('a, 'b) Path * 'b QuadRope * 'a QuadRope * 'a QuadRope
-        | SW of 'b QuadRope * 'b QuadRope * ('a, 'b) Path * 'a QuadRope
-        | SE of 'b QuadRope * 'b QuadRope * 'b QuadRope * ('a, 'b) Path
+        | NW of int * int * 'a QuadRope * ('a, 'b) Path * 'a QuadRope * 'a QuadRope
+        | NE of int * int * ('a, 'b) Path * 'b QuadRope * 'a QuadRope * 'a QuadRope
+        | SW of int * int * 'b QuadRope * 'b QuadRope * ('a, 'b) Path * 'a QuadRope
+        | SE of int * int * 'b QuadRope * 'b QuadRope * 'b QuadRope * ('a, 'b) Path
 
     module Path =
 
+        let index = function
+            | Top -> 0, 0
+            | NW (h, w, _, _, _, _)
+            | NE (h, w, _, _, _, _)
+            | SW (h, w, _, _, _, _)
+            | SE (h, w, _, _, _, _) -> h, w
+
         let west (node, path) =
             match path with
-                | NE (path, nw, sw, se) -> nw, NW (node, path, sw, se)
-                | SE (ne, nw, sw, path) -> sw, SW (ne, nw, path, node)
+                | NE (h, w, path, nw, sw, se) -> nw, NW (h, w - cols nw, node, path, sw, se)
+                | SE (h, w, ne, nw, sw, path) -> sw, SW (h, w - cols sw, ne, nw, path, node)
                 | _ -> node, path
 
         let east (node, path) =
             match path with
-                | NW (ne, path, sw, se) -> ne, NE (path, node, sw, se)
-                | SW (ne, nw, path, se) -> se, SE (ne, nw, node, path)
+                | NW (h, w, ne, path, sw, se) -> ne, NE (h, w + cols node, path, node, sw, se)
+                | SW (h, w, ne, nw, path, se) -> se, SE (h, w + cols node, ne, nw, node, path)
                 | _ -> node, path
 
         let north (node, path) =
             match path with
-                | SW (ne, nw, path, se) -> nw, NW (ne, path, node, se)
-                | SE (ne, nw, sw, path) -> ne, NE (path, nw, sw, node)
+                | SW (h, w, ne, nw, path, se) -> nw, NW (h - rows nw, w, ne, path, node, se)
+                | SE (h, w, ne, nw, sw, path) -> ne, NE (h - rows ne, w, path, nw, sw, node)
                 | _ -> node, path
 
         let south (node, path) =
             match path with
-                | NE (path, nw, sw, se) -> se, SE (node, nw, sw, path)
-                | NW (ne, path, sw, se) -> sw, SW (ne, node, path, se)
+                | NE (h, w, path, nw, sw, se) -> se, SE (h + rows node, w, node, nw, sw, path)
+                | NW (h, w, ne, path, sw, se) -> sw, SW (h + rows node, w, ne, node, path, se)
                 | _ -> (node, path)
 
         let up (node, path) =
             match path with
-                | NE (path, nw, sw, se) -> (makeNode node nw sw se), path
-                | NW (ne, path, sw, se) -> (makeNode ne node sw se), path
-                | SW (ne, nw, path, se) -> (makeNode ne nw node se), path
-                | SE (ne, nw, sw, path) -> (makeNode ne nw sw node), path
+                | NE (_, _, path, nw, sw, se) -> (makeNode node nw sw se), path
+                | NW (_, _, ne, path, sw, se) -> (makeNode ne node sw se), path
+                | SW (_, _, ne, nw, path, se) -> (makeNode ne nw node se), path
+                | SE (_, _, ne, nw, sw, path) -> (makeNode ne nw sw node), path
                 | _ -> node, path
 
         let down (node, path) =
@@ -364,14 +371,15 @@ module QuadRope =
                 | Empty
                 | Leaf _ -> node, path
                 | Node (_, _, _, ne, nw, sw, se) ->
-                    nw, NW (ne, path, sw, se)
+                    let h, w = index path
+                    nw, NW (h, w, ne, path, sw, se)
 
         let rec upperLeftMost (node, path) =
             match node with
                 | Empty
                 | Leaf _ -> node, path
-                | Node (_, _, _, ne, nw, sw, se) ->
-                    upperLeftMost (nw, (NW (ne, path, sw, se)))
+                | _ ->
+                    upperLeftMost (down (node, path))
 
         let start rope = upperLeftMost (rope, Top)
 

@@ -63,6 +63,16 @@ module Array2D =
         let j0  = Array2D.length2 arr - 1
         Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> arr.[i, j0 - j])
 
+    let fold1 f s arr =
+        Array.init
+            (Array2D.length1 arr)
+            (fun i -> Seq.fold f s (seq { for j in 0 .. Array2D.length2 arr - 1 -> arr.[i, j] }))
+
+    let fold2 f s arr =
+        Array.init
+            (Array2D.length2 arr)
+            (fun j -> Seq.fold f s (seq { for i in 0 .. Array2D.length1 arr - 1 -> arr.[i, j] }))
+
 module Fibonacci =
 
     let private fibs =

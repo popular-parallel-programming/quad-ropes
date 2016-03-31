@@ -23,7 +23,6 @@ namespace RadTrees.Benchmark
 
             Infrastructure.Mark8("QuadRope.map", i => { QuadRope.map(timesTwo, x); return i; });
             Infrastructure.Mark8("Array2D.map", i => { Array2DModule.Map(timesTwo, arr); return i; });
-
             Infrastructure.Mark8("QuadRope.foldH", i => { QuadRope.foldH(times, 0, x); return i; });
             Infrastructure.Mark8("Array2D.foldH", i => { Array2D.fold1(times, 0, arr); return i; });
             Infrastructure.Mark8("QuadRope.foldV", i => { QuadRope.foldV(times, 0, x); return i; });

@@ -320,84 +320,89 @@ module QuadRope =
     (* Constructor takes sub-ropes in order NE, NW, SW, SE. *)
     type ('a, 'b) Path =
         | Top
-        | NW of int * int * 'a QuadRope * ('a, 'b) Path * 'a QuadRope * 'a QuadRope
-        | NE of int * int * ('a, 'b) Path * 'b QuadRope * 'a QuadRope * 'a QuadRope
-        | SW of int * int * 'b QuadRope * 'b QuadRope * ('a, 'b) Path * 'a QuadRope
-        | SE of int * int * 'b QuadRope * 'b QuadRope * 'b QuadRope * ('a, 'b) Path
+        | NW of 'a QuadRope * ('a, 'b) Path * 'a QuadRope * 'a QuadRope
+        | NE of  ('a, 'b) Path * 'b QuadRope * 'a QuadRope * 'a QuadRope
+        | SW of 'b QuadRope * 'b QuadRope * ('a, 'b) Path * 'a QuadRope
+        | SE of 'b QuadRope * 'b QuadRope * 'b QuadRope * ('a, 'b) Path
+
+    type ('a, 'b) Loc = 'a QuadRope * int * int * ('a, 'b) Path
+
+    module Loc =
+
+        let node ((n, _, _, _) : ('a, 'b) Loc) = n
+        let i    ((_, i, _, _) : ('a, 'b) Loc) = i
+        let j    ((_, _, j, _) : ('a, 'b) Loc) = j
+        let path ((_, _, _, p) : ('a, 'b) Loc) = p
 
     module Path =
 
-        let index = function
-            | Top -> 0, 0
-            | NW (h, w, _, _, _, _)
-            | NE (h, w, _, _, _, _)
-            | SW (h, w, _, _, _, _)
-            | SE (h, w, _, _, _, _) -> h, w
-
-        let west (node, path) =
+        let west (node, i, j, path) =
             match path with
-                | NE (h, w, path, nw, sw, se) -> nw, NW (h, w - cols nw, node, path, sw, se)
-                | SE (h, w, ne, nw, sw, path) -> sw, SW (h, w - cols sw, ne, nw, path, node)
-                | _ -> node, path
+                | NE (path, nw, sw, se) -> nw, i, j - cols nw, NW (node, path, sw, se)
+                | SE (ne, nw, sw, path) -> sw, i, j - cols sw, SW (ne, nw, path, node)
+                | _ -> node, i, j, path
 
-        let east (node, path) =
+        let east (node, i, j, path) =
             match path with
-                | NW (h, w, ne, path, sw, se) -> ne, NE (h, w + cols node, path, node, sw, se)
-                | SW (h, w, ne, nw, path, se) -> se, SE (h, w + cols node, ne, nw, node, path)
-                | _ -> node, path
+                | NW (ne, path, sw, se) -> ne, i, j + cols node, NE (path, node, sw, se)
+                | SW (ne, nw, path, se) -> se, i, j + cols node, SE (ne, nw, node, path)
+                | _ -> node, i, j, path
 
-        let north (node, path) =
+        let north (node, i, j, path) =
             match path with
-                | SW (h, w, ne, nw, path, se) -> nw, NW (h - rows nw, w, ne, path, node, se)
-                | SE (h, w, ne, nw, sw, path) -> ne, NE (h - rows ne, w, path, nw, sw, node)
-                | _ -> node, path
+                | SW (ne, nw, path, se) -> nw, i - rows nw, j, NW (ne, path, node, se)
+                | SE (ne, nw, sw, path) -> ne, i - rows ne, j, NE (path, nw, sw, node)
+                | _ -> node, i, j, path
 
-        let south (node, path) =
+        let south (node, i, j, path) =
             match path with
-                | NE (h, w, path, nw, sw, se) -> se, SE (h + rows node, w, node, nw, sw, path)
-                | NW (h, w, ne, path, sw, se) -> sw, SW (h + rows node, w, ne, node, path, se)
-                | _ -> (node, path)
+                | NE (path, nw, sw, se) -> se, i + rows node, j, SE (node, nw, sw, path)
+                | NW (ne, path, sw, se) -> sw, i + rows node, j, SW (ne, node, path, se)
+                | _ -> (node, i, j, path)
 
-        let up (node, path) =
+        let southWest (node, i, j, path) =
             match path with
-                | NE (_, _, path, nw, sw, se) -> (makeNode node nw sw se), path
-                | NW (_, _, ne, path, sw, se) -> (makeNode ne node sw se), path
-                | SW (_, _, ne, nw, path, se) -> (makeNode ne nw node se), path
-                | SE (_, _, ne, nw, sw, path) -> (makeNode ne nw sw node), path
-                | _ -> node, path
+                | NE (path, nw, sw, se) -> sw, i + rows nw, j - cols nw, SW (node, nw, path, se)
+                | _ -> node, i, j, path
 
-        let down (node, path) =
+        let up (node, i, j, path) =
+            match path with
+                | NE (path, nw, sw, se) -> (makeNode node nw sw se), i, j - cols nw, path
+                | NW (ne, path, sw, se) -> (makeNode ne node sw se), i, j, path
+                | SW (ne, nw, path, se) -> (makeNode ne nw node se), i - rows nw, j, path
+                | SE (ne, nw, sw, path) -> (makeNode ne nw sw node), i - rows ne, j - cols sw, path
+                | _ -> node, i, j, path
+
+        let down (node, i, j, path) =
             match node with
                 | Empty
-                | Leaf _ -> node, path
+                | Leaf _ -> node, i, j, path
                 | Node (_, _, _, ne, nw, sw, se) ->
-                    let h, w = index path
-                    nw, NW (h, w, ne, path, sw, se)
+                    nw, i, j, NW (ne, path, sw, se)
 
-        let rec upperLeftMost (node, path) =
+        let rec upperLeftMost (node, i, j, path) =
             match node with
                 | Empty
-                | Leaf _ -> node, path
-                | _ ->
-                    upperLeftMost (down (node, path))
+                | Leaf _ -> node, i, j, path
+                | _ -> upperLeftMost (down (node, i, j, path))
 
-        let start rope = upperLeftMost (rope, Top)
+        let start rope = upperLeftMost (rope, 0, 0, Top)
 
-        let rec walkSouth (node, loc) =
+        let rec walkSouth (node, i, j, loc) =
             match loc with
                 | Top -> None
                 | NW _
-                | NE _ -> Some (south (node, loc))
-                | SW _ -> Option.map upperLeftMost (walkSouth (up (node, loc)))
-                | SE _ -> Option.map (down >> east >> upperLeftMost) (walkSouth (up (node, loc)))
+                | NE _ -> Some (south (node, i, j, loc))
+                | SW _ -> Option.map upperLeftMost (walkSouth (up (node, i, j, loc)))
+                | SE _ -> Option.map (down >> east >> upperLeftMost) (walkSouth (up (node, i, j, loc)))
 
-        let rec walkEast (node, loc) =
+        let rec walkEast (node, i, j, loc) =
             match loc with
                 | Top -> None
                 | NW _
-                | SW _ -> Some (east (node, loc))
-                | NE _ -> Option.map upperLeftMost (walkEast (up (node, loc)))
-                | SE _ -> Option.map (down >> south >> upperLeftMost) (walkEast (up (node, loc)))
+                | SW _ -> Some (east (node, i, j, loc))
+                | NE _ -> Option.map upperLeftMost (walkEast (up (node, i, j, loc)))
+                | SE _ -> Option.map (down >> south >> upperLeftMost) (walkEast (up (node, i, j, loc)))
 
     (* TODO: This implementation takes O(n log n), but I would much
        prefer a O(n) solution using zippers. *)

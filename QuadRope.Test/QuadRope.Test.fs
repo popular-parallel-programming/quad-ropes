@@ -138,9 +138,9 @@ module QuadRopeTest =
                   QuadRope.depth b .<=. QuadRope.depth a)
 
         static member ``toSeq yields correct number of scalars`` (a : int QuadRope) =
-            QuadRope.rows a * QuadRope.cols a .=. Seq.length (Seq.concat (QuadRope.toSeq a))
+            QuadRope.rows a * QuadRope.cols a .=. Seq.length (Seq.concat (QuadRope.toCols a))
 
         static member ``toSeq yields scalars in correct order`` (a : int QuadRope) =
             let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
             let scalars = Seq.map (fun (i, j) -> QuadRope.get a i j) indices
-            Seq.reduce (.&.) (Seq.map2 (.=.) scalars (Seq.concat (QuadRope.toSeq a)))
+            Seq.reduce (.&.) (Seq.map2 (.=.) scalars (Seq.concat (QuadRope.toCols a)))

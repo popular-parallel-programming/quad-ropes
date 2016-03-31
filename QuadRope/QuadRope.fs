@@ -404,6 +404,24 @@ module QuadRope =
                 | NE _ -> Option.map upperLeftMost (walkEast (up (node, i, j, loc)))
                 | SE _ -> Option.map (down >> south >> upperLeftMost) (walkEast (up (node, i, j, loc)))
 
+    module Traverse =
+
+        let rec col j = function
+            | Empty -> Seq.empty
+            | Leaf vs -> seq { for i in 0 .. Array2D.length1 vs - 1 -> vs.[i, j] }
+            | Node (_, _, _, ne, nw, sw, se) ->
+                let us = if j < cols nw then col j nw else col (j - cols nw) ne
+                let ls = if j < cols sw then col j sw else col (j - cols sw) se
+                Seq.append us ls
+
+        let rec row i = function
+            | Empty -> Seq.empty
+            | Leaf vs -> seq { for j in 0 .. Array2D.length2 vs - 1 -> vs.[i, j] }
+            | Node (_, _, _, ne, nw, sw, se) ->
+                let ls = if i < rows nw then row i nw else row (i - rows nw) sw
+                let rs = if i < rows ne then row i ne else row (i - rows ne) se
+                Seq.append ls rs
+
     (* TODO: This implementation takes O(n log n), but I would much
        prefer a O(n) solution using zippers. *)
     let toSeq = function

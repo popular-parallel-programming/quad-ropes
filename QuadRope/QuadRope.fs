@@ -430,7 +430,7 @@ module QuadRope =
             seq { for i in 0 .. rows rope - 1 ->
                   seq { for j in 0 .. cols rope - 1 -> get rope i j }}
 
-    let ofSeq h w ss =
+    let fromSeq h w ss =
         let ss' = Seq.cache ss
         init h w (fun i j -> Seq.item (i * w + j) ss')
 
@@ -438,7 +438,7 @@ module QuadRope =
         Seq.fold f s (Seq.concat (toSeq rope))
 
     let scan f s rope =
-        ofSeq (rows rope) (cols rope) (Seq.scan f s (Seq.concat (toSeq rope)))
+        fromSeq (rows rope) (cols rope) (Seq.scan f s (Seq.concat (toSeq rope)))
 
     let zip f lope rope =
         if rows lope <> rows rope || cols lope <> cols rope then

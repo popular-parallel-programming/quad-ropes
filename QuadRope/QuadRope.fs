@@ -304,6 +304,12 @@ module QuadRope =
     let fromArray vss =
         init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)
 
+    let fromArrayH vs =
+        init 1 (Array.length vs) (fun _ j -> Array.get vs j)
+
+    let fromArrayV vs =
+        init (Array.length vs) 1 (fun i _ -> Array.get vs i)
+
     (* Apply a function to every element in the tree and preserves the
        tree structure. *)
     let rec map f root =
@@ -422,9 +428,13 @@ module QuadRope =
                 let rs = if i < rows ne then row i ne else row (i - rows ne) se
                 Seq.append ls rs
 
-    (* TODO: This implementation takes O(n log n), but I would much
-       prefer a O(n) solution using zippers. *)
-    let toSeq = function
+    let toCols = function
+        | Empty -> Seq.empty
+        | rope ->
+            seq { for j in 0 .. cols rope - 1 ->
+                  seq { for i in 0 .. rows rope - 1 -> get rope i j }}
+
+    let toRows = function
         | Empty -> Seq.empty
         | rope ->
             seq { for i in 0 .. rows rope - 1 ->
@@ -434,11 +444,13 @@ module QuadRope =
         let ss' = Seq.cache ss
         init h w (fun i j -> Seq.item (i * w + j) ss')
 
-    let fold f s rope =
-        Seq.fold f s (Seq.concat (toSeq rope))
+    let foldH f s rope =
+        let rs = Array.map (Array.fold f s) (Array.ofSeq (Seq.map Array.ofSeq (toRows rope)))
+        fromArrayH rs
 
-    let scan f s rope =
-        fromSeq (rows rope) (cols rope) (Seq.scan f s (Seq.concat (toSeq rope)))
+    let foldV f s rope =
+        let cs = Array.map (Array.fold f s) (Array.ofSeq (Seq.map Array.ofSeq (toCols rope)))
+        fromArrayV cs
 
     let zip f lope rope =
         if rows lope <> rows rope || cols lope <> cols rope then

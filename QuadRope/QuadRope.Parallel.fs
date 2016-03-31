@@ -10,13 +10,13 @@ module Parallel =
         | More of 'a
         | Done of 'b
 
-    let rec next rope path =
-        match path with
-            | Top -> Done rope
-            | NE (path, nw, sw, se) -> More (upperLeftMost (sw, (SW (rope, nw, path, se))))
-            | NW (ne, path, sw, se) -> More (upperLeftMost (ne, (NE (path, rope, sw, se))))
-            | SW (ne, nw, path, se) -> More (upperLeftMost (se, (SE (ne, nw, rope, path))))
-            | SE (ne, nw, sw, path) -> next (makeNode ne nw sw rope) path
+    let rec next loc =
+        match Loc.path loc with
+            | Top -> Done (Loc.node loc)
+            | NE _ -> More ((southWest >> upperLeftMost) loc)
+            | NW _ -> More ((east >> upperLeftMost) loc)
+            | SW _ -> More ((east >> upperLeftMost) loc)
+            | SE _ -> next (up loc)
 
     let rec splitPath p u path =
         match path with
@@ -33,15 +33,14 @@ module Parallel =
             Done (map f node)
 
     let mapUntil cond f rope =
-        let rec cmap node path =
-            match mapUntilSeq cond f node with
-                | More node -> More (splitPath Empty node path)
+        let rec cmap loc =
+            match mapUntilSeq cond f (Loc.node loc) with
+                | More node -> More (splitPath Empty node (Loc.path loc))
                 | Done propes ->
-                    match next propes path with
+                    match next (propes, 0, 0, Loc.path loc) with
                         | Done rope -> Done rope
-                        | More (node, path) -> cmap node path
-        let node, path = start rope
-        cmap node path
+                        | More loc -> cmap loc
+        cmap (start rope)
 
     let inline size rope =
         rows rope * cols rope

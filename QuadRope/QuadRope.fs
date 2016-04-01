@@ -436,23 +436,47 @@ module QuadRope =
             seq { for j in 0 .. cols rope - 1 ->
                   seq { for i in 0 .. rows rope - 1 -> get rope i j }}
 
+    let toColsArray rope = (toCols >> Seq.concat >> Array.ofSeq) rope
+
     let toRows = function
         | Empty -> Seq.empty
         | rope ->
             seq { for i in 0 .. rows rope - 1 ->
                   seq { for j in 0 .. cols rope - 1 -> get rope i j }}
 
+    let toRowsArray rope = (toRows >> Seq.concat >> Array.ofSeq) rope
+
     let fromSeq h w ss =
         let ss' = Seq.cache ss
         init h w (fun i j -> Seq.item (i * w + j) ss')
 
-    let foldH f s rope =
-        let rs = Array.map (Array.fold f s) (Array.ofSeq (Seq.map Array.ofSeq (toRows rope)))
-        fromArrayH rs
+    let foldH f ss rope =
+        let vnode n s =
+            makeNode Empty n s Empty
+        let rec fold ss = function
+            | Empty -> Empty
+            | Leaf vs -> Leaf (Array2D.fold2 f ss vs)
+            | Node (_, _, _, ne, nw, sw, se) ->
+                fold2 (toColsArray (fold2 ss nw sw)) ne se
+        and fold2 ss n s =
+            vnode
+                (fold (Array.sub ss 0 (rows n)) n)
+                (fold (Array.sub ss (rows n) (Array.length ss - rows n)) s)
+        fold ss rope
 
-    let foldV f s rope =
-        let cs = Array.map (Array.fold f s) (Array.ofSeq (Seq.map Array.ofSeq (toCols rope)))
-        fromArrayV cs
+    let foldV f ss rope =
+        let hnode w e =
+            makeNode e w Empty Empty
+        let rec fold ss = function
+            | Empty -> Empty
+            | Leaf vs -> Leaf (Array2D.fold1 f ss vs)
+            | Node (_, _, _, ne, nw, sw, se) ->
+                fold2 (toRowsArray (fold2 ss nw ne)) sw se
+        and fold2 ss w e =
+            hnode
+                (fold (Array.sub ss 0 (cols w)) w)
+                (fold (Array.sub ss (cols w) (Array.length ss - cols w)) e)
+        fold ss rope
 
     let zip f lope rope =
         if rows lope <> rows rope || cols lope <> cols rope then

@@ -319,12 +319,6 @@ module QuadRope =
     let fromArray vss =
         init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)
 
-    let fromArrayH vs =
-        init 1 (Array.length vs) (fun _ j -> Array.get vs j)
-
-    let fromArrayV vs =
-        init (Array.length vs) 1 (fun i _ -> Array.get vs i)
-
     (* Apply a function to every element in the tree and preserves the
        tree structure. *)
     let rec map f root =

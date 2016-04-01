@@ -308,9 +308,10 @@ module QuadRope =
                          (init0 hpv w0 h1 wpv) (* SW *)
                          (init0 hpv wpv h1 w1) (* SE *)
         init0 0 0 h w
-    
+
     let initZeros h w =
         init h w (fun _ _ -> 0)
+
     let fromArray vss =
         init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)
 

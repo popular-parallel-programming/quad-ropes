@@ -261,13 +261,17 @@ module QuadRope =
                     let se0 = split se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
                     makeNode ne0 nw0 sw0 se0
 
-    let rec split2V rope =
-        let i = rows rope / 2
-        split rope 0 0 i (cols rope), split rope (i + 1) 0 (rows rope - i) (cols rope)
+    let inline vsplit rope i h =
+        split rope i 0 h (cols rope)
 
-    let rec split2H rope =
-        let j = cols rope / 2
-        split rope 0 0 (rows rope) j, split rope 0 (j + 1) (rows rope) (cols rope - j)
+    let inline hsplit rope j w =
+        split rope 0 j (rows rope) w
+
+    let inline vsplit2 rope i =
+        vsplit rope 0 i, vsplit rope i (rows rope  - i)
+
+    let inline hsplit2 rope j =
+        hsplit rope 0 j, hsplit rope j (cols rope - j)
 
     let rec hrev = function
         | Empty -> Empty

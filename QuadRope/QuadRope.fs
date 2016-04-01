@@ -246,7 +246,7 @@ module QuadRope =
     (* Compute the "subrope" starting from indexes i, j taking h and w
        elements in vertical and horizontal direction. *)
     let rec split root i j h w =
-        if h <= 0 || w <= 0 then
+        if rows root <= i || h <= 0 || cols root <= j || w <= 0 then
             Empty
         else if i <= 0 && rows root <= h && j <= 0 && cols root <= w then
             root

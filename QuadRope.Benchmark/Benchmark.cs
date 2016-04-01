@@ -4,29 +4,38 @@ using Microsoft.FSharp.Collections;
 
 namespace RadTrees.Benchmark
 {
-
-    delegate int intop(int i, int j);
-
     class Benchmark
     {
-        delegate int intint(int x);
-        
         const int size = 100;
+
+        public static Func<int, double> ToDouble(Action f)
+        {
+            return i => { f(); return i; };
+        }
+
+        public static void Mark(string msg, Action f)
+        {
+            Infrastructure.Mark8(msg, ToDouble(f));
+        }
 
         public static void Run()
         {
+            // Wrapping C# functions could be done much nicer in F#, but
+            // that seems too much of a hassle for only two functions.
             var times = FSharpFunc<int, FSharpFunc<int, int>>.FromConverter(i => FSharpFunc<int, int>.FromConverter(j => i * j));
             var timesTwo = FSharpFunc<int, int>.FromConverter(i => 2 * i);
 
+            // No need to generate new data structures, they are immutable.
             var x = QuadRope.init(size, size, times);
             var arr = Array2DModule.Initialize(size, size, times);
 
-            Infrastructure.Mark8("QuadRope.map", i => { QuadRope.map(timesTwo, x); return i; });
-            Infrastructure.Mark8("Array2D.map", i => { Array2DModule.Map(timesTwo, arr); return i; });
-            Infrastructure.Mark8("QuadRope.foldH", i => { QuadRope.foldH(times, 0, x); return i; });
-            Infrastructure.Mark8("Array2D.foldH", i => { Array2D.fold1(times, 0, arr); return i; });
-            Infrastructure.Mark8("QuadRope.foldV", i => { QuadRope.foldV(times, 0, x); return i; });
-            Infrastructure.Mark8("Array2D.foldV", i => { Array2D.fold2(times, 0, arr); return i; });
+            // Run every operation on quad ropes and on 2D arrays in pairs.
+            Mark("QuadRope.map", () => QuadRope.map(timesTwo, x));
+            Mark("Array2D.map", () => Array2DModule.Map(timesTwo, arr));
+            Mark("QuadRope.foldH", () => QuadRope.foldH(times, 0, x));
+            Mark("Array2D.foldH", () => Array2D.fold1(times, 0, arr));
+            Mark("QuadRope.foldV", () => QuadRope.foldV(times, 0, x));
+            Mark("Array2D.foldV", () => Array2D.fold2(times, 0, arr));
         }
 
 	public static void Main(string[] args)
@@ -116,11 +125,11 @@ namespace RadTrees.Benchmark
     }
 
     public class Timer {
-	private readonly System.Diagnostics.Stopwatch stopwatch
-	    = new System.Diagnostics.Stopwatch();
-	public Timer() { Play(); }
-	public double Check() { return stopwatch.ElapsedMilliseconds / 1000.0; }
-	public void Pause() { stopwatch.Stop(); }
-	public void Play() { stopwatch.Start(); }
+        private readonly System.Diagnostics.Stopwatch stopwatch
+                = new System.Diagnostics.Stopwatch();
+        public Timer() { Play(); }
+        public double Check() { return stopwatch.ElapsedMilliseconds / 1000.0; }
+        public void Pause() { stopwatch.Stop(); }
+        public void Play() { stopwatch.Start(); }
     }
 }

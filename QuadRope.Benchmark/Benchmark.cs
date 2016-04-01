@@ -26,16 +26,16 @@ namespace RadTrees.Benchmark
             var timesTwo = FSharpFunc<int, int>.FromConverter(i => 2 * i);
 
             // No need to generate new data structures, they are immutable.
-            var x = QuadRope.init(size, size, times);
+            var rope = QuadRope.init(size, size, times);
             var arr = Array2DModule.Initialize(size, size, times);
 
             // Run every operation on quad ropes and on 2D arrays in pairs.
-            Mark("QuadRope.map", () => QuadRope.map(timesTwo, x));
+            Mark("QuadRope.map", () => QuadRope.map(timesTwo, rope));
             Mark("Array2D.map", () => Array2DModule.Map(timesTwo, arr));
-            Mark("QuadRope.foldH", () => QuadRope.foldH(times, 0, x));
-            Mark("Array2D.foldH", () => Array2D.fold1(times, 0, arr));
-            Mark("QuadRope.foldV", () => QuadRope.foldV(times, 0, x));
-            Mark("Array2D.foldV", () => Array2D.fold2(times, 0, arr));
+            Mark("QuadRope.foldH", () => QuadRope.foldH(times, ArrayModule.ZeroCreate<int>(size), rope));
+            Mark("Array2D.foldH", () => Array2D.fold1(times, ArrayModule.ZeroCreate<int>(size), arr));
+            Mark("QuadRope.foldV", () => QuadRope.foldV(times, ArrayModule.ZeroCreate<int>(size), rope));
+            Mark("Array2D.foldV", () => Array2D.fold2(times, ArrayModule.ZeroCreate<int>(size), arr));
         }
 
 	public static void Main(string[] args)

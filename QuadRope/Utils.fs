@@ -106,3 +106,34 @@ module Option =
         match s with
             | None -> v
             | Some s -> s
+
+(* This module contains a bunch of functions that convert a C#
+   function into an F# function conveniently. More versions for
+   even more parameters will probably be added in the future. *)
+module Functions =
+    open System
+
+    let toFunc0 (f : 'a Func) =
+        let f0 () =
+            f.Invoke()
+        f0
+
+    let toFunc1 (f : ('b0, 'a) Func) =
+        let f1 b0 =
+            f.Invoke(b0)
+        f1
+
+    let toFunc2 (f : ('b0, 'b1, 'a) Func) =
+        let f2 b0 b1 =
+            f.Invoke(b0, b1)
+        f2
+
+    let toFunc3 (f : ('b0, 'b1, 'b2, 'a) Func) =
+        let f3 b0 b1 b2 =
+            f.Invoke(b0, b1, b2)
+        f3
+
+    let toFunc4 (f : ('b0, 'b1, 'b2, 'b3, 'a) Func) =
+        let f4 b0 b1 b2 b3 =
+            f.Invoke(b0, b1, b2, b3)
+        f4

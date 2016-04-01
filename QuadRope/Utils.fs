@@ -25,8 +25,8 @@ module Array2D =
         else
             let i0 = max 0 i
             let j0 = max 0 j
-            let h0 = min h (Array2D.length1 arr - i0)
-            let w0 = min w (Array2D.length2 arr - j0)
+            let h0 = min h (Array2D.length1 arr)
+            let w0 = min w (Array2D.length2 arr)
             Array2D.initBased i0 j0 h0 w0 (Array2D.get arr)
 
     let slice arr imin jmin imax jmax =

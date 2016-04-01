@@ -46,6 +46,14 @@ namespace RadTrees.Benchmark
 	    Mark("QuadRope.hcat", () => QuadRope.hcat(rope, rope));
 	    Mark("QuadRope.hcat + balanceH", () => QuadRope.balanceH(QuadRope.hcat(rope, rope)));
 	    Mark("Array2D.hcat", () => Array2D.cat2(arr, arr));
+
+	    {
+	        Random rnd = new Random(892);
+		int i = rnd.Next(size);
+		int j = rnd.Next(size);
+		Mark("QuadRope.index", () => QuadRope.get(rope, i, j));
+		Mark("Array2D.index", () => Array2DModule.Get(arr, i, j));
+	    }
         }
 
 	public static void Main(string[] args)

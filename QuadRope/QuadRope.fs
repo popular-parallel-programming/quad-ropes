@@ -348,37 +348,30 @@ module QuadRope =
 
     let toRowsArray rope = (toRows >> Seq.concat >> Array.ofSeq) rope
 
-    let fromSeq h w ss =
-        let ss' = Seq.cache ss
-        init h w (fun i j -> Seq.item (i * w + j) ss')
-
-    let foldH f ss rope =
+    let foldH f states rope =
         let vnode n s =
             makeNode Empty n s Empty
-        let rec fold ss = function
+        let rec fold states = function
             | Empty -> Empty
-            | Leaf vs -> Leaf (Array2D.fold2 f ss vs)
-            | Node (_, _, _, ne, nw, sw, se) ->
-                fold2 (toColsArray (fold2 ss nw sw)) ne se
-        and fold2 ss n s =
-            vnode
-                (fold (Array.sub ss 0 (rows n)) n)
-                (fold (Array.sub ss (rows n) (Array.length ss - rows n)) s)
-        fold ss rope
+            | Leaf vs -> Leaf (Array2D.fold2 f (fun i -> get states i 0) vs)
+            | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
+        and fold2 states n s =
+            let nstates, sstates = vsplit2 states (rows n)
+            vnode (fold nstates n) (fold sstates s)
+        fold states rope
 
-    let foldV f ss rope =
+    let foldV f states rope =
         let hnode w e =
             makeNode e w Empty Empty
-        let rec fold ss = function
+        let rec fold states = function
             | Empty -> Empty
-            | Leaf vs -> Leaf (Array2D.fold1 f ss vs)
-            | Node (_, _, _, ne, nw, sw, se) ->
-                fold2 (toRowsArray (fold2 ss nw ne)) sw se
-        and fold2 ss w e =
-            hnode
-                (fold (Array.sub ss 0 (cols w)) w)
-                (fold (Array.sub ss (cols w) (Array.length ss - cols w)) e)
-        fold ss rope
+            | Leaf vs -> Leaf (Array2D.fold1 f (get states 0) vs)
+            | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
+        and fold2 states n s =
+            let nstates, sstates = hsplit2 states (cols n)
+            hnode (fold nstates n) (fold sstates s)
+        fold states rope
+
 
     let zip f lope rope =
         if rows lope <> rows rope || cols lope <> cols rope then

@@ -40,13 +40,15 @@ namespace RadTrees.Benchmark
 
 	public static void Main(string[] args)
         {
+	    Infrastructure.SystemInfo();
 	    Run();
 	}
     }
 
     // Benchmark code by https://www.itu.dk/~sestoft/papers/benchmarking.pdf
     class Infrastructure {
-	private static void SystemInfo() {
+
+	public static void SystemInfo() {
 	    Console.WriteLine("# OS          {0}",
 			      Environment.OSVersion.VersionString);
 	    Console.WriteLine("# .NET vers.  {0}",

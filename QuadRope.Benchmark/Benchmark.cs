@@ -1,5 +1,4 @@
 ﻿using System;
-using Microsoft.FSharp.Core;
 using Microsoft.FSharp.Collections;
 
 namespace RadTrees.Benchmark
@@ -20,22 +19,29 @@ namespace RadTrees.Benchmark
 
         public static void Run()
         {
-            // Wrapping C# functions could be done much nicer in F#, but
-            // that seems too much of a hassle for only two functions.
-            var times = FSharpFunc<int, FSharpFunc<int, int>>.FromConverter(i => FSharpFunc<int, int>.FromConverter(j => i * j));
-            var timesTwo = FSharpFunc<int, int>.FromConverter(i => 2 * i);
-
-            // No need to generate new data structures, they are immutable.
+	    // No need to generate new data structures, they are immutable.
+	    var times = Functions.toFunc2<int, int, int>((i, j) => i * j);
             var rope = QuadRope.init(size, size, times);
             var arr = Array2DModule.Initialize(size, size, times);
 
-            // Run every operation on quad ropes and on 2D arrays in pairs.
+            var timesTwo = Functions.toFunc1<int, int>(i => 2 * i);
             Mark("QuadRope.map", () => QuadRope.map(timesTwo, rope));
             Mark("Array2D.map", () => Array2DModule.Map(timesTwo, arr));
-            Mark("QuadRope.foldH", () => QuadRope.foldH(times, ArrayModule.ZeroCreate<int>(size), rope));
-            Mark("Array2D.foldH", () => Array2D.fold1(times, ArrayModule.ZeroCreate<int>(size), arr));
-            Mark("QuadRope.foldV", () => QuadRope.foldV(times, ArrayModule.ZeroCreate<int>(size), rope));
-            Mark("Array2D.foldV", () => Array2D.fold2(times, ArrayModule.ZeroCreate<int>(size), arr));
+
+	    {
+		var ropeZeros = QuadRope.initZeros(size, 1);
+		var arrZeros = Array2D.initZeros(size, 1);
+                var getZeros = Functions.toFunc1<int, int>(i => Array2DModule.Get(arrZeros, i, 0));
+		Mark("QuadRope.foldH", () => QuadRope.foldH(times, ropeZeros, rope));
+		Mark("Array2D.foldH", () => Array2D.fold1(times, getZeros, arr));
+	    }
+	    {
+		var ropeZeros = QuadRope.initZeros(1, size);
+		var arrZeros = Array2D.initZeros(1, size);
+                var getZeros = Functions.toFunc1<int, int>(j => Array2DModule.Get(arrZeros, 0, j));
+		Mark("QuadRope.foldV", () => QuadRope.foldV(times, ropeZeros, rope));
+		Mark("Array2D.foldV", () => Array2D.fold2(times, getZeros, arr));
+	    }
         }
 
 	public static void Main(string[] args)

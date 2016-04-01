@@ -42,6 +42,10 @@ namespace RadTrees.Benchmark
 		Mark("QuadRope.foldV", () => QuadRope.foldV(times, ropeZeros, rope));
 		Mark("Array2D.foldV", () => Array2D.fold2(times, getZeros, arr));
 	    }
+
+	    Mark("QuadRope.hcat", () => QuadRope.hcat(rope, rope));
+	    Mark("QuadRope.hcat + balanceH", () => QuadRope.balanceH(QuadRope.hcat(rope, rope)));
+	    Mark("Array2D.hcat", () => Array2D.cat2(arr, arr));
         }
 
 	public static void Main(string[] args)

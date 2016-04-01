@@ -1,8 +1,8 @@
 debug:
-	xbuild /p:Condiguration=Debug
+	xbuild /p:Condiguration=Debug /p:TargetFrameworkVersion="v4.5"
 
 release:
-	xbuild /p:Configuration=Release
+	xbuild /p:Configuration=Release /p:TargetFrameworkVersion="v4.5"
 
 clean:
 	xbuild /t:Clean /p:Configuration=Debug

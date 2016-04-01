@@ -1,5 +1,5 @@
 debug:
-	xbuild /p:Condiguration=Debug /p:TargetFrameworkVersion="v4.5"
+	xbuild /p:Configuration=Debug /p:TargetFrameworkVersion="v4.5"
 
 release:
 	xbuild /p:Configuration=Release /p:TargetFrameworkVersion="v4.5"

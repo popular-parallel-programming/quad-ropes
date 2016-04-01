@@ -137,10 +137,10 @@ module QuadRopeTest =
             lazy (let b = QuadRope.balanceV a
                   QuadRope.depth b .<=. QuadRope.depth a)
 
-        static member ``toCols yields correct number of scalars`` (a : int QuadRope) =
-            QuadRope.rows a * QuadRope.cols a .=. Seq.length (Seq.concat (QuadRope.toCols a))
+        static member ``toRows yields correct number of scalars`` (a : int QuadRope) =
+            QuadRope.rows a * QuadRope.cols a .=. Seq.length (Seq.concat (QuadRope.toRows a))
 
-        static member ``toCols yields scalars in correct order`` (a : int QuadRope) =
+        static member ``toRows yields scalars in correct order`` (a : int QuadRope) =
             let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
             let scalars = Seq.map (fun (i, j) -> QuadRope.get a i j) indices
-            Seq.reduce (.&.) (Seq.map2 (.=.) scalars (Seq.concat (QuadRope.toCols a)))
+            Seq.reduce (.&.) (Seq.map2 (.=.) scalars (Seq.concat (QuadRope.toRows a)))

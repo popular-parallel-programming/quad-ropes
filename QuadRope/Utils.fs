@@ -63,19 +63,15 @@ module Array2D =
         let j0  = Array2D.length2 arr - 1
         Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> arr.[i, j0 - j])
 
-    let fold1 f ss arr =
-        Array2D.init
-            (Array2D.length1 arr)
-            1
-            (fun i _ ->
-             Seq.fold f (Array.get ss i) (seq { for j in 0 .. Array2D.length2 arr - 1 -> arr.[i, j] }))
+    let fold2 f g arr =
+        let fold i _ =
+            Seq.fold f (g i) (seq { for j in 0 .. Array2D.length2 arr - 1 -> arr.[i, j] })
+        Array2D.init (Array2D.length1 arr) 1 fold
 
-    let fold2 f ss arr =
-        Array2D.init
-            1
-            (Array2D.length2 arr)
-            (fun _ j ->
-             Seq.fold f (Array.get ss j) (seq { for i in 0 .. Array2D.length1 arr - 1 -> arr.[i, j] }))
+    let fold1 f g arr =
+        let fold _ j =
+            Seq.fold f (g j) (seq { for i in 0 .. Array2D.length1 arr - 1 -> arr.[i, j] })
+        Array2D.init 1 (Array2D.length2 arr) fold
 
     let initZeros h w =
         Array2D.init h w (fun _ _ -> 0)

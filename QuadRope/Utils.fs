@@ -20,8 +20,10 @@ module Array2D =
         arr0
 
     let subArr arr i j h w =
-        if i <= 0 && Array2D.length1 arr <= i + h && j <= 0 && Array2D.length2 arr <= j + w then
+        if i <= 0 && Array2D.length1 arr <= h && j <= 0 && Array2D.length2 arr <= w then
             arr
+        else if Array2D.length1 arr <= i || h <= 0 || Array2D.length2 arr <= j || w <= 0 then
+            Array2D.zeroCreate 0 0
         else
             let i0 = max 0 i
             let j0 = max 0 j

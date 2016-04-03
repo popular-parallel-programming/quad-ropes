@@ -24,10 +24,12 @@ namespace RadTrees.Benchmark
             var rope = QuadRope.init(size, size, times);
             var arr = Array2DModule.Initialize(size, size, times);
 
+	    // Mapping
             var timesTwo = Functions.toFunc1<int, int>(i => 2 * i);
             Mark("QuadRope.map", () => QuadRope.map(timesTwo, rope));
             Mark("Array2D.map", () => Array2DModule.Map(timesTwo, arr));
 
+	    // Folding in both dimensions.
 	    {
 		var ropeZeros = QuadRope.initZeros(size, 1);
 		var arrZeros = Array2D.initZeros(size, 1);
@@ -43,10 +45,16 @@ namespace RadTrees.Benchmark
 		Mark("Array2D.foldV", () => Array2D.fold2(times, getZeros, arr));
 	    }
 
+	    // Concatenation in both domensions.
 	    Mark("QuadRope.hcat", () => QuadRope.hcat(rope, rope));
 	    Mark("QuadRope.hcat + balanceH", () => QuadRope.balanceH(QuadRope.hcat(rope, rope)));
 	    Mark("Array2D.hcat", () => Array2D.cat2(arr, arr));
 
+	    Mark("QuadRope.vcat", () => QuadRope.vcat(rope, rope));
+	    Mark("QuadRope.vcat + balanceV", () => QuadRope.balanceV(QuadRope.vcat(rope, rope)));
+	    Mark("Array2D.vcat", () => Array2D.cat1(arr, arr));
+
+	    // Indexing with a pseudo-random index-pair.
 	    {
 	        Random rnd = new Random(892);
 		int i = rnd.Next(size);

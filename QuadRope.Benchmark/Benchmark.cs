@@ -14,7 +14,11 @@ namespace RadTrees.Benchmark
 
         public static void Mark(string msg, Action f)
         {
-            Infrastructure.Mark8(msg, ToDouble(f));
+	    try {
+		Infrastructure.Mark8(msg, ToDouble(f));
+	    } catch (Exception e) {
+		Console.WriteLine(e.ToString());
+	    }
         }
 
         public static void Run()

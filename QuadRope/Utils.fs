@@ -107,18 +107,6 @@ module Fibonacci =
     let nth m =
         fst (Seq.find (snd >> ((<) m)) fibs)
 
-module Tuple =
-
-    let tupled f =
-        (fun (x, y) -> f x y)
-
-module Option =
-
-    let getDefault v s =
-        match s with
-            | None -> v
-            | Some s -> s
-
 (* This module contains a bunch of functions that convert a C#
    function into an F# function conveniently. More versions for
    even more parameters will probably be added in the future. *)

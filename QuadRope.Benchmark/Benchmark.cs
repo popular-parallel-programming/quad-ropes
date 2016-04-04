@@ -54,6 +54,12 @@ namespace RadTrees.Benchmark
 	    Mark("QuadRope.vcat + balanceV", () => QuadRope.balanceV(QuadRope.vcat(rope, rope)));
 	    Mark("Array2D.vcat", () => Array2D.cat1(arr, arr));
 
+	    var plus = Functions.toFunc2<int, int, int>((x, y) => x + y);
+	    Mark("QuadRope.reduceH", () => QuadRope.reduceH(plus, rope));
+	    Mark("Array2D.reduceH", () => Array2D.reduce2(plus, arr));
+	    Mark("QuadRope.reduceV", () => QuadRope.reduceV(plus, rope));
+	    Mark("Array2D.reduceV", () => Array2D.reduce1(plus, arr));
+
 	    // Indexing with a pseudo-random index-pair.
 	    {
 	        Random rnd = new Random(892);

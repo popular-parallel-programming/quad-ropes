@@ -375,7 +375,7 @@ module QuadRope =
             | Leaf vs -> Leaf (Array2D.fold2 f (fun i -> get states i 0) vs)
             | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
         and fold2 states n s =
-            let nstates, sstates = vsplit2 states (rows n)
+            let nstates, sstates = vsplit2 states (rows n / 2)
             vnode (fold nstates n) (fold sstates s)
         fold states rope
 
@@ -389,7 +389,7 @@ module QuadRope =
             | Leaf vs -> Leaf (Array2D.fold1 f (get states 0) vs)
             | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
         and fold2 states n s =
-            let nstates, sstates = hsplit2 states (cols n)
+            let nstates, sstates = hsplit2 states (cols n / 2)
             hnode (fold nstates n) (fold sstates s)
         fold states rope
 

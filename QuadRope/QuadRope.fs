@@ -1,5 +1,6 @@
 namespace RadTrees
 
+[<Microsoft.FSharp.Core.CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
 type 'a QuadRope =
     | Empty
     | Leaf of 'a [,]

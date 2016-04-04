@@ -387,10 +387,10 @@ module QuadRope =
         let rec fold states = function
             | Empty -> Empty
             | Leaf vs -> Leaf (Array2D.fold1 f (get states 0) vs)
-            | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
-        and fold2 states n s =
-            let nstates, sstates = hsplit2 states (cols n / 2)
-            hnode (fold nstates n) (fold sstates s)
+            | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
+        and fold2 states w e =
+            let wstates, estates = hsplit2 states (cols w / 2)
+            hnode (fold wstates w) (fold estates e)
         fold states rope
 
     /// Apply f to each (i, j) of lope and rope.

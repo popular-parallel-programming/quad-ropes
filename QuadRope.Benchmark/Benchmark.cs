@@ -61,13 +61,22 @@ namespace RadTrees.Benchmark
 	    Mark("QuadRope.vcat + vbalance", () => QuadRope.hbalance(QuadRope.vcat(rope, rope)));
 	    Mark("Array2D.vcat", () => Array2D.cat1(arr, arr));
 
-	    // Indexing with a pseudo-random index-pair.
+	    // Indexing with a pseudo-random index pair.
 	    {
 	        Random rnd = new Random(892);
 		int i = rnd.Next(size);
 		int j = rnd.Next(size);
 		Mark("QuadRope.index", () => QuadRope.get(rope, i, j));
 		Mark("Array2D.index", () => Array2DModule.Get(arr, i, j));
+	    }
+
+	    // Persistent update of a pseudo-random index pair.
+	    {
+		Random rnd = new Random(368);
+		int i = rnd.Next(size);
+		int j = rnd.Next(size);
+		Mark("QuadRope.set", () => QuadRope.set(rope, i, j, 0));
+		Mark("Array2D.set", () => Array2D.set(arr, i, j, 0));
 	    }
         }
 

@@ -377,3 +377,19 @@ module QuadRope =
         if rows lope <> rows rope || cols lope <> cols rope then
             failwith "QuadRopes must have same shape."
         init (rows lope) (cols lope) (fun i j -> f (get lope i j) (get lope i j))
+
+    let rec reduceH f = function
+        | Empty -> Empty
+        | Leaf vs -> Leaf (Array2D.reduce2 f vs)
+        | Node (_, _, _, ne, nw, sw, se) ->
+            let w = makeNode Empty (reduceH f nw) (reduceH f sw) Empty
+            let e = makeNode Empty (reduceH f ne) (reduceH f se) Empty
+            zip f w e
+
+    let rec reduceV f = function
+        | Empty -> Empty
+        | Leaf vs -> Leaf (Array2D.reduce1 f vs)
+        | Node (_, _, _, ne, nw, sw, se) ->
+            let n = makeNode (reduceV f ne) (reduceV f nw) Empty Empty
+            let s = makeNode (reduceV f sw) (reduceV f se) Empty Empty
+            zip f n s

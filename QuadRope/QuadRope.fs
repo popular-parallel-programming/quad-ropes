@@ -375,7 +375,7 @@ module QuadRope =
     let zip f lope rope =
         if rows lope <> rows rope || cols lope <> cols rope then
             failwith "QuadRopes must have same shape."
-        init (rows lope) (cols lope) (fun i j -> f (get lope i j) (get lope i j))
+        init (rows lope) (cols lope) (fun i j -> f (get lope i j) (get rope i j))
 
     let rec hreduce f = function
         | Empty -> Empty

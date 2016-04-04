@@ -34,31 +34,32 @@ namespace RadTrees.Benchmark
 		var ropeZeros = QuadRope.initZeros(size, 1);
 		var arrZeros = Array2D.initZeros(size, 1);
                 var getZeros = Functions.toFunc1<int, int>(i => Array2DModule.Get(arrZeros, i, 0));
-		Mark("QuadRope.foldH", () => QuadRope.foldH(times, ropeZeros, rope));
-		Mark("Array2D.foldH", () => Array2D.fold1(times, getZeros, arr));
+		Mark("QuadRope.hfold", () => QuadRope.hfold(times, ropeZeros, rope));
+		Mark("Array2D.hfold", () => Array2D.fold1(times, getZeros, arr));
 	    }
 	    {
 		var ropeZeros = QuadRope.initZeros(1, size);
 		var arrZeros = Array2D.initZeros(1, size);
                 var getZeros = Functions.toFunc1<int, int>(j => Array2DModule.Get(arrZeros, 0, j));
-		Mark("QuadRope.foldV", () => QuadRope.foldV(times, ropeZeros, rope));
-		Mark("Array2D.foldV", () => Array2D.fold2(times, getZeros, arr));
+		Mark("QuadRope.vfold", () => QuadRope.vfold(times, ropeZeros, rope));
+		Mark("Array2D.vfold", () => Array2D.fold2(times, getZeros, arr));
 	    }
+
+	    // Reduction in both dimensions
+	    var plus = Functions.toFunc2<int, int, int>((x, y) => x + y);
+	    Mark("QuadRope.hreduce", () => QuadRope.hreduce(plus, rope));
+	    Mark("Array2D.hreduce", () => Array2D.reduce2(plus, arr));
+	    Mark("QuadRope.vreduce", () => QuadRope.vreduce(plus, rope));
+	    Mark("Array2D.vreduce", () => Array2D.reduce1(plus, arr));
 
 	    // Concatenation in both domensions.
 	    Mark("QuadRope.hcat", () => QuadRope.hcat(rope, rope));
-	    Mark("QuadRope.hcat + balanceH", () => QuadRope.balanceH(QuadRope.hcat(rope, rope)));
+	    Mark("QuadRope.hcat + hbalance", () => QuadRope.hbalance(QuadRope.hcat(rope, rope)));
 	    Mark("Array2D.hcat", () => Array2D.cat2(arr, arr));
 
 	    Mark("QuadRope.vcat", () => QuadRope.vcat(rope, rope));
-	    Mark("QuadRope.vcat + balanceV", () => QuadRope.balanceV(QuadRope.vcat(rope, rope)));
+	    Mark("QuadRope.vcat + vbalance", () => QuadRope.hbalance(QuadRope.vcat(rope, rope)));
 	    Mark("Array2D.vcat", () => Array2D.cat1(arr, arr));
-
-	    var plus = Functions.toFunc2<int, int, int>((x, y) => x + y);
-	    Mark("QuadRope.reduceH", () => QuadRope.reduceH(plus, rope));
-	    Mark("Array2D.reduceH", () => Array2D.reduce2(plus, arr));
-	    Mark("QuadRope.reduceV", () => QuadRope.reduceV(plus, rope));
-	    Mark("Array2D.reduceV", () => Array2D.reduce1(plus, arr));
 
 	    // Indexing with a pseudo-random index-pair.
 	    {

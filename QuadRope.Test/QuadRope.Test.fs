@@ -117,24 +117,24 @@ module QuadRopeTest =
 
         static member ``balanceH maintains layout`` (a : int QuadRope) =
             not (QuadRope.isBalancedH a) ==>
-            lazy (let b = QuadRope.balanceH a
+            lazy (let b = QuadRope.hbalance a
                   let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
                   Seq.reduce (.&.) (Seq.map (fun (i, j) -> QuadRope.get a i j .=. QuadRope.get b i j) indices))
 
         static member ``balanceH maintains or improves depth`` (a : int QuadRope) =
             not (QuadRope.isBalancedH a) ==>
-            lazy (let b = QuadRope.balanceH a
+            lazy (let b = QuadRope.hbalance a
                   QuadRope.depth b .<=. QuadRope.depth a)
 
         static member ``balanceV maintains layout`` (a : int QuadRope) =
             not (QuadRope.isBalancedV a) ==>
-            lazy (let b = QuadRope.balanceV a
+            lazy (let b = QuadRope.vbalance a
                   let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
                   Seq.reduce (.&.) (Seq.map (fun (i, j) -> QuadRope.get a i j .=. QuadRope.get b i j) indices))
 
         static member ``balanceV maintains or improves depth`` (a : int QuadRope) =
             not (QuadRope.isBalancedV a) ==>
-            lazy (let b = QuadRope.balanceV a
+            lazy (let b = QuadRope.vbalance a
                   QuadRope.depth b .<=. QuadRope.depth a)
 
         static member ``toRows yields correct number of scalars`` (a : int QuadRope) =

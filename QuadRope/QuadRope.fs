@@ -139,33 +139,33 @@ module QuadRope =
             let lxs, rxs = List.splitAt ((List.length xs) / 2) xs
             rebuild merge lxs @ rebuild merge rxs
 
-    let balanceH rope =
-        let reduceH = reduce (rebuild (fun nw ne -> makeNode ne nw Empty Empty))
-        let rec balanceH0 rope =
+    let hbalance rope =
+        let hreduce = reduce (rebuild (fun nw ne -> makeNode ne nw Empty Empty))
+        let rec hbalance0 rope =
             let rs = collect rope []
-            reduceH rs
+            hreduce rs
         and collect rope rs  =
             match rope with
                 | Empty -> rs
                 | Node (_, _, _, ne, nw, Empty, Empty) -> collect nw (collect ne rs)
                 | Node (_, _, _, ne, nw, sw, se) ->
-                    makeNode (balanceH0 ne) (balanceH0 nw) (balanceH0 sw) (balanceH0 se) :: rs
+                    makeNode (hbalance0 ne) (hbalance0 nw) (hbalance0 sw) (hbalance0 se) :: rs
                 | _ -> rope :: rs
-        balanceH0 rope
+        hbalance0 rope
 
-    let balanceV rope =
-        let reduceV = reduce (rebuild (fun nw sw -> makeNode Empty nw sw Empty))
-        let rec balanceV0 rope =
+    let vbalance rope =
+        let vreduce = reduce (rebuild (fun nw sw -> makeNode Empty nw sw Empty))
+        let rec vbalance0 rope =
             let rs = collect rope []
-            reduceV rs
+            vreduce rs
         and collect rope rs  =
             match rope with
                 | Empty -> rs
                 | Node (_, _, _, Empty, nw, sw, Empty) -> collect nw (collect sw rs)
                 | Node (_, _, _, ne, nw, sw, se) ->
-                    makeNode (balanceV0 ne) (balanceV0 nw) (balanceV0 sw) (balanceV0 se) :: rs
+                    makeNode (vbalance0 ne) (vbalance0 nw) (vbalance0 sw) (vbalance0 se) :: rs
                 | _ -> rope :: rs
-        balanceV0 rope
+        vbalance0 rope
 
     (* Concatenate two trees vertically. *)
     let vcat upper lower =
@@ -348,7 +348,7 @@ module QuadRope =
 
     let toRowsArray rope = (toRows >> Seq.concat >> Array.ofSeq) rope
 
-    let foldH f states rope =
+    let hfold f states rope =
         let vnode n s =
             makeNode Empty n s Empty
         let rec fold states = function
@@ -360,7 +360,7 @@ module QuadRope =
             vnode (fold nstates n) (fold sstates s)
         fold states rope
 
-    let foldV f states rope =
+    let vfold f states rope =
         let hnode w e =
             makeNode e w Empty Empty
         let rec fold states = function
@@ -372,24 +372,23 @@ module QuadRope =
             hnode (fold nstates n) (fold sstates s)
         fold states rope
 
-
     let zip f lope rope =
         if rows lope <> rows rope || cols lope <> cols rope then
             failwith "QuadRopes must have same shape."
         init (rows lope) (cols lope) (fun i j -> f (get lope i j) (get lope i j))
 
-    let rec reduceH f = function
+    let rec hreduce f = function
         | Empty -> Empty
         | Leaf vs -> Leaf (Array2D.reduce2 f vs)
         | Node (_, _, _, ne, nw, sw, se) ->
-            let w = makeNode Empty (reduceH f nw) (reduceH f sw) Empty
-            let e = makeNode Empty (reduceH f ne) (reduceH f se) Empty
+            let w = makeNode Empty (hreduce f nw) (hreduce f sw) Empty
+            let e = makeNode Empty (hreduce f ne) (hreduce f se) Empty
             zip f w e
 
-    let rec reduceV f = function
+    let rec vreduce f = function
         | Empty -> Empty
         | Leaf vs -> Leaf (Array2D.reduce1 f vs)
         | Node (_, _, _, ne, nw, sw, se) ->
-            let n = makeNode (reduceV f ne) (reduceV f nw) Empty Empty
-            let s = makeNode (reduceV f sw) (reduceV f se) Empty Empty
+            let n = makeNode (vreduce f ne) (vreduce f nw) Empty Empty
+            let s = makeNode (vreduce f sw) (vreduce f se) Empty Empty
             zip f n s

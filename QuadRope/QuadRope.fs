@@ -1,11 +1,14 @@
 namespace RadTrees
 
-[<Microsoft.FSharp.Core.CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
+open Microsoft.FSharp.Core
+
+[<CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
 type 'a QuadRope =
     | Empty
     | Leaf of 'a [,]
     | Node of int * int * int * 'a QuadRope * 'a QuadRope * 'a QuadRope * 'a QuadRope
 
+[<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module QuadRope =
 
     (* The maximal size of a leaf array in any direction. *)

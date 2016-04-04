@@ -144,3 +144,9 @@ module QuadRopeTest =
             let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
             let scalars = Seq.map (fun (i, j) -> QuadRope.get a i j) indices
             Seq.reduce (.&.) (Seq.map2 (.=.) scalars (Seq.concat (QuadRope.toRows a)))
+
+        static member ``hfold maintains order`` (a : int QuadRope) =
+            let cons xs x = x :: xs
+            let empties = QuadRope.init (QuadRope.rows a) 1 (fun _ _ -> [])
+            let rows0 = QuadRope.hfold cons empties a
+            Seq.map (Seq.toList) (QuadRope.toRows a) .=. Seq.concat (QuadRope.toRows rows0)

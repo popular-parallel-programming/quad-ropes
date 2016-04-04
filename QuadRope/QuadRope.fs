@@ -43,6 +43,8 @@ module QuadRope =
         else
             Leaf vs
 
+    /// Pseudo-constructor for generating a new rope out of some
+    /// existing nodes.
     let rec makeNode ne nw sw se =
         match ne, nw, sw, se with
             | _, Empty, Empty, Empty -> ne
@@ -120,11 +122,13 @@ module QuadRope =
     let private isBalanced d s =
         d <= 1 || d <= d_max && Fibonacci.fib (d + 1) <= s
 
+    /// True if rope is balanced horizontally. False otherwise.
     let isBalancedH = function
         | Empty
         | Leaf _ -> true
         | Node (d, h, _, _, _, _, _) -> isBalanced d h
 
+    /// True if rope is balanced vertically. False otherwise.
     let isBalancedV = function
         | Empty
         | Leaf _ -> true
@@ -143,6 +147,7 @@ module QuadRope =
             let lxs, rxs = List.splitAt ((List.length xs) / 2) xs
             rebuild merge lxs @ rebuild merge rxs
 
+    /// Balance rope horizontally.
     let hbalance rope =
         let hreduce = reduce (rebuild (fun nw ne -> makeNode ne nw Empty Empty))
         let rec hbalance0 rope =
@@ -157,6 +162,7 @@ module QuadRope =
                 | _ -> rope :: rs
         hbalance0 rope
 
+    /// Balance rope vertically.
     let vbalance rope =
         let vreduce = reduce (rebuild (fun nw sw -> makeNode Empty nw sw Empty))
         let rec vbalance0 rope =
@@ -265,18 +271,23 @@ module QuadRope =
                     let se0 = split se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
                     makeNode ne0 nw0 sw0 se0
 
+    /// Split rope vertically from row i, taking h rows.
     let inline vsplit rope i h =
         split rope i 0 h (cols rope)
 
+    /// Split rope horizontally from column j, taking w columns.
     let inline hsplit rope j w =
         split rope 0 j (rows rope) w
 
+    /// Split rope in two at row i.
     let inline vsplit2 rope i =
         vsplit rope 0 i, vsplit rope i (rows rope  - i)
 
+    /// Split rope in two at column j.
     let inline hsplit2 rope j =
         hsplit rope 0 j, hsplit rope j (cols rope - j)
 
+    /// Reverse rope horizontally.
     let rec hrev = function
         | Empty -> Empty
         | Leaf vs -> Leaf (Array2D.rev2 vs)
@@ -285,6 +296,7 @@ module QuadRope =
         | Node (d, h, w, ne, nw, sw, se) ->
             Node (d, h, w, hrev nw, hrev ne, hrev se, hrev sw)
 
+    /// Reverse rope vertically.
     let rec vrev = function
         | Empty -> Empty
         | Leaf vs -> Leaf (Array2D.rev1 vs)
@@ -317,6 +329,7 @@ module QuadRope =
                          (init0 hpv wpv h1 w1) (* SE *)
         init0 0 0 h w
 
+    /// Initialize a rope with all zeros.
     let initZeros h w =
         init h w (fun _ _ -> 0)
 
@@ -352,6 +365,8 @@ module QuadRope =
 
     let toRowsArray rope = (toRows >> Seq.concat >> Array.ofSeq) rope
 
+    /// Fold each row of rope with f, starting with the according
+    /// state in states.
     let hfold f states rope =
         let vnode n s =
             makeNode Empty n s Empty
@@ -364,6 +379,8 @@ module QuadRope =
             vnode (fold nstates n) (fold sstates s)
         fold states rope
 
+    /// Fold each column of rope with f, starting with the according
+    /// state in states.
     let vfold f states rope =
         let hnode w e =
             makeNode e w Empty Empty
@@ -376,11 +393,13 @@ module QuadRope =
             hnode (fold nstates n) (fold sstates s)
         fold states rope
 
+    /// Apply f to each (i, j) of lope and rope.
     let zip f lope rope =
         if rows lope <> rows rope || cols lope <> cols rope then
             failwith "QuadRopes must have same shape."
         init (rows lope) (cols lope) (fun i j -> f (get lope i j) (get rope i j))
 
+    /// Reduce all rows of rope with f.
     let rec hreduce f = function
         | Empty -> Empty
         | Leaf vs -> Leaf (Array2D.reduce2 f vs)
@@ -389,6 +408,7 @@ module QuadRope =
             let e = makeNode Empty (hreduce f ne) (hreduce f se) Empty
             zip f w e
 
+    /// Reduce all columns of rope with f.
     let rec vreduce f = function
         | Empty -> Empty
         | Leaf vs -> Leaf (Array2D.reduce1 f vs)

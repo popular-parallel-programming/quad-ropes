@@ -19,19 +19,19 @@ module QuadRope =
     (* Initialize Fibonacci numbers at module load time. *)
     ignore (Fibonacci.fib d_max)
 
-    (* Number of rows in a rectangular tree. *)
+    /// Number of rows in a rectangular tree.
     let rows = function
         | Empty -> 0
         | Leaf vs -> Array2D.length1 vs
         | Node (_, h, _, _, _, _, _) -> h
 
-    (* Number of columns in a rectangular tree. *)
+    /// Number of columns in a rectangular tree.
     let cols = function
         | Empty -> 0
         | Leaf vs -> Array2D.length2 vs
         | Node (_, _, w, _, _, _, _) -> w
 
-    (* Depth of a rectangular tree. *)
+    /// Depth of a rectangular tree.
     let depth = function
         | Empty -> 0
         | Leaf _ -> 0
@@ -60,7 +60,7 @@ module QuadRope =
     let inline private withinRange root i j =
         0 <= i && i < rows root && 0 <= j && j < cols root
 
-    (* Get the value of a location in the tree. *)
+    /// Get the value of a location in the tree.
     let rec get root i j =
         match root with
             | Empty -> failwith "Empty tree cannot contain values."
@@ -79,7 +79,7 @@ module QuadRope =
                         else
                             get se (i - rows ne) (j - cols sw) (* Either contains or ends in out-of-bounds. *)
 
-    (* Update a tree location wihtout modifying the original tree. *)
+    /// Update a tree location wihtout modifying the original tree.
     let rec set root i j v =
         match root with
             | Empty -> failwith "Empty tree cannot contain values."
@@ -98,7 +98,7 @@ module QuadRope =
                         else
                             Node (d, h, w, ne, nw, sw, set se (i - rows ne) (j - cols sw) v)
 
-    (* Write to a tree location destructively. *)
+    /// Write to a tree location destructively.
     let rec write root i j v =
         match root with
             | Empty -> failwith "Empty tree cannot contain values."
@@ -171,7 +171,7 @@ module QuadRope =
                 | _ -> rope :: rs
         vbalance0 rope
 
-    (* Concatenate two trees vertically. *)
+    /// Concatenate two trees vertically.
     let vcat upper lower =
         let canCopy us ls =
             Array2D.length2 us = Array2D.length2 ls && Array2D.length1 us + Array2D.length1 ls <= h_max
@@ -209,7 +209,7 @@ module QuadRope =
 
             | _ -> makeNode Empty upper lower Empty
 
-    (* Concatenate two trees horizontally. *)
+    /// Concatenate two trees horizontally.
     let hcat left right =
         let canCopy ls rs =
             Array2D.length1 ls = Array2D.length1 rs && Array2D.length2 ls + Array2D.length2 rs <= w_max
@@ -247,8 +247,8 @@ module QuadRope =
 
             | _ -> makeNode right left Empty Empty
 
-    (* Compute the "subrope" starting from indexes i, j taking h and w
-       elements in vertical and horizontal direction. *)
+    /// Compute the "subrope" starting from indexes i, j taking h and w
+    /// elements in vertical and horizontal direction.
     let rec split root i j h w =
         if rows root <= i || h <= 0 || cols root <= j || w <= 0 then
             Empty
@@ -293,7 +293,7 @@ module QuadRope =
         | Node (d, h, w, ne, nw, sw, se) ->
             Node (d, h, w, vrev se, vrev sw, vrev nw, vrev ne)
 
-    (* Generate a new tree without any intermediate values. *)
+    /// Generate a new tree without any intermediate values.
     let init h w f =
         let rec init0 h0 w0 h1 w1 =
             let h = h1 - h0
@@ -323,8 +323,8 @@ module QuadRope =
     let fromArray vss =
         init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)
 
-    (* Apply a function to every element in the tree and preserves the
-       tree structure. *)
+    /// Apply a function to every element in the tree and preserves the
+    /// tree structure.
     let rec map f root =
         match root with
             | Empty -> Empty

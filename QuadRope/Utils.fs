@@ -13,7 +13,7 @@ module Bits =
 
 module Array2D =
 
-    (* Return a fresh copy of arr with the value at i,j replaced with v. *)
+    /// Return a fresh copy of arr with the value at i,j replaced with v.
     let set arr i j v =
         let arr0 = Array2D.copy arr
         arr0.[i, j] <- v
@@ -39,55 +39,55 @@ module Array2D =
     let inline isSingleton arr =
         Array2D.length1 arr = 1 && Array2D.length2 arr = 1
 
-    (* Concatenate two arrays in first dimension. *)
+    /// Concatenate two arrays in first dimension.
     let cat1 left right =
         let l1 = Array2D.length1 left + Array2D.length1 right
         let l2 = min (Array2D.length2 left) (Array2D.length2 right)
         let l1l = Array2D.length1 left
         Array2D.init l1 l2 (fun i j -> if i < l1l then left.[i, j] else right.[i - l1l, j])
 
-    (* Concatenate two arrays in second dimension. *)
+    /// Concatenate two arrays in second dimension.
     let cat2 left right =
         let l1 = min (Array2D.length1 left) (Array2D.length1 right)
         let l2 = Array2D.length2 left + Array2D.length2 right
         let l2l = Array2D.length2 left
         Array2D.init l1 l2 (fun i j -> if j < l2l then left.[i, j] else right.[i, j - l2l])
 
-    (* Revert an array in first dimension. *)
+    /// Revert an array in first dimension.
     let rev1 arr =
         let i0 = Array2D.length1 arr - 1
         Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> arr.[i0 - i, j])
 
-    (* Revert an array in second dimension. *)
+    /// Revert an array in second dimension.
     let rev2 arr =
         let j0  = Array2D.length2 arr - 1
         Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> arr.[i, j0 - j])
 
-    (* Fold each column of a 2D array, calling state with each row to get the state. *)
+    /// Fold each column of a 2D array, calling state with each row to get the state.
     let fold1 f state arr =
         let fold _ j =
             Seq.fold f (state j) (seq { for i in 0 .. Array2D.length1 arr - 1 -> arr.[i, j] })
         Array2D.init 1 (Array2D.length2 arr) fold
 
-    (* Fold each column of a 2D array, calling state with each column to get the state. *)
+    /// Fold each column of a 2D array, calling state with each column to get the state.
     let fold2 f state arr =
         let fold i _ =
             Seq.fold f (state i) (seq { for j in 0 .. Array2D.length2 arr - 1 -> arr.[i, j] })
         Array2D.init (Array2D.length1 arr) 1 fold
 
-    (* Reduce each column of a 2D array. *)
+    /// Reduce each column of a 2D array.
     let reduce1 f arr =
         let reduce _ j =
             Seq.reduce f (seq { for i in 0 .. Array2D.length1 arr - 1 -> arr.[i, j] })
         Array2D.init 1 (Array2D.length2 arr) reduce
 
-    (* Reduce each row of a 2D array. *)
+    /// Reduce each row of a 2D array.
     let reduce2 f arr =
         let reduce i _ =
             Seq.reduce f (seq { for j in 0 .. Array2D.length2 arr - 1 -> arr.[i, j] })
         Array2D.init (Array2D.length1 arr) 1 reduce
 
-    (* Initialize a 2D array with all zeros. *)
+    /// Initialize a 2D array with all zeros.
     let initZeros h w =
         Array2D.init h w (fun _ _ -> 0)
 
@@ -99,17 +99,17 @@ module Fibonacci =
             seq { yield (n, n2); yield! fibr (n + 1) n1 n2 }
         seq { yield (0, 0); yield (1, 1); yield (2, 1); yield! fibr 3 1 1 } |> Seq.cache
 
-    (* Return the nth Fibonacci number and cache it. *)
+    /// Return the nth Fibonacci number and cache it.
     let fib n =
         (Seq.item n >> snd) fibs
 
-    (* Return the n of the first Fibonacci number that is greater than m. *)
+    /// Return the n of the first Fibonacci number that is greater than m.
     let nth m =
         fst (Seq.find (snd >> ((<) m)) fibs)
 
-(* This module contains a bunch of functions that convert a C#
-   function into an F# function conveniently. More versions for
-   even more parameters will probably be added in the future. *)
+/// This module contains a bunch of functions that convert a C#
+/// function into an F# function conveniently. More versions for
+/// even more parameters will probably be added in the future.
 module Functions =
     open System
 

@@ -5,7 +5,7 @@ namespace RadTrees.Benchmark
 {
     class Benchmark
     {
-        const int size = 100;
+        const int size = 1000;
 
         public static Func<int, double> ToDouble(Action f)
         {

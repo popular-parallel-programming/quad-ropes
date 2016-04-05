@@ -281,11 +281,11 @@ module QuadRope =
 
     /// Split rope in two at row i.
     let inline vsplit2 rope i =
-        vsplit rope 0 i, vsplit rope i (rows rope - i)
+        vsplit rope 0 i, vsplit rope i (rows rope)
 
     /// Split rope in two at column j.
     let inline hsplit2 rope j =
-        hsplit rope 0 j, hsplit rope j (cols rope - j)
+        hsplit rope 0 j, hsplit rope j (cols rope)
 
     /// Reverse rope horizontally.
     let rec hrev = function

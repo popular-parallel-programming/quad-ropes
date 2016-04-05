@@ -329,6 +329,11 @@ module QuadRope =
                          (init0 hpv wpv h1 w1) (* SE *)
         init0 0 0 h w
 
+    /// Reallocate a rope form the ground up. Sometimes, this is the
+    /// only way to improve performance of a badly composed quad rope.
+    let reallocate rope =
+        init (rows rope) (cols rope) (get rope)
+
     /// Initialize a rope with all zeros.
     let initZeros h w =
         init h w (fun _ _ -> 0)

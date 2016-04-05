@@ -31,7 +31,7 @@ module Array2D =
             let j0 = max 0 j
             let h0 = min h (Array2D.length1 arr)
             let w0 = min w (Array2D.length2 arr)
-            Array2D.initBased i0 j0 h0 w0 (Array2D.get arr)
+            Array2D.init h0 w0 (fun i j -> Array2D.get arr (i0 + i) (j0 + j))
 
     let slice arr imin jmin imax jmax =
          subArr arr imin jmin (imax - imin) (jmax - jmin)

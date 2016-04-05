@@ -105,15 +105,25 @@ module QuadRopeTest =
             lazy (let ab = QuadRope.vcat a b
                   Seq.reduce (.&.) (Seq.map (access ab) (makeIndices (QuadRope.rows ab) (QuadRope.cols ab))))
 
-        static member ``hsplit produces ropes correct height`` (a : int QuadRope) (NonNegativeInt w) =
+        static member ``hsplit produces ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
             w <= QuadRope.cols a ==>
             lazy (let b = QuadRope.split a 0 0 (QuadRope.rows a) w
                   QuadRope.cols b .=. w |@ sprintf "%A" b)
 
-        static member ``vsplit produces ropes correct width`` (a : int QuadRope) (NonNegativeInt h) =
+        static member ``hsplit2 produces two ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
+            w <= QuadRope.cols a ==>
+            lazy (let b, c = QuadRope.hsplit2 a w
+                  QuadRope.cols a = QuadRope.cols b + QuadRope.cols c)
+
+        static member ``vsplit produces ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =
             h <= QuadRope.rows a ==>
             lazy (let b = QuadRope.split a 0 0 h (QuadRope.cols a)
                   QuadRope.rows b .=. h |@ sprintf "%A" b)
+
+        static member ``vsplit2 produces two ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =
+            h <= QuadRope.rows a ==>
+            lazy (let b, c = QuadRope.vsplit2 a h
+                  QuadRope.rows a = QuadRope.rows b + QuadRope.rows c)
 
         static member ``balanceH maintains layout`` (a : int QuadRope) =
             not (QuadRope.isBalancedH a) ==>

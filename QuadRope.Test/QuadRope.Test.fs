@@ -159,4 +159,4 @@ module QuadRopeTest =
             let cons xs x = x :: xs
             let empties = QuadRope.init (QuadRope.rows a) 1 (fun _ _ -> [])
             let rows0 = QuadRope.hfold cons empties a
-            Seq.map (Seq.toList) (QuadRope.toRows a) .=. Seq.concat (QuadRope.toRows rows0)
+            Seq.map (Seq.toList >> List.rev) (QuadRope.toRows a) .=. Seq.concat (QuadRope.toRows rows0)

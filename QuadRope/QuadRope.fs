@@ -373,29 +373,25 @@ module QuadRope =
     /// Fold each row of rope with f, starting with the according
     /// state in states.
     let hfold f states rope =
-        let vnode n s =
-            makeNode Empty n s Empty
         let rec fold1 states = function
             | Empty -> Empty
             | Leaf vs -> Leaf (ViewArray2D.fold2 f (fun i -> get states i 0) vs)
             | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
         and fold2 states n s =
             let nstates, sstates = vsplit2 states (rows n)
-            vnode (fold1 nstates n) (fold1 sstates s)
+            makeNode Empty (fold1 nstates n) (fold1 sstates s) Empty
         fold1 states rope
 
     /// Fold each column of rope with f, starting with the according
     /// state in states.
     let vfold f states rope =
-        let hnode w e =
-            makeNode e w Empty Empty
         let rec fold1 states = function
             | Empty -> Empty
             | Leaf vs -> Leaf (ViewArray2D.fold1 f (get states 0) vs)
             | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
         and fold2 states w e =
             let wstates, estates = hsplit2 states (cols w)
-            hnode (fold1 wstates w) (fold1 estates e)
+            makeNode (fold1 estates e) (fold1 wstates w) Empty Empty
         fold1 states rope
 
     /// Apply f to each (i, j) of lope and rope.

@@ -27,13 +27,13 @@ module ViewArray2D =
     let inline initZeros h w =
         init h w (fun _ _ -> 0)
 
-    let get lar i j =
-        match lar with
+    let get varr i j =
+        match varr with
             | Array arr -> arr.[i, j]
             | View (i0, j0, _, _, arr) -> arr.[i0 + i, j0 + j]
 
-    let set lar i j v =
-        match lar with
+    let set varr i j v =
+        match varr with
             | Array arr ->
                 let arr' = Array2D.copy arr
                 arr'.[i, j] <- v
@@ -43,13 +43,13 @@ module ViewArray2D =
                 arr'.[i, j] <- v
                 view i0 j0 h w arr'
 
-    let write lar i j v =
-        match lar with
+    let write varr i j v =
+        match varr with
             | Array arr ->
                 arr.[i, j] <- v
                 array arr
             | _ ->
-                set lar i j v
+                set varr i j v
 
     let subArr i j h w = function
         | Array arr -> view i j (min (Array2D.length1 arr - i) h) (min (Array2D.length2 arr - j) w) arr

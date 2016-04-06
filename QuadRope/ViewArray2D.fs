@@ -104,3 +104,11 @@ module ViewArray2D =
         | View (i0, j0, h, w, arr) ->
             let reduce i _ = Seq.reduce f (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] })
             array (Array2D.init h 1 reduce)
+
+    let filter1 p varr =
+        let vs = Seq.filter p (Seq.init (length1 varr) (fun i -> get varr i 0)) |> Array.ofSeq
+        init (Array.length vs) 1 (fun i _ -> Array.get vs i)
+
+    let filter2 p varr =
+        let vs = Seq.filter p (Seq.init (length2 varr) (get varr 0)) |> Array.ofSeq
+        init 1 (Array.length vs) (fun _ j -> Array.get vs j)

@@ -78,16 +78,19 @@ module Array2D =
         Array2D.init (Array2D.length1 arr) 1 fold
 
     /// Reduce each column of a 2D array.
-    let reduce1 f arr =
+    let mapreduce1 f g arr =
         let reduce _ j =
-            Seq.reduce f (seq { for i in 0 .. Array2D.length1 arr - 1 -> arr.[i, j] })
+            Seq.reduce g (seq { for i in 0 .. Array2D.length1 arr - 1 -> f arr.[i, j] })
         Array2D.init 1 (Array2D.length2 arr) reduce
 
     /// Reduce each row of a 2D array.
-    let reduce2 f arr =
+    let mapreduce2 f g arr =
         let reduce i _ =
-            Seq.reduce f (seq { for j in 0 .. Array2D.length2 arr - 1 -> arr.[i, j] })
+            Seq.reduce g (seq { for j in 0 .. Array2D.length2 arr - 1 -> f arr.[i, j] })
         Array2D.init (Array2D.length1 arr) 1 reduce
+
+    let reduce1 f arr = mapreduce1 id f arr
+    let reduce2 f arr = mapreduce2 id f arr
 
     /// Initialize a 2D array with all zeros.
     let initZeros h w =

@@ -93,17 +93,20 @@ module ViewArray2D =
             let fold i _ = Seq.fold f (state i) (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] })
             array (Array2D.init h 1 fold)
 
-    let reduce1 f = function
-        | Array arr -> Array (Array2D.reduce1 f arr)
+    let mapreduce1 f g = function
+        | Array arr -> Array (Array2D.mapreduce1 f g arr)
         | View (i0, j0, h, w, arr) ->
-            let reduce _ j = Seq.reduce f (seq { for i in i0 .. i0 + h - 1 -> arr.[i, j0 + j] })
+            let reduce _ j = Seq.reduce g (seq { for i in i0 .. i0 + h - 1 -> f arr.[i, j0 + j] })
             array (Array2D.init 1 w reduce)
 
-    let reduce2 f = function
-        | Array arr -> Array (Array2D.reduce2 f arr)
+    let mapreduce2 f g = function
+        | Array arr -> Array (Array2D.mapreduce2 f g arr)
         | View (i0, j0, h, w, arr) ->
-            let reduce i _ = Seq.reduce f (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] })
+            let reduce i _ = Seq.reduce g (seq { for j in j0 .. j0 + w - 1 -> f arr.[i0 + i, j] })
             array (Array2D.init h 1 reduce)
+
+    let reduce1 f arr = mapreduce1 id f arr
+    let reduce2 f arr = mapreduce2 id f arr
 
     let filter1 p varr =
         let vs = Seq.filter p (Seq.init (length1 varr) (fun i -> get varr i 0)) |> Array.ofSeq

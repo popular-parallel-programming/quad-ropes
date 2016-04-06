@@ -406,23 +406,29 @@ module QuadRope =
             failwith "QuadRopes must have same shape."
         init (rows lope) (cols lope) (fun i j -> f (get lope i j) (get rope i j))
 
-    /// Reduce all rows of rope with f.
-    let rec hreduce f = function
+    // Map f to every element of the rope and reduce column-wise with g.
+    let rec mapHreduce f g = function
         | Empty -> Empty
-        | Leaf vs -> Leaf (ViewArray2D.reduce2 f vs)
+        | Leaf vs -> Leaf (ViewArray2D.mapreduce2 f g vs)
         | Node (_, _, _, ne, nw, sw, se) ->
-            let w = makeThinNode (hreduce f nw) (hreduce f sw)
-            let e = makeThinNode (hreduce f ne) (hreduce f se)
-            zip f w e
+            let w = makeThinNode (mapHreduce f g nw) (mapHreduce f g sw)
+            let e = makeThinNode (mapHreduce f g ne) (mapHreduce f g se)
+            zip g w e
+
+    // Map f to every element of the rope and reduce row-wise with g.
+    let rec mapVreduce f g = function
+        | Empty -> Empty
+        | Leaf vs -> Leaf (ViewArray2D.mapreduce1 f g vs)
+        | Node (_, _, _, ne, nw, sw, se) ->
+            let n = makeFlatNode (mapVreduce f g nw) (mapVreduce f g ne)
+            let s = makeFlatNode (mapVreduce f g sw) (mapVreduce f g se)
+            zip g n s
+
+    /// Reduce all rows of rope with f.
+    let rec hreduce f rope = mapHreduce id f rope
 
     /// Reduce all columns of rope with f.
-    let rec vreduce f = function
-        | Empty -> Empty
-        | Leaf vs -> Leaf (ViewArray2D.reduce1 f vs)
-        | Node (_, _, _, ne, nw, sw, se) ->
-            let n = makeFlatNode (vreduce f nw) (vreduce f ne)
-            let s = makeFlatNode (vreduce f sw) (vreduce f se)
-            zip f n s
+    let rec vreduce f rope = mapVreduce id f rope
 
     let rec hfilter p = function
         | Empty -> Empty

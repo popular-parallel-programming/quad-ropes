@@ -413,7 +413,9 @@ module QuadRope =
         | Node (_, _, _, ne, nw, sw, se) ->
             let w = makeThinNode (mapHreduce f g nw) (mapHreduce f g sw)
             let e = makeThinNode (mapHreduce f g ne) (mapHreduce f g se)
-            zip g w e
+            match e with
+                | Empty -> w
+                | _ -> zip g w e
 
     // Map f to every element of the rope and reduce row-wise with g.
     let rec mapVreduce f g = function
@@ -422,7 +424,9 @@ module QuadRope =
         | Node (_, _, _, ne, nw, sw, se) ->
             let n = makeFlatNode (mapVreduce f g nw) (mapVreduce f g ne)
             let s = makeFlatNode (mapVreduce f g sw) (mapVreduce f g se)
-            zip g n s
+            match s with
+                | Empty -> n
+                | _ -> zip g n s
 
     /// Reduce all rows of rope with f.
     let rec hreduce f rope = mapHreduce id f rope

@@ -16,9 +16,14 @@ namespace RadTrees.Benchmark
 
         public static void Run(int size)
         {
-	    // No need to generate new data structures, they are immutable.
 	    var times = Functions.toFunc2<int, int, int>((i, j) => i * j);
-            var rope = QuadRopeModule.init(size, size, times);
+
+	    // Initialization
+	    Mark("QuadRope.init", () => QuadRopeModule.init(size, size, times));
+	    Mark("Array2D.init", () => Array2DModule.Initialize(size, size, times));
+
+	    // No need to generate new data structures, they are immutable.
+	    var rope = QuadRopeModule.init(size, size, times);
             var arr = Array2DModule.Initialize(size, size, times);
 
 	    // Mapping

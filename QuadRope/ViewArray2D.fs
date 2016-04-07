@@ -81,6 +81,12 @@ module ViewArray2D =
         let l2l = length2 left
         array (Array2D.init l1 l2 (fun i j -> if j < l2l then get left i j else get right i (j - l2l)))
 
+    let call f = function
+        | Array arr ->
+            array (f 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr)
+        | View (i0, j0, h, w, arr) ->
+            array (f i0 j0 h w arr)
+
     let fold1 f state = function
         | Array arr -> Array (Array2D.fold1 f state arr)
         | View (i0, j0, h, w, arr) ->
@@ -93,20 +99,14 @@ module ViewArray2D =
             let fold i _ = Seq.fold f (state i) (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] })
             array (Array2D.init h 1 fold)
 
-    let mapreduce1 f g = function
-        | Array arr -> Array (Array2D.mapreduce1 f g arr)
-        | View (i0, j0, h, w, arr) ->
-            let reduce _ j = Seq.reduce g (seq { for i in i0 .. i0 + h - 1 -> f arr.[i, j0 + j] })
-            array (Array2D.init 1 w reduce)
-
-    let mapreduce2 f g = function
-        | Array arr -> Array (Array2D.mapreduce2 f g arr)
-        | View (i0, j0, h, w, arr) ->
-            let reduce i _ = Seq.reduce g (seq { for j in j0 .. j0 + w - 1 -> f arr.[i0 + i, j] })
-            array (Array2D.init h 1 reduce)
+    let mapreduce1 f g varr = call (Array2D.mapreduce1 f g) varr
+    let mapreduce2 f g varr = call (Array2D.mapreduce2 f g) varr
 
     let reduce1 f arr = mapreduce1 id f arr
     let reduce2 f arr = mapreduce2 id f arr
+
+    let scan1 f state varr = call (Array2D.scanBased1 f state) varr
+    let scan2 f state varr = call (Array2D.scanBased2 f state) varr
 
     let filter1 p varr =
         let vs = Seq.filter p (Seq.init (length1 varr) (fun i -> get varr i 0)) |> Array.ofSeq

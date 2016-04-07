@@ -78,19 +78,37 @@ module Array2D =
         Array2D.init (Array2D.length1 arr) 1 fold
 
     /// Reduce each column of a 2D array.
-    let mapreduce1 f g arr =
+    let mapreduce1 f g i0 j0 h _ (arr : _ [,]) =
         let reduce _ j =
-            Seq.reduce g (seq { for i in 0 .. Array2D.length1 arr - 1 -> f arr.[i, j] })
+            Seq.reduce g (seq { for i in i0 .. i0 + h - 1 -> f arr.[i0 + i, j0 + j] })
         Array2D.init 1 (Array2D.length2 arr) reduce
 
     /// Reduce each row of a 2D array.
-    let mapreduce2 f g arr =
+    let mapreduce2 f g i0 j0 _ w (arr : _ [,]) =
         let reduce i _ =
-            Seq.reduce g (seq { for j in 0 .. Array2D.length2 arr - 1 -> f arr.[i, j] })
+            Seq.reduce g (seq { for j in j0 .. j0 + w - 1 -> f arr.[i0 + i, j0 + j] })
         Array2D.init (Array2D.length1 arr) 1 reduce
 
-    let reduce1 f arr = mapreduce1 id f arr
-    let reduce2 f arr = mapreduce2 id f arr
+    let reduce1 f i0 j0 h w arr = mapreduce1 id f i0 j0 h w arr
+    let reduce2 f i0 j0 h w arr = mapreduce2 id f i0 j0 h w arr
+
+    // Compute the column-wise prefix sum for f.
+    let scanBased1 f state i0 j0 h w (arr : _ [,]) =
+        let scan i j =
+            let i' = i0 + i
+            let j' = j0 + j
+            let p = if i = 0 then state i else arr.[i' - 1, j']
+            f p arr.[i', j']
+        Array2D.init h w scan
+
+    // Compute the row-wise prefix sum for f.
+    let scanBased2 f state i0 j0 h w (arr : _ [,]) =
+        let scan i j =
+            let i' = i0 + i
+            let j' = j0 + j
+            let p = if j = 0 then state j else arr.[i', j' - 1]
+            f p arr.[i', j']
+        Array2D.init h w scan
 
     /// Initialize a 2D array with all zeros.
     let initZeros h w =

@@ -8,7 +8,7 @@ module TestRunner =
         Check.QuickAll (typeof<QuadRopeTest.Handle>.DeclaringType)
 
     [<EntryPoint>]
-    let main args =
+    let main _ =
         try
             test()
             0

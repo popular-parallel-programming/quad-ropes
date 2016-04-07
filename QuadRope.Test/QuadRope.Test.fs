@@ -155,6 +155,23 @@ module QuadRopeTest =
             let scalars = Seq.map (fun (i, j) -> QuadRope.get a i j) indices
             Seq.reduce (.&.) (Seq.map2 (.=.) scalars (Seq.concat (QuadRope.toRows a)))
 
+        static member ``map modifies all values`` (a : int QuadRope) (f : int -> int) =
+            let h = QuadRope.rows a
+            let w = QuadRope.cols a
+            let b = QuadRope.map f a
+            let check (i, j) = f (QuadRope.get a i j) .=. QuadRope.get b i j
+            Seq.reduce (.&.) (Seq.map check (makeIndices h w))
+
+        static member ``hreduce produces thin ropes`` (a : int QuadRope) (f : int -> int -> int) =
+            QuadRope.cols (QuadRope.hreduce f a) .=. 1
+
+        static member ``vreduce produces thin ropes`` (a : int QuadRope) (f : int -> int -> int) =
+            QuadRope.rows (QuadRope.vreduce f a) .=. 1
+
+        static member ``map + reduce equals mapreduce`` (a : int QuadRope) (f : int -> int) (g : int -> int -> int) =
+            QuadRope.mapHreduce f g a = QuadRope.hreduce g (QuadRope.map f a) &&
+                QuadRope.mapVreduce f g a = QuadRope.vreduce g (QuadRope.map f a)
+
         static member ``hfold maintains order`` (a : int QuadRope) =
             let cons xs x = x :: xs
             let empties = QuadRope.init (QuadRope.rows a) 1 (fun _ _ -> [])

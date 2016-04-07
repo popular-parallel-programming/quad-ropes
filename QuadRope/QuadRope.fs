@@ -12,9 +12,14 @@ type 'a QuadRope =
 module QuadRope =
 
     (* The maximal size of a leaf array in any direction. *)
-    let h_max = 6
-    let w_max = 5
-    let d_max = 4
+    #if DEBUG
+    let h_max = 4
+    let w_max = 4
+    #else
+    let h_max = 32
+    let w_max = 16
+    #endif
+    let d_max = 32
 
     (* Initialize Fibonacci numbers at module load time. *)
     ignore (Fibonacci.fib d_max)

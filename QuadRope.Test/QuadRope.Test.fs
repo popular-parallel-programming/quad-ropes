@@ -38,6 +38,9 @@ module QuadRopeTest =
     open Utils
     type QuadRopeTest =
 
+        static member ``DEBUG leaf sizes enabled`` () =
+            QuadRope.h_max = 4 && QuadRope.w_max = 4
+
         (* Hight of generated rope is equal to height parameter. *)
         static member ``init produces correct height`` (NonNegativeInt h) (NonNegativeInt w) =
             (0 < h && 0 < w) ==>

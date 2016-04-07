@@ -438,8 +438,9 @@ module QuadRope =
     /// Reduce all columns of rope with f.
     let rec vreduce f rope = mapVreduce id f rope
 
-    let forall p rope =
-        get (vreduce (&&) (mapHreduce p (&&) rope)) 0 0
+    let forall p = function
+        | Empty -> true
+        | rope -> get (vreduce (&&) (mapHreduce p (&&) rope)) 0 0
 
     let rec hfilter p = function
         | Empty -> Empty

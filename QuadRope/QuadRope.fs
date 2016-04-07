@@ -37,6 +37,10 @@ module QuadRope =
         | Leaf _ -> 0
         | Node (d, _, _, _, _, _, _) -> d
 
+    let isEmpty = function
+        | Empty -> true
+        | _ -> false
+
     let makeLeaf vs =
         if ViewArray2D.length1 vs = 0 || ViewArray2D.length2 vs = 0 then
             Empty

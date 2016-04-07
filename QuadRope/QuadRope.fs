@@ -420,6 +420,7 @@ module QuadRope =
         | Empty -> Empty
         | Leaf vs -> makeLeaf (ViewArray2D.mapreduce2 f g vs)
         | Node (_, _, _, ne, nw, sw, se) ->
+            (* Both, w and e, are of width 1. *)
             let w = makeThinNode (mapHreduce f g nw) (mapHreduce f g sw)
             let e = makeThinNode (mapHreduce f g ne) (mapHreduce f g se)
             match e with
@@ -431,6 +432,7 @@ module QuadRope =
         | Empty -> Empty
         | Leaf vs -> makeLeaf (ViewArray2D.mapreduce1 f g vs)
         | Node (_, _, _, ne, nw, sw, se) ->
+            (* Both, n and s, are of height 1. *)
             let n = makeFlatNode (mapVreduce f g nw) (mapVreduce f g ne)
             let s = makeFlatNode (mapVreduce f g sw) (mapVreduce f g se)
             match s with

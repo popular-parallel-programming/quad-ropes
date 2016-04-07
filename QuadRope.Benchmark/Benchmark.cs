@@ -5,23 +5,16 @@ namespace RadTrees.Benchmark
 {
     class Benchmark
     {
-        const int size = 1000;
-
-        public static Func<int, double> ToDouble(Action f)
-        {
-            return i => { f(); return i; };
-        }
-
         public static void Mark(string msg, Action f)
         {
 	    try {
-		Infrastructure.Mark8(msg, ToDouble(f));
+		Infrastructure.Mark8(msg, i => { f(); return i; });
 	    } catch (Exception e) {
 		Console.WriteLine(e.ToString());
 	    }
         }
 
-        public static void Run()
+        public static void Run(int size)
         {
 	    // No need to generate new data structures, they are immutable.
 	    var times = Functions.toFunc2<int, int, int>((i, j) => i * j);
@@ -87,7 +80,7 @@ namespace RadTrees.Benchmark
 	public static void Main(string[] args)
         {
 	    Infrastructure.SystemInfo();
-	    Run();
+	    Run(1000);
 	}
     }
 

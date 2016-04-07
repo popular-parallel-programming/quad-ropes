@@ -5,7 +5,7 @@ module TestRunner =
 
     let test () =
         RadTrees.Test.Gen.register() |> ignore
-        Check.QuickAll<QuadRopeTest.QuadRopeTest>()
+        Check.QuickAll (typeof<QuadRopeTest.Handle>.DeclaringType)
 
     [<EntryPoint>]
     let main args =

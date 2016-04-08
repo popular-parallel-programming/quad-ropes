@@ -389,7 +389,7 @@ module QuadRope =
     /// state in states.
     let hfold f states rope =
         let rec fold1 states = function
-            | Empty -> Empty
+            | Empty -> states
             | Leaf vs -> makeLeaf (ViewArray2D.fold2 f (fun i -> get states i 0) vs)
             | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
         and fold2 states n s =
@@ -401,7 +401,7 @@ module QuadRope =
     /// state in states.
     let vfold f states rope =
         let rec fold1 states = function
-            | Empty -> Empty
+            | Empty -> states
             | Leaf vs -> makeLeaf (ViewArray2D.fold1 f (get states 0) vs)
             | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
         and fold2 states w e =

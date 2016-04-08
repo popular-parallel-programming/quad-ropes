@@ -7,10 +7,10 @@ type 'a ViewArray2D =
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module ViewArray2D =
 
-    let inline array arr =
+    let inline private array arr =
         Array arr
 
-    let inline view i j h w arr =
+    let inline private view i j h w arr =
         View (i, j, h, w, arr)
 
 

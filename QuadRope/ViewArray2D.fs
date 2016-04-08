@@ -59,8 +59,8 @@ module ViewArray2D =
                 set varr i j v
 
     let subArr i j h w = function
-        | Array arr -> view i j (min (Array2D.length1 arr - i) h) (min (Array2D.length2 arr - j) w) arr
-        | View (i0, j0, h0, w0, arr) -> view (i0 + i) (j0 + j) (min h0 h) (min w0 w) arr
+        | Array arr -> view (max 0 i) (max 0 j) (min (Array2D.length1 arr - i) h) (min (Array2D.length2 arr - j) w) arr
+        | View (i0, j0, h0, w0, arr) -> view (max (i0 + i) i0) (max j0 (j0 + j)) (min h0 h) (min w0 w) arr
 
     let map f = function
         | Array arr -> array (Array2D.map f arr)

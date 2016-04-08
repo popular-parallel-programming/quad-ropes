@@ -177,7 +177,7 @@ module QuadRopeTest =
         QuadRope.mapHreduce f g a = QuadRope.hreduce g (QuadRope.map f a) &&
             QuadRope.mapVreduce f g a = QuadRope.vreduce g (QuadRope.map f a)
 
-    let ``hfilter removes elements correctly`` (a : int QuadRope) (p : int -> bool) =
+    let ``hfilter removes elements correctly`` (a : int QuadRope) (Fun p) =
         QuadRope.rows a = 1 ==> lazy QuadRope.forall p (QuadRope.hfilter p a)
 
     let ``hfold maintains order`` (a : int QuadRope) =

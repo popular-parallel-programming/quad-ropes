@@ -50,9 +50,9 @@ namespace RadTrees.Benchmark
 	    // Reduction in both dimensions
 	    var plus = Functions.toFunc2<int, int, int>((x, y) => x + y);
 	    Mark("QuadRope.hreduce", () => QuadRopeModule.hreduce(plus, rope));
-	    Mark("Array2D.hreduce", () => Array2D.reduce2(plus, 0, 0, size, size, arr));
+	    Mark("Array2D.hreduce", () => Array2D.reduce2(plus, arr));
 	    Mark("QuadRope.vreduce", () => QuadRopeModule.vreduce(plus, rope));
-	    Mark("Array2D.vreduce", () => Array2D.reduce1(plus, 0, 0, size, size, arr));
+	    Mark("Array2D.vreduce", () => Array2D.reduce1(plus, arr));
 
 	    // Concatenation in both domensions.
 	    Mark("QuadRope.hcat", () => QuadRopeModule.hcat(rope, rope));

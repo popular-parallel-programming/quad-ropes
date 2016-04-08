@@ -451,14 +451,14 @@ module QuadRope =
 
     let rec hfilter p = function
         | Empty -> Empty
-        | Leaf vs -> Leaf (ViewArray2D.filter2 p vs)
+        | Leaf vs -> makeLeaf (ViewArray2D.filter2 p vs)
         | Node (_, 1, _, ne, nw, Empty, Empty) ->
             makeFlatNode (hfilter p nw) (hfilter p ne)
         | _ -> failwith "hight must be exactly 1"
 
     let rec vfilter p = function
         | Empty -> Empty
-        | Leaf vs -> Leaf (ViewArray2D.filter1 p vs)
+        | Leaf vs -> makeLeaf (ViewArray2D.filter1 p vs)
         | Node (_, _, 1, Empty, nw, sw, Empty) ->
             makeThinNode (vfilter p nw) (vfilter p sw)
         | _ -> failwith "width must be exactly 1"

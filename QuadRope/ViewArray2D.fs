@@ -13,6 +13,13 @@ module ViewArray2D =
     let inline view i j h w arr =
         View (i, j, h, w, arr)
 
+
+    let private call f = function
+        | Array arr ->
+            array (f 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr)
+        | View (i0, j0, h, w, arr) ->
+            array (f i0 j0 h w arr)
+
     let length1 = function
         | Array arr -> Array2D.length1 arr
         | View (_, _, h, _, _) -> h
@@ -59,13 +66,8 @@ module ViewArray2D =
         | Array arr -> array (Array2D.map f arr)
         | View (i0, j0, h, w, arr) -> array (Array2D.init h w (fun i j -> f arr.[i0 + i, j0 + j]))
 
-    let rev1 = function
-        | Array arr -> Array (Array2D.rev1 arr)
-        | View (i0, j0, h, w, arr) -> array (Array2D.init h w (fun i j -> arr.[(h - 1) - i0 + i, j0 + j]))
-
-    let rev2 = function
-        | Array arr -> Array (Array2D.rev2 arr)
-        | View (i0, j0, h, w, arr) -> array (Array2D.init h w (fun i j -> arr.[i0 + i, (w - 1) - j0 + j]))
+    let rev1 varr = call Array2D.revBased1 varr
+    let rev2 varr = call Array2D.revBased2 varr
 
     let cat1 upper lower =
         if length2 upper <> length2 lower then failwith "length2 must be equal!"
@@ -81,26 +83,11 @@ module ViewArray2D =
         let l2l = length2 left
         array (Array2D.init l1 l2 (fun i j -> if j < l2l then get left i j else get right i (j - l2l)))
 
-    let call f = function
-        | Array arr ->
-            array (f 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr)
-        | View (i0, j0, h, w, arr) ->
-            array (f i0 j0 h w arr)
+    let fold1 f state varr = call (Array2D.foldBased1 f state) varr
+    let fold2 f state varr = call (Array2D.foldBased2 f state) varr
 
-    let fold1 f state = function
-        | Array arr -> Array (Array2D.fold1 f state arr)
-        | View (i0, j0, h, w, arr) ->
-            let fold _ j = Seq.fold f (state j) (seq { for i in i0 .. i0 + h - 1 -> arr.[i, j0 + j] })
-            array (Array2D.init 1 w fold)
-
-    let fold2 f state = function
-        | Array arr -> Array (Array2D.fold2 f state arr)
-        | View (i0, j0, h, w, arr) ->
-            let fold i _ = Seq.fold f (state i) (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] })
-            array (Array2D.init h 1 fold)
-
-    let mapreduce1 f g varr = call (Array2D.mapreduce1 f g) varr
-    let mapreduce2 f g varr = call (Array2D.mapreduce2 f g) varr
+    let mapreduce1 f g varr = call (Array2D.mapReduceBased1 f g) varr
+    let mapreduce2 f g varr = call (Array2D.mapReduceBased2 f g) varr
 
     let reduce1 f arr = mapreduce1 id f arr
     let reduce2 f arr = mapreduce2 id f arr

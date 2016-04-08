@@ -13,6 +13,9 @@ module Bits =
 
 module Array2D =
 
+    let inline call f arr =
+        f 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
+
     /// Return a fresh copy of arr with the value at i,j replaced with v.
     let set arr i j v =
         let arr0 = Array2D.copy arr
@@ -56,41 +59,55 @@ module Array2D =
         Array2D.init l1 l2 (fun i j -> if j < l2l then left.[i, j] else right.[i, j - l2l])
 
     /// Revert an array in first dimension.
-    let rev1 arr =
-        let i0 = Array2D.length1 arr - 1
-        Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> arr.[i0 - i, j])
+    let revBased1 i0 j0 h w (arr : _ [,]) =
+        let h0 = h - 1
+        Array2D.init h w (fun i j -> arr.[h0 - (i0 + i), j0 + j])
 
     /// Revert an array in second dimension.
-    let rev2 arr =
-        let j0  = Array2D.length2 arr - 1
-        Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> arr.[i, j0 - j])
+    let revBased2 i0 j0 h w (arr : _ [,]) =
+        let w0 = w - 1
+        Array2D.init h w (fun i j -> arr.[i0 + i, w0 - (j0 + j)])
+
+    let rev1 arr = call revBased1 arr
+    let rev2 arr = call revBased2 arr
 
     /// Fold each column of a 2D array, calling state with each row to get the state.
-    let fold1 f state arr =
+    let foldBased1 f state i0 j0 h w (arr : _ [,]) =
         let fold _ j =
-            Seq.fold f (state j) (seq { for i in 0 .. Array2D.length1 arr - 1 -> arr.[i, j] })
-        Array2D.init 1 (Array2D.length2 arr) fold
+            Seq.fold f (state j) (seq { for i in i0 .. i0 + h - 1 -> arr.[i, j0 + j] })
+        Array2D.init 1 w fold
 
     /// Fold each column of a 2D array, calling state with each column to get the state.
-    let fold2 f state arr =
+    let foldBased2 f state i0 j0 h w (arr : _ [,]) =
         let fold i _ =
-            Seq.fold f (state i) (seq { for j in 0 .. Array2D.length2 arr - 1 -> arr.[i, j] })
-        Array2D.init (Array2D.length1 arr) 1 fold
+            Seq.fold f (state i) (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] })
+        Array2D.init h 1 fold
+
+    let fold1 f state arr =
+        let g = foldBased1 f state
+        call g arr
+    let fold2 f state arr = call (foldBased2 f state) arr
 
     /// Reduce each column of a 2D array.
-    let mapreduce1 f g i0 j0 h _ (arr : _ [,]) =
+    let mapReduceBased1 f g i0 j0 h w (arr : _ [,]) =
         let reduce _ j =
             Seq.reduce g (seq { for i in i0 .. i0 + h - 1 -> f arr.[i0 + i, j0 + j] })
-        Array2D.init 1 (Array2D.length2 arr) reduce
+        Array2D.init 1 w reduce
 
     /// Reduce each row of a 2D array.
-    let mapreduce2 f g i0 j0 _ w (arr : _ [,]) =
+    let mapReduceBased2 f g i0 j0 h w (arr : _ [,]) =
         let reduce i _ =
             Seq.reduce g (seq { for j in j0 .. j0 + w - 1 -> f arr.[i0 + i, j0 + j] })
-        Array2D.init (Array2D.length1 arr) 1 reduce
+        Array2D.init h 1 reduce
 
-    let reduce1 f i0 j0 h w arr = mapreduce1 id f i0 j0 h w arr
-    let reduce2 f i0 j0 h w arr = mapreduce2 id f i0 j0 h w arr
+    let mapReduce1 f g arr = call (mapReduceBased1 f g) arr
+    let mapReduce2 f g arr = call (mapReduceBased2 f g) arr
+
+    let reduceBased1 f i0 j0 h w arr = mapReduceBased1 id f i0 j0 h w arr
+    let reduceBased2 f i0 j0 h w arr = mapReduceBased2 id f i0 j0 h w arr
+
+    let reduce1 f arr = call (reduceBased1 f) arr
+    let reduce2 f arr = call (reduceBased2 f) arr
 
     // Compute the column-wise prefix sum for f.
     let scanBased1 f state i0 j0 h w (arr : _ [,]) =
@@ -109,6 +126,9 @@ module Array2D =
             let p = if j = 0 then state j else arr.[i', j' - 1]
             f p arr.[i', j']
         Array2D.init h w scan
+
+    let scan1 f state arr = call (scanBased1 f state) arr
+    let scan2 f state arr = call (scanBased2 f state) arr
 
     /// Initialize a 2D array with all zeros.
     let initZeros h w =

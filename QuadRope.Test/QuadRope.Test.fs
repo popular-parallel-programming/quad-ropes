@@ -160,6 +160,9 @@ module QuadRopeTest =
         let scalars = Seq.map (fun (i, j) -> QuadRope.get a i j) indices
         Seq.reduce (.&.) (Seq.map2 (.=.) scalars (Seq.concat (QuadRope.toRows a)))
 
+    let ``toCols yields correct number of scalars`` (a : int QuadRope) =
+        QuadRope.rows a * QuadRope.cols a .=. Seq.length (Seq.concat (QuadRope.toCols a))
+
     let ``map modifies all values`` (a : int QuadRope) (f : int -> int) =
         let h = QuadRope.rows a
         let w = QuadRope.cols a
@@ -180,8 +183,17 @@ module QuadRopeTest =
     let ``hfilter removes elements correctly`` (a : int QuadRope) (Fun p) =
         QuadRope.rows a = 1 ==> lazy QuadRope.forall p (QuadRope.hfilter p a)
 
+    let ``vfilter removes elements correctly`` (a : int QuadRope) (Fun p) =
+        QuadRope.cols a = 1 ==> lazy QuadRope.forall p (QuadRope.vfilter p a)
+
     let ``hfold maintains order`` (a : int QuadRope) =
         let cons xs x = x :: xs
         let empties = QuadRope.init (QuadRope.rows a) 1 (fun _ _ -> [])
         let b = QuadRope.hfold cons empties a
         (Seq.map (Seq.toList >> List.rev) (QuadRope.toRows a) |> List.ofSeq) = (Seq.concat (QuadRope.toRows b) |> List.ofSeq)
+
+    let ``vfold maintains order`` (a : int QuadRope) =
+        let cons xs x = x :: xs
+        let empties = QuadRope.init 1 (QuadRope.cols a) (fun _ _ -> [])
+        let b = QuadRope.vfold cons empties a
+        (Seq.map (Seq.toList >> List.rev) (QuadRope.toCols a) |> List.ofSeq) = (Seq.concat (QuadRope.toCols b) |> List.ofSeq)

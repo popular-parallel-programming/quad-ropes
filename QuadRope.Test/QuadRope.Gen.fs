@@ -30,9 +30,19 @@ module Gen =
                           yield Gen.map (fun (l, r) -> QuadRope.hcat l r) hs;
                           yield Gen.map (fun (u, l) -> QuadRope.vcat u l) vs })
 
+    let shrink = function
+        | Node (_, _, _, ne, nw, sw, se) ->
+            seq { yield ne; yield nw; yield sw; yield se
+                  if QuadRope.rows ne = QuadRope.rows nw then yield QuadRope.makeFlatNode nw ne
+                  if QuadRope.cols nw = QuadRope.cols sw then yield QuadRope.makeThinNode nw sw }
+        | _ -> Seq.empty
+
     type QuadRopeGen =
         static member QuadRope () =
-            Arb.fromGen genCatRope
+            { new Arbitrary<int QuadRope>() with
+              override x.Generator = genCatRope
+              override x.Shrinker rope = shrink rope
+            }
 
     let register () =
         Arb.register<QuadRopeGen>()

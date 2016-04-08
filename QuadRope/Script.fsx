@@ -1,4 +1,5 @@
 #load "Utils.fs"
+#load "ViewArray2D.fs"
 #load "QuadRope.fs"
 #load "QuadRope.Parallel.fs"
 
@@ -6,4 +7,3 @@
 
 open RadTrees
 open RadTrees.QuadRope
-open RadTrees.QuadRope.Path

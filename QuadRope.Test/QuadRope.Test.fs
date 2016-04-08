@@ -183,5 +183,5 @@ module QuadRopeTest =
     let ``hfold maintains order`` (a : int QuadRope) =
         let cons xs x = x :: xs
         let empties = QuadRope.init (QuadRope.rows a) 1 (fun _ _ -> [])
-        let rows0 = QuadRope.hfold cons empties a
-        Seq.map (Seq.toList >> List.rev) (QuadRope.toRows a) .=. Seq.concat (QuadRope.toRows rows0)
+        let b = QuadRope.hfold cons empties a
+        (Seq.map (Seq.toList >> List.rev) (QuadRope.toRows a) |> List.ofSeq) .=. (Seq.concat (QuadRope.toRows b) |> List.ofSeq)

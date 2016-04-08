@@ -457,6 +457,18 @@ module QuadRope =
             let se' = hscan f estate se
             makeNode ne' nw' sw' se'
 
+    let rec vscan f states = function
+        | Empty -> Empty
+        | Leaf vs -> Leaf (ViewArray2D.scan1 f states vs)
+        | Node (_, _, _, ne, nw, sw, se) ->
+            let nw' = vscan f states nw
+            let ne' = vscan f (((+) (cols nw)) >> states) ne
+            let sstate j =
+                if j < cols nw' then get nw' (rows nw' - 1) j else get ne' (rows ne' - 1) (j - cols nw')
+            let sw' = vscan f sstate sw
+            let se' = vscan f sstate se
+            makeNode ne' nw' sw' se'
+
     let forall p = function
         | Empty -> true
         | rope -> get (vreduce (&&) (mapHreduce p (&&) rope)) 0 0

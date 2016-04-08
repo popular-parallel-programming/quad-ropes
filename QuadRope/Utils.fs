@@ -83,9 +83,7 @@ module Array2D =
             Seq.fold f (state i) (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] })
         Array2D.init h 1 fold
 
-    let fold1 f state arr =
-        let g = foldBased1 f state
-        call g arr
+    let fold1 f state arr = call (foldBased1 f state) arr
     let fold2 f state arr = call (foldBased2 f state) arr
 
     /// Reduce each column of a 2D array.

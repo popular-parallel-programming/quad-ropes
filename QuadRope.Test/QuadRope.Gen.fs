@@ -32,9 +32,11 @@ module Gen =
 
     let shrink = function
         | Node (_, _, _, ne, nw, sw, se) ->
-            seq { yield ne; yield nw; yield sw; yield se
-                  if QuadRope.rows ne = QuadRope.rows nw then yield QuadRope.makeFlatNode nw ne
-                  if QuadRope.cols nw = QuadRope.cols sw then yield QuadRope.makeThinNode nw sw }
+            seq { if not (QuadRope.isEmpty ne) then yield ne
+                  if not (QuadRope.isEmpty nw) then yield nw
+                  if not (QuadRope.isEmpty sw) then yield sw
+                  if not (QuadRope.isEmpty se) then yield se
+                  yield QuadRope.Empty }
         | _ -> Seq.empty
 
     type QuadRopeGen =

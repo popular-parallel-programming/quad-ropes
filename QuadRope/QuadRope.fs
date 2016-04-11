@@ -445,16 +445,19 @@ module QuadRope =
     /// Reduce all columns of rope with f.
     let rec vreduce f rope = mapVreduce id f rope
 
+    let private offset f x =
+        ((+) x) >> f
+
     let rec hscan f states = function
         | Empty -> Empty
         | Leaf vs -> Leaf (ViewArray2D.scan2 f states vs)
         | Node (_, _, _, ne, nw, sw, se) ->
             let nw' = hscan f states nw
-            let sw' = hscan f (((+) (rows nw)) >> states) sw
+            let sw' = hscan f (offset states (rows nw')) sw
             let estate i =
                 if i < rows nw' then get nw' i (cols nw' - 1) else get sw' (i - rows nw') (cols sw' - 1)
             let ne' = hscan f estate ne
-            let se' = hscan f estate se
+            let se' = hscan f (offset estate (rows ne')) se
             makeNode ne' nw' sw' se'
 
     let rec vscan f states = function
@@ -462,11 +465,11 @@ module QuadRope =
         | Leaf vs -> Leaf (ViewArray2D.scan1 f states vs)
         | Node (_, _, _, ne, nw, sw, se) ->
             let nw' = vscan f states nw
-            let ne' = vscan f (((+) (cols nw)) >> states) ne
+            let ne' = vscan f (offset states (cols nw')) ne
             let sstate j =
                 if j < cols nw' then get nw' (rows nw' - 1) j else get ne' (rows ne' - 1) (j - cols nw')
             let sw' = vscan f sstate sw
-            let se' = vscan f sstate se
+            let se' = vscan f (offset sstate (cols sw')) se
             makeNode ne' nw' sw' se'
 
     let forall p = function

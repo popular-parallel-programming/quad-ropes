@@ -186,16 +186,16 @@ module QuadRopeTest =
     let ``vfilter removes elements correctly`` (a : int QuadRope) (Fun p) =
         QuadRope.cols a = 1 ==> lazy QuadRope.forall p (QuadRope.vfilter p a)
 
+    let snoc xs x = x :: xs
+
     let ``hfold maintains order`` (a : int QuadRope) =
-        let cons xs x = x :: xs
         let empties = QuadRope.init (QuadRope.rows a) 1 (fun _ _ -> [])
-        let b = QuadRope.hfold cons empties a
+        let b = QuadRope.hfold snoc empties a
         (Seq.map (Seq.toList >> List.rev) (QuadRope.toRows a) |> List.ofSeq) = (Seq.concat (QuadRope.toRows b) |> List.ofSeq)
 
     let ``vfold maintains order`` (a : int QuadRope) =
-        let cons xs x = x :: xs
         let empties = QuadRope.init 1 (QuadRope.cols a) (fun _ _ -> [])
-        let b = QuadRope.vfold cons empties a
+        let b = QuadRope.vfold snoc empties a
         (Seq.map (Seq.toList >> List.rev) (QuadRope.toCols a) |> List.ofSeq) = (Seq.concat (QuadRope.toCols b) |> List.ofSeq)
 
     let ``last of hscan equals hfold`` (a : int QuadRope) =

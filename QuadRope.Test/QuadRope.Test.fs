@@ -118,7 +118,7 @@ module QuadRopeTest =
     let ``hsplit2 produces two ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
         w <= QuadRope.cols a ==>
         lazy (let b, c = QuadRope.hsplit2 a w
-              QuadRope.cols a .=. QuadRope.cols b + QuadRope.cols c)
+              (QuadRope.cols b .=. w) .&. (QuadRope.cols c .=. QuadRope.cols a - w))
 
     let ``vsplit produces ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =
         h <= QuadRope.rows a ==>
@@ -128,7 +128,7 @@ module QuadRopeTest =
     let ``vsplit2 produces two ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =
         h <= QuadRope.rows a ==>
         lazy (let b, c = QuadRope.vsplit2 a h
-              QuadRope.rows a .=. QuadRope.rows b + QuadRope.rows c)
+              (QuadRope.rows b .=. h) .&. (QuadRope.rows c = QuadRope.rows a - h))
 
     let ``balanceH maintains layout`` (a : int QuadRope) =
         not (QuadRope.isBalancedH a) ==>

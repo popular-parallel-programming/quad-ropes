@@ -13,7 +13,6 @@ module ViewArray2D =
     let inline private view i j h w arr =
         View (i, j, h, w, arr)
 
-
     let private call f = function
         | Array arr ->
             array (f 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr)

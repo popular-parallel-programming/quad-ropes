@@ -199,7 +199,7 @@ module QuadRopeTest =
         (Seq.map (Seq.toList >> List.rev) (QuadRope.toCols a) |> List.ofSeq) = (Seq.concat (QuadRope.toCols b) |> List.ofSeq)
 
     let ``last of hscan equals hfold`` (a : int QuadRope) =
-        let b = QuadRope.map (fun e -> [e]) a
+        let b = QuadRope.map List.singleton a
         let c = QuadRope.hscan (@) (fun _ -> []) b
         let d = QuadRope.hfold (@) (QuadRope.init (QuadRope.rows b) 1 (fun _ _ -> [])) b
         let x = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toCols c)))
@@ -207,9 +207,9 @@ module QuadRopeTest =
         x .=. y
 
     let ``last of vscan equals vfold`` (a : int QuadRope) =
-        let b = QuadRope.map (fun e -> [e]) a
+        let b = QuadRope.map List.singleton a
         let c = QuadRope.vscan (@) (fun _ -> []) b
-        let d = QuadRope.vfold (@) (QuadRope.init (QuadRope.rows b) 1 (fun _ _ -> [])) b
+        let d = QuadRope.vfold (@) (QuadRope.init 1 (QuadRope.cols b) (fun _ _ -> [])) b
         let x = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toRows c)))
         let y = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toRows d)))
         x .=. y

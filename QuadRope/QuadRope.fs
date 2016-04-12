@@ -486,6 +486,12 @@ module QuadRope =
         | Empty -> true
         | rope -> get (vreduce (&&) (mapHreduce p (&&) rope)) 0 0
 
+    // Apply predicate p to all elements of rope and reduce the
+    // elements in both dimensions using logical or.
+    let exists p = function
+        | Empty -> false
+        | rope -> get (vreduce (||) (mapHreduce p (||) rope)) 0 0
+
     // Remove all elements from rope for which p does not hold. Input
     // rope must be of height 1.
     let rec hfilter p = function

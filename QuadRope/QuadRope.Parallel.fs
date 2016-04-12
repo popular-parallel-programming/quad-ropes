@@ -13,94 +13,87 @@ module Parallel =
         | SW of 'b QuadRope * 'b QuadRope * ('a, 'b) Path * 'a QuadRope
         | SE of 'b QuadRope * 'b QuadRope * 'b QuadRope * ('a, 'b) Path
 
-    type ('a, 'b) Loc = 'a QuadRope * int * int * ('a, 'b) Path
+    type ('a, 'b) Loc = 'a QuadRope * ('a, 'b) Path
 
-    module Loc =
-
-        let node ((n, _, _, _) : ('a, 'b) Loc) = n
-        let i    ((_, i, _, _) : ('a, 'b) Loc) = i
-        let j    ((_, _, j, _) : ('a, 'b) Loc) = j
-        let path ((_, _, _, p) : ('a, 'b) Loc) = p
-
-    let west (node, i, j, path) =
+    let west (node, path) =
         match path with
-            | NE (path, nw, sw, se) -> nw, i, j - cols nw, NW (node, path, sw, se)
-            | SE (ne, nw, sw, path) -> sw, i, j - cols sw, SW (ne, nw, path, node)
-            | _ -> node, i, j, path
+            | NE (path, nw, sw, se) -> nw, NW (node, path, sw, se)
+            | SE (ne, nw, sw, path) -> sw, SW (ne, nw, path, node)
+            | _ -> node, path
 
-    let east (node, i, j, path) =
+    let east (node, path) =
         match path with
-            | NW (ne, path, sw, se) -> ne, i, j + cols node, NE (path, node, sw, se)
-            | SW (ne, nw, path, se) -> se, i, j + cols node, SE (ne, nw, node, path)
-            | _ -> node, i, j, path
+            | NW (ne, path, sw, se) -> ne, NE (path, node, sw, se)
+            | SW (ne, nw, path, se) -> se, SE (ne, nw, node, path)
+            | _ -> node, path
 
-    let north (node, i, j, path) =
+    let north (node, path) =
         match path with
-            | SW (ne, nw, path, se) -> nw, i - rows nw, j, NW (ne, path, node, se)
-            | SE (ne, nw, sw, path) -> ne, i - rows ne, j, NE (path, nw, sw, node)
-            | _ -> node, i, j, path
+            | SW (ne, nw, path, se) -> nw, NW (ne, path, node, se)
+            | SE (ne, nw, sw, path) -> ne, NE (path, nw, sw, node)
+            | _ -> node, path
 
-    let south (node, i, j, path) =
+    let south (node, path) =
         match path with
-            | NE (path, nw, sw, se) -> se, i + rows node, j, SE (node, nw, sw, path)
-            | NW (ne, path, sw, se) -> sw, i + rows node, j, SW (ne, node, path, se)
-            | _ -> (node, i, j, path)
+            | NE (path, nw, sw, se) -> se, SE (node, nw, sw, path)
+            | NW (ne, path, sw, se) -> sw, SW (ne, node, path, se)
+            | _ -> (node, path)
 
-    let southWest (node, i, j, path) =
+    let southWest (node, path) =
         match path with
-            | NE (path, nw, sw, se) -> sw, i + rows nw, j - cols nw, SW (node, nw, path, se)
-            | _ -> node, i, j, path
+            | NE (path, nw, sw, se) -> sw, SW (node, nw, path, se)
+            | _ -> node, path
 
-    let up (node, i, j, path) =
+    let up (node, path) =
         match path with
-            | NE (path, nw, sw, se) -> (makeNode node nw sw se), i, j - cols nw, path
-            | NW (ne, path, sw, se) -> (makeNode ne node sw se), i, j, path
-            | SW (ne, nw, path, se) -> (makeNode ne nw node se), i - rows nw, j, path
-            | SE (ne, nw, sw, path) -> (makeNode ne nw sw node), i - rows ne, j - cols sw, path
-            | _ -> node, i, j, path
+            | NE (path, nw, sw, se) -> (makeNode node nw sw se), path
+            | NW (ne, path, sw, se) -> (makeNode ne node sw se), path
+            | SW (ne, nw, path, se) -> (makeNode ne nw node se), path
+            | SE (ne, nw, sw, path) -> (makeNode ne nw sw node), path
+            | _ -> node, path
 
-    let down (node, i, j, path) =
+    let down (node, path) =
         match node with
             | Empty
-            | Leaf _ -> node, i, j, path
+            | Leaf _ -> node, path
             | Node (_, _, _, ne, nw, sw, se) ->
-                nw, i, j, NW (ne, path, sw, se)
+                nw, NW (ne, path, sw, se)
 
-    let rec upperLeftMost (node, i, j, path) =
+    let rec upperLeftMost (node, path) =
         match node with
             | Empty
-            | Leaf _ -> node, i, j, path
-            | _ -> upperLeftMost (down (node, i, j, path))
+            | Leaf _ -> node, path
+            | _ -> upperLeftMost (down (node, path))
 
-    let start rope = upperLeftMost (rope, 0, 0, Top)
+    let start rope = upperLeftMost (rope, Top)
 
-    let rec walkSouth (node, i, j, loc) =
-        match loc with
+    let rec walkSouth (node, path) =
+        match path with
             | Top -> None
             | NW _
-            | NE _ -> Some (south (node, i, j, loc))
-            | SW _ -> Option.map upperLeftMost (walkSouth (up (node, i, j, loc)))
-            | SE _ -> Option.map (down >> east >> upperLeftMost) (walkSouth (up (node, i, j, loc)))
+            | NE _ -> Some (south (node, path))
+            | SW _ -> Option.map upperLeftMost (walkSouth (up (node, path)))
+            | SE _ -> Option.map (down >> east >> upperLeftMost) (walkSouth (up (node, path)))
 
-    let rec walkEast (node, i, j, loc) =
-        match loc with
+    let rec walkEast (node, path) =
+        match path with
             | Top -> None
             | NW _
-            | SW _ -> Some (east (node, i, j, loc))
-            | NE _ -> Option.map upperLeftMost (walkEast (up (node, i, j, loc)))
-            | SE _ -> Option.map (down >> south >> upperLeftMost) (walkEast (up (node, i, j, loc)))
+            | SW _ -> Some (east (node, path))
+            | NE _ -> Option.map upperLeftMost (walkEast (up (node, path)))
+            | SE _ -> Option.map (down >> south >> upperLeftMost) (walkEast (up (node, path)))
 
     type ('a, 'b) Progress =
         | More of 'a
         | Done of 'b
 
-    let rec next loc =
-        match Loc.path loc with
-            | Top -> Done (Loc.node loc)
-            | NE _ -> More ((southWest >> upperLeftMost) loc)
-            | NW _ -> More ((east >> upperLeftMost) loc)
-            | SW _ -> More ((east >> upperLeftMost) loc)
-            | SE _ -> next (up loc)
+    let rec next (node, path) =
+        match path with
+            | Top -> Done node
+            | NE _ -> More ((southWest >> upperLeftMost) (node, path))
+            | NW _ -> More ((east >> upperLeftMost) (node, path))
+            | SW _ -> More ((east >> upperLeftMost) (node, path))
+            | SE _ -> next (up (node, path))
 
     let rec splitPath p u path =
         match path with
@@ -117,11 +110,11 @@ module Parallel =
             Done (map f node)
 
     let mapUntil cond f rope =
-        let rec cmap loc =
-            match mapUntilSeq cond f (Loc.node loc) with
-                | More node -> More (splitPath Empty node (Loc.path loc))
+        let rec cmap (node, path) =
+            match mapUntilSeq cond f node with
+                | More node -> More (splitPath Empty node path)
                 | Done propes ->
-                    match next (propes, 0, 0, Loc.path loc) with
+                    match next (propes, path) with
                         | Done rope -> Done rope
                         | More loc -> cmap loc
         cmap (start rope)

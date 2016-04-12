@@ -1,5 +1,4 @@
-namespace RadTrees
-namespace QuadRope
+namespace RadTrees.QuadRope
 
 module Parallel =
     open RadTrees

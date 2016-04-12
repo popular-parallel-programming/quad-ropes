@@ -388,6 +388,8 @@ module QuadRope =
     /// Fold each row of rope with f, starting with the according
     /// state in states.
     let hfold f states rope =
+        if rows states <> rows rope then
+            failwith "states and rope must have same height"
         let rec fold1 states = function
             | Empty -> states
             | Leaf vs -> makeLeaf (ViewArray2D.fold2 f (fun i -> get states i 0) vs)
@@ -400,6 +402,8 @@ module QuadRope =
     /// Fold each column of rope with f, starting with the according
     /// state in states.
     let vfold f states rope =
+        if cols states <> cols rope then
+            failwith "states and rope must have same width"
         let rec fold1 states = function
             | Empty -> states
             | Leaf vs -> makeLeaf (ViewArray2D.fold1 f (get states 0) vs)

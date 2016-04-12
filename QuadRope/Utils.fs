@@ -36,7 +36,7 @@ module Array2D =
             let w0 = min w (Array2D.length2 arr)
             Array2D.init h0 w0 (fun i j -> Array2D.get arr (i0 + i) (j0 + j))
 
-    let slice arr imin jmin imax jmax =
+    let inline slice arr imin jmin imax jmax =
          subArr arr imin jmin (imax - imin) (jmax - jmin)
 
     let inline isSingleton arr =
@@ -68,8 +68,8 @@ module Array2D =
         let w0 = w - 1
         Array2D.init h w (fun i j -> arr.[i0 + i, w0 - (j0 + j)])
 
-    let rev1 arr = call revBased1 arr
-    let rev2 arr = call revBased2 arr
+    let inline rev1 arr = call revBased1 arr
+    let inline rev2 arr = call revBased2 arr
 
     /// Fold each column of a 2D array, calling state with each row to get the state.
     let foldBased1 f state i0 j0 h w (arr : _ [,]) =
@@ -83,8 +83,8 @@ module Array2D =
             Seq.fold f (state i) (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] })
         Array2D.init h 1 fold
 
-    let fold1 f state arr = call (foldBased1 f state) arr
-    let fold2 f state arr = call (foldBased2 f state) arr
+    let inline fold1 f state arr = call (foldBased1 f state) arr
+    let inline fold2 f state arr = call (foldBased2 f state) arr
 
     /// Reduce each column of a 2D array.
     let mapReduceBased1 f g i0 j0 h w (arr : _ [,]) =
@@ -98,14 +98,14 @@ module Array2D =
             Seq.reduce g (seq { for j in j0 .. j0 + w - 1 -> f arr.[i0 + i, j0 + j] })
         Array2D.init h 1 reduce
 
-    let mapReduce1 f g arr = call (mapReduceBased1 f g) arr
-    let mapReduce2 f g arr = call (mapReduceBased2 f g) arr
+    let inline mapReduce1 f g arr = call (mapReduceBased1 f g) arr
+    let inline mapReduce2 f g arr = call (mapReduceBased2 f g) arr
 
-    let reduceBased1 f i0 j0 h w arr = mapReduceBased1 id f i0 j0 h w arr
-    let reduceBased2 f i0 j0 h w arr = mapReduceBased2 id f i0 j0 h w arr
+    let inline reduceBased1 f i0 j0 h w arr = mapReduceBased1 id f i0 j0 h w arr
+    let inline reduceBased2 f i0 j0 h w arr = mapReduceBased2 id f i0 j0 h w arr
 
-    let reduce1 f arr = call (reduceBased1 f) arr
-    let reduce2 f arr = call (reduceBased2 f) arr
+    let inline reduce1 f arr = call (reduceBased1 f) arr
+    let inline reduce2 f arr = call (reduceBased2 f) arr
 
     // Compute the column-wise prefix sum for f.
     let scanBased1 f state i0 j0 h w (arr : _ [,]) =
@@ -120,8 +120,8 @@ module Array2D =
             Seq.scan f (state i) (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] }) |> Array.ofSeq
         array2D [| for i in 0 .. h - 1 -> scan i |]
 
-    let scan1 f state arr = call (scanBased1 f state) arr
-    let scan2 f state arr = call (scanBased2 f state) arr
+    let inline scan1 f state arr = call (scanBased1 f state) arr
+    let inline scan2 f state arr = call (scanBased2 f state) arr
 
     let sortBased1 p i0 j0 h w (arr : _ [,]) =
         let sort j =
@@ -134,11 +134,11 @@ module Array2D =
             Array.sortBy p [| for j in j0 .. j0 + w - 1 -> arr.[i, j] |]
         array2D [| for i in i0 .. i0 + h - 1 -> sort i |]
 
-    let sort1 p arr = call p arr
-    let sort2 p arr = call p arr
+    let inline sort1 p arr = call p arr
+    let inline sort2 p arr = call p arr
 
     /// Initialize a 2D array with all zeros.
-    let initZeros h w =
+    let inline initZeros h w =
         Array2D.init h w (fun _ _ -> 0)
 
 module Fibonacci =

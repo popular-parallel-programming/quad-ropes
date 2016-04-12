@@ -99,8 +99,10 @@ module Parallel =
         match path with
             | Top -> p, u
             | NW (ne, path, sw, se) -> splitPath p (makeNode ne u sw se) path
-            | NE (path, nw, sw, se) -> splitPath (hcat nw p) (vcat u (hcat sw se)) path
-            | SW (ne, nw, path, se) -> splitPath (vcat (hcat nw ne) p) (hcat u se) path
+            | NE (path, nw, sw, se) ->
+                splitPath (makeFlatNode nw p) (makeThinNode u (makeFlatNode sw se)) path
+            | SW (ne, nw, path, se) ->
+                splitPath (makeThinNode (makeFlatNode nw ne) p) (makeFlatNode u se) path
             | SE (ne, nw, sw, path) -> splitPath (makeNode ne nw sw p) u path
 
     let mapUntilSeq cond f node =

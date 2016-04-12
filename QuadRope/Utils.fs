@@ -112,7 +112,7 @@ module Array2D =
         let scan j =
             Seq.scan f (state j) (seq { for i in i0 .. i0 + h - 1 -> arr.[i, j0 + j] }) |> Array.ofSeq
         let arr' = [| for j in 0 .. w - 1 -> scan j |]
-        Array2D.init h w (fun i j -> Array.get (Array.get arr' j) i)
+        Array2D.init (h + 1) w (fun i j -> Array.get (Array.get arr' j) i)
 
     // Compute the row-wise prefix sum for f.
     let scanBased2 f state i0 j0 h w (arr : _ [,]) =

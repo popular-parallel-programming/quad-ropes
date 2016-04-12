@@ -112,3 +112,6 @@ module ViewArray2D =
     let filter2 p varr =
         let vs = Seq.filter p (Seq.init (length2 varr) (get varr 0)) |> Array.ofSeq
         init 1 (Array.length vs) (fun _ j -> Array.get vs j)
+
+    let sort1 p varr = call (Array2D.sortBased1 p) varr
+    let sort2 p varr = call (Array2D.sortBased2 p) varr

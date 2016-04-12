@@ -123,6 +123,20 @@ module Array2D =
     let scan1 f state arr = call (scanBased1 f state) arr
     let scan2 f state arr = call (scanBased2 f state) arr
 
+    let sortBased1 p i0 j0 h w (arr : _ [,]) =
+        let sort j =
+            Array.sortBy p [| for i in i0 .. i0 + h - 1 -> arr.[i, + j] |]
+        let arr' = [| for j in j0 .. j0 + w - 1 -> sort j |]
+        Array2D.init h w (fun i j -> Array.get (Array.get arr' j) i)
+
+    let sortBased2 p i0 j0 h w (arr : _ [,]) =
+        let sort i =
+            Array.sortBy p [| for j in j0 .. j0 + w - 1 -> arr.[i, j] |]
+        array2D [| for i in i0 .. i0 + h - 1 -> sort i |]
+
+    let sort1 p arr = call p arr
+    let sort2 p arr = call p arr
+
     /// Initialize a 2D array with all zeros.
     let initZeros h w =
         Array2D.init h w (fun _ _ -> 0)

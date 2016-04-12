@@ -57,10 +57,12 @@ namespace RadTrees.Benchmark
 	    // Concatenation in both domensions.
 	    Mark("QuadRope.hcat", () => QuadRopeModule.hcat(rope, rope));
 	    Mark("QuadRope.hcat + hbalance", () => QuadRopeModule.hbalance(QuadRopeModule.hcat(rope, rope)));
+	    Mark("QuadRope.hcat + reallocate", () => QuadRopeModule.reallocate(QuadRopeModule.hcat(rope, rope)));
 	    Mark("Array2D.hcat", () => Array2D.cat2(arr, arr));
 
 	    Mark("QuadRope.vcat", () => QuadRopeModule.vcat(rope, rope));
 	    Mark("QuadRope.vcat + vbalance", () => QuadRopeModule.vbalance(QuadRopeModule.vcat(rope, rope)));
+	    Mark("QuadRope.vcat + reallocate", () => QuadRopeModule.reallocate(QuadRopeModule.vcat(rope, rope)));
 	    Mark("Array2D.vcat", () => Array2D.cat1(arr, arr));
 
 	    // Indexing with a pseudo-random index pair.

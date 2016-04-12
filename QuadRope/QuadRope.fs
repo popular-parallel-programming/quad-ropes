@@ -452,6 +452,8 @@ module QuadRope =
     let private offset f x =
         ((+) x) >> f
 
+    // Compute the row-wise prefix sum of the rope for f starting with
+    // states.
     let rec hscan f states = function
         | Empty -> Empty
         | Leaf vs -> Leaf (ViewArray2D.scan2 f states vs)
@@ -464,6 +466,8 @@ module QuadRope =
             let se' = hscan f (offset estate (rows ne')) se
             makeNode ne' nw' sw' se'
 
+    // Compute the column-wise prefix sum of the rope for f starting
+    // with states.
     let rec vscan f states = function
         | Empty -> Empty
         | Leaf vs -> Leaf (ViewArray2D.scan1 f states vs)
@@ -476,10 +480,14 @@ module QuadRope =
             let se' = vscan f (offset sstate (cols sw')) se
             makeNode ne' nw' sw' se'
 
+    // Apply predicate p to all elements of rope and reduce the
+    // elements in both dimension using logical and.
     let forall p = function
         | Empty -> true
         | rope -> get (vreduce (&&) (mapHreduce p (&&) rope)) 0 0
 
+    // Remove all elements from rope for which p does not hold. Input
+    // rope must be of height 1.
     let rec hfilter p = function
         | Empty -> Empty
         | Leaf vs -> makeLeaf (ViewArray2D.filter2 p vs)
@@ -487,6 +495,8 @@ module QuadRope =
             makeFlatNode (hfilter p nw) (hfilter p ne)
         | _ -> failwith "hight must be exactly 1"
 
+    // Remove all elements from rope for which p does not hold. Input
+    // rope must be of width 1.
     let rec vfilter p = function
         | Empty -> Empty
         | Leaf vs -> makeLeaf (ViewArray2D.filter1 p vs)

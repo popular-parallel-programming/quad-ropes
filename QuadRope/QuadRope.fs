@@ -507,3 +507,9 @@ module QuadRope =
         | Node (_, _, 1, Empty, nw, sw, Empty) ->
             makeThinNode (vfilter p nw) (vfilter p sw)
         | _ -> failwith "width must be exactly 1"
+
+    let rec transpose = function
+        | Empty -> Empty
+        | Leaf vs -> makeLeaf (ViewArray2D.transpose vs)
+        | Node (_, _, _, ne, nw, sw, se) ->
+            makeNode (transpose sw) (transpose nw) (transpose ne) (transpose se)

@@ -117,3 +117,6 @@ module ViewArray2D =
 
     let inline sort1 p varr = call (Array2D.sortBased1 p) varr
     let inline sort2 p varr = call (Array2D.sortBased2 p) varr
+
+    let inline transpose varr =
+        array (Array2D.init (length2 varr) (length1 varr) (fun j i -> get varr i j))

@@ -164,10 +164,9 @@ module QuadRope =
 
     /// Balance rope horizontally.
     let hbalance rope =
-        let hreduce = reduce (rebuild makeFlatNode)
         let rec hbalance0 rope =
             let rs = collect rope []
-            hreduce rs
+            reduce (rebuild makeFlatNode) rs
         and collect rope rs  =
             match rope with
                 | Empty -> rs
@@ -179,10 +178,9 @@ module QuadRope =
 
     /// Balance rope vertically.
     let vbalance rope =
-        let vreduce = reduce (rebuild makeThinNode)
         let rec vbalance0 rope =
             let rs = collect rope []
-            vreduce rs
+            reduce (rebuild makeThinNode) rs
         and collect rope rs  =
             match rope with
                 | Empty -> rs

@@ -213,3 +213,6 @@ module QuadRopeTest =
         let x = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toRows c)))
         let y = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toRows d)))
         x .=. y
+
+    let ``transpose of transpose is identity`` (a : int QuadRope) =
+        QuadRope.transpose (QuadRope.transpose a) .=. a

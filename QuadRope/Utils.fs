@@ -17,12 +17,12 @@ module Array2D =
         f 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
 
     /// Return a fresh copy of arr with the value at i,j replaced with v.
-    let set arr i j v =
+    let inline set arr i j v =
         let arr0 = Array2D.copy arr
         arr0.[i, j] <- v
         arr0
 
-    let subArr arr i j h w =
+    let inline subArr arr i j h w =
         if i <= 0 && Array2D.length1 arr <= h && j <= 0 && Array2D.length2 arr <= w then
             arr
         else if Array2D.length1 arr <= i || h <= 0 then
@@ -43,7 +43,7 @@ module Array2D =
         Array2D.length1 arr = 1 && Array2D.length2 arr = 1
 
     /// Concatenate two arrays in first dimension.
-    let cat1 left right =
+    let inline cat1 left right =
         if Array2D.length2 left <> Array2D.length2 right then failwith "length2 must be equal!"
         let l1 = Array2D.length1 left + Array2D.length1 right
         let l2 = Array2D.length2 left
@@ -51,7 +51,7 @@ module Array2D =
         Array2D.init l1 l2 (fun i j -> if i < l1l then left.[i, j] else right.[i - l1l, j])
 
     /// Concatenate two arrays in second dimension.
-    let cat2 left right =
+    let inline cat2 left right =
         if Array2D.length1 left <> Array2D.length1 right then failwith "length1 must be equal!"
         let l1 = Array2D.length1 left
         let l2 = Array2D.length2 left + Array2D.length2 right
@@ -59,12 +59,12 @@ module Array2D =
         Array2D.init l1 l2 (fun i j -> if j < l2l then left.[i, j] else right.[i, j - l2l])
 
     /// Revert an array in first dimension.
-    let revBased1 i0 j0 h w (arr : _ [,]) =
+    let inline revBased1 i0 j0 h w (arr : _ [,]) =
         let h0 = h - 1
         Array2D.init h w (fun i j -> arr.[h0 - (i0 + i), j0 + j])
 
     /// Revert an array in second dimension.
-    let revBased2 i0 j0 h w (arr : _ [,]) =
+    let inline revBased2 i0 j0 h w (arr : _ [,]) =
         let w0 = w - 1
         Array2D.init h w (fun i j -> arr.[i0 + i, w0 - (j0 + j)])
 
@@ -72,14 +72,14 @@ module Array2D =
     let inline rev2 arr = call revBased2 arr
 
     /// Fold each column of a 2D array, calling state with each row to get the state.
-    let foldBased1 f state i0 j0 h w (arr : _ [,]) =
-        let fold _ j =
+    let inline foldBased1 f state i0 j0 h w (arr : _ [,]) =
+        let inline fold _ j =
             Seq.fold f (state j) (seq { for i in i0 .. i0 + h - 1 -> arr.[i, j0 + j] })
         Array2D.init 1 w fold
 
     /// Fold each column of a 2D array, calling state with each column to get the state.
-    let foldBased2 f state i0 j0 h w (arr : _ [,]) =
-        let fold i _ =
+    let inline foldBased2 f state i0 j0 h w (arr : _ [,]) =
+        let inline fold i _ =
             Seq.fold f (state i) (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] })
         Array2D.init h 1 fold
 
@@ -87,14 +87,14 @@ module Array2D =
     let inline fold2 f state arr = call (foldBased2 f state) arr
 
     /// Reduce each column of a 2D array.
-    let mapReduceBased1 f g i0 j0 h w (arr : _ [,]) =
-        let reduce _ j =
+    let inline mapReduceBased1 f g i0 j0 h w (arr : _ [,]) =
+        let inline reduce _ j =
             Seq.reduce g (seq { for i in i0 .. i0 + h - 1 -> f arr.[i0 + i, j0 + j] })
         Array2D.init 1 w reduce
 
     /// Reduce each row of a 2D array.
-    let mapReduceBased2 f g i0 j0 h w (arr : _ [,]) =
-        let reduce i _ =
+    let inline mapReduceBased2 f g i0 j0 h w (arr : _ [,]) =
+        let inline reduce i _ =
             Seq.reduce g (seq { for j in j0 .. j0 + w - 1 -> f arr.[i0 + i, j0 + j] })
         Array2D.init h 1 reduce
 
@@ -108,29 +108,29 @@ module Array2D =
     let inline reduce2 f arr = call (reduceBased2 f) arr
 
     // Compute the column-wise prefix sum for f.
-    let scanBased1 f state i0 j0 h w (arr : _ [,]) =
-        let scan j =
+    let inline scanBased1 f state i0 j0 h w (arr : _ [,]) =
+        let inline scan j =
             Seq.scan f (state j) (seq { for i in i0 .. i0 + h - 1 -> arr.[i, j0 + j] }) |> Array.ofSeq
         let arr' = [| for j in 0 .. w - 1 -> scan j |]
         Array2D.init (h + 1) w (fun i j -> Array.get (Array.get arr' j) i)
 
     // Compute the row-wise prefix sum for f.
-    let scanBased2 f state i0 j0 h w (arr : _ [,]) =
-        let scan i =
+    let inline scanBased2 f state i0 j0 h w (arr : _ [,]) =
+        let inline scan i =
             Seq.scan f (state i) (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] }) |> Array.ofSeq
         array2D [| for i in 0 .. h - 1 -> scan i |]
 
     let inline scan1 f state arr = call (scanBased1 f state) arr
     let inline scan2 f state arr = call (scanBased2 f state) arr
 
-    let sortBased1 p i0 j0 h w (arr : _ [,]) =
-        let sort j =
+    let inline sortBased1 p i0 j0 h w (arr : _ [,]) =
+        let inline sort j =
             Array.sortBy p [| for i in i0 .. i0 + h - 1 -> arr.[i, + j] |]
         let arr' = [| for j in j0 .. j0 + w - 1 -> sort j |]
         Array2D.init h w (fun i j -> Array.get (Array.get arr' j) i)
 
-    let sortBased2 p i0 j0 h w (arr : _ [,]) =
-        let sort i =
+    let inline sortBased2 p i0 j0 h w (arr : _ [,]) =
+        let inline sort i =
             Array.sortBy p [| for j in j0 .. j0 + w - 1 -> arr.[i, j] |]
         array2D [| for i in i0 .. i0 + h - 1 -> sort i |]
 
@@ -163,27 +163,27 @@ module Fibonacci =
 module Functions =
     open System
 
-    let toFunc0 (f : 'a Func) =
+    let inline toFunc0 (f : 'a Func) =
         let f0 () =
             f.Invoke()
         f0
 
-    let toFunc1 (f : ('b0, 'a) Func) =
+    let inline toFunc1 (f : ('b0, 'a) Func) =
         let f1 b0 =
             f.Invoke(b0)
         f1
 
-    let toFunc2 (f : ('b0, 'b1, 'a) Func) =
+    let inline toFunc2 (f : ('b0, 'b1, 'a) Func) =
         let f2 b0 b1 =
             f.Invoke(b0, b1)
         f2
 
-    let toFunc3 (f : ('b0, 'b1, 'b2, 'a) Func) =
+    let inline toFunc3 (f : ('b0, 'b1, 'b2, 'a) Func) =
         let f3 b0 b1 b2 =
             f.Invoke(b0, b1, b2)
         f3
 
-    let toFunc4 (f : ('b0, 'b1, 'b2, 'b3, 'a) Func) =
+    let inline toFunc4 (f : ('b0, 'b1, 'b2, 'b3, 'a) Func) =
         let f4 b0 b1 b2 b3 =
             f.Invoke(b0, b1, b2, b3)
         f4

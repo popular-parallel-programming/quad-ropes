@@ -150,14 +150,14 @@ module QuadRope =
         | Node (d, _, w, _, _, _, _) -> isBalanced d w
 
     let rec private reduce f = function
-        | [] -> Empty
-        | n :: [] -> n
-        | ns -> reduce f (f ns)
+        | []  -> Empty
+        | [n] -> n
+        | ns  -> reduce f (f ns)
 
     let rec private rebuild merge = function
         | [] -> []
-        | x  :: [] -> x :: []
-        | x :: y :: [] -> merge x y :: []
+        | [x] -> [x]
+        | [x ; y] -> [merge x y]
         | xs ->
             let lxs, rxs = List.splitAt ((List.length xs) / 2) xs
             rebuild merge lxs @ rebuild merge rxs

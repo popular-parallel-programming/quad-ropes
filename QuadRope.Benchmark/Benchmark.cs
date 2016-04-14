@@ -31,21 +31,25 @@ namespace RadTrees.Benchmark
             Mark("QuadRope.map", () => QuadRopeModule.map(timesTwo, rope));
             Mark("Array2D.map", () => Array2DModule.Map(timesTwo, arr));
 
+	    var getZeros = Functions.toFunc1<int, int>(i => 0);
 	    // Folding in both dimensions.
 	    {
 		var ropeZeros = QuadRopeModule.initZeros(size, 1);
-		var arrZeros = Array2D.initZeros(size, 1);
-                var getZeros = Functions.toFunc1<int, int>(i => Array2DModule.Get(arrZeros, i, 0));
 		Mark("QuadRope.hfold", () => QuadRopeModule.hfold(times, ropeZeros, rope));
-		Mark("Array2D.hfold", () => Array2D.fold1(times, getZeros, arr));
+		Mark("Array2D.hfold", () => Array2D.fold2(times, getZeros, arr));
 	    }
 	    {
 		var ropeZeros = QuadRopeModule.initZeros(1, size);
-		var arrZeros = Array2D.initZeros(1, size);
-                var getZeros = Functions.toFunc1<int, int>(j => Array2DModule.Get(arrZeros, 0, j));
 		Mark("QuadRope.vfold", () => QuadRopeModule.vfold(times, ropeZeros, rope));
-		Mark("Array2D.vfold", () => Array2D.fold2(times, getZeros, arr));
+		Mark("Array2D.vfold", () => Array2D.fold1(times, getZeros, arr));
 	    }
+
+	    // Scanning in both dimensions.
+	    Mark("QuadRope.hscan", () => QuadRopeModule.hscan(times, getZeros, rope));
+	    Mark("Array2D.hscan", () => Array2D.scan2(times, getZeros, arr));
+
+	    Mark("QuadRope.vscan", () => QuadRopeModule.vscan(times, getZeros, rope));
+	    Mark("Array2D.vscan", () => Array2D.scan1(times, getZeros, arr));
 
 	    // Reduction in both dimensions
 	    var plus = Functions.toFunc2<int, int, int>((x, y) => x + y);

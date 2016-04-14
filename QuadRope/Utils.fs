@@ -86,6 +86,29 @@ module Array2D =
     let inline fold1 f state arr = call (foldBased1 f state) arr
     let inline fold2 f state arr = call (foldBased2 f state) arr
 
+    let inline exclusiveScan f s p g =
+        let inline unfold (i, s) =
+            if p i then
+                let s' = f s (g i)
+                Some (s', (i + 1, s'))
+            else
+                None
+        Array.unfold unfold (0, s)
+
+    // Compute the column-wise prefix sum for f.
+    let inline scanBased1 f state i0 j0 h w (arr : _ [,]) =
+        let arr' = [| for j in 0 .. w - 1 ->
+                       exclusiveScan f (state j) ((>) h) (fun i -> Array2D.get arr (i0 + i) (j0 + j)) |]
+        Array2D.init h w (fun i j -> Array.get (Array.get arr' j) i)
+
+    // Compute the row-wise prefix sum for f.
+    let inline scanBased2 f state i0 j0 h w (arr : _ [,]) =
+        array2D [| for i in 0 .. h - 1 ->
+                    exclusiveScan f (state i) ((>) w) (fun j -> Array2D.get arr (i0 + i) (j0 + j)) |]
+
+    let inline scan1 f state arr = call (scanBased1 f state) arr
+    let inline scan2 f state arr = call (scanBased2 f state) arr
+
     /// Reduce each column of a 2D array.
     let inline mapReduceBased1 f g i0 j0 h w (arr : _ [,]) =
         let inline reduce _ j =
@@ -106,22 +129,6 @@ module Array2D =
 
     let inline reduce1 f arr = call (reduceBased1 f) arr
     let inline reduce2 f arr = call (reduceBased2 f) arr
-
-    // Compute the column-wise prefix sum for f.
-    let inline scanBased1 f state i0 j0 h w (arr : _ [,]) =
-        let inline scan j =
-            Seq.scan f (state j) (seq { for i in i0 .. i0 + h - 1 -> arr.[i, j0 + j] }) |> Array.ofSeq
-        let arr' = [| for j in 0 .. w - 1 -> scan j |]
-        Array2D.init (h + 1) w (fun i j -> Array.get (Array.get arr' j) i)
-
-    // Compute the row-wise prefix sum for f.
-    let inline scanBased2 f state i0 j0 h w (arr : _ [,]) =
-        let inline scan i =
-            Seq.scan f (state i) (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] }) |> Array.ofSeq
-        array2D [| for i in 0 .. h - 1 -> scan i |]
-
-    let inline scan1 f state arr = call (scanBased1 f state) arr
-    let inline scan2 f state arr = call (scanBased2 f state) arr
 
     let inline sortBased1 p i0 j0 h w (arr : _ [,]) =
         let inline sort j =

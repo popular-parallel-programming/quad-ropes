@@ -344,13 +344,17 @@ module QuadRope =
 
     /// Reallocate a rope form the ground up. Sometimes, this is the
     /// only way to improve performance of a badly composed quad rope.
-    let reallocate rope =
+    let inline reallocate rope =
         init (rows rope) (cols rope) (get rope)
 
-    /// Initialize a rope with all zeros.
-    let initZeros h w =
-        init h w (fun _ _ -> 0)
+    /// Initialize a rope where all elements are <code>e</code>.
+    let inline initAll h w e =
+        init h w (fun _ _ -> e)
 
+    /// Initialize a rope with all zeros.
+    let inline initZeros h w = initAll h w 0
+
+    /// Initialize a rope from a native 2D-array.
     let fromArray vss =
         init (ViewArray2D.length1 vss) (ViewArray2D.length2 vss) (ViewArray2D.get vss)
 

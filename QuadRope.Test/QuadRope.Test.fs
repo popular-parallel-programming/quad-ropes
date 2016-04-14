@@ -173,7 +173,7 @@ module QuadRopeTest =
     let ``hreduce produces thin ropes`` (a : int QuadRope) (f : int -> int -> int) =
         QuadRope.cols (QuadRope.hreduce f a) .=. 1
 
-    let ``vreduce produces thin ropes`` (a : int QuadRope) (f : int -> int -> int) =
+    let ``vreduce produces flat ropes`` (a : int QuadRope) (f : int -> int -> int) =
         QuadRope.rows (QuadRope.vreduce f a) .=. 1
 
     let ``map + reduce equals mapreduce`` (a : int QuadRope) (f : int -> int) (g : int -> int -> int) =

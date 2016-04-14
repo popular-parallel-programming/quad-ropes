@@ -216,5 +216,15 @@ module QuadRopeTest =
         let y = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toRows d)))
         x .=. y
 
+    let ``hscan's elements are strictly ordered`` (a : int QuadRope) =
+        let b = QuadRope.map List.singleton a
+        let c = QuadRope.hscan (@) (fun _ -> []) b
+        QuadRope.forallRows (fun (x, y) -> List.length x < List.length y) c
+
+    let ``vscan's elements are strictly ordered`` (a : int QuadRope) =
+        let b = QuadRope.map List.singleton a
+        let c = QuadRope.vscan (@) (fun _ -> []) b
+        QuadRope.forallCols (fun (x, y) -> List.length x < List.length y) c
+
     let ``transpose of transpose is identity`` (a : int QuadRope) =
         QuadRope.transpose (QuadRope.transpose a) .=. a

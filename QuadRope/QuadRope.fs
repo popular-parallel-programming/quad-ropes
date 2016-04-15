@@ -46,7 +46,7 @@ module QuadRope =
         | Empty -> true
         | _ -> false
 
-    let makeLeaf vs =
+    let leaf vs =
         if ViewArray2D.length1 vs = 0 || ViewArray2D.length2 vs = 0 then
             Empty
         else
@@ -54,25 +54,25 @@ module QuadRope =
 
     /// Pseudo-constructor for generating a new rope out of some
     /// existing nodes.
-    let rec makeNode ne nw sw se =
+    let rec node ne nw sw se =
         match ne, nw, sw, se with
             | _, Empty, Empty, Empty -> ne
             | Empty, _, Empty, Empty -> nw
             | Empty, Empty, _, Empty -> sw
             | Empty, Empty, Empty, _ -> se
-            | Empty, Empty, _, _ -> makeNode se sw Empty Empty
-            | _, Empty, Empty, _ -> makeNode Empty ne se Empty
+            | Empty, Empty, _, _ -> node se sw Empty Empty
+            | _, Empty, Empty, _ -> node Empty ne se Empty
             | _ ->
                 let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se)) + 1
                 let h = rows nw + rows sw
                 let w = cols nw + cols ne
                 Node (d, h, w, ne, nw, sw, se)
 
-    let inline makeFlatNode w e =
-        makeNode e w Empty Empty (* NB: Arguments switched. *)
+    let inline flatNode w e =
+        node e w Empty Empty (* NB: Arguments switched. *)
 
-    let inline makeThinNode n s =
-        makeNode Empty n s Empty
+    let inline thinNode n s =
+        node Empty n s Empty
 
     let inline private withinRange root i j =
         0 <= i && i < rows root && 0 <= j && j < cols root
@@ -166,13 +166,13 @@ module QuadRope =
     let hbalance rope =
         let rec hbalance0 rope =
             let rs = collect rope []
-            reduce (rebuild makeFlatNode) rs
+            reduce (rebuild flatNode) rs
         and collect rope rs  =
             match rope with
                 | Empty -> rs
                 | Node (_, _, _, ne, nw, Empty, Empty) -> collect nw (collect ne rs)
                 | Node (_, _, _, ne, nw, sw, se) ->
-                    makeNode (hbalance0 ne) (hbalance0 nw) (hbalance0 sw) (hbalance0 se) :: rs
+                    node (hbalance0 ne) (hbalance0 nw) (hbalance0 sw) (hbalance0 se) :: rs
                 | _ -> rope :: rs
         hbalance0 rope
 
@@ -180,13 +180,13 @@ module QuadRope =
     let vbalance rope =
         let rec vbalance0 rope =
             let rs = collect rope []
-            reduce (rebuild makeThinNode) rs
+            reduce (rebuild thinNode) rs
         and collect rope rs  =
             match rope with
                 | Empty -> rs
                 | Node (_, _, _, Empty, nw, sw, Empty) -> collect nw (collect sw rs)
                 | Node (_, _, _, ne, nw, sw, se) ->
-                    makeNode (vbalance0 ne) (vbalance0 nw) (vbalance0 sw) (vbalance0 se) :: rs
+                    node (vbalance0 ne) (vbalance0 nw) (vbalance0 sw) (vbalance0 se) :: rs
                 | _ -> rope :: rs
         vbalance0 rope
 
@@ -200,33 +200,33 @@ module QuadRope =
             | Empty, _ -> lower
             | _, Empty -> upper
             | Leaf us, Leaf ls when canCopy us ls ->
-                makeLeaf (ViewArray2D.cat1 us ls)
+                leaf (ViewArray2D.cat1 us ls)
 
             | Node (_, _, _, Empty, nwu, Leaf swus, Empty), Leaf ls when canCopy swus ls->
-                makeThinNode nwu (makeLeaf (ViewArray2D.cat1 swus ls))
+                thinNode nwu (leaf (ViewArray2D.cat1 swus ls))
 
             | Leaf us, Node (_, _, _, Empty, Leaf nwls, swl, Empty) when canCopy us nwls ->
-                makeThinNode (makeLeaf (ViewArray2D.cat1 us nwls)) swl
+                thinNode (leaf (ViewArray2D.cat1 us nwls)) swl
 
             | (Node (_, _, _, neu, nwu, Leaf swus, Leaf seus),
                Node (_, _, _, Leaf nels, Leaf nwls, Empty, Empty))
                 when canCopy swus nwls && canCopy seus nels ->
-                    let sw = makeLeaf (ViewArray2D.cat1 swus nwls)
-                    let se = makeLeaf (ViewArray2D.cat1 seus nels)
-                    makeNode neu nwu sw se
+                    let sw = leaf (ViewArray2D.cat1 swus nwls)
+                    let se = leaf (ViewArray2D.cat1 seus nels)
+                    node neu nwu sw se
 
             | (Node (_, _, _, Leaf neus, Leaf nwus, Empty, Empty),
                Node (_, _, _, Leaf nels, Leaf nwls, swl, sel))
                 when canCopy nwus nwls && canCopy neus nels ->
-                    let nw = makeLeaf (ViewArray2D.cat1 nwus nwls)
-                    let ne = makeLeaf (ViewArray2D.cat1 neus nels)
-                    makeNode ne nw swl sel
+                    let nw = leaf (ViewArray2D.cat1 nwus nwls)
+                    let ne = leaf (ViewArray2D.cat1 neus nels)
+                    node ne nw swl sel
 
             | (Node (_, _, _, neu, nwu, Empty, Empty),
                Node (_, _, _, nel, nwl, Empty, Empty)) ->
-                makeNode neu nwu nwl nel
+                node neu nwu nwl nel
 
-            | _ -> makeThinNode upper lower
+            | _ -> thinNode upper lower
 
     /// Concatenate two trees horizontally.
     let hcat left right =
@@ -238,33 +238,33 @@ module QuadRope =
             | Empty, _ -> right
             | _, Empty -> left
             | Leaf ls, Leaf rs when canCopy ls rs ->
-                makeLeaf (ViewArray2D.cat2 ls rs)
+                leaf (ViewArray2D.cat2 ls rs)
 
             | Node (_, _, _, Leaf lnes, lnw, Empty, Empty), Leaf rs when canCopy lnes rs->
-                makeFlatNode lnw (makeLeaf (ViewArray2D.cat2 lnes rs))
+                flatNode lnw (leaf (ViewArray2D.cat2 lnes rs))
 
             | Leaf ls, Node (_, _, _, rne, Leaf rnws, Empty, Empty) when canCopy ls rnws ->
-                makeFlatNode (makeLeaf (ViewArray2D.cat2 ls rnws)) rne
+                flatNode (leaf (ViewArray2D.cat2 ls rnws)) rne
 
             | (Node (_, _, _, Leaf lnes, lnw, lsw, Leaf lses),
                Node (_, _, _, Empty, Leaf rnws, Leaf rsws, Empty))
                 when canCopy lnes rnws && canCopy lses rsws ->
-                    let ne = makeLeaf (ViewArray2D.cat2 lnes rnws)
-                    let se = makeLeaf (ViewArray2D.cat2 lses rsws)
-                    makeNode ne lnw lsw se
+                    let ne = leaf (ViewArray2D.cat2 lnes rnws)
+                    let se = leaf (ViewArray2D.cat2 lses rsws)
+                    node ne lnw lsw se
 
             | (Node (_, _, _, Empty, Leaf lnws, Leaf lsws, Empty),
                Node (_, _, _, rne, Leaf rnws, Leaf rsws, rse))
                 when canCopy lnws rnws && canCopy lsws rsws ->
-                    let nw = makeLeaf (ViewArray2D.cat2 lnws rnws)
-                    let sw = makeLeaf (ViewArray2D.cat2 lsws rsws)
-                    makeNode rne nw sw rse
+                    let nw = leaf (ViewArray2D.cat2 lnws rnws)
+                    let sw = leaf (ViewArray2D.cat2 lsws rsws)
+                    node rne nw sw rse
 
             | (Node (_, _, _, Empty, lnw, lsw, Empty),
                Node (_, _, _, Empty, rnw, rsw, Empty)) ->
-                makeNode rnw lnw lsw rsw
+                node rnw lnw lsw rsw
 
-            | _ -> makeFlatNode left right
+            | _ -> flatNode left right
 
     /// Compute the "subrope" starting from indexes i, j taking h and w
     /// elements in vertical and horizontal direction.
@@ -276,13 +276,13 @@ module QuadRope =
         else
             match root with
                 | Empty -> Empty
-                | Leaf vs -> makeLeaf (ViewArray2D.subArr i j h w vs)
+                | Leaf vs -> leaf (ViewArray2D.subArr i j h w vs)
                 | Node (_, _, _, ne, nw, sw, se) ->
                     let nw0 = split nw i j h w
                     let ne0 = split ne i (j - cols nw) h (w - cols nw0)
                     let sw0 = split sw (i - rows nw) j (h - rows nw0) w
                     let se0 = split se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
-                    makeNode ne0 nw0 sw0 se0
+                    node ne0 nw0 sw0 se0
 
     /// Split rope vertically from row i, taking h rows.
     let inline vsplit rope i h =
@@ -326,17 +326,17 @@ module QuadRope =
             if h <= 0 || w <= 0 then
                 Empty
             else if h <= h_max && w <= w_max then
-                makeLeaf (ViewArray2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
+                leaf (ViewArray2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
             else if w <= w_max then
                 let hpv = h0 + h / 2
-                makeThinNode (init0 h0 w0 hpv w1) (init0 hpv w0 h1 w1)
+                thinNode (init0 h0 w0 hpv w1) (init0 hpv w0 h1 w1)
             else if h <= h_max then
                 let wpv = w0 + w / 2
-                makeFlatNode (init0 h0 w0 h1 wpv) (init0 h0 wpv h1 w1)
+                flatNode (init0 h0 w0 h1 wpv) (init0 h0 wpv h1 w1)
             else
                 let hpv = h0 + h / 2
                 let wpv = w0 + w / 2
-                makeNode (init0 h0 wpv hpv w1) (* NE *)
+                node (init0 h0 wpv hpv w1) (* NE *)
                          (init0 h0 w0 hpv wpv) (* NW *)
                          (init0 hpv w0 h1 wpv) (* SW *)
                          (init0 hpv wpv h1 w1) (* SE *)
@@ -363,7 +363,7 @@ module QuadRope =
     let rec map f root =
         match root with
             | Empty -> Empty
-            | Leaf vs -> makeLeaf (ViewArray2D.map f vs)
+            | Leaf vs -> leaf (ViewArray2D.map f vs)
             | Node (d, h, w, ne, nw, sw, se) ->
                 Node (d, h, w,
                       map f ne,
@@ -394,11 +394,11 @@ module QuadRope =
             failwith "states and rope must have same height"
         let rec fold1 states = function
             | Empty -> states
-            | Leaf vs -> makeLeaf (ViewArray2D.fold2 f (fun i -> get states i 0) vs)
+            | Leaf vs -> leaf (ViewArray2D.fold2 f (fun i -> get states i 0) vs)
             | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
         and fold2 states n s =
             let nstates, sstates = vsplit2 states (rows n)
-            makeThinNode (fold1 nstates n) (fold1 sstates s)
+            thinNode (fold1 nstates n) (fold1 sstates s)
         fold1 states rope
 
     /// Fold each column of rope with f, starting with the according
@@ -408,11 +408,11 @@ module QuadRope =
             failwith "states and rope must have same width"
         let rec fold1 states = function
             | Empty -> states
-            | Leaf vs -> makeLeaf (ViewArray2D.fold1 f (get states 0) vs)
+            | Leaf vs -> leaf (ViewArray2D.fold1 f (get states 0) vs)
             | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
         and fold2 states w e =
             let wstates, estates = hsplit2 states (cols w)
-            makeFlatNode (fold1 wstates w) (fold1 estates e)
+            flatNode (fold1 wstates w) (fold1 estates e)
         fold1 states rope
 
     /// Apply f to each (i, j) of lope and rope.
@@ -424,11 +424,11 @@ module QuadRope =
     // Map f to every element of the rope and reduce column-wise with g.
     let rec mapHreduce f g = function
         | Empty -> Empty
-        | Leaf vs -> makeLeaf (ViewArray2D.mapreduce2 f g vs)
+        | Leaf vs -> leaf (ViewArray2D.mapreduce2 f g vs)
         | Node (_, _, _, ne, nw, sw, se) ->
             (* Both, w and e, are of width 1. *)
-            let w = makeThinNode (mapHreduce f g nw) (mapHreduce f g sw)
-            let e = makeThinNode (mapHreduce f g ne) (mapHreduce f g se)
+            let w = thinNode (mapHreduce f g nw) (mapHreduce f g sw)
+            let e = thinNode (mapHreduce f g ne) (mapHreduce f g se)
             match e with
                 | Empty -> w
                 | _ -> zip g w e
@@ -436,11 +436,11 @@ module QuadRope =
     // Map f to every element of the rope and reduce row-wise with g.
     let rec mapVreduce f g = function
         | Empty -> Empty
-        | Leaf vs -> makeLeaf (ViewArray2D.mapreduce1 f g vs)
+        | Leaf vs -> leaf (ViewArray2D.mapreduce1 f g vs)
         | Node (_, _, _, ne, nw, sw, se) ->
             (* Both, n and s, are of height 1. *)
-            let n = makeFlatNode (mapVreduce f g nw) (mapVreduce f g ne)
-            let s = makeFlatNode (mapVreduce f g sw) (mapVreduce f g se)
+            let n = flatNode (mapVreduce f g nw) (mapVreduce f g ne)
+            let s = flatNode (mapVreduce f g sw) (mapVreduce f g se)
             match s with
                 | Empty -> n
                 | _ -> zip g n s
@@ -466,7 +466,7 @@ module QuadRope =
                 if i < rows nw' then get nw' i (cols nw' - 1) else get sw' (i - rows nw') (cols sw' - 1)
             let ne' = hscan f estate ne
             let se' = hscan f (offset estate (rows ne')) se
-            makeNode ne' nw' sw' se'
+            node ne' nw' sw' se'
 
     // Compute the column-wise prefix sum of the rope for f starting
     // with states.
@@ -480,7 +480,7 @@ module QuadRope =
                 if j < cols nw' then get nw' (rows nw' - 1) j else get ne' (rows ne' - 1) (j - cols nw')
             let sw' = vscan f sstate sw
             let se' = vscan f (offset sstate (cols sw')) se
-            makeNode ne' nw' sw' se'
+            node ne' nw' sw' se'
 
     /// Checks that some relation p holds between each two adjacent
     /// elements in each row. This is slow and should not really be
@@ -516,22 +516,22 @@ module QuadRope =
     // rope must be of height 1.
     let rec hfilter p = function
         | Empty -> Empty
-        | Leaf vs -> makeLeaf (ViewArray2D.filter2 p vs)
+        | Leaf vs -> leaf (ViewArray2D.filter2 p vs)
         | Node (_, 1, _, ne, nw, Empty, Empty) ->
-            makeFlatNode (hfilter p nw) (hfilter p ne)
+            flatNode (hfilter p nw) (hfilter p ne)
         | _ -> failwith "hight must be exactly 1"
 
     // Remove all elements from rope for which p does not hold. Input
     // rope must be of width 1.
     let rec vfilter p = function
         | Empty -> Empty
-        | Leaf vs -> makeLeaf (ViewArray2D.filter1 p vs)
+        | Leaf vs -> leaf (ViewArray2D.filter1 p vs)
         | Node (_, _, 1, Empty, nw, sw, Empty) ->
-            makeThinNode (vfilter p nw) (vfilter p sw)
+            thinNode (vfilter p nw) (vfilter p sw)
         | _ -> failwith "width must be exactly 1"
 
     let rec transpose = function
         | Empty -> Empty
-        | Leaf vs -> makeLeaf (ViewArray2D.transpose vs)
+        | Leaf vs -> leaf (ViewArray2D.transpose vs)
         | Node (_, _, _, ne, nw, sw, se) ->
-            makeNode (transpose sw) (transpose nw) (transpose ne) (transpose se)
+            node (transpose sw) (transpose nw) (transpose ne) (transpose se)

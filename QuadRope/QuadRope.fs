@@ -193,7 +193,8 @@ module QuadRope =
     /// Concatenate two trees vertically.
     let vcat upper lower =
         let canCopy us ls =
-            ViewArray2D.length2 us = ViewArray2D.length2 ls && ViewArray2D.length1 us + ViewArray2D.length1 ls <= h_max
+            ViewArray2D.length2 us = ViewArray2D.length2 ls
+            && ViewArray2D.length1 us + ViewArray2D.length1 ls <= h_max
         if cols upper <> cols lower then
             failwith (sprintf "Trees must be of same width! u = %A\nl = %A" upper lower)
         match upper, lower with
@@ -231,7 +232,8 @@ module QuadRope =
     /// Concatenate two trees horizontally.
     let hcat left right =
         let canCopy ls rs =
-            ViewArray2D.length1 ls = ViewArray2D.length1 rs && ViewArray2D.length2 ls + ViewArray2D.length2 rs <= w_max
+            ViewArray2D.length1 ls = ViewArray2D.length1 rs
+            && ViewArray2D.length2 ls + ViewArray2D.length2 rs <= w_max
         if rows left <> rows right then
             failwith (sprintf "Trees must be of same height! l = %A\nr = %A" left right)
         match left, right with

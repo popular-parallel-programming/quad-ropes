@@ -532,6 +532,8 @@ module QuadRope =
             thinNode (vfilter p nw) (vfilter p sw)
         | _ -> failwith "width must be exactly 1"
 
+    // Transpose the quad rope. This is equal to swapping indices,
+    // such that get rope i j = get rope j i.
     let rec transpose = function
         | Empty -> Empty
         | Leaf vs -> leaf (ViewArray2D.transpose vs)

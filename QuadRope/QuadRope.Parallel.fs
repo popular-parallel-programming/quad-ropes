@@ -69,13 +69,13 @@ module Parallel =
         | More of 'a
         | Done of 'b
 
-    let rec next (rope, path) =
+    let rec next (rope, path : ('a, 'b) Path) =
         match path with
-            | Top -> Done rope
-            | NE _ -> More ((southWest >> upperLeftMost) (rope, path))
-            | NW _ -> More ((east >> upperLeftMost) (rope, path))
-            | SW _ -> More ((east >> upperLeftMost) (rope, path))
-            | SE _ -> next (up (rope, path))
+            | Top  -> Done rope
+            | NW (ne, path, sw, se) -> More (upperLeftMost (ne, NE (path, rope, sw, se)))
+            | NE (path, nw, sw, se) -> More (upperLeftMost (sw, SW (rope, nw, path, se)))
+            | SW (ne, nw, path, se) -> More (upperLeftMost (se, SE (ne, nw, rope, path)))
+            | SE (ne, nw, sw, _)    -> next (node ne nw sw rope, path)
 
     let rec splitPath p u path =
         match path with

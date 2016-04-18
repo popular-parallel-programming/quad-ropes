@@ -78,7 +78,7 @@ module Parallel =
             | NW (ne, path, sw, se) -> More (upperLeftMost (ne, NE (path, rope, sw, se)))
             | NE (path, nw, sw, se) -> More (upperLeftMost (sw, SW (rope, nw, path, se)))
             | SW (ne, nw, path, se) -> More (upperLeftMost (se, SE (ne, nw, rope, path)))
-            | SE (ne, nw, sw, _)    -> next (node ne nw sw rope, path)
+            | SE (ne, nw, sw, path) -> next (node ne nw sw rope, path)
 
     /// Split the rope along the given path and return the processed
     /// and the unprocessed part. Here, it becomes clear why the NW,

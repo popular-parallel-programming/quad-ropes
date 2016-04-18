@@ -11,58 +11,63 @@ module Parallel =
         | SW of 'b QuadRope * 'b QuadRope * ('a, 'b) Path * 'a QuadRope
         | SE of 'b QuadRope * 'b QuadRope * 'b QuadRope * ('a, 'b) Path
 
-    let northEast (rope, path) =
-        match path with
-            | Top -> rope, path
-            | NW (ne, path, sw, se) -> ne, NE (path, rope, sw, se)
-            | NE _ -> rope, path
-            | SW (ne, nw, path, se) -> ne, NE (path, nw, rope, se)
-            | SE (ne, nw, sw, path) -> ne, NE (path, nw, sw, rope)
+    [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
+    module private Path =
 
-    let northWest (rope, path) =
-        match path with
-            | Top
-            | NW _ -> rope, path
-            | NE (path, nw, sw, se) -> nw, NW (rope, path, sw, se)
-            | SW (ne, nw, path, se) -> nw, NW (ne, path, rope, se)
-            | SE (ne, nw, sw, path) -> nw, NW (ne, path, sw, rope)
+        let northEast (rope, path) =
+            match path with
+                | Top -> rope, path
+                | NW (ne, path, sw, se) -> ne, NE (path, rope, sw, se)
+                | NE _ -> rope, path
+                | SW (ne, nw, path, se) -> ne, NE (path, nw, rope, se)
+                | SE (ne, nw, sw, path) -> ne, NE (path, nw, sw, rope)
 
-    let southWest (rope, path) =
-        match path with
-            | Top -> rope, path
-            | NW (ne, path, sw, se) -> sw, SW (ne, rope, path, se)
-            | NE (path, nw, sw, se) -> sw, SW (rope, nw, path, se)
-            | SW _ -> rope, path
-            | SE (ne, nw, sw, path) -> sw, SW (ne, nw, path, rope)
+        let northWest (rope, path) =
+            match path with
+                | Top
+                | NW _ -> rope, path
+                | NE (path, nw, sw, se) -> nw, NW (rope, path, sw, se)
+                | SW (ne, nw, path, se) -> nw, NW (ne, path, rope, se)
+                | SE (ne, nw, sw, path) -> nw, NW (ne, path, sw, rope)
 
-    let southEast (rope, path) =
-        match path with
-            | Top -> rope, path
-            | NW (ne, path, sw, se) -> se, SE (ne, rope, sw, path)
-            | NE (path, nw, sw, se) -> se, SE (rope, nw, sw, path)
-            | SW (ne, nw, path, se) -> se, SE (ne, nw, rope, path)
-            | SE _ -> rope, path
+        let southWest (rope, path) =
+            match path with
+                | Top -> rope, path
+                | NW (ne, path, sw, se) -> sw, SW (ne, rope, path, se)
+                | NE (path, nw, sw, se) -> sw, SW (rope, nw, path, se)
+                | SW _ -> rope, path
+                | SE (ne, nw, sw, path) -> sw, SW (ne, nw, path, rope)
 
-    let down (rope, path) =
-        match rope with
-            | Node (_, _, _, ne, nw, sw, se) -> nw, NW (ne, path, sw, se)
-            | _ -> rope, path
+        let southEast (rope, path) =
+            match path with
+                | Top -> rope, path
+                | NW (ne, path, sw, se) -> se, SE (ne, rope, sw, path)
+                | NE (path, nw, sw, se) -> se, SE (rope, nw, sw, path)
+                | SW (ne, nw, path, se) -> se, SE (ne, nw, rope, path)
+                | SE _ -> rope, path
 
-    let up (rope, path) =
-        match path with
-            | Top -> rope, path
-            | NW (ne, path, sw, se) -> node ne rope sw se, path
-            | NE (path, nw, sw, se) -> node rope nw sw se, path
-            | SW (ne, nw, path, se) -> node ne nw rope se, path
-            | SE (ne, nw, sw, path) -> node ne nw sw rope, path
+        let down (rope, path) =
+            match rope with
+                | Node (_, _, _, ne, nw, sw, se) -> nw, NW (ne, path, sw, se)
+                | _ -> rope, path
 
-    let rec upperLeftMost (rope, path) =
-        match rope with
-            | Empty
-            | Leaf _ -> rope, path
-            | _ -> upperLeftMost (down (rope, path))
+        let up (rope, path) =
+            match path with
+                | Top -> rope, path
+                | NW (ne, path, sw, se) -> node ne rope sw se, path
+                | NE (path, nw, sw, se) -> node rope nw sw se, path
+                | SW (ne, nw, path, se) -> node ne nw rope se, path
+                | SE (ne, nw, sw, path) -> node ne nw sw rope, path
 
-    let start rope = upperLeftMost (rope, Top)
+        let rec upperLeftMost (rope, path) =
+            match rope with
+                | Empty
+                | Leaf _ -> rope, path
+                | _ -> upperLeftMost (down (rope, path))
+
+        let start rope = upperLeftMost (rope, Top)
+
+    open Path
 
     type ('a, 'b) Progress =
         | More of 'a

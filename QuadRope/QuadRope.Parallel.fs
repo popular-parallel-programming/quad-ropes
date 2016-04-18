@@ -2,7 +2,6 @@ namespace RadTrees.QuadRope
 
 module Parallel =
     open RadTrees
-    open RadTrees.QuadRope
 
     (* Constructor takes sub-ropes in order NE, NW, SW, SE. *)
     type ('a, 'b) Path =

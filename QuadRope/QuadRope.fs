@@ -8,6 +8,7 @@ type 'a QuadRope =
     | Leaf of 'a ViewArray2D
     | Node of int * int * int * 'a QuadRope * 'a QuadRope * 'a QuadRope * 'a QuadRope
 
+[<RequireQualifiedAccessAttribute>]
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
 module QuadRope =
 

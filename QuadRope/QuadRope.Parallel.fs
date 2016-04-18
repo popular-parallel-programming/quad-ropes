@@ -13,9 +13,9 @@ module Parallel =
 
     let down (rope, path) =
         match rope with
-            | Empty
-            | Leaf _ -> rope, path
             | Node (_, _, _, ne, nw, sw, se) -> nw, NW (ne, path, sw, se)
+            | _ -> rope, path
+
 
     let rec upperLeftMost (rope, path) =
         match rope with

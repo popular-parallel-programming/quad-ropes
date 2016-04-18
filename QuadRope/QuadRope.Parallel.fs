@@ -65,22 +65,6 @@ module Parallel =
 
     let start rope = upperLeftMost (rope, Top)
 
-    let rec walkSouth (rope, path) =
-        match path with
-            | Top -> None
-            | NW _
-            | NE _ -> Some (south (rope, path))
-            | SW _ -> Option.map upperLeftMost (walkSouth (up (rope, path)))
-            | SE _ -> Option.map (down >> east >> upperLeftMost) (walkSouth (up (rope, path)))
-
-    let rec walkEast (rope, path) =
-        match path with
-            | Top -> None
-            | NW _
-            | SW _ -> Some (east (rope, path))
-            | NE _ -> Option.map upperLeftMost (walkEast (up (rope, path)))
-            | SE _ -> Option.map (down >> south >> upperLeftMost) (walkEast (up (rope, path)))
-
     type ('a, 'b) Progress =
         | More of 'a
         | Done of 'b

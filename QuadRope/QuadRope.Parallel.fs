@@ -98,14 +98,8 @@ module Parallel =
                 | More (rope, path) -> mapUntilSeq cond f (rope, path)
 
     let mapUntil cond f rope =
-        let rec cmap (node, path) =
-            match mapUntilSeq cond f node with
-                | More node -> More (splitPath Empty node path)
-                | Done propes ->
-                    match next (propes, path) with
-                        | Done rope -> Done rope
-                        | More loc -> cmap loc
-        cmap (start rope)
+        let u, path = start rope
+        match mapUntilSeq cond f (u, path) with
+            | Done rope -> Done rope
+            | More (u, path) -> More (splitPath Empty u path, path)
 
-    let inline size rope =
-        rows rope * cols rope

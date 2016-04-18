@@ -11,51 +11,11 @@ module Parallel =
         | SW of 'b QuadRope * 'b QuadRope * ('a, 'b) Path * 'a QuadRope
         | SE of 'b QuadRope * 'b QuadRope * 'b QuadRope * ('a, 'b) Path
 
-    type ('a, 'b) Loc = 'a QuadRope * ('a, 'b) Path
-
-    let west (rope, path) =
-        match path with
-            | NE (path, nw, sw, se) -> nw, NW (rope, path, sw, se)
-            | SE (ne, nw, sw, path) -> sw, SW (ne, nw, path, rope)
-            | _ -> rope, path
-
-    let east (rope, path) =
-        match path with
-            | NW (ne, path, sw, se) -> ne, NE (path, rope, sw, se)
-            | SW (ne, nw, path, se) -> se, SE (ne, nw, rope, path)
-            | _ -> rope, path
-
-    let north (rope, path) =
-        match path with
-            | SW (ne, nw, path, se) -> nw, NW (ne, path, rope, se)
-            | SE (ne, nw, sw, path) -> ne, NE (path, nw, sw, rope)
-            | _ -> rope, path
-
-    let south (rope, path) =
-        match path with
-            | NE (path, nw, sw, se) -> se, SE (rope, nw, sw, path)
-            | NW (ne, path, sw, se) -> sw, SW (ne, rope, path, se)
-            | _ -> (rope, path)
-
-    let southWest (rope, path) =
-        match path with
-            | NE (path, nw, sw, se) -> sw, SW (rope, nw, path, se)
-            | _ -> rope, path
-
-    let up (rope, path) =
-        match path with
-            | NE (path, nw, sw, se) -> (node rope nw sw se), path
-            | NW (ne, path, sw, se) -> (node ne rope sw se), path
-            | SW (ne, nw, path, se) -> (node ne nw rope se), path
-            | SE (ne, nw, sw, path) -> (node ne nw sw rope), path
-            | _ -> rope, path
-
     let down (rope, path) =
         match rope with
             | Empty
             | Leaf _ -> rope, path
-            | Node (_, _, _, ne, nw, sw, se) ->
-                nw, NW (ne, path, sw, se)
+            | Node (_, _, _, ne, nw, sw, se) -> nw, NW (ne, path, sw, se)
 
     let rec upperLeftMost (rope, path) =
         match rope with

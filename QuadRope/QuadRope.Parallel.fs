@@ -77,17 +77,16 @@ module Parallel =
             | SW (ne, nw, path, se) -> More (upperLeftMost (se, SE (ne, nw, rope, path)))
             | SE (ne, nw, sw, _)    -> next (node ne nw sw rope, path)
 
-    let rec splitPath p u path =
-        match path with
-            | Top -> p, u
-            | NW (ne, path, sw, se) ->
-                splitPath p (node ne u sw se) path
-            | NE (path, nw, sw, se) ->
-                splitPath (flatNode nw p) (thinNode u (flatNode sw se)) path
-            | SW (ne, nw, path, se) ->
-                splitPath (thinNode (flatNode nw ne) p) (flatNode u se) path
-            | SE (ne, nw, sw, path) ->
-                splitPath (node ne nw sw p) u path
+    let rec splitPath p u = function
+        | Top -> p, u
+        | NW (ne, path, sw, se) ->
+            splitPath p (node ne u sw se) path
+        | NE (path, nw, sw, se) ->
+            splitPath (flatNode nw p) (thinNode u (flatNode sw se)) path
+        | SW (ne, nw, path, se) ->
+            splitPath (thinNode (flatNode nw ne) p) (flatNode u se) path
+        | SE (ne, nw, sw, path) ->
+            splitPath (node ne nw sw p) u path
 
     let rec mapUntilSeq cond f (rope, path) =
         if cond() then

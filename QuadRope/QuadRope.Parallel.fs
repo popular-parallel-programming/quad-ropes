@@ -117,7 +117,7 @@ module Parallel =
 
     let split2 rope =
         match rope with
-            | Node (d, h, w, ne, nw, sw, se) ->
+            | Node (_, h, w, ne, nw, sw, se) ->
                 if h < w then
                     thinNode nw sw, thinNode ne se, hcat
                 else

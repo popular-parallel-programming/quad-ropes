@@ -36,14 +36,22 @@ module Parallel =
         | More of 'a
         | Done of 'b
 
+    /// Get the next leaf that follows the location (rope, path). It
+    /// might seem unintuitive to process nodes in NW, NE, SW, SE
+    /// order, but this allows us to re-use pseudo-constructors and
+    /// other convenience functions.
     let rec next (rope, path : ('a, 'b) Path) =
         match path with
-            | Top  -> Done rope
+            | Top -> Done rope
             | NW (ne, path, sw, se) -> More (upperLeftMost (ne, NE (path, rope, sw, se)))
             | NE (path, nw, sw, se) -> More (upperLeftMost (sw, SW (rope, nw, path, se)))
             | SW (ne, nw, path, se) -> More (upperLeftMost (se, SE (ne, nw, rope, path)))
             | SE (ne, nw, sw, _)    -> next (node ne nw sw rope, path)
 
+    /// Split the rope along the given path and return the processed
+    /// and the unprocessed part. Here, it becomes clear why the NW,
+    /// NE, SW, SE order is more desirable, as it allows us to use all
+    /// the standard pseudo-constructors for quad ropes.
     let rec splitPath p u = function
         | Top -> p, u
         | NW (ne, path, sw, se) ->

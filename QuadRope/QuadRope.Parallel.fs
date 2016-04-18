@@ -89,11 +89,14 @@ module Parallel =
             | SE (ne, nw, sw, path) ->
                 splitPath (node ne nw sw p) u path
 
-    let mapUntilSeq cond f rope =
+    let rec mapUntilSeq cond f (rope, path) =
         if cond() then
-            More rope
+            More (rope, path)
         else
-            Done (map f rope)
+            let rope' = map f rope
+            match next (rope', path) with
+                | Done rope' -> Done rope'
+                | More (rope'', path') -> mapUntilSeq cond f (rope'', path')
 
     let mapUntil cond f rope =
         let rec cmap (node, path) =

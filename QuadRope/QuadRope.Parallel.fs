@@ -83,3 +83,12 @@ module Parallel =
             | Done rope -> Done rope
             | More (u, path) -> More (splitPath Empty u path, path)
 
+    let split2 rope =
+        match rope with
+            | Node (d, h, w, ne, nw, sw, se) ->
+                if h < w then
+                    thinNode nw sw, thinNode ne se, hcat
+                else
+                    flatNode nw ne, flatNode sw se, vcat
+            | rope -> rope, Empty, (fun rope _ -> rope)
+

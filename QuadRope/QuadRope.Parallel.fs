@@ -94,8 +94,8 @@ module Parallel =
         else
             let rope' = map f rope
             match next (rope', path) with
-                | Done rope' -> Done rope'
-                | More (rope'', path') -> mapUntilSeq cond f (rope'', path')
+                | Done rope -> Done rope
+                | More (rope, path) -> mapUntilSeq cond f (rope, path)
 
     let mapUntil cond f rope =
         let rec cmap (node, path) =

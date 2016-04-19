@@ -60,9 +60,19 @@ module Parallel =
                 node ne nw sw se
         init0 0 0 h w
 
-    let initAll h w e = init h w (fun _ _ -> e)
-    let initZeros h w = initAll h w 0
-    let reallocate rope = init (rows rope) (cols rope) (get rope)
+    /// Reallocate a rope form the ground up in parallel. Sometimes,
+    /// this is the only way to improve performance of a badly
+    /// composed quad rope.
+    let inline reallocate rope =
+        init (rows rope) (cols rope) (get rope)
+
+    /// Initialize a rope in parallel where all elements are
+    /// <code>e</code>.
+    let inline initAll h w e =
+        init h w (fun _ _ -> e)
+
+    /// Initialize a rope in parallel with all zeros.
+    let inline initZeros h w = initAll h w 0
 
     /// Apply a function f to all scalars in parallel.
     let rec map f = function

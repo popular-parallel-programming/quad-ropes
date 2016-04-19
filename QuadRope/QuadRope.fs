@@ -454,7 +454,7 @@ module QuadRope =
     /// Reduce all columns of rope with f.
     let vreduce f rope = mapVreduce id f rope
 
-    let private offset f x =
+    let inline private offset f x =
         ((+) x) >> f
 
     // Compute the row-wise prefix sum of the rope for f starting with

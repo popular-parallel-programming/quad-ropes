@@ -4,7 +4,6 @@ namespace RadTrees.QuadRope
 module Parallel =
 
     module private Tasks =
-        open System.Threading
         open System.Threading.Tasks
 
         let inline private task (f : unit -> 'a) =

@@ -33,6 +33,37 @@ module Parallel =
         await4 ft gt ht kt
         result ft, result gt, result ht, result kt
 
+    /// Generate a new tree in parallel.
+    let init h w f =
+        let rec init0 h0 w0 h1 w1 =
+            let h = h1 - h0
+            let w = w1 - w0
+            if h <= 0 || w <= 0 then
+                Empty
+            else if h <= h_max && w <= w_max then
+                leaf (ViewArray2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
+            else if w <= w_max then
+                let hpv = h0 + h / 2
+                let n, s = par2 (fun () -> init0 h0 w0 hpv w1) (fun () -> init0 hpv w0 h1 w1)
+                thinNode n s
+            else if h <= h_max then
+                let wpv = w0 + w / 2
+                let w, e = par2 (fun () -> init0 h0 w0 h1 wpv) (fun () -> init0 h0 wpv h1 w1)
+                flatNode w e
+            else
+                let hpv = h0 + h / 2
+                let wpv = w0 + w / 2
+                let ne, nw, sw, se = par4 (fun () -> init0 h0 wpv hpv w1)
+                                          (fun () -> init0 h0 w0 hpv wpv)
+                                          (fun () -> init0 hpv w0 h1 wpv)
+                                          (fun () -> init0 hpv wpv h1 w1)
+                node ne nw sw se
+        init0 0 0 h w
+
+    let initAll h w e = init h w (fun _ _ -> e)
+    let initZeros h w = initAll h w 0
+    let reallocate rope = init (rows rope) (cols rope) (get rope)
+
     /// Apply a function f to all scalars in parallel.
     let rec map f = function
         | Node (_, _, _, ne, nw, Empty, Empty) ->

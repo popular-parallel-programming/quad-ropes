@@ -6,16 +6,16 @@ module Parallel =
 
     open RadTrees
 
-    let task f =
+    let inline private task f =
         Task<_ QuadRope>.Factory.StartNew(System.Func<_>(f))
 
-    let result (t : _ Task) =
+    let inline private result (t : _ Task) =
         t.Result
 
-    let await2 (t0 : _ Task) t1 =
+    let inline private await2 (t0 : _ Task) t1 =
         Task.WaitAll(t0, t1)
 
-    let await4 (t0 : _ Task) t1 t2 t3 =
+    let inline private await4 (t0 : _ Task) t1 t2 t3 =
         Task.WaitAll(t0, t1, t2, t3)
 
     let rec pmap f = function

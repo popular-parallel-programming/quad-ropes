@@ -2,36 +2,39 @@ namespace RadTrees.QuadRope
 
 [<RequireQualifiedAccessAttribute>]
 module Parallel =
-    open System.Threading
-    open System.Threading.Tasks
 
+    module private Tasks =
+        open System.Threading
+        open System.Threading.Tasks
+
+        let inline private task (f : unit -> 'a) =
+            Task<'a>.Factory.StartNew(System.Func<'a>(f))
+
+        let inline private result (t : _ Task) =
+            t.Result
+
+        let inline private await2 (t0 : _ Task) t1 =
+            Task.WaitAll(t0, t1)
+
+        let inline private await4 (t0 : _ Task) t1 t2 t3 =
+            Task.WaitAll(t0, t1, t2, t3)
+
+        let par2 f g =
+            let ft = task f
+            let gt = task g
+            await2 ft gt
+            result ft, result gt
+
+        let par4 f g h k =
+            let ft = task f
+            let gt = task g
+            let ht = task h
+            let kt = task k
+            await4 ft gt ht kt
+            result ft, result gt, result ht, result kt
+
+    open Tasks
     open RadTrees
-
-    let inline private task f =
-        Task<_ QuadRope>.Factory.StartNew(System.Func<_>(f))
-
-    let inline private result (t : _ Task) =
-        t.Result
-
-    let inline private await2 (t0 : _ Task) t1 =
-        Task.WaitAll(t0, t1)
-
-    let inline private await4 (t0 : _ Task) t1 t2 t3 =
-        Task.WaitAll(t0, t1, t2, t3)
-
-    let private par2 f g =
-        let ft = task f
-        let gt = task g
-        await2 ft gt
-        result ft, result gt
-
-    let private par4 f g h k =
-        let ft = task f
-        let gt = task g
-        let ht = task h
-        let kt = task k
-        await4 ft gt ht kt
-        result ft, result gt, result ht, result kt
 
     /// Generate a new tree in parallel.
     let init h w f =

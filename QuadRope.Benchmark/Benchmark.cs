@@ -29,6 +29,7 @@ namespace RadTrees.Benchmark
 	    // Mapping
             var timesTwo = Functions.toFunc1<int, int>(i => 2 * i);
             Mark("QuadRope.map", () => QuadRopeModule.map(timesTwo, rope));
+	    Mark("QuadRope.Parallel.map", () => QuadRope.Parallel.map(timesTwo, rope));
             Mark("Array2D.map", () => Array2DModule.Map(timesTwo, arr));
 
 	    var getZeros = Functions.toFunc1<int, int>(i => 0);
@@ -54,8 +55,10 @@ namespace RadTrees.Benchmark
 	    // Reduction in both dimensions
 	    var plus = Functions.toFunc2<int, int, int>((x, y) => x + y);
 	    Mark("QuadRope.hreduce", () => QuadRopeModule.hreduce(plus, rope));
+	    Mark("QuadRope.Parallel.hreduce", () => QuadRope.Parallel.hreduce(plus, rope));
 	    Mark("Array2D.hreduce", () => Array2D.reduce2(plus, arr));
 	    Mark("QuadRope.vreduce", () => QuadRopeModule.vreduce(plus, rope));
+	    Mark("QuadRope.Parallel.vreduce", () => QuadRope.Parallel.vreduce(plus, rope));
 	    Mark("Array2D.vreduce", () => Array2D.reduce1(plus, arr));
 
 	    // Concatenation in both domensions.

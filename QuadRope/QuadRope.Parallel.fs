@@ -85,6 +85,12 @@ module Parallel =
             | SW (ne, nw, path, se) -> More (upperLeftMost (se, SE (ne, nw, rope, path)))
             | SE (ne, nw, sw, path) -> next (node ne nw sw rope, path)
 
+    let node0 ne nw sw se =
+        let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se))
+        let h = max (rows nw + rows sw) (rows ne + rows se)
+        let w = max (cols ne + cols nw) (cols sw + cols se)
+        Node (d + 1, h, w, ne, nw, sw, se)
+
     /// Split the rope along the given path and return the processed
     /// and the unprocessed part. Here, it becomes clear why the NW,
     /// NE, SW, SE order is more desirable, as it allows us to use all
@@ -92,18 +98,35 @@ module Parallel =
     let rec splitPath p u = function
         | Top -> p, u
         | NW (ne, path, sw, se) ->
-            splitPath p (node ne u sw se) path
+            splitPath (node0 Empty p Empty Empty) (node0 ne u sw se) path
         | NE (path, nw, sw, se) ->
-            splitPath (flatNode nw p) (thinNode u (flatNode sw se)) path
+            splitPath (node0 p nw Empty Empty) (node0 u Empty sw se) path
         | SW (ne, nw, path, se) ->
-            splitPath (thinNode (flatNode nw ne) p) (flatNode u se) path
+            splitPath (node0 ne nw p Empty) (node0 Empty Empty u se) path
         | SE (ne, nw, sw, path) ->
-            splitPath (node ne nw sw p) u path
+            splitPath (node0 ne nw sw p) u path
 
-    let rec zip (rope, path) =
-        match path with
-            | Top -> rope
-            | _ -> zip (up (rope, path))
+    let rec mergePath rope l r =
+        match l, r with
+            | Top, Top -> rope
+            | NW (_, l, _, _), NW (ne, r, sw, se) ->
+                mergePath (node ne rope sw se) l r
+            | NE (l, nw, _, _), NE (r, _, sw, se) ->
+                mergePath (node rope nw sw se) l r
+            | SW (ne, nw, l, _), SW (_, _, r, se) ->
+                mergePath (node ne nw rope se) l r
+            | SE (ne, nw, sw, l), SE (_, _, _, r) ->
+                mergePath (node ne nw sw rope) l r
+            | _ -> failwith "paths have different structure"
+
+    let rebuild rope path =
+        let rec build f = function
+            | Top -> f
+            | NE (path, _, _, _) -> build (down >> northEast >> f) path
+            | NW (_, path, _, _) -> build (down >> f) path
+            | SW (_, _, path, _) -> build (down >> southWest >> f) path
+            | SE (_, _, _, path) -> build (down >> southEast >> f) path
+        (build id path) (rope, Top)
 
     let rec mapUntilSeq cond f (rope, path) =
         if cond() then
@@ -115,8 +138,8 @@ module Parallel =
                 | More (rope, path) -> mapUntilSeq cond f (rope, path)
 
     let mapUntil cond f rope =
-        let u, path = start rope
-        match mapUntilSeq cond f (u, path) with
+        let u', path = start rope
+        match mapUntilSeq cond f (u', path) with
             | Done rope -> Done rope
             | More (u, path) -> More (splitPath Empty u path, path)
 
@@ -129,3 +152,11 @@ module Parallel =
                     flatNode nw ne, flatNode sw se, vcat
             | rope -> rope, Empty, (fun rope _ -> rope)
 
+    let rec pmap cond par2 f rope =
+        match (mapUntil cond f rope) with
+            | More ((_, u), path) ->
+                let u1, u2, cat = split2 u
+                let p1, p2 = par2 (fun () -> pmap cond par2 f u1) (fun () -> pmap cond par2 f u2)
+                let p0, path0 = rebuild (cat p1 p2) path
+                mergePath p0 path path0
+            | Done rope -> rope

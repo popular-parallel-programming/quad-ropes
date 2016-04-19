@@ -449,10 +449,10 @@ module QuadRope =
                 | _ -> zip g n s
 
     /// Reduce all rows of rope with f.
-    let rec hreduce f rope = mapHreduce id f rope
+    let hreduce f rope = mapHreduce id f rope
 
     /// Reduce all columns of rope with f.
-    let rec vreduce f rope = mapVreduce id f rope
+    let vreduce f rope = mapVreduce id f rope
 
     let private offset f x =
         ((+) x) >> f

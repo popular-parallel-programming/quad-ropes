@@ -138,3 +138,36 @@ module Parallel =
 
     /// Reduce all columns of rope by f.
     let vreduce f rope = mapVreduce id f rope
+
+    // Remove all elements from rope for which p does not hold in
+    // parallel. Input rope must be of height 1.
+    let rec hfilter p = function
+        | Node (_, 1, _, ne, nw, Empty, Empty) ->
+            let ne0, nw0 = par2 (fun () -> hfilter p ne) (fun () -> hfilter p nw)
+            flatNode nw0 ne0
+        | rope -> QuadRope.hfilter p rope
+
+    // Remove all elements from rope for which p does not hold in
+    // parallel. Input rope must be of width 1.
+    let rec vfilter p = function
+        | Node (_, _, 1, Empty, nw, sw, Empty) ->
+            let nw0, sw0 = par2 (fun () -> vfilter p nw) (fun () -> vfilter p sw)
+            thinNode nw0 sw0
+        | rope -> QuadRope.vfilter p rope
+
+    // Transpose the quad rope in parallel. This is equal to swapping
+    // indices, such that get rope i j = get rope j i.
+    let rec transpose = function
+        | Node (_, _, _, ne, nw, Empty, Empty) ->
+            let nw0, ne0 = par2 (fun () -> transpose nw) (fun () -> transpose ne)
+            thinNode nw0 ne0
+        | Node (_, _, _, Empty, nw, sw, Empty) ->
+            let nw0, sw0 = par2 (fun () -> transpose nw) (fun () -> transpose sw)
+            flatNode nw0 sw0
+        | Node (_, _, _, ne, nw, sw, se) ->
+            let ne0, nw0, sw0, se0 = par4 (fun () -> transpose ne)
+                                          (fun () -> transpose nw)
+                                          (fun () -> transpose sw)
+                                          (fun () -> transpose se)
+            node sw0 nw0 ne0 se0
+        | rope -> QuadRope.transpose rope

@@ -1,5 +1,6 @@
 namespace RadTrees.QuadRope
 
+[<RequireQualifiedAccessAttribute>]
 module Parallel =
     open System.Threading
     open System.Threading.Tasks

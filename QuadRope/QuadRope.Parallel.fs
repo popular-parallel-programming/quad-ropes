@@ -41,10 +41,8 @@ module Parallel =
         let rec init0 h0 w0 h1 w1 =
             let h = h1 - h0
             let w = w1 - w0
-            if h <= 0 || w <= 0 then
-                Empty
-            else if h <= h_max && w <= w_max then
-                leaf (ViewArray2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
+            if h <= h_max && w <= w_max then
+                QuadRope.init h w (fun i j -> f (h0 + i) (w0 + j))
             else if w <= w_max then
                 let hpv = h0 + h / 2
                 let n, s = par2 (fun () -> init0 h0 w0 hpv w1) (fun () -> init0 hpv w0 h1 w1)

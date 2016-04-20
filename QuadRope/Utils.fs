@@ -1,5 +1,40 @@
 namespace RadTrees
 
+module Tasks =
+    open System.Threading.Tasks
+
+    let inline private task (f : unit -> 'a) =
+        Task<'a>.Factory.StartNew(System.Func<'a>(f))
+
+    let inline private result (t : _ Task) =
+        t.Result
+
+    let inline private await2 (t0 : _ Task) t1 =
+        Task.WaitAll(t0, t1)
+
+    let inline private await4 (t0 : _ Task) t1 t2 t3 =
+        Task.WaitAll(t0, t1, t2, t3)
+
+    /// Execute two functions f and g in parallel. This function
+    /// blocks the current thread until f and g are computed and
+    /// returns their (unwrapped) results.
+    let par2 f g =
+        let ft = task f
+        let gt = task g
+        await2 ft gt
+        result ft, result gt
+
+    /// Execute four functions in parallel. This function blocks the
+    /// current thread until all functions are computed and returns
+    /// their (unwrapped) results.
+    let par4 f g h k =
+        let ft = task f
+        let gt = task g
+        let ht = task h
+        let kt = task k
+        await4 ft gt ht kt
+        result ft, result gt, result ht, result kt
+
 module Bits =
 
     let inline radix bits =

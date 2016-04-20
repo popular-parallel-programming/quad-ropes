@@ -1,1 +1,1 @@
-mono QuadRope.Benchmark/bin/Release/QuadRope.Benchmark.exe
+mono QuadRope.Benchmark/bin/Release/QuadRope.Benchmark.exe "$@"

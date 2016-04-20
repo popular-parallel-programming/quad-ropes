@@ -1,1 +1,1 @@
-QuadRope.Benchmark\bin\Release\QuadRope.Benchmark.exe
+QuadRope.Benchmark\bin\Release\QuadRope.Benchmark.exe %*

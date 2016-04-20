@@ -540,3 +540,26 @@ module QuadRope =
         | Leaf vs -> leaf (ViewArray2D.transpose vs)
         | Node (_, _, _, ne, nw, sw, se) ->
             node (transpose sw) (transpose nw) (transpose ne) (transpose se)
+
+    /// Produce a string with the tikz code for printing the rope as a
+    /// box diagram. This is useful for illustrating algorithms on
+    /// quad ropes.
+    let tikzify h w rope =
+        let line i0 j0 i1 j1 =
+            sprintf "\draw (%f, %f) -- (%f, %f);" i0 j0 i1 j1
+        let rect i j h w =
+            sprintf "\draw (%f, %f) rectangle (%f, %f);" i j h w
+        let rec tikz i j h w = function
+            | Empty -> Seq.singleton (line i j (i + h) (j + w))
+            | Leaf _ -> Seq.empty
+            | Node (_, _, _, ne, nw, sw, se) ->
+                let h0 = h / 2.0
+                let w0 = w / 2.0
+                seq {
+                    yield line i (j + w0) (i + h) (j + w0)
+                    yield line (i + h0) j (i + h0) (j + w)
+                    yield! tikz i j h0 w0 sw
+                    yield! tikz i (j + w0) h0 w0 nw
+                    yield! tikz (i + h0) j h0 w0 se
+                    yield! tikz (i + h0) (j + w0) h0 w0 ne }
+        printfn "%s" (String.concat "\n" ((rect 0.0 0.0 h w ) :: (List.ofSeq (tikz 0.0 0.0 h w rope))))

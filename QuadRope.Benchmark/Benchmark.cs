@@ -1,5 +1,6 @@
 ﻿using System;
 using Microsoft.FSharp.Collections;
+using Microsoft.FSharp.Core;
 
 namespace RadTrees.Benchmark
 {
@@ -14,10 +15,39 @@ namespace RadTrees.Benchmark
 	    }
         }
 
+	public static void SetThreads(int nthreads)
+	{
+	    // Set min threads first, otherwise setting max threads might fail.
+	    System.Threading.ThreadPool.SetMinThreads(1, 0);
+	    if (!System.Threading.ThreadPool.SetMaxThreads(nthreads, 0))
+		Console.WriteLine("# Error: could not change the number of thread pool threads.");
+	    Console.WriteLine("# Threads     {0}", nthreads);
+	}
+
+	// Functions of type int * int -> int.
+	public static FSharpFunc<int, FSharpFunc<int, int>> times =
+	    Functions.toFunc2<int, int, int>((i, j) => i * j);
+	public static FSharpFunc<int, FSharpFunc<int, int>> plus =
+	    Functions.toFunc2<int, int, int>((x, y) => x + y);
+
+	// Functions of type int -> int.
+	public static FSharpFunc<int, int> timesTwo =
+	    Functions.toFunc1<int, int>(i => 2 * i);
+	public static FSharpFunc<int, int> getZeros =
+	    Functions.toFunc1<int, int>(i => 0);
+
+	public static void Parallel(int size, int threads)
+	{
+	    SetThreads(threads);
+	    Mark("QuadRope.Parallel.init", () => QuadRope.Parallel.init(size, size, times));
+	    var rope = QuadRopeModule.init(size, size, times);
+	    Mark("QuadRope.Parallel.map", () => QuadRope.Parallel.map(timesTwo, rope));
+	    Mark("QuadRope.Parallel.hreduce", () => QuadRope.Parallel.hreduce(plus, rope));
+	    Mark("QuadRope.Parallel.vreduce", () => QuadRope.Parallel.vreduce(plus, rope));
+	}
+
         public static void Run(int size)
         {
-	    var times = Functions.toFunc2<int, int, int>((i, j) => i * j);
-
 	    // Initialization
 	    Mark("QuadRope.init", () => QuadRopeModule.init(size, size, times));
 	    Mark("Array2D.init", () => Array2DModule.Initialize(size, size, times));
@@ -27,12 +57,9 @@ namespace RadTrees.Benchmark
             var arr = Array2DModule.Initialize(size, size, times);
 
 	    // Mapping
-            var timesTwo = Functions.toFunc1<int, int>(i => 2 * i);
             Mark("QuadRope.map", () => QuadRopeModule.map(timesTwo, rope));
-	    Mark("QuadRope.Parallel.map", () => QuadRope.Parallel.map(timesTwo, rope));
             Mark("Array2D.map", () => Array2DModule.Map(timesTwo, arr));
 
-	    var getZeros = Functions.toFunc1<int, int>(i => 0);
 	    // Folding in both dimensions.
 	    {
 		var ropeZeros = QuadRopeModule.initZeros(size, 1);
@@ -53,12 +80,9 @@ namespace RadTrees.Benchmark
 	    Mark("Array2D.vscan", () => Array2D.scan1(times, getZeros, arr));
 
 	    // Reduction in both dimensions
-	    var plus = Functions.toFunc2<int, int, int>((x, y) => x + y);
 	    Mark("QuadRope.hreduce", () => QuadRopeModule.hreduce(plus, rope));
-	    Mark("QuadRope.Parallel.hreduce", () => QuadRope.Parallel.hreduce(plus, rope));
 	    Mark("Array2D.hreduce", () => Array2D.reduce2(plus, arr));
 	    Mark("QuadRope.vreduce", () => QuadRopeModule.vreduce(plus, rope));
-	    Mark("QuadRope.Parallel.vreduce", () => QuadRope.Parallel.vreduce(plus, rope));
 	    Mark("Array2D.vreduce", () => Array2D.reduce1(plus, arr));
 
 	    // Concatenation in both domensions.

@@ -547,12 +547,14 @@ module QuadRope =
     let tikzify h w rope =
         let line i0 j0 i1 j1 =
             sprintf "\\draw (%f, %f) -- (%f, %f);" i0 j0 i1 j1
+        let thinLine i0 j0 i1 j1 =
+            sprintf "\\draw [very thin] (%f, %f) -- (%f, %f);" i0 j0 i1 j1
         let rect i j h w =
             sprintf "\\draw (%f, %f) rectangle (%f, %f);" i j (i + h) (j + w)
         let box i j h w =
             sprintf "\\fill[gray!20!white] (%f, %f) rectangle (%f, %f);" i j (i + h) (j + w)
         let rec tikz i j h w = function
-            | Empty -> seq { yield box i j h w; yield line i j (h + i) (w + j) }
+            | Empty -> seq { yield box i j h w; yield thinLine i j (h + i) (w + j) }
             | Leaf _ -> Seq.empty
             | Node (_, _, _, ne, nw, sw, se) ->
                 let h0 = h / 2.0

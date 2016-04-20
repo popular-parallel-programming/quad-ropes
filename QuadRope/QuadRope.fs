@@ -552,7 +552,7 @@ module QuadRope =
         let box i j h w =
             sprintf "\\fill[gray!20!white] (%f, %f) rectangle (%f, %f);" i j (i + h) (j + w)
         let rec tikz i j h w = function
-            | Empty -> Seq.singleton (line i j (i + h) (j + w))
+            | Empty -> seq { yield box i j h w; yield line i j (h + i) (w + j) }
             | Leaf _ -> Seq.empty
             | Node (_, _, _, ne, nw, sw, se) ->
                 let h0 = h / 2.0

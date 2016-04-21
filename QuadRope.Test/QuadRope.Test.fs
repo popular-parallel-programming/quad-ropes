@@ -4,16 +4,13 @@ open FsCheck
 open RadTrees
 
 module Utils =
-    let (.=.) l r =
-            l = r |@ sprintf "%A, %A" l r
-
-    let (.<=.) l r =
-            l <= r |@ sprintf "%A, %A" l r
-
     let makeIndices h w =
         seq { for i in 0..h - 1 do
               for j in 0..w - 1 ->
               i, j }
+
+    let makeIndicesFrom rope =
+        makeIndices (QuadRope.rows rope) (QuadRope.cols rope)
 
     let rec maintainsTight = function
         | Empty
@@ -30,10 +27,9 @@ module Utils =
     let access rope (i, j) =
         try
             ignore (QuadRope.get rope i j)
-            true |@ ""
+            true
         with
-            | e  -> false |@ sprintf "(i, j) = (%d, %d)\nrope = %A\nexception = %A" i j rope e
-
+            | _ -> false
 
 open Utils
 module QuadRopeTest =
@@ -62,7 +58,7 @@ module QuadRopeTest =
               Seq.forall (fun (i, j) -> QuadRope.get rope i j = i * j) (makeIndices h w))
 
     let ``get is always inside bounds`` (a : int QuadRope) =
-        Seq.reduce (.&.) (Seq.map (access a) (makeIndices (QuadRope.rows a) (QuadRope.cols a)))
+        Seq.forall (access a) (makeIndicesFrom a)
 
     (* The width of hcat of two ropes is equal to the sum of their widths. *)
     let ``hcat width is equal to width sum`` (a : int QuadRope) (b : int QuadRope)  =
@@ -91,90 +87,88 @@ module QuadRopeTest =
         let h = QuadRope.rows a
         let w = QuadRope.cols a
         (i < h && j < w) ==>
-        lazy (QuadRope.get (QuadRope.hrev a) i j .=. QuadRope.get a i ((w - 1) - j))
+        lazy (QuadRope.get (QuadRope.hrev a) i j = QuadRope.get a i ((w - 1) - j))
 
     (* vrec puts values in the correct position and get can access them. *)
     let ``get accesses vrev correctly`` (a: int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
         let h = QuadRope.rows a
         let w = QuadRope.cols a
         (i < h && j < w) ==>
-        lazy (QuadRope.get (QuadRope.vrev a) i j .=. QuadRope.get a ((h - 1) - i) j)
+        lazy (QuadRope.get (QuadRope.vrev a) i j = QuadRope.get a ((h - 1) - i) j)
 
     let ``get accesses hcat correctly`` (a : int QuadRope) (b : int QuadRope) =
         (QuadRope.rows a = QuadRope.rows b) ==>
         lazy (let ab = QuadRope.hcat a b
-              Seq.reduce (.&.) (Seq.map (access ab) (makeIndices (QuadRope.rows ab) (QuadRope.cols ab))))
+              Seq.forall (access ab) (makeIndicesFrom ab))
 
     let ``get accesses vcat correctly`` (a : int QuadRope) (b : int QuadRope) =
         (QuadRope.cols a = QuadRope.cols b) ==>
         lazy (let ab = QuadRope.vcat a b
-              Seq.reduce (.&.) (Seq.map (access ab) (makeIndices (QuadRope.rows ab) (QuadRope.cols ab))))
+              Seq.forall (access ab) (makeIndicesFrom ab))
 
     let ``hsplit produces ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
         w <= QuadRope.cols a ==>
         lazy (let b = QuadRope.split a 0 0 (QuadRope.rows a) w
-              QuadRope.cols b .=. w |@ sprintf "%A" b)
+              QuadRope.cols b = w)
 
     let ``hsplit2 produces two ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
         w <= QuadRope.cols a ==>
         lazy (let b, c = QuadRope.hsplit2 a w
-              (QuadRope.cols b .=. w) .&. (QuadRope.cols c .=. QuadRope.cols a - w))
+              QuadRope.cols b = w && QuadRope.cols c = QuadRope.cols a - w)
 
     let ``vsplit produces ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =
         h <= QuadRope.rows a ==>
         lazy (let b = QuadRope.split a 0 0 h (QuadRope.cols a)
-              QuadRope.rows b .=. h |@ sprintf "%A" b)
+              QuadRope.rows b = h)
 
     let ``vsplit2 produces two ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =
         h <= QuadRope.rows a ==>
         lazy (let b, c = QuadRope.vsplit2 a h
-              (QuadRope.rows b .=. h) .&. (QuadRope.rows c = QuadRope.rows a - h))
+              (QuadRope.rows b = h) && (QuadRope.rows c = QuadRope.rows a - h))
 
     let ``balanceH maintains layout`` (a : int QuadRope) =
         not (QuadRope.isBalancedH a) ==>
         lazy (let b = QuadRope.hbalance a
-              let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
-              Seq.reduce (.&.) (Seq.map (fun (i, j) -> QuadRope.get a i j .=. QuadRope.get b i j) indices))
+              Seq.forall (fun (i, j) -> QuadRope.get a i j = QuadRope.get b i j) (makeIndicesFrom a))
 
     let ``balanceH maintains or improves depth`` (a : int QuadRope) =
         not (QuadRope.isBalancedH a) ==>
         lazy (let b = QuadRope.hbalance a
-              QuadRope.depth b .<=. QuadRope.depth a)
+              QuadRope.depth b <= QuadRope.depth a)
 
     let ``balanceV maintains layout`` (a : int QuadRope) =
         not (QuadRope.isBalancedV a) ==>
         lazy (let b = QuadRope.vbalance a
-              let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
-              Seq.reduce (.&.) (Seq.map (fun (i, j) -> QuadRope.get a i j .=. QuadRope.get b i j) indices))
+              Seq.forall (fun (i, j) -> QuadRope.get a i j = QuadRope.get b i j) (makeIndicesFrom a))
 
     let ``balanceV maintains or improves depth`` (a : int QuadRope) =
         not (QuadRope.isBalancedV a) ==>
         lazy (let b = QuadRope.vbalance a
-              QuadRope.depth b .<=. QuadRope.depth a)
+              QuadRope.depth b <= QuadRope.depth a)
 
     let ``toRows yields correct number of scalars`` (a : int QuadRope) =
-        QuadRope.rows a * QuadRope.cols a .=. Seq.length (Seq.concat (QuadRope.toRows a))
+        QuadRope.rows a * QuadRope.cols a = Seq.length (Seq.concat (QuadRope.toRows a))
 
     let ``toRows yields scalars in correct order`` (a : int QuadRope) =
         let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
         let scalars = Seq.map (fun (i, j) -> QuadRope.get a i j) indices
-        Seq.reduce (.&.) (Seq.map2 (.=.) scalars (Seq.concat (QuadRope.toRows a)))
+        Seq.forall2 (=) scalars (Seq.concat (QuadRope.toRows a))
 
     let ``toCols yields correct number of scalars`` (a : int QuadRope) =
-        QuadRope.rows a * QuadRope.cols a .=. Seq.length (Seq.concat (QuadRope.toCols a))
+        QuadRope.rows a * QuadRope.cols a = Seq.length (Seq.concat (QuadRope.toCols a))
 
     let ``map modifies all values`` (a : int QuadRope) (f : int -> int) =
         let h = QuadRope.rows a
         let w = QuadRope.cols a
         let b = QuadRope.map f a
-        let check (i, j) = f (QuadRope.get a i j) .=. QuadRope.get b i j
-        Seq.reduce (.&.) (Seq.map check (makeIndices h w))
+        let check (i, j) = f (QuadRope.get a i j) = QuadRope.get b i j
+        Seq.forall check (makeIndices h w)
 
     let ``hreduce produces thin ropes`` (a : int QuadRope) (f : int -> int -> int) =
-        QuadRope.cols (QuadRope.hreduce f a) .=. 1
+        QuadRope.cols (QuadRope.hreduce f a) = 1
 
     let ``vreduce produces flat ropes`` (a : int QuadRope) (f : int -> int -> int) =
-        QuadRope.rows (QuadRope.vreduce f a) .=. 1
+        QuadRope.rows (QuadRope.vreduce f a) = 1
 
     let ``map + reduce equals mapreduce`` (a : int QuadRope) (f : int -> int) (g : int -> int -> int) =
         QuadRope.mapHreduce f g a = QuadRope.hreduce g (QuadRope.map f a) &&
@@ -205,7 +199,7 @@ module QuadRopeTest =
         let d = QuadRope.hfold (@) states b
         let x = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toCols c)))
         let y = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toCols d)))
-        x .=. y
+        x = y
 
     let ``last of vscan equals vfold`` (a : int QuadRope) =
         let b = QuadRope.map List.singleton a
@@ -214,7 +208,7 @@ module QuadRopeTest =
         let d = QuadRope.vfold (@) states b
         let x = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toRows c)))
         let y = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toRows d)))
-        x .=. y
+        x = y
 
     let ``hscan's elements are strictly ordered`` (a : int QuadRope) =
         let b = QuadRope.map List.singleton a
@@ -227,4 +221,4 @@ module QuadRopeTest =
         QuadRope.forallCols (fun (x, y) -> List.length x < List.length y) c
 
     let ``transpose of transpose is identity`` (a : int QuadRope) =
-        QuadRope.transpose (QuadRope.transpose a) .=. a
+        QuadRope.transpose (QuadRope.transpose a) = a

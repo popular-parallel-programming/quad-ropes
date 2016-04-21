@@ -124,6 +124,15 @@ module Parallel =
             thinNode nw0 sw0
         | rope -> QuadRope.vfilter p rope
 
+    /// Apply f in parallel to each (i, j) of lope and rope. This is
+    /// exactly the same code as in the sequential module but we use
+    /// parallel init instead.
+    let zip f lope rope =
+        if rows lope <> rows rope || cols lope <> cols rope then
+            failwith "QuadRopes must have same shape."
+        init (rows lope) (cols lope) (fun i j -> f (get lope i j) (get rope i j))
+
+
     /// Reverse the quad rope horizontally in parallel.
     let rec hrev = function
         | Node (d, h, w, ne, nw, sw, se) ->

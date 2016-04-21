@@ -106,6 +106,14 @@ module QuadRopeTest =
         lazy (let ab = QuadRope.vcat a b
               Seq.forall (access ab) (makeIndicesFrom ab))
 
+    let ``get accesses split correctly`` (a : int QuadRope) (NonNegativeInt i)
+                                                            (NonNegativeInt j)
+                                                            (NonNegativeInt h)
+                                                            (NonNegativeInt w) =
+        (i < QuadRope.rows a && i < h && j < QuadRope.cols a && j < w) ==>
+            lazy (let b = QuadRope.split a i j h w
+                  Seq.forall (access b) (makeIndicesFrom b))
+
     let ``hsplit produces ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
         w <= QuadRope.cols a ==>
         lazy (let b = QuadRope.split a 0 0 (QuadRope.rows a) w

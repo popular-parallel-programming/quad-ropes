@@ -166,8 +166,11 @@ module QuadRope =
     /// Balance rope horizontally.
     let hbalance rope =
         let rec hbalance0 rope =
-            let rs = collect rope []
-            reduce (rebuild flatNode) rs
+            if isBalancedH rope then
+                rope
+            else
+                let rs = collect rope []
+                reduce (rebuild flatNode) rs
         and collect rope rs  =
             match rope with
                 | Empty -> rs
@@ -180,8 +183,11 @@ module QuadRope =
     /// Balance rope vertically.
     let vbalance rope =
         let rec vbalance0 rope =
-            let rs = collect rope []
-            reduce (rebuild thinNode) rs
+            if isBalancedV rope then
+                rope
+            else
+                let rs = collect rope []
+                reduce (rebuild thinNode) rs
         and collect rope rs  =
             match rope with
                 | Empty -> rs

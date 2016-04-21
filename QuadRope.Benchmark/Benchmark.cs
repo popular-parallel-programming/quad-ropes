@@ -45,6 +45,8 @@ namespace RadTrees.Benchmark
 	    Mark("QuadRope.map", () => QuadRopeModule.map(timesTwo, rope));
 	    Mark("QuadRope.hreduce", () => QuadRopeModule.hreduce(plus, rope));
 	    Mark("QuadRope.vreduce", () => QuadRopeModule.vreduce(plus, rope));
+	    Mark("QuadRope.zip", () => QuadRopeModule.zip(times, rope,
+							  QuadRopeModule.hrev(QuadRopeModule.vrev(rope))));
 	}
 
 	public static void RunParallel(Options opts)
@@ -59,6 +61,8 @@ namespace RadTrees.Benchmark
 	    Mark("QuadRope.Parallel.map", () => QuadRope.Parallel.map(timesTwo, rope));
 	    Mark("QuadRope.Parallel.hreduce", () => QuadRope.Parallel.hreduce(plus, rope));
 	    Mark("QuadRope.Parallel.vreduce", () => QuadRope.Parallel.vreduce(plus, rope));
+	    Mark("QuadRope.Parallel.zip", () =>
+		 QuadRope.Parallel.zip(times, rope, QuadRopeModule.hrev(QuadRopeModule.vrev(rope))));
 	}
 
         public static void RunSequential(Options opts)

@@ -108,23 +108,23 @@ module Parallel =
     /// Reduce all columns of rope by f.
     let vreduce f rope = mapVreduce id f rope
 
-    // Remove all elements from rope for which p does not hold in
-    // parallel. Input rope must be of height 1.
+    /// Remove all elements from rope for which p does not hold in
+    /// parallel. Input rope must be of height 1.
     let rec hfilter p = function
         | Node (_, 1, _, ne, nw, Empty, Empty) ->
             let ne0, nw0 = par2 (fun () -> hfilter p ne) (fun () -> hfilter p nw)
             flatNode nw0 ne0
         | rope -> QuadRope.hfilter p rope
 
-    // Remove all elements from rope for which p does not hold in
-    // parallel. Input rope must be of width 1.
+    /// Remove all elements from rope for which p does not hold in
+    /// parallel. Input rope must be of width 1.
     let rec vfilter p = function
         | Node (_, _, 1, Empty, nw, sw, Empty) ->
             let nw0, sw0 = par2 (fun () -> vfilter p nw) (fun () -> vfilter p sw)
             thinNode nw0 sw0
         | rope -> QuadRope.vfilter p rope
 
-    // Reverse the quad rope horizontally in parallel.
+    /// Reverse the quad rope horizontally in parallel.
     let rec hrev = function
         | Node (d, h, w, ne, nw, sw, se) ->
             let ne0, nw0, sw0, se0 = par4 (fun() -> hrev ne)
@@ -134,7 +134,7 @@ module Parallel =
             Node (d, h, w, nw0, ne0, se0, sw0)
         | rope -> QuadRope.hrev rope
 
-    // Reverse the quad rope vertically in parallel.
+    /// Reverse the quad rope vertically in parallel.
     let rec vrev = function
         | Node (d, h, w, ne, nw, sw, se) ->
             let ne0, nw0, sw0, se0 = par4 (fun() -> vrev ne)
@@ -145,8 +145,8 @@ module Parallel =
         | rope -> QuadRope.vrev rope
 
 
-    // Transpose the quad rope in parallel. This is equal to swapping
-    // indices, such that get rope i j = get rope j i.
+    /// Transpose the quad rope in parallel. This is equal to swapping
+    /// indices, such that get rope i j = get rope j i.
     let rec transpose = function
         | Node (_, _, _, ne, nw, Empty, Empty) ->
             let nw0, ne0 = par2 (fun () -> transpose nw) (fun () -> transpose ne)

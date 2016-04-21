@@ -2,6 +2,7 @@ namespace RadTrees
 
 open Microsoft.FSharp.Core
 
+[<CompiledNameAttribute("QuadRopeDataType")>]
 [<CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
 type 'a QuadRope =
     | Empty

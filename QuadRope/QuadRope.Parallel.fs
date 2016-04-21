@@ -60,6 +60,23 @@ module Parallel =
             node ne0 nw0 sw0 se0
         | rope -> QuadRope.map f rope
 
+    /// Apply f in parallel to each (i, j) of lope and rope.
+    let zip f lope rope =
+        let rec zip0 f lope rope =
+             match lope with
+                 | Empty -> Empty
+                 | Leaf vs -> leaf (ViewArray2D.mapi (fun i j e -> f e (get rope i j)) vs)
+                 | Node (d, h, w, ne, nw, sw, se) ->
+                     let nw0, ne0, sw0, se0 =
+                         par4 (fun () -> zip0 f nw (split rope 0 0 (rows nw) (cols nw)))
+                              (fun () -> zip0 f ne (split rope 0 (cols nw) (rows ne) (cols ne)))
+                              (fun () -> zip0 f sw (split rope (rows nw) 0 (rows sw) (cols sw)))
+                              (fun () -> zip0 f se (split rope (rows ne) (cols sw) (rows se) (cols se)))
+                     Node (d, h, w, ne0, nw0, sw0, se0)
+        if cols lope <> cols rope || rows lope <> rows rope then
+            failwith "ropes must have the same shape"
+        zip0 f lope rope
+
     /// Apply f to all scalars in parallel and reduce the results
     /// row-wise using g.
     let rec mapHreduce f g = function
@@ -123,15 +140,6 @@ module Parallel =
             let nw0, sw0 = par2 (fun () -> vfilter p nw) (fun () -> vfilter p sw)
             thinNode nw0 sw0
         | rope -> QuadRope.vfilter p rope
-
-    /// Apply f in parallel to each (i, j) of lope and rope. This is
-    /// exactly the same code as in the sequential module but we use
-    /// parallel init instead.
-    let zip f lope rope =
-        if rows lope <> rows rope || cols lope <> cols rope then
-            failwith "QuadRopes must have same shape."
-        init (rows lope) (cols lope) (fun i j -> f (get lope i j) (get rope i j))
-
 
     /// Reverse the quad rope horizontally in parallel.
     let rec hrev = function

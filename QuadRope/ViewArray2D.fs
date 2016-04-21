@@ -77,6 +77,10 @@ module ViewArray2D =
         | Array arr -> array (Array2D.map f arr)
         | View (i0, j0, h, w, arr) -> array (Array2D.init h w (fun i j -> f arr.[i0 + i, j0 + j]))
 
+    let inline mapi f = function
+        | Array arr -> array (Array2D.mapi f arr)
+        | View (i0, j0, h, w, arr) -> array (Array2D.init h w (fun i j -> f i j arr.[i0 + i, j0 + j]))
+
     let inline copy rope = map id rope
 
     let inline rev1 varr = call Array2D.revBased1 varr

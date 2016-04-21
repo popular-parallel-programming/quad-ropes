@@ -426,9 +426,19 @@ module QuadRope =
 
     /// Apply f to each (i, j) of lope and rope.
     let zip f lope rope =
-        if rows lope <> rows rope || cols lope <> cols rope then
-            failwith "QuadRopes must have same shape."
-        init (rows lope) (cols lope) (fun i j -> f (get lope i j) (get rope i j))
+        let rec zip0 f lope rope =
+             match lope with
+                 | Empty -> Empty
+                 | Leaf vs -> leaf (ViewArray2D.mapi (fun i j e -> f e (get rope i j)) vs)
+                 | Node (d, h, w, ne, nw, sw, se) ->
+                     let nw0 = zip0 f nw (split rope 0 0 (rows nw) (cols nw))
+                     let ne0 = zip0 f ne (split rope 0 (cols nw) (rows ne) (cols ne))
+                     let sw0 = zip0 f sw (split rope (rows nw) 0 (rows sw) (cols sw))
+                     let se0 = zip0 f se (split rope (rows ne) (cols sw) (rows se) (cols se))
+                     Node (d, h, w, ne0, nw0, sw0, se0)
+        if cols lope <> cols rope || rows lope <> rows rope then
+            failwith "ropes must have the same shape"
+        zip0 f lope rope
 
     // Map f to every element of the rope and reduce column-wise with g.
     let rec mapHreduce f g = function

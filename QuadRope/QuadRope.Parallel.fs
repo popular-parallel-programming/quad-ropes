@@ -124,6 +124,27 @@ module Parallel =
             thinNode nw0 sw0
         | rope -> QuadRope.vfilter p rope
 
+    // Reverse the quad rope horizontally in parallel.
+    let rec hrev = function
+        | Node (d, h, w, ne, nw, sw, se) ->
+            let ne0, nw0, sw0, se0 = par4 (fun() -> hrev ne)
+                                          (fun() -> hrev nw)
+                                          (fun() -> hrev sw)
+                                          (fun() -> hrev se)
+            Node (d, h, w, nw0, ne0, se0, sw0)
+        | rope -> QuadRope.hrev rope
+
+    // Reverse the quad rope vertically in parallel.
+    let rec vrev = function
+        | Node (d, h, w, ne, nw, sw, se) ->
+            let ne0, nw0, sw0, se0 = par4 (fun() -> vrev ne)
+                                          (fun() -> vrev nw)
+                                          (fun() -> vrev sw)
+                                          (fun() -> vrev se)
+            Node (d, h, w, sw0, se0, nw0, ne0)
+        | rope -> QuadRope.vrev rope
+
+
     // Transpose the quad rope in parallel. This is equal to swapping
     // indices, such that get rope i j = get rope j i.
     let rec transpose = function

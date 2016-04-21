@@ -222,3 +222,9 @@ module QuadRopeTest =
 
     let ``transpose of transpose is identity`` (a : int QuadRope) =
         QuadRope.transpose (QuadRope.transpose a) = a
+
+    let ``zip ignores internal shape`` (a : int QuadRope) (b : int QuadRope) (f : int -> int -> int) =
+        (QuadRope.rows a = QuadRope.rows b && QuadRope.cols a = QuadRope.cols b) ==>
+        lazy (let c = QuadRope.zip f a b
+              let indices = makeIndices (QuadRope.rows c) (QuadRope.cols c)
+              Seq.forall (fun (i, j) -> QuadRope.get c i j = f (QuadRope.get a i j) (QuadRope.get b i j)) indices)

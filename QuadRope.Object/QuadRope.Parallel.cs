@@ -2,7 +2,7 @@
 
 using System;
 
-namespace RadTrees.QuadRope.Object
+namespace RadTrees.QuadRope.Object.Parallel
 {
     public class QuadRope<T> : IQuadRope<T>
     {

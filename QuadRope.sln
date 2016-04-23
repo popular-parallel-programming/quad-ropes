@@ -12,6 +12,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuadRope.Benchmark", "QuadR
 		{465A801E-438B-4B5A-8EF1-658BDE154519} = {465A801E-438B-4B5A-8EF1-658BDE154519}
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuadRope.Object", "QuadRope.Object\QuadRope.Object.csproj", "{77AEF065-7EA7-4A6D-AD1C-00260DA8FF44}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,6 +32,10 @@ Global
 		{D08E5A80-8D18-4B24-A9EE-C8648ED32E62}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D08E5A80-8D18-4B24-A9EE-C8648ED32E62}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D08E5A80-8D18-4B24-A9EE-C8648ED32E62}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77AEF065-7EA7-4A6D-AD1C-00260DA8FF44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77AEF065-7EA7-4A6D-AD1C-00260DA8FF44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77AEF065-7EA7-4A6D-AD1C-00260DA8FF44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77AEF065-7EA7-4A6D-AD1C-00260DA8FF44}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

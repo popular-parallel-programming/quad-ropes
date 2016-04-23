@@ -155,13 +155,13 @@ namespace RadTrees.QuadRope.Object
         ///   Produce a new thin rope of a single column with the
         ///   single rows reduced by f.
         /// </summary>
-        public abstract IQuadRope<S> ReduceHorizontally<S>(Func<S, S, S> f);
+        public abstract IQuadRope<T> ReduceHorizontally(Func<T, T, T> f);
 
         /// <summary>
         ///   Produce a new flat rope of a single row with the
         ///   single columns reduced by f.
         /// </summary>
-        public abstract IQuadRope<S> ReduceVertically<S>(Func<S, S, S> f);
+        public abstract IQuadRope<T> ReduceVertically(Func<T, T, T> f);
 
         /// <summary>
         ///   Fold the rope row-wise using f and starting from

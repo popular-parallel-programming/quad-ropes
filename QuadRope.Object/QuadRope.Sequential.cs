@@ -55,12 +55,12 @@ namespace RadTrees.QuadRope.Object
             throw new NotImplementedException();
         }
 
-        public override IQuadRope<S> ReduceHorizontally<S>(Func<S, S, S> f)
+        public override IQuadRope<T> ReduceHorizontally(Func<T, T, T> f)
         {
             throw new NotImplementedException();
         }
 
-        public override IQuadRope<S> ReduceVertically<S>(Func<S, S, S> f)
+        public override IQuadRope<T> ReduceVertically(Func<T, T, T> f)
         {
             throw new NotImplementedException();
         }

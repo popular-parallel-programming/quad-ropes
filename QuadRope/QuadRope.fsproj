@@ -51,7 +51,6 @@
     <Compile Include="ViewArray2D.fs" />
     <Compile Include="QuadRope.fs" />
     <Compile Include="QuadRope.Parallel.fs" />
-    <Compile Include="QuadRope.Object.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

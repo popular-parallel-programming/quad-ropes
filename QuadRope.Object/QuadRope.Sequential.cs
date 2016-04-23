@@ -12,92 +12,100 @@ namespace RadTrees.QuadRope.Object
 
         public override IQuadRope<T> BalanceHorizontally()
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<T>(QuadRopeModule.hbalance(rope));
         }
 
         public override IQuadRope<T> BalanceVertically()
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<T>(QuadRopeModule.vbalance(rope));
         }
 
         public override IQuadRope<T> ConcatHorizontally(IQuadRope<T> other)
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<T>(QuadRopeModule.hcat(rope, other.rope));
         }
 
         public override IQuadRope<T> ConcatVertically(IQuadRope<T> other)
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<T>(QuadRopeModule.vcat(rope, other.rope));
         }
 
         public override IQuadRope<S> FoldHorizontally<S>(Func<S, T, S> f, IQuadRope<S> states)
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<S>(QuadRopeModule.hfold(Functions.toFunc2(f), states.rope, rope));
         }
 
         public override IQuadRope<S> FoldVertically<S>(Func<S, T, S> f, IQuadRope<S> states)
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<S>(QuadRopeModule.vfold(Functions.toFunc2(f), states.rope, rope));
         }
 
         public override IQuadRope<S> Map<S>(Func<T, S> f)
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<S>(QuadRopeModule.map(Functions.toFunc1(f), rope));
         }
 
         public override IQuadRope<S> MapReduceHorizontally<S>(Func<T, S> f, Func<S, S, S> g)
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<S>(QuadRopeModule.mapHreduce(Functions.toFunc1(f),
+                                                                       Functions.toFunc2(g),
+                                                                       rope));
         }
 
         public override IQuadRope<S> MapReduceVertically<S>(Func<T, S> f, Func<S, S, S> g)
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<S>(QuadRopeModule.mapVreduce(Functions.toFunc1(f),
+                                                                       Functions.toFunc2(g),
+                                                                       rope));
         }
 
         public override IQuadRope<T> ReduceHorizontally(Func<T, T, T> f)
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<T>(QuadRopeModule.hreduce(Functions.toFunc2(f), rope));
         }
 
         public override IQuadRope<T> ReduceVertically(Func<T, T, T> f)
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<T>(QuadRopeModule.vreduce(Functions.toFunc2(f), rope));
         }
 
         public override IQuadRope<T> ReverseHorizontally()
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<T>(QuadRopeModule.hrev(rope));
         }
 
         public override IQuadRope<T> ReverseVertically()
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<T>(QuadRopeModule.vrev(rope));
         }
 
         public override IQuadRope<T> ScanHorizontally(Func<T, T, T> f, Func<int, T> states)
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<T>(QuadRopeModule.hscan(Functions.toFunc2(f),
+                                                                  Functions.toFunc1(states),
+                                                                  rope));
         }
 
         public override IQuadRope<T> ScanVertically(Func<T, T, T> f, Func<int, T> states)
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<T>(QuadRopeModule.vscan(Functions.toFunc2(f),
+                                                                  Functions.toFunc1(states),
+                                                                  rope));
         }
 
         public override IQuadRope<T> Set(int row, int col, T v)
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<T>(QuadRopeModule.set(rope, row, col, v));
         }
 
         public override IQuadRope<T> Slice(int row, int col, int rows, int cols)
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<T>(QuadRopeModule.split(rope, row, col, rows, cols));
         }
 
         public override IQuadRope<T> Transpose()
         {
-            throw new NotImplementedException();
+            return new SequentialQuadRope<T>(QuadRopeModule.transpose(rope));
         }
     }
 }

@@ -2,13 +2,13 @@
 
 using System;
 
-namespace RadTrees.QuadRope.Object.Sequential
+namespace RadTrees.QuadRope.Object
 {
-    public class QuadRope<T> : IQuadRope<T>
+    public class SequentialQuadRope<T> : IQuadRope<T>
     {
-	private QuadRope(RadTrees.QuadRope<T> rope)
-	    : base(rope)
-	{ }
+        private SequentialQuadRope(QuadRope<T> rope)
+                : base(rope)
+        { }
 
         public override IQuadRope<T> BalanceHorizontally()
         {

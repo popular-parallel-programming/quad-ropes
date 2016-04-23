@@ -6,12 +6,12 @@ namespace RadTrees.QuadRope.Object
 {
     public abstract class IQuadRope<T>
     {
-        protected RadTrees.QuadRope<T> rope;
+        protected internal QuadRope<T> rope;
 
         /// <summary>
         ///   Construct a new wrapper instance for the rope parameter.
         /// </summary>
-        protected IQuadRope(RadTrees.QuadRope<T> rope)
+        protected IQuadRope(QuadRope<T> rope)
         {
             this.rope = rope;
         }

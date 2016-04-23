@@ -68,10 +68,10 @@ module Parallel =
                  | Leaf vs -> leaf (ViewArray2D.mapi (fun i j e -> f e (get rope i j)) vs)
                  | Node (d, h, w, ne, nw, sw, se) ->
                      let nw0, ne0, sw0, se0 =
-                         par4 (fun () -> zip0 f nw (split rope 0 0 (rows nw) (cols nw)))
-                              (fun () -> zip0 f ne (split rope 0 (cols nw) (rows ne) (cols ne)))
-                              (fun () -> zip0 f sw (split rope (rows nw) 0 (rows sw) (cols sw)))
-                              (fun () -> zip0 f se (split rope (rows ne) (cols sw) (rows se) (cols se)))
+                         par4 (fun () -> zip0 f nw (slice rope 0 0 (rows nw) (cols nw)))
+                              (fun () -> zip0 f ne (slice rope 0 (cols nw) (rows ne) (cols ne)))
+                              (fun () -> zip0 f sw (slice rope (rows nw) 0 (rows sw) (cols sw)))
+                              (fun () -> zip0 f se (slice rope (rows ne) (cols sw) (rows se) (cols se)))
                      Node (d, h, w, ne0, nw0, sw0, se0)
         if cols lope <> cols rope || rows lope <> rows rope then
             failwith "ropes must have the same shape"

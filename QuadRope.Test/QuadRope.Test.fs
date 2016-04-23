@@ -106,17 +106,17 @@ module QuadRopeTest =
         lazy (let ab = QuadRope.vcat a b
               Seq.forall (access ab) (makeIndicesFrom ab))
 
-    let ``get accesses split correctly`` (a : int QuadRope) (NonNegativeInt i)
+    let ``get accesses slice correctly`` (a : int QuadRope) (NonNegativeInt i)
                                                             (NonNegativeInt j)
                                                             (NonNegativeInt h)
                                                             (NonNegativeInt w) =
         (i < QuadRope.rows a && i < h && j < QuadRope.cols a && j < w) ==>
-            lazy (let b = QuadRope.split a i j h w
+            lazy (let b = QuadRope.slice a i j h w
                   Seq.forall (access b) (makeIndicesFrom b))
 
-    let ``hsplit produces ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
+    let ``hslice produces ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
         w <= QuadRope.cols a ==>
-        lazy (let b = QuadRope.split a 0 0 (QuadRope.rows a) w
+        lazy (let b = QuadRope.slice a 0 0 (QuadRope.rows a) w
               QuadRope.cols b = w)
 
     let ``hsplit2 produces two ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
@@ -124,9 +124,9 @@ module QuadRopeTest =
         lazy (let b, c = QuadRope.hsplit2 a w
               QuadRope.cols b = w && QuadRope.cols c = QuadRope.cols a - w)
 
-    let ``vsplit produces ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =
+    let ``vslice produces ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =
         h <= QuadRope.rows a ==>
-        lazy (let b = QuadRope.split a 0 0 h (QuadRope.cols a)
+        lazy (let b = QuadRope.slice a 0 0 h (QuadRope.cols a)
               QuadRope.rows b = h)
 
     let ``vsplit2 produces two ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =

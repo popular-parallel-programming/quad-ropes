@@ -277,7 +277,7 @@ module QuadRope =
 
     /// Compute the "subrope" starting from indexes i, j taking h and w
     /// elements in vertical and horizontal direction.
-    let rec split root i j h w =
+    let rec slice root i j h w =
         if rows root <= i || h <= 0 || cols root <= j || w <= 0 then
             Empty
         else if i <= 0 && rows root <= h && j <= 0 && cols root <= w then
@@ -287,19 +287,19 @@ module QuadRope =
                 | Empty -> Empty
                 | Leaf vs -> leaf (ViewArray2D.subArr i j h w vs)
                 | Node (_, _, _, ne, nw, sw, se) ->
-                    let nw0 = split nw i j h w
-                    let ne0 = split ne i (j - cols nw) h (w - cols nw0)
-                    let sw0 = split sw (i - rows nw) j (h - rows nw0) w
-                    let se0 = split se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
+                    let nw0 = slice nw i j h w
+                    let ne0 = slice ne i (j - cols nw) h (w - cols nw0)
+                    let sw0 = slice sw (i - rows nw) j (h - rows nw0) w
+                    let se0 = slice se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
                     node ne0 nw0 sw0 se0
 
     /// Split rope vertically from row i, taking h rows.
     let inline vsplit rope i h =
-        split rope i 0 h (cols rope)
+        slice rope i 0 h (cols rope)
 
     /// Split rope horizontally from column j, taking w columns.
     let inline hsplit rope j w =
-        split rope 0 j (rows rope) w
+        slice rope 0 j (rows rope) w
 
     /// Split rope in two at row i.
     let inline vsplit2 rope i =
@@ -431,10 +431,10 @@ module QuadRope =
                  | Empty -> Empty
                  | Leaf vs -> leaf (ViewArray2D.mapi (fun i j e -> f e (get rope i j)) vs)
                  | Node (d, h, w, ne, nw, sw, se) ->
-                     let nw0 = zip0 f nw (split rope 0 0 (rows nw) (cols nw))
-                     let ne0 = zip0 f ne (split rope 0 (cols nw) (rows ne) (cols ne))
-                     let sw0 = zip0 f sw (split rope (rows nw) 0 (rows sw) (cols sw))
-                     let se0 = zip0 f se (split rope (rows ne) (cols sw) (rows se) (cols se))
+                     let nw0 = zip0 f nw (slice rope 0 0 (rows nw) (cols nw))
+                     let ne0 = zip0 f ne (slice rope 0 (cols nw) (rows ne) (cols ne))
+                     let sw0 = zip0 f sw (slice rope (rows nw) 0 (rows sw) (cols sw))
+                     let se0 = zip0 f se (slice rope (rows ne) (cols sw) (rows se) (cols se))
                      Node (d, h, w, ne0, nw0, sw0, se0)
         if cols lope <> cols rope || rows lope <> rows rope then
             failwith "ropes must have the same shape"

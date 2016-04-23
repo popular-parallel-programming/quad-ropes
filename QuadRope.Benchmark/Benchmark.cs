@@ -1,4 +1,5 @@
-﻿using System;
+﻿// -*- c-basic-offset: 4; indent-tabs-mode: nil-*-
+using System;
 using Microsoft.FSharp.Collections;
 using Microsoft.FSharp.Core;
 
@@ -13,7 +14,7 @@ namespace RadTrees.Benchmark
 	    try {
 		Infrastructure.Mark8(msg, i => { f(); return i; });
 	    } catch (Exception e) {
-		Console.WriteLine(e.ToString());
+                Console.WriteLine(e.ToString());
 	    }
         }
 

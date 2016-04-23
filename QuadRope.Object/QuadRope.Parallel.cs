@@ -2,11 +2,11 @@
 
 using System;
 
-namespace RadTrees.QuadRope.Object.Parallel
+namespace RadTrees.QuadRope.Object
 {
-    public class QuadRope<T> : IQuadRope<T>
+    public class ParallelQuadRope<T> : IQuadRope<T>
     {
-	private QuadRope(RadTrees.QuadRope<T> rope)
+	private ParallelQuadRope(RadTrees.QuadRope<T> rope)
 	    : base(rope)
 	{ }
 

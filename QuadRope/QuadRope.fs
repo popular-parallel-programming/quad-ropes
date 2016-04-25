@@ -345,10 +345,10 @@ module QuadRope =
             else
                 let hpv = h0 + h / 2
                 let wpv = w0 + w / 2
-                node (init0 h0 wpv hpv w1) (* NE *)
-                     (init0 h0 w0 hpv wpv) (* NW *)
-                     (init0 hpv w0 h1 wpv) (* SW *)
-                     (init0 hpv wpv h1 w1) (* SE *)
+                node (init0 h0 wpv hpv w1)
+                     (init0 h0 w0 hpv wpv)
+                     (init0 hpv w0 h1 wpv)
+                     (init0 hpv wpv h1 w1)
         init0 0 0 h w
 
     /// Reallocate a rope form the ground up. Sometimes, this is the

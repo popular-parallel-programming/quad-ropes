@@ -144,6 +144,9 @@ module Array2D =
     let inline scan1 f state arr = call (scanBased1 f state) arr
     let inline scan2 f state arr = call (scanBased2 f state) arr
 
+    let inline map2 f (arr0 : _ [,]) (arr1 : _ [,]) =
+        Array2D.init (Array2D.length1 arr0) (Array2D.length2 arr0) (fun i j -> f arr0.[i, j] arr1.[i, j])
+
     /// Reduce each column of a 2D array.
     let inline mapReduceBased1 f g i0 j0 h w (arr : _ [,]) =
         let inline reduce _ j =

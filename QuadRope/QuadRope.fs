@@ -562,25 +562,24 @@ module QuadRope =
     /// quad ropes.
     let tikzify h w rope =
         let line i0 j0 i1 j1 =
-            sprintf "\\draw (%f, %f) -- (%f, %f);" i0 j0 i1 j1
+            sprintf "\\draw (%f, %f) -- (%f, %f);" j0 i0 j1 i1
         let thinLine i0 j0 i1 j1 =
-            sprintf "\\draw [very thin] (%f, %f) -- (%f, %f);" i0 j0 i1 j1
+            sprintf "\\draw [very thin] (%f, %f) -- (%f, %f);" j0 i0 j1 i1
         let rect i j h w =
-            sprintf "\\draw (%f, %f) rectangle (%f, %f);" i j (i + h) (j + w)
+            sprintf "\\draw (%f, %f) rectangle (%f, %f);" j i (j + w) (i + h)
         let box i j h w =
-            sprintf "\\fill[gray!20!white] (%f, %f) rectangle (%f, %f);" i j (i + h) (j + w)
+            sprintf "\\fill[gray!20!white] (%f, %f) rectangle (%f, %f);" j i (j + w) (i + h)
         let rec tikz i j h w = function
             | Empty -> seq { yield box i j h w; yield thinLine i j (h + i) (w + j) }
             | Leaf _ -> Seq.empty
             | Node (_, _, _, ne, nw, sw, se) ->
                 let h0 = h / 2.0
                 let w0 = w / 2.0
-                seq {
-                    yield! tikz i (j + w0) h0 w0 nw
-                    yield! tikz (i + h0) (j + w0) h0 w0 ne
-                    yield! tikz i j h0 w0 sw
-                    yield! tikz (i + h0) j h0 w0 se
-                    yield line i (j + w0) (i + h) (j + w0)
-                    yield line (i + h0) j (i + h0) (j + w)}
+                seq { yield! tikz i j h0 w0 sw
+                      yield! tikz (i + h0) j h0 w0 nw
+                      yield! tikz i (j + w0) h0 w0 se
+                      yield! tikz (i + h0) (j + w0) h0 w0 ne
+                      yield line i (j + w0) (i + h) (j + w0)
+                      yield line (i + h0) j (i + h0) (j + w) }
         let cmds = List.ofSeq (seq { yield! tikz 0.0 0.0 h w rope; yield rect 0.0 0.0 h w });
         printfn "%s" (String.concat "\n" cmds)

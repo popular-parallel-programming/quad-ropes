@@ -6,17 +6,21 @@
 #nowarn "62"
 
 open RadTrees
-open RadTrees.QuadRope
-open RadTrees.QuadRope.Parallel
 
-let mutable calls = 3
-let cond () =
-    if calls <= 0 then
-        true
+let rope = QuadRope.init 10 10 (*)
+let a = QuadRope.init 4 4 (*);
+let b = QuadRope.hcat a a;;
+let c = QuadRope.vcat a a;;
+
+let rec dontimes n x f =
+    if n = 0 then
+        x
     else
-        calls <- (calls - 1)
-        false
+        dontimes (n - 1) (f x) f
 
-let unpack = function
-    | Done rope -> rope, Empty
-    | More (ps, us) -> ps, us
+let hcatn n =
+    let q = QuadRope.initZeros 1 1
+    let mutable p = q
+    for i in 1 .. n do
+        p <- QuadRope.hcat p q
+    p

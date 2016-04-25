@@ -115,6 +115,7 @@ namespace RadTrees.Benchmark
 	    Mark("Array2D.vscan", () => Array2D.scan1(times, getZeros, arr));
 	    Mark("Array2D.hreduce", () => Array2D.reduce2(plus, arr));
 	    Mark("Array2D.vreduce", () => Array2D.reduce1(plus, arr));
+            Mark("Array2D.zip", () => Array2D.map2(plus, arr, arr));
 	    Mark("Array2D.hcat", () => Array2D.cat2(arr, arr));
 	    Mark("Array2D.vcat", () => Array2D.cat1(arr, arr));
 

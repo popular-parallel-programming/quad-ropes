@@ -150,10 +150,10 @@ module QuadRope =
         | Leaf _ -> true
         | Node (d, _, w, _, _, _, _) -> isBalanced d w
 
-    let rec private reduce f = function
+    let rec private reduceList f = function
         | []  -> Empty
         | [n] -> n
-        | ns  -> reduce f (f ns)
+        | ns  -> reduceList f (f ns)
 
     let rec private rebuild merge = function
         | [] -> []
@@ -170,7 +170,7 @@ module QuadRope =
                 rope
             else
                 let rs = collect rope []
-                reduce (rebuild flatNode) rs
+                reduceList (rebuild flatNode) rs
         and collect rope rs  =
             match rope with
                 | Empty -> rs
@@ -187,7 +187,7 @@ module QuadRope =
                 rope
             else
                 let rs = collect rope []
-                reduce (rebuild thinNode) rs
+                reduceList (rebuild thinNode) rs
         and collect rope rs  =
             match rope with
                 | Empty -> rs
@@ -465,10 +465,22 @@ module QuadRope =
                 | _ -> zip g n s
 
     /// Reduce all rows of rope with f.
-    let hreduce f rope = mapHreduce id f rope
+    let inline hreduce f rope = mapHreduce id f rope
 
     /// Reduce all columns of rope with f.
-    let vreduce f rope = mapVreduce id f rope
+    let inline vreduce f rope = mapVreduce id f rope
+
+    let rec mapreduce f g = function
+        | Empty -> failwith "impossible to reduce an empty rope"
+        | Leaf vs -> ViewArray2D.mapreduce f g vs
+        | Node (_, _, _, ne, nw, Empty, Empty) ->
+            g (mapreduce f g ne) (mapreduce f g nw)
+        | Node (_, _, _, Empty, nw, sw, Empty) ->
+            g (mapreduce f g nw) (mapreduce f g sw)
+        | Node (_, _, _, ne, nw, sw, se) ->
+            g (g (mapreduce f g ne) (mapreduce f g nw)) (g (mapreduce f g sw) (mapreduce f g se))
+
+    let inline reduce f rope = mapreduce id f rope
 
     let inline private offset f x =
         ((+) x) >> f
@@ -523,13 +535,13 @@ module QuadRope =
     // elements in both dimension using logical and.
     let forall p = function
         | Empty -> true
-        | rope -> get (vreduce (&&) (mapHreduce p (&&) rope)) 0 0
+        | rope -> mapreduce p (&&) rope
 
     // Apply predicate p to all elements of rope and reduce the
     // elements in both dimensions using logical or.
     let exists p = function
         | Empty -> false
-        | rope -> get (vreduce (||) (mapHreduce p (||) rope)) 0 0
+        | rope -> mapreduce p (||) rope
 
     // Remove all elements from rope for which p does not hold. Input
     // rope must be of height 1.

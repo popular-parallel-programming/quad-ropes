@@ -168,6 +168,13 @@ module Array2D =
     let inline reduce1 f arr = call (reduceBased1 f) arr
     let inline reduce2 f arr = call (reduceBased2 f) arr
 
+    let inline mapReduceBased f g i0 j0 h w (arr : _ [,]) =
+        Seq.reduce g (Seq.map f (seq { for i in i0 .. h - 1 do for j in j0 .. w - 1 -> arr.[i, j] }))
+
+    let inline mapReduce f g arr = call (mapReduceBased f g) arr
+    let inline reduceBased f i0 j0 h w arr = mapReduceBased id f i0 j0 h w arr
+    let inline reduce f arr = call (reduceBased f) arr
+
     let inline sortBased1 p i0 j0 h w (arr : _ [,]) =
         let inline sort j =
             Array.sortBy p [| for i in i0 .. i0 + h - 1 -> arr.[i, + j] |]

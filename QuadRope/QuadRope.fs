@@ -470,6 +470,8 @@ module QuadRope =
     /// Reduce all columns of rope with f.
     let inline vreduce f rope = mapVreduce id f rope
 
+    /// Apply f to all values of the rope and reduce the resulting
+    /// values to a single scalar using g.
     let rec mapreduce f g = function
         | Empty -> failwith "impossible to reduce an empty rope"
         | Leaf vs -> ViewArray2D.mapreduce f g vs
@@ -480,6 +482,7 @@ module QuadRope =
         | Node (_, _, _, ne, nw, sw, se) ->
             g (g (mapreduce f g ne) (mapreduce f g nw)) (g (mapreduce f g sw) (mapreduce f g se))
 
+    /// Reduce all values of the rope to a single scalar.
     let inline reduce f rope = mapreduce id f rope
 
     let inline private offset f x =

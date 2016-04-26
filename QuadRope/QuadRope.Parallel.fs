@@ -120,10 +120,11 @@ module Parallel =
         | rope -> QuadRope.mapHreduce f g rope
 
     /// Reduce all rows of rope by f.
-    let hreduce f rope = mapHreduce id f rope
+    let inline hreduce f rope = mapHreduce id f rope
 
     /// Reduce all columns of rope by f.
-    let vreduce f rope = mapVreduce id f rope
+    let inline vreduce f rope = mapVreduce id f rope
+
 
     /// Remove all elements from rope for which p does not hold in
     /// parallel. Input rope must be of height 1.

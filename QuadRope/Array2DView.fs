@@ -1,57 +1,57 @@
 namespace RadTrees
 
-type 'a ViewArray2D =
-    | Array of 'a [,]
+type 'a Array2DView =
+    | All of 'a [,]
     | View of int * int * int * int * 'a [,]
 
 [<CompilationRepresentation(CompilationRepresentationFlags.ModuleSuffix)>]
-module ViewArray2D =
+module Array2DView =
 
-    let inline private array arr =
-        Array arr
+    let inline private all arr =
+        All arr
 
     let inline private view i j h w arr =
         View (i, j, h, w, arr)
 
     let inline private toArray f = function
-        | Array arr ->
-            array (f 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr)
+        | All arr ->
+            all (f 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr)
         | View (i0, j0, h, w, arr) ->
-            array (f i0 j0 h w arr)
+            all (f i0 j0 h w arr)
 
     let inline private toScalar f = function
-        | Array arr ->
+        | All arr ->
             f 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
         | View (i0, j0, h, w, arr) ->
             f i0 j0 h w arr
 
     let inline length1 varr =
         match varr with
-            | Array arr -> Array2D.length1 arr
+            | All arr -> Array2D.length1 arr
             | View (_, _, h, _, _) -> h
 
     let inline length2 varr =
         match varr with
-            | Array arr -> Array2D.length2 arr
+            | All arr -> Array2D.length2 arr
             | View (_, _, _, w, _) -> w
 
     let inline init h w f =
-        array (Array2D.init h w f)
+        all (Array2D.init h w f)
 
     let inline initZeros h w =
         init h w (fun _ _ -> 0)
 
     let inline get varr i j =
         match varr with
-            | Array arr -> arr.[i, j]
+            | All arr -> arr.[i, j]
             | View (i0, j0, _, _, arr) -> arr.[i0 + i, j0 + j]
 
     let inline set varr i j v =
         match varr with
-            | Array arr ->
+            | All arr ->
                 let arr' = Array2D.copy arr
                 arr'.[i, j] <- v
-                array arr'
+                all arr'
             | View (i0, j0, h, w, arr) ->
                 let arr' = Array2D.init h w (fun i j -> arr.[i0 + i, j0 + j])
                 arr'.[i, j] <- v
@@ -59,9 +59,9 @@ module ViewArray2D =
 
     let inline write varr i j v =
         match varr with
-            | Array arr ->
+            | All arr ->
                 arr.[i, j] <- v
-                array arr
+                all arr
             | _ ->
                 set varr i j v
 
@@ -70,7 +70,7 @@ module ViewArray2D =
             varr
         else
             match varr with
-                | Array arr ->
+                | All arr ->
                     let i0 = max 0 i
                     let j0 = max 0 j
                     let h0 = min (Array2D.length1 arr - i0) h
@@ -80,12 +80,12 @@ module ViewArray2D =
                     view (min (i0 + (max 0 i)) i0) (min j0 (j0 + (max 0 j))) (min h0 h) (min w0 w) arr
 
     let inline map f = function
-        | Array arr -> array (Array2D.map f arr)
-        | View (i0, j0, h, w, arr) -> array (Array2D.init h w (fun i j -> f arr.[i0 + i, j0 + j]))
+        | All arr -> all (Array2D.map f arr)
+        | View (i0, j0, h, w, arr) -> all (Array2D.init h w (fun i j -> f arr.[i0 + i, j0 + j]))
 
     let inline mapi f = function
-        | Array arr -> array (Array2D.mapi f arr)
-        | View (i0, j0, h, w, arr) -> array (Array2D.init h w (fun i j -> f i j arr.[i0 + i, j0 + j]))
+        | All arr -> all (Array2D.mapi f arr)
+        | View (i0, j0, h, w, arr) -> all (Array2D.init h w (fun i j -> f i j arr.[i0 + i, j0 + j]))
 
     let inline copy rope = map id rope
 
@@ -97,14 +97,14 @@ module ViewArray2D =
         let l1 = length1 upper + length1 lower
         let l2 = length2 lower
         let l1u = length1 upper
-        array (Array2D.init l1 l2 (fun i j -> if i < l1u then get upper i j else get lower (i - l1u) j))
+        all (Array2D.init l1 l2 (fun i j -> if i < l1u then get upper i j else get lower (i - l1u) j))
 
     let inline cat2 left right =
         if length1 left <> length1 right then failwith "length1 must be equal!"
         let l1 = length1 left
         let l2 = length2 left + length2 right
         let l2l = length2 left
-        array (Array2D.init l1 l2 (fun i j -> if j < l2l then get left i j else get right i (j - l2l)))
+        all (Array2D.init l1 l2 (fun i j -> if j < l2l then get left i j else get right i (j - l2l)))
 
     let inline fold1 f state varr = toArray (Array2D.foldBased1 f state) varr
     let inline fold2 f state varr = toArray (Array2D.foldBased2 f state) varr
@@ -133,4 +133,4 @@ module ViewArray2D =
     let inline sort2 p varr = toArray (Array2D.sortBased2 p) varr
 
     let inline transpose varr =
-        array (Array2D.init (length2 varr) (length1 varr) (fun j i -> get varr i j))
+        all (Array2D.init (length2 varr) (length1 varr) (fun j i -> get varr i j))

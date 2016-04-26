@@ -125,6 +125,25 @@ module Parallel =
     /// Reduce all columns of rope by f.
     let inline vreduce f rope = mapVreduce id f rope
 
+    /// Apply f to all values of the rope and reduce the resulting
+    /// values to a single scalar using g in parallel.
+    let rec mapreduce f g = function
+        | Node (_, _, _, ne, nw, Empty, Empty) ->
+            let ne', nw' = par2 (fun () -> mapreduce f g ne) (fun () -> mapreduce f g nw)
+            g ne' nw'
+        | Node (_, _, _, Empty, nw, sw, Empty) ->
+            let nw', sw' = par2 (fun () -> mapreduce f g nw) (fun () -> mapreduce f g sw)
+            g nw' sw'
+        | Node (_, _, _, ne, nw, sw, se) ->
+            let ne', nw', sw', se' = par4 (fun () -> mapreduce f g ne)
+                                          (fun () -> mapreduce f g nw)
+                                          (fun () -> mapreduce f g sw)
+                                          (fun () -> mapreduce f g se)
+            g (g ne' nw') (g sw' se')
+        | rope -> QuadRope.mapreduce f g rope
+
+    /// Reduce all values of the rope to a single scalar in parallel.
+    let inline reduce f rope = mapreduce id f rope
 
     /// Remove all elements from rope for which p does not hold in
     /// parallel. Input rope must be of height 1.

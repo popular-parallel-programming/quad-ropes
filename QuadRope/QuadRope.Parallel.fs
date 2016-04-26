@@ -64,8 +64,6 @@ module Parallel =
     let zip f lope rope =
         let rec zip0 f lope rope =
              match lope with
-                 | Empty -> Empty
-                 | Leaf vs -> leaf (ViewArray2D.mapi (fun i j e -> f e (get rope i j)) vs)
                  | Node (d, h, w, ne, nw, sw, se) ->
                      let nw0, ne0, sw0, se0 =
                          par4 (fun () -> zip0 f nw (slice rope 0 0 (rows nw) (cols nw)))
@@ -73,6 +71,7 @@ module Parallel =
                               (fun () -> zip0 f sw (slice rope (rows nw) 0 (rows sw) (cols sw)))
                               (fun () -> zip0 f se (slice rope (rows ne) (cols sw) (rows se) (cols se)))
                      Node (d, h, w, ne0, nw0, sw0, se0)
+                 | _ -> QuadRope.zip f lope rope
         if cols lope <> cols rope || rows lope <> rows rope then
             failwith "ropes must have the same shape"
         zip0 f lope rope

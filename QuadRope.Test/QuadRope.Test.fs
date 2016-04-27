@@ -179,8 +179,8 @@ module QuadRopeTest =
         QuadRope.rows (QuadRope.vreduce f a) = 1
 
     let ``map + reduce equals mapreduce`` (a : int QuadRope) (f : int -> int) (g : int -> int -> int) =
-        QuadRope.mapHreduce f g a = QuadRope.hreduce g (QuadRope.map f a) &&
-            QuadRope.mapVreduce f g a = QuadRope.vreduce g (QuadRope.map f a)
+        QuadRope.hmapreduce f g a = QuadRope.hreduce g (QuadRope.map f a) &&
+            QuadRope.vmapreduce f g a = QuadRope.vreduce g (QuadRope.map f a)
 
     let ``hfilter removes elements correctly`` (a : int QuadRope) (Fun p) =
         QuadRope.rows a = 1 ==> lazy QuadRope.forall p (QuadRope.hfilter p a)

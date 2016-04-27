@@ -441,34 +441,34 @@ module QuadRope =
         zip0 f lope rope
 
     // Map f to every element of the rope and reduce column-wise with g.
-    let rec mapHreduce f g = function
+    let rec hmapreduce f g = function
         | Empty -> Empty
         | Leaf vs -> leaf (Array2DView.mapreduce2 f g vs)
         | Node (_, _, _, ne, nw, sw, se) ->
             (* Both, w and e, are of width 1. *)
-            let w = thinNode (mapHreduce f g nw) (mapHreduce f g sw)
-            let e = thinNode (mapHreduce f g ne) (mapHreduce f g se)
+            let w = thinNode (hmapreduce f g nw) (hmapreduce f g sw)
+            let e = thinNode (hmapreduce f g ne) (hmapreduce f g se)
             match e with
                 | Empty -> w
                 | _ -> zip g w e
 
     // Map f to every element of the rope and reduce row-wise with g.
-    let rec mapVreduce f g = function
+    let rec vmapreduce f g = function
         | Empty -> Empty
         | Leaf vs -> leaf (Array2DView.mapreduce1 f g vs)
         | Node (_, _, _, ne, nw, sw, se) ->
             (* Both, n and s, are of height 1. *)
-            let n = flatNode (mapVreduce f g nw) (mapVreduce f g ne)
-            let s = flatNode (mapVreduce f g sw) (mapVreduce f g se)
+            let n = flatNode (vmapreduce f g nw) (vmapreduce f g ne)
+            let s = flatNode (vmapreduce f g sw) (vmapreduce f g se)
             match s with
                 | Empty -> n
                 | _ -> zip g n s
 
     /// Reduce all rows of rope with f.
-    let inline hreduce f rope = mapHreduce id f rope
+    let inline hreduce f rope = hmapreduce id f rope
 
     /// Reduce all columns of rope with f.
-    let inline vreduce f rope = mapVreduce id f rope
+    let inline vreduce f rope = vmapreduce id f rope
 
     /// Apply f to all values of the rope and reduce the resulting
     /// values to a single scalar using g.
@@ -523,7 +523,7 @@ module QuadRope =
         | Empty -> true
         | rope ->
             let xs = hfold (fun xs x -> x :: xs) (initAll (rows rope) 1 []) rope
-            get (mapVreduce (List.rev >> List.pairwise >> List.forall p) (&&) xs) 0 0
+            get (vmapreduce (List.rev >> List.pairwise >> List.forall p) (&&) xs) 0 0
 
     /// Checks that some relation p holds between each two adjacent
     /// elements in each column. This is slow and should not really be
@@ -532,7 +532,7 @@ module QuadRope =
         | Empty -> true
         | rope ->
             let xs = vfold (fun xs x -> x :: xs) (initAll 1 (cols rope) []) rope
-            get (mapHreduce (List.rev >> List.pairwise >> List.forall p) (&&) xs) 0 0
+            get (hmapreduce (List.rev >> List.pairwise >> List.forall p) (&&) xs) 0 0
 
     // Apply predicate p to all elements of rope and reduce the
     // elements in both dimension using logical and.

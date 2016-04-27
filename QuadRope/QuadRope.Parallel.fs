@@ -78,51 +78,51 @@ module Parallel =
 
     /// Apply f to all scalars in parallel and reduce the results
     /// row-wise using g.
-    let rec mapHreduce f g = function
+    let rec hmapreduce f g = function
         | Node (_, _, _, ne, nw, Empty, Empty) ->
-            let ne0, nw0 = par2 (fun () -> mapHreduce f g ne) (fun () -> mapHreduce f g nw)
+            let ne0, nw0 = par2 (fun () -> hmapreduce f g ne) (fun () -> hmapreduce f g nw)
             match ne0 with
                 | Empty -> nw0
                 | _ -> zip g nw0 ne0
         | Node (_, _, _, Empty, nw, sw, Empty) ->
-            let nw0, sw0 = par2 (fun () -> mapHreduce f g nw) (fun () -> mapHreduce f g sw)
+            let nw0, sw0 = par2 (fun () -> hmapreduce f g nw) (fun () -> hmapreduce f g sw)
             thinNode nw0 sw0
         | Node (_, _, _, ne, nw, sw, se) ->
-            let ne0, nw0, sw0, se0 = par4 (fun () -> mapHreduce f g ne)
-                                          (fun () -> mapHreduce f g nw)
-                                          (fun () -> mapHreduce f g sw)
-                                          (fun () -> mapHreduce f g se)
+            let ne0, nw0, sw0, se0 = par4 (fun () -> hmapreduce f g ne)
+                                          (fun () -> hmapreduce f g nw)
+                                          (fun () -> hmapreduce f g sw)
+                                          (fun () -> hmapreduce f g se)
             let w = thinNode nw0 sw0
             let e = thinNode ne0 se0
             zip g w e
-        | rope -> QuadRope.mapHreduce f g rope
+        | rope -> QuadRope.hmapreduce f g rope
 
     /// Apply f to all scalars in parallel and reduce the results
     /// column-wise using g.
-    let rec mapVreduce f g = function
+    let rec vmapreduce f g = function
         | Node (_, _, _, ne, nw, Empty, Empty) ->
-            let ne0, nw0 = par2 (fun () -> mapVreduce f g ne) (fun () -> mapVreduce f g nw)
+            let ne0, nw0 = par2 (fun () -> vmapreduce f g ne) (fun () -> vmapreduce f g nw)
             flatNode nw0 ne0
         | Node (_, _, _, Empty, nw, sw, Empty) ->
-            let nw0, sw0 = par2 (fun () -> mapVreduce f g nw) (fun () -> mapVreduce f g sw)
+            let nw0, sw0 = par2 (fun () -> vmapreduce f g nw) (fun () -> vmapreduce f g sw)
             match sw0 with
                 | Empty -> nw0
                 | _ -> zip g nw0 sw0
         | Node (_, _, _, ne, nw, sw, se) ->
-            let ne0, nw0, sw0, se0 = par4 (fun () -> mapHreduce f g ne)
-                                          (fun () -> mapHreduce f g nw)
-                                          (fun () -> mapHreduce f g sw)
-                                          (fun () -> mapHreduce f g se)
+            let ne0, nw0, sw0, se0 = par4 (fun () -> hmapreduce f g ne)
+                                          (fun () -> hmapreduce f g nw)
+                                          (fun () -> hmapreduce f g sw)
+                                          (fun () -> hmapreduce f g se)
             let n = flatNode nw0 ne0
             let s = flatNode sw0 se0
             zip g n s
-        | rope -> QuadRope.mapHreduce f g rope
+        | rope -> QuadRope.hmapreduce f g rope
 
     /// Reduce all rows of rope by f.
-    let inline hreduce f rope = mapHreduce id f rope
+    let inline hreduce f rope = hmapreduce id f rope
 
     /// Reduce all columns of rope by f.
-    let inline vreduce f rope = mapVreduce id f rope
+    let inline vreduce f rope = vmapreduce id f rope
 
     /// Apply f to all values of the rope and reduce the resulting
     /// values to a single scalar using g in parallel.

@@ -53,14 +53,14 @@ namespace RadTrees.QuadRope.Object
 
         public override IQuadRope<S> MapReduceHorizontally<S>(Func<T, S> f, Func<S, S, S> g)
         {
-            return new ParallelQuadRope<S>(QuadRope.Parallel.mapHreduce(Functions.toFunc1(f),
+            return new ParallelQuadRope<S>(QuadRope.Parallel.hmapreduce(Functions.toFunc1(f),
                                                                         Functions.toFunc2(g),
                                                                         rope));
         }
 
         public override IQuadRope<S> MapReduceVertically<S>(Func<T, S> f, Func<S, S, S> g)
         {
-            return new ParallelQuadRope<S>(QuadRope.Parallel.mapVreduce(Functions.toFunc1(f),
+            return new ParallelQuadRope<S>(QuadRope.Parallel.vmapreduce(Functions.toFunc1(f),
                                                                         Functions.toFunc2(g),
                                                                         rope));
         }

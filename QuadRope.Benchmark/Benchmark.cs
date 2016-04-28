@@ -7,6 +7,8 @@ using CommandLine;
 
 namespace RadTrees.Benchmark
 {
+    using Parallel = RadTrees.Parallel.QuadRopeModule.Parallel;
+
     class Benchmark
     {
         public static void Mark(string msg, Action f)
@@ -57,13 +59,13 @@ namespace RadTrees.Benchmark
 		return;
 	    }
 	    SetThreads(opts.Threads);
-	    Mark("QuadRope.Parallel.init", () => QuadRope.Parallel.init(opts.Size, opts.Size, times));
+	    Mark("QuadRope.Parallel.init", () => Parallel.init(opts.Size, opts.Size, times));
 	    var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-	    Mark("QuadRope.Parallel.map", () => QuadRope.Parallel.map(timesTwo, rope));
-	    Mark("QuadRope.Parallel.hreduce", () => QuadRope.Parallel.hreduce(plus, rope));
-	    Mark("QuadRope.Parallel.vreduce", () => QuadRope.Parallel.vreduce(plus, rope));
+	    Mark("QuadRope.Parallel.map", () => Parallel.map(timesTwo, rope));
+	    Mark("QuadRope.Parallel.hreduce", () => Parallel.hreduce(plus, rope));
+	    Mark("QuadRope.Parallel.vreduce", () => Parallel.vreduce(plus, rope));
 	    Mark("QuadRope.Parallel.zip", () =>
-		 QuadRope.Parallel.zip(times, rope, QuadRopeModule.hrev(QuadRopeModule.vrev(rope))));
+		 Parallel.zip(times, rope, QuadRopeModule.hrev(QuadRopeModule.vrev(rope))));
 	}
 
         public static void RunSequential(Options opts)

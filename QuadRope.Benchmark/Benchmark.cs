@@ -40,13 +40,20 @@ namespace RadTrees.Benchmark
 	public static FSharpFunc<int, int> getZeros =
 	    Utils.Functions.toFunc1<int, int>(i => 0);
 
+        public static T DoNTimes<T>(int n, Func<T, T, T> f, T t)
+        {
+            T acc = t;
+            for (int i = 0; i < n; ++i)
+                acc = f(acc, t);
+            return acc;
+        }
+
 	public static void RunBaseline(Options opts)
 	{
 	    Mark("QuadRope.init", () => QuadRopeModule.init(opts.Size, opts.Size, times));
 	    var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
 	    Mark("QuadRope.map", () => QuadRopeModule.map(timesTwo, rope));
-	    Mark("QuadRope.hreduce", () => QuadRopeModule.hreduce(plus, rope));
-	    Mark("QuadRope.vreduce", () => QuadRopeModule.vreduce(plus, rope));
+	    Mark("QuadRope.reduce", () => QuadRopeModule.hreduce(plus, rope));
 	    Mark("QuadRope.zip", () => QuadRopeModule.zip(times, rope,
 							  QuadRopeModule.hrev(QuadRopeModule.vrev(rope))));
 	}
@@ -77,15 +84,15 @@ namespace RadTrees.Benchmark
 		 () => QuadRopeModule.vfold(times, QuadRopeModule.initZeros(1, opts.Size), rope));
 	    Mark("QuadRope.hscan", () => QuadRopeModule.hscan(times, getZeros, rope));
 	    Mark("QuadRope.vscan", () => QuadRopeModule.vscan(times, getZeros, rope));
-	    Mark("QuadRope.hcat", () => QuadRopeModule.hcat(rope, rope));
+	    Mark("QuadRope.hcat", () => DoNTimes(100, (l, r) => QuadRopeModule.hcat(l, r), rope));
 	    Mark("QuadRope.hcat + hbalance",
-		 () => QuadRopeModule.hbalance(QuadRopeModule.hcat(rope, rope)));
+		 () => QuadRopeModule.hbalance(DoNTimes(100, (l, r) => QuadRopeModule.hcat(l, r), rope)));
 	    Mark("QuadRope.hcat + reallocate",
 		 () => QuadRopeModule.reallocate(QuadRopeModule.hcat(rope, rope)));
 
-	    Mark("QuadRope.vcat", () => QuadRopeModule.vcat(rope, rope));
+	    Mark("QuadRope.vcat", () => DoNTimes(100, (u, l) => QuadRopeModule.vcat(u, l), rope));
 	    Mark("QuadRope.vcat + vbalance",
-		 () => QuadRopeModule.vbalance(QuadRopeModule.vcat(rope, rope)));
+		 () => QuadRopeModule.vbalance(DoNTimes(100, (u, l) => QuadRopeModule.vcat(u, l), rope)));
 	    Mark("QuadRope.vcat + reallocate",
 		 () => QuadRopeModule.reallocate(QuadRopeModule.vcat(rope, rope)));
 
@@ -114,11 +121,10 @@ namespace RadTrees.Benchmark
 	    Mark("Array2D.vfold", () => Utils.Array2D.fold1(times, getZeros, arr));
 	    Mark("Array2D.hscan", () => Utils.Array2D.scan2(times, getZeros, arr));
 	    Mark("Array2D.vscan", () => Utils.Array2D.scan1(times, getZeros, arr));
-	    Mark("Array2D.hreduce", () => Utils.Array2D.hreduce(plus, arr));
-            Mark("Array2D.vreduce", () => Utils.Array2D.vreduce(plus, arr));
+	    Mark("Array2D.reduce", () => Utils.Array2D.reduce(plus, arr));
             Mark("Array2D.zip", () => Utils.Array2D.map2(plus, arr, arr));
-	    Mark("Array2D.hcat", () => Utils.Array2D.cat2(arr, arr));
-	    Mark("Array2D.vcat", () => Utils.Array2D.cat1(arr, arr));
+	    Mark("Array2D.hcat", () => DoNTimes(100, (l, r) => Utils.Array2D.cat2(l, r), arr));
+	    Mark("Array2D.vcat", () => DoNTimes(100, (l, r) => Utils.Array2D.cat1(l, r), arr));
 
 	    // Indexing.
 	    {

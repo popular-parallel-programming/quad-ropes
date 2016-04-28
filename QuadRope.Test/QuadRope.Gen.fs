@@ -3,6 +3,7 @@
 module Gen =
     open FsCheck
     open RadTrees
+    open Types
 
     let maxSize = 14
     let size = Gen.choose (1, maxSize)

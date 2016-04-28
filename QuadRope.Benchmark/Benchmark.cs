@@ -7,7 +7,6 @@ using CommandLine;
 
 namespace RadTrees.Benchmark
 {
-    using Parallel = RadTrees.Parallel.QuadRopeModule.Parallel;
 
     class Benchmark
     {
@@ -31,15 +30,15 @@ namespace RadTrees.Benchmark
 
 	// Functions of type int * int -> int.
 	public static FSharpFunc<int, FSharpFunc<int, int>> times =
-	    Functions.toFunc2<int, int, int>((i, j) => i * j);
+	    Utils.Functions.toFunc2<int, int, int>((i, j) => i * j);
 	public static FSharpFunc<int, FSharpFunc<int, int>> plus =
-	    Functions.toFunc2<int, int, int>((x, y) => x + y);
+	    Utils.Functions.toFunc2<int, int, int>((x, y) => x + y);
 
 	// Functions of type int -> int.
 	public static FSharpFunc<int, int> timesTwo =
-	    Functions.toFunc1<int, int>(i => 2 * i);
+	    Utils.Functions.toFunc1<int, int>(i => 2 * i);
 	public static FSharpFunc<int, int> getZeros =
-	    Functions.toFunc1<int, int>(i => 0);
+	    Utils.Functions.toFunc1<int, int>(i => 0);
 
 	public static void RunBaseline(Options opts)
 	{
@@ -59,13 +58,13 @@ namespace RadTrees.Benchmark
 		return;
 	    }
 	    SetThreads(opts.Threads);
-	    Mark("QuadRope.Parallel.init", () => Parallel.init(opts.Size, opts.Size, times));
+	    Mark("QuadRope.Parallel.init", () => Parallel.QuadRopeModule.init(opts.Size, opts.Size, times));
 	    var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-	    Mark("QuadRope.Parallel.map", () => Parallel.map(timesTwo, rope));
-	    Mark("QuadRope.Parallel.hreduce", () => Parallel.hreduce(plus, rope));
-	    Mark("QuadRope.Parallel.vreduce", () => Parallel.vreduce(plus, rope));
+	    Mark("QuadRope.Parallel.map", () => Parallel.QuadRopeModule.map(timesTwo, rope));
+	    Mark("QuadRope.Parallel.hreduce", () => Parallel.QuadRopeModule.hreduce(plus, rope));
+	    Mark("QuadRope.Parallel.vreduce", () => Parallel.QuadRopeModule.vreduce(plus, rope));
 	    Mark("QuadRope.Parallel.zip", () =>
-		 Parallel.zip(times, rope, QuadRopeModule.hrev(QuadRopeModule.vrev(rope))));
+		 Parallel.QuadRopeModule.zip(times, rope, QuadRopeModule.hrev(QuadRopeModule.vrev(rope))));
 	}
 
         public static void RunSequential(Options opts)
@@ -111,15 +110,15 @@ namespace RadTrees.Benchmark
             var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
 	    Mark("Array2D.init", () => Array2DModule.Initialize(opts.Size, opts.Size, times));
             Mark("Array2D.map", () => Array2DModule.Map(timesTwo, arr));
-	    Mark("Array2D.hfold", () => Array2D.fold2(times, getZeros, arr));
-	    Mark("Array2D.vfold", () => Array2D.fold1(times, getZeros, arr));
-	    Mark("Array2D.hscan", () => Array2D.scan2(times, getZeros, arr));
-	    Mark("Array2D.vscan", () => Array2D.scan1(times, getZeros, arr));
-	    Mark("Array2D.hreduce", () => Array2D.reduce2(plus, arr));
-	    Mark("Array2D.vreduce", () => Array2D.reduce1(plus, arr));
-            Mark("Array2D.zip", () => Array2D.map2(plus, arr, arr));
-	    Mark("Array2D.hcat", () => Array2D.cat2(arr, arr));
-	    Mark("Array2D.vcat", () => Array2D.cat1(arr, arr));
+	    Mark("Array2D.hfold", () => Utils.Array2D.fold2(times, getZeros, arr));
+	    Mark("Array2D.vfold", () => Utils.Array2D.fold1(times, getZeros, arr));
+	    Mark("Array2D.hscan", () => Utils.Array2D.scan2(times, getZeros, arr));
+	    Mark("Array2D.vscan", () => Utils.Array2D.scan1(times, getZeros, arr));
+	    Mark("Array2D.hreduce", () => Utils.Array2D.hreduce(plus, arr));
+            Mark("Array2D.vreduce", () => Utils.Array2D.vreduce(plus, arr));
+            Mark("Array2D.zip", () => Utils.Array2D.map2(plus, arr, arr));
+	    Mark("Array2D.hcat", () => Utils.Array2D.cat2(arr, arr));
+	    Mark("Array2D.vcat", () => Utils.Array2D.cat1(arr, arr));
 
 	    // Indexing.
 	    {
@@ -134,7 +133,7 @@ namespace RadTrees.Benchmark
 		Random rnd = new Random(368);
 		int i = rnd.Next(opts.Size);
 		int j = rnd.Next(opts.Size);
-		Mark("Array2D.set", () => Array2D.set(arr, i, j, 0));
+		Mark("Array2D.set", () => Utils.Array2D.set(arr, i, j, 0));
 	    }
         }
 

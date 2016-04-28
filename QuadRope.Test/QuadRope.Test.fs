@@ -2,8 +2,10 @@
 
 open FsCheck
 open RadTrees
+open Types
 
 module Utils =
+
     let makeIndices h w =
         seq { for i in 0..h - 1 do
               for j in 0..w - 1 ->

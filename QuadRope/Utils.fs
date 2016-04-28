@@ -1,4 +1,4 @@
-namespace RadTrees
+module RadTrees.Utils
 
 module Tasks =
     open System.Threading.Tasks

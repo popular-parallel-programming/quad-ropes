@@ -2,13 +2,14 @@
 
 using System;
 
+using static RadTrees.Types;
+using static RadTrees.Utils;
+
 namespace RadTrees.QuadRope.Object
 {
-    using Parallel = RadTrees.Parallel.QuadRopeModule.Parallel;
-
     public class ParallelQuadRope<T> : IQuadRope<T>
     {
-	private ParallelQuadRope(RadTrees.QuadRope<T> rope)
+	private ParallelQuadRope(QuadRope<T> rope)
 	    : base(rope)
 	{ }
 
@@ -50,41 +51,41 @@ namespace RadTrees.QuadRope.Object
 
         public override IQuadRope<S> Map<S>(Func<T, S> f)
         {
-            return new ParallelQuadRope<S>(Parallel.map(Functions.toFunc1(f), rope));
+            return new ParallelQuadRope<S>(Parallel.QuadRopeModule.map(Functions.toFunc1(f), rope));
         }
 
         public override IQuadRope<S> MapReduceHorizontally<S>(Func<T, S> f, Func<S, S, S> g)
         {
-            return new ParallelQuadRope<S>(Parallel.hmapreduce(Functions.toFunc1(f),
-                                                               Functions.toFunc2(g),
-                                                               rope));
+            return new ParallelQuadRope<S>(Parallel.QuadRopeModule.hmapreduce(Functions.toFunc1(f),
+                                                                              Functions.toFunc2(g),
+                                                                              rope));
         }
 
         public override IQuadRope<S> MapReduceVertically<S>(Func<T, S> f, Func<S, S, S> g)
         {
-            return new ParallelQuadRope<S>(Parallel.vmapreduce(Functions.toFunc1(f),
-                                                               Functions.toFunc2(g),
-                                                               rope));
+            return new ParallelQuadRope<S>(Parallel.QuadRopeModule.vmapreduce(Functions.toFunc1(f),
+                                                                              Functions.toFunc2(g),
+                                                                              rope));
         }
 
         public override IQuadRope<T> ReduceHorizontally(Func<T, T, T> f)
         {
-            return new ParallelQuadRope<T>(Parallel.hreduce(Functions.toFunc2(f), rope));
+            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.hreduce(Functions.toFunc2(f), rope));
         }
 
         public override IQuadRope<T> ReduceVertically(Func<T, T, T> f)
         {
-            return new ParallelQuadRope<T>(Parallel.vreduce(Functions.toFunc2(f), rope));
+            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.vreduce(Functions.toFunc2(f), rope));
         }
 
         public override IQuadRope<T> ReverseHorizontally()
         {
-            return new ParallelQuadRope<T>(Parallel.hrev(rope));
+            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.hrev(rope));
         }
 
         public override IQuadRope<T> ReverseVertically()
         {
-            return new ParallelQuadRope<T>(Parallel.vrev(rope));
+            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.vrev(rope));
         }
 
         public override IQuadRope<T> ScanHorizontally(Func<T, T, T> f, Func<int, T> states)
@@ -117,7 +118,7 @@ namespace RadTrees.QuadRope.Object
 
         public override IQuadRope<T> Transpose()
         {
-            return new ParallelQuadRope<T>(Parallel.transpose(rope));
+            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.transpose(rope));
         }
 
     }

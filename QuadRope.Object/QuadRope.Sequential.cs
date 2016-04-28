@@ -2,6 +2,9 @@
 
 using System;
 
+using static RadTrees.Types;
+using static RadTrees.Utils;
+
 namespace RadTrees.QuadRope.Object
 {
     public class SequentialQuadRope<T> : IQuadRope<T>

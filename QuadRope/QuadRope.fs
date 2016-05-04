@@ -90,7 +90,7 @@ let rec get root i j =
                     else
                         get se (i - rows ne) (j - cols sw) (* Either contains or ends in out-of-bounds. *)
 
-/// Update a tree location wihtout modifying the original tree.
+/// Update a tree location without modifying the original tree.
 let rec set root i j v =
     match root with
         | Empty -> failwith "Empty tree cannot contain values."

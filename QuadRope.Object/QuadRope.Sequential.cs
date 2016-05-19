@@ -48,6 +48,11 @@ namespace RadTrees.QuadRope.Object
             return new SequentialQuadRope<S>(QuadRopeModule.map(Functions.toFunc1(f), rope));
         }
 
+        public override S MapReduce<S>(Func<T, S> f, Func<S, S, S> g)
+        {
+            return QuadRopeModule.mapreduce(Functions.toFunc1(f), Functions.toFunc2(g), rope);
+        }
+
         public override IQuadRope<S> MapReduceHorizontally<S>(Func<T, S> f, Func<S, S, S> g)
         {
             return new SequentialQuadRope<S>(QuadRopeModule.hmapreduce(Functions.toFunc1(f),
@@ -60,6 +65,11 @@ namespace RadTrees.QuadRope.Object
             return new SequentialQuadRope<S>(QuadRopeModule.vmapreduce(Functions.toFunc1(f),
                                                                        Functions.toFunc2(g),
                                                                        rope));
+        }
+
+        public override T Reduce(Func<T, T, T> f)
+        {
+            return QuadRopeModule.reduce(Functions.toFunc2(f), rope);
         }
 
         public override IQuadRope<T> ReduceHorizontally(Func<T, T, T> f)

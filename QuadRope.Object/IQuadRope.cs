@@ -140,6 +140,12 @@ namespace RadTrees.QuadRope.Object
         public abstract IQuadRope<S> Map<S>(Func<T, S> f);
 
         /// <summary>
+        ///   Apply f to all elements of the rope and reduce all
+        ///   elements to a single scalar by applying g.
+        /// </summary>
+        public abstract S MapReduce<S>(Func<T, S> f, Func<S, S, S> g);
+
+        /// <summary>
         ///   Produce a new thin rope of a single column with f
         ///   applied to every value and the single rows reduced by g.
         /// </summary>
@@ -150,6 +156,11 @@ namespace RadTrees.QuadRope.Object
         ///   to every value and the single columns reduced by g.
         /// </summary>
         public abstract IQuadRope<S> MapReduceVertically<S>(Func<T, S> f, Func<S, S, S> g);
+
+        /// <summary>
+        ///   Reduce the rope to a single scalar value by applying f.
+        /// </summary>
+        public abstract T Reduce(Func<T, T, T> f);
 
         /// <summary>
         ///   Produce a new thin rope of a single column with the

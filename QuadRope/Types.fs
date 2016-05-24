@@ -9,3 +9,4 @@ type 'a QuadRope =
     | Empty
     | Leaf of 'a Array2DView
     | Node of int * int * int * 'a QuadRope * 'a QuadRope * 'a QuadRope * 'a QuadRope
+    | Slice of int * int * int * int * 'a QuadRope

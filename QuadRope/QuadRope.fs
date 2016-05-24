@@ -23,18 +23,21 @@ let rows = function
     | Empty -> 0
     | Leaf vs -> Array2DView.length1 vs
     | Node (_, h, _, _, _, _, _) -> h
+    | Slice (_, _, h, _, _) -> h
 
 /// Number of columns in a rectangular tree.
 let cols = function
     | Empty -> 0
     | Leaf vs -> Array2DView.length2 vs
     | Node (_, _, w, _, _, _, _) -> w
+    | Slice (_, _, _, w, _) -> w
 
 /// Depth of a rectangular tree.
-let depth = function
+let rec depth = function
     | Empty -> 0
     | Leaf _ -> 0
     | Node (d, _, _, _, _, _, _) -> d
+    | Slice (_, _, _, _, rope) -> depth rope
 
 let isEmpty = function
     | Empty -> true
@@ -88,7 +91,9 @@ let rec get root i j =
                     if withinRange sw i0 j then
                         get sw i0 j
                     else
-                        get se (i - rows ne) (j - cols sw) (* Either contains or ends in out-of-bounds. *)
+                        (* Either contains or ends in out-of-bounds. *)
+                        get se (i - rows ne) (j - cols sw)
+        | Slice (x, y, _, _, rope) -> get rope (i + x) (j + y)
 
 /// Update a tree location without modifying the original tree.
 let rec set root i j v =
@@ -108,6 +113,7 @@ let rec set root i j v =
                         Node (d, h, w, ne, nw, set sw i0 j v, se)
                     else
                         Node (d, h, w, ne, nw, sw, set se (i - rows ne) (j - cols sw) v)
+        | Slice (x, y, h, w, rope) -> Slice (x, y, h, w, set rope (i + x) (j + y) v)
 
 /// Write to a tree location destructively.
 let rec write root i j v =
@@ -127,21 +133,20 @@ let rec write root i j v =
                         write sw i0 j v
                     else
                         write se (i - rows ne) (j - cols sw) v
+        | Slice (x, y, _, _, rope) -> write rope (x + i) (y + j) v
 
 let private isBalanced d s =
     d <= 1 || d <= d_max && Fibonacci.fib (d + 1) <= s
 
 /// True if rope is balanced horizontally. False otherwise.
 let isBalancedH = function
-    | Empty
-    | Leaf _ -> true
     | Node (d, h, _, _, _, _, _) -> isBalanced d h
+    | _ -> true
 
 /// True if rope is balanced vertically. False otherwise.
 let isBalancedV = function
-    | Empty
-    | Leaf _ -> true
     | Node (d, _, w, _, _, _, _) -> isBalanced d w
+    | _ -> true
 
 let rec private reduceList f = function
     | []  -> Empty
@@ -190,8 +195,26 @@ let vbalance rope =
             | _ -> rope :: rs
     vbalance0 rope
 
+// Actually compute the "subrope" of a slice.
+let rec private doSlice root i j h w =
+    if rows root <= i || h <= 0 || cols root <= j || w <= 0 then
+        Empty
+    else if i <= 0 && rows root <= h && j <= 0 && cols root <= w then
+        root
+    else
+        match root with
+            | Empty -> Empty
+            | Leaf vs -> leaf (Array2DView.subArr i j h w vs)
+            | Node (_, _, _, ne, nw, sw, se) ->
+                let nw0 = doSlice nw i j h w
+                let ne0 = doSlice ne i (j - cols nw) h (w - cols nw0)
+                let sw0 = doSlice sw (i - rows nw) j (h - rows nw0) w
+                let se0 = doSlice se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
+                node ne0 nw0 sw0 se0
+            | Slice (x, y, h, w, rope) -> doSlice rope (x + i) (y + j) h w
+
 /// Concatenate two trees vertically.
-let vcat upper lower =
+let rec vcat upper lower =
     let canCopy us ls =
         Array2DView.length2 us = Array2DView.length2 ls
         && Array2DView.length1 us + Array2DView.length1 ls <= h_max
@@ -200,6 +223,13 @@ let vcat upper lower =
     match upper, lower with
         | Empty, _ -> lower
         | _, Empty -> upper
+
+        | Slice (i, j, h, w, rope), _ ->
+            vcat (doSlice rope i j h w) lower
+
+        | _, Slice (i, j, h, w, rope) ->
+            vcat upper (doSlice rope i j h w)
+
         | Leaf us, Leaf ls when canCopy us ls ->
             leaf (Array2DView.cat1 us ls)
 
@@ -230,7 +260,7 @@ let vcat upper lower =
         | _ -> thinNode upper lower
 
 /// Concatenate two trees horizontally.
-let hcat left right =
+let rec hcat left right =
     let canCopy ls rs =
         Array2DView.length1 ls = Array2DView.length1 rs
         && Array2DView.length2 ls + Array2DView.length2 rs <= w_max
@@ -239,6 +269,13 @@ let hcat left right =
     match left, right with
         | Empty, _ -> right
         | _, Empty -> left
+
+        | Slice (i, j, h, w, rope), _ ->
+            hcat (doSlice rope i j h w) right
+
+        | _, Slice (i, j, h, w, rope) ->
+            hcat left (doSlice rope i j h w)
+
         | Leaf ls, Leaf rs when canCopy ls rs ->
             leaf (Array2DView.cat2 ls rs)
 
@@ -270,21 +307,15 @@ let hcat left right =
 
 /// Compute the "subrope" starting from indexes i, j taking h and w
 /// elements in vertical and horizontal direction.
-let rec slice root i j h w =
-    if rows root <= i || h <= 0 || cols root <= j || w <= 0 then
-        Empty
-    else if i <= 0 && rows root <= h && j <= 0 && cols root <= w then
-        root
-    else
-        match root with
-            | Empty -> Empty
-            | Leaf vs -> leaf (Array2DView.subArr i j h w vs)
-            | Node (_, _, _, ne, nw, sw, se) ->
-                let nw0 = slice nw i j h w
-                let ne0 = slice ne i (j - cols nw) h (w - cols nw0)
-                let sw0 = slice sw (i - rows nw) j (h - rows nw0) w
-                let se0 = slice se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
-                node ne0 nw0 sw0 se0
+let slice root i j h w =
+    match root with
+        | Slice (x, y, h0, w0, rope) ->
+            Slice ((min (x + (max 0 i)) x),
+                   (min (y + (max 0 j)) y),
+                   (min h0 h),
+                   (min w0 w),
+                   rope)
+        | _ -> Slice (i, j, (min h (rows root - i)), (min w (cols root - j)), root)
 
 /// Split rope vertically from row i, taking h rows.
 let inline vsplit rope i h =
@@ -310,6 +341,7 @@ let rec hrev = function
         Node (d, h, w, Empty, hrev nw, hrev sw, Empty)
     | Node (d, h, w, ne, nw, sw, se) ->
         Node (d, h, w, hrev nw, hrev ne, hrev se, hrev sw)
+    | Slice (i, j, h, w, rope) -> Slice (i, j, h, w, hrev rope)
 
 /// Reverse rope vertically.
 let rec vrev = function
@@ -319,6 +351,7 @@ let rec vrev = function
         Node (d, h, w, vrev ne, vrev nw, Empty, Empty)
     | Node (d, h, w, ne, nw, sw, se) ->
         Node (d, h, w, vrev se, vrev sw, vrev nw, vrev ne)
+    | Slice (i, j, h, w, rope) -> Slice (i, j, h, w, vrev rope)
 
 /// Generate a new tree without any intermediate values.
 let init h w f =
@@ -372,6 +405,7 @@ let rec map f root =
                   map f nw,
                   map f sw,
                   map f se)
+        | Slice (i, j, h, w, rope) -> map f (doSlice rope i j h w)
 
 let toCols = function
     | Empty -> Seq.empty
@@ -398,6 +432,7 @@ let hfold f states rope =
         | Empty -> states
         | Leaf vs -> leaf (Array2DView.fold2 f (fun i -> get states i 0) vs)
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
+        | Slice (i, j, h, w, rope) -> fold1 states (doSlice rope i j h w)
     and fold2 states n s =
         let nstates, sstates = vsplit2 states (rows n)
         thinNode (fold1 nstates n) (fold1 sstates s)
@@ -412,6 +447,7 @@ let vfold f states rope =
         | Empty -> states
         | Leaf vs -> leaf (Array2DView.fold1 f (get states 0) vs)
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
+        | Slice (i, j, h, w, rope) -> fold1 states (doSlice rope i j h w)
     and fold2 states w e =
         let wstates, estates = hsplit2 states (cols w)
         flatNode (fold1 wstates w) (fold1 estates e)
@@ -429,6 +465,7 @@ let zip f lope rope =
                  let sw0 = zip0 f sw (slice rope (rows nw) 0 (rows sw) (cols sw))
                  let se0 = zip0 f se (slice rope (rows ne) (cols sw) (rows se) (cols se))
                  Node (d, h, w, ne0, nw0, sw0, se0)
+             | Slice (i, j, h, w, rope) -> doSlice rope i j h w
     if cols lope <> cols rope || rows lope <> rows rope then
         failwith "ropes must have the same shape"
     zip0 f lope rope
@@ -444,6 +481,7 @@ let rec hmapreduce f g = function
         match e with
             | Empty -> w
             | _ -> zip g w e
+    | Slice (i, j, h, w, rope) -> hmapreduce f g (doSlice rope i j h w)
 
 // Map f to every element of the rope and reduce row-wise with g.
 let rec vmapreduce f g = function
@@ -456,6 +494,7 @@ let rec vmapreduce f g = function
         match s with
             | Empty -> n
             | _ -> zip g n s
+    | Slice (i, j, h, w, rope) -> vmapreduce f g (doSlice rope i j h w)
 
 /// Reduce all rows of rope with f.
 let inline hreduce f rope = hmapreduce id f rope
@@ -474,6 +513,7 @@ let rec mapreduce f g = function
         g (mapreduce f g nw) (mapreduce f g sw)
     | Node (_, _, _, ne, nw, sw, se) ->
         g (g (mapreduce f g ne) (mapreduce f g nw)) (g (mapreduce f g sw) (mapreduce f g se))
+    | Slice (i, j, h, w, rope) -> mapreduce f g (doSlice rope i j h w)
 
 /// Reduce all values of the rope to a single scalar.
 let inline reduce f rope = mapreduce id f rope
@@ -494,6 +534,7 @@ let rec hscan f states = function
         let ne' = hscan f estate ne
         let se' = hscan f (offset estate (rows ne')) se
         node ne' nw' sw' se'
+    | Slice (i, j, h, w, rope) -> hscan f states (doSlice rope i j h w)
 
 // Compute the column-wise prefix sum of the rope for f starting
 // with states.
@@ -508,6 +549,7 @@ let rec vscan f states = function
         let sw' = vscan f sstate sw
         let se' = vscan f (offset sstate (cols sw')) se
         node ne' nw' sw' se'
+    | Slice (i, j, h, w, rope) -> vscan f states (doSlice rope i j h w)
 
 /// Checks that some relation p holds between each two adjacent
 /// elements in each row. This is slow and should not really be
@@ -564,6 +606,8 @@ let rec transpose = function
     | Leaf vs -> leaf (Array2DView.transpose vs)
     | Node (_, _, _, ne, nw, sw, se) ->
         node (transpose sw) (transpose nw) (transpose ne) (transpose se)
+    | Slice (i, j, h, w, rope) -> transpose (doSlice rope i j h w)
+
 
 /// Produce a string with the tikz code for printing the rope as a
 /// box diagram. This is useful for illustrating algorithms on
@@ -589,5 +633,6 @@ let tikzify h w rope =
                   yield! tikz (i + h0) (j + w0) h0 w0 ne
                   yield line i (j + w0) (i + h) (j + w0)
                   yield line (i + h0) j (i + h0) (j + w) }
+        | Slice (i0, j0, h0, w0, rope) -> tikz i j h w (doSlice rope i0 j0 h0 w0)
     let cmds = List.ofSeq (seq { yield! tikz 0.0 0.0 h w rope; yield rect 0.0 0.0 h w });
     printfn "%s" (String.concat "\n" cmds)

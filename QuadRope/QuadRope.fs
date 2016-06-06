@@ -315,8 +315,10 @@ let rec hcat left right =
 /// Compute the "subrope" starting from indexes i, j taking h and w
 /// elements in vertical and horizontal direction.
 let slice root i j h w =
-    if h <= 0 || w <= 0 || h <= i || w <= j then
+    if rows root <= i || cols root <= j || h <= 0 || w <= 0 then
         Empty
+    else if i <= 0 && rows root <= h && j <= 0 && cols root <= w then
+        root
     else
         match root with
             | Slice (_, _, h0, w0, _) when h0 <= i || w0 <= j -> Empty

@@ -233,7 +233,7 @@ let rec vcat upper lower =
     let canCopy us ls =
         Array2DView.length2 us = Array2DView.length2 ls
         && Array2DView.length1 us + Array2DView.length1 ls <= h_max
-    if cols upper <> cols lower then
+    if (not ((isEmpty upper) || (isEmpty lower))) && cols upper <> cols lower then
         failwith (sprintf "Trees must be of same width! u = %A\nl = %A" upper lower)
     match upper, lower with
         | Empty, _ -> lower
@@ -275,7 +275,7 @@ let rec hcat left right =
     let canCopy ls rs =
         Array2DView.length1 ls = Array2DView.length1 rs
         && Array2DView.length2 ls + Array2DView.length2 rs <= w_max
-    if rows left <> rows right then
+    if (not ((isEmpty left) || (isEmpty right))) && rows left <> rows right then
         failwith (sprintf "Trees must be of same height! l = %A\nr = %A" left right)
     match left, right with
         | Empty, _ -> right

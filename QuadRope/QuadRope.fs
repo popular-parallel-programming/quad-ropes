@@ -600,7 +600,7 @@ let rec vfilter p = function
     | _ -> failwith "width must be exactly 1"
 
 // Transpose the quad rope. This is equal to swapping indices,
-// such that get rope i j = get rope j i.
+// such that get rope i j = get (reverse rope) j i.
 let rec transpose = function
     | Empty -> Empty
     | Leaf vs -> leaf (Array2DView.transpose vs)

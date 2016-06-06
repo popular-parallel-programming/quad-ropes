@@ -25,6 +25,7 @@ module Utils =
         | Node (_, _, _, _, _, Empty, _) -> false
         | Node (_, _, _, ne, nw, sw, se) ->
             maintainsTight ne && maintainsTight nw && maintainsTight sw && maintainsTight se
+        | Slice _ as rope -> maintainsTight rope
 
     let access rope (i, j) =
         try

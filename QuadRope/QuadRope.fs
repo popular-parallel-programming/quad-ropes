@@ -608,6 +608,9 @@ let rec transpose = function
         node (transpose sw) (transpose nw) (transpose ne) (transpose se)
     | Slice (i, j, h, w, rope) -> transpose (doSlice rope i j h w)
 
+// Straightforward conversion into a 2D array.
+let toArray rope =
+    Array2D.init (rows rope) (cols rope) (get rope)
 
 /// Produce a string with the tikz code for printing the rope as a
 /// box diagram. This is useful for illustrating algorithms on

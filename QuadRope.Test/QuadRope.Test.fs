@@ -117,6 +117,14 @@ module QuadRopeTest =
             lazy (let b = QuadRope.slice a i j h w
                   Seq.forall (access b) (makeIndicesFrom b))
 
+    let ``slices never nest`` (a: int QuadRope) =
+       (* Using generated limits for slices results in very few run tests, this is more reliable. *)
+       let b, _ = QuadRope.vsplit2 a (QuadRope.rows a / 2)
+       let c, _ = QuadRope.vsplit2 b (QuadRope.rows b / 2)
+       match c with
+           | Slice (_, _, _, _, Slice _) -> false
+           | _ -> true
+
     let ``hslice produces ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
         w <= QuadRope.cols a ==>
         lazy (let b = QuadRope.slice a 0 0 (QuadRope.rows a) w

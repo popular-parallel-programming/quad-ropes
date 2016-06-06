@@ -176,10 +176,10 @@ module QuadRopeTest =
         Seq.forall check (makeIndices h w)
 
     let ``hreduce produces thin ropes`` (a : int QuadRope) (f : int -> int -> int) =
-        QuadRope.cols (QuadRope.hreduce f a) = 1
+        (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.cols (QuadRope.hreduce f a) = 1)
 
     let ``vreduce produces flat ropes`` (a : int QuadRope) (f : int -> int -> int) =
-        QuadRope.rows (QuadRope.vreduce f a) = 1
+        (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.rows (QuadRope.vreduce f a) = 1)
 
     let ``map + reduce equals mapreduce`` (a : int QuadRope) (f : int -> int) (g : int -> int -> int) =
         QuadRope.hmapreduce f g a = QuadRope.hreduce g (QuadRope.map f a) &&

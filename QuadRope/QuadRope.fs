@@ -66,9 +66,11 @@ let rec node ne nw sw se =
             Node (d, h, w, ne, nw, sw, se)
 
 let inline flatNode w e =
+    assert (match w, e with | (_, Slice _) | (Slice _, _) -> false | _ -> true)
     node e w Empty Empty (* NB: Arguments switched. *)
 
 let inline thinNode n s =
+    assert (match n, s with | (_, Slice _) | (Slice _, _) -> false | _ -> true)
     node Empty n s Empty
 
 let inline private withinRange root i j =

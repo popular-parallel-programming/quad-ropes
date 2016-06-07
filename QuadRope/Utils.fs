@@ -106,13 +106,13 @@ module Array2D =
     let inline rev1 arr = call revBased1 arr
     let inline rev2 arr = call revBased2 arr
 
-    /// Fold each column of a 2D array, calling state with each row to get the state.
+    /// Fold each column of a 2D array, calling state with each column to get the state.
     let inline foldBased1 f state i0 j0 h w (arr : _ [,]) =
         let inline fold _ j =
             Seq.fold f (state j) (seq { for i in i0 .. i0 + h - 1 -> arr.[i, j0 + j] })
         Array2D.init 1 w fold
 
-    /// Fold each column of a 2D array, calling state with each column to get the state.
+    /// Fold each row of a 2D array, calling state with each row to get the state.
     let inline foldBased2 f state i0 j0 h w (arr : _ [,]) =
         let inline fold i _ =
             Seq.fold f (state i) (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] })

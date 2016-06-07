@@ -127,6 +127,33 @@ module QuadRopeTest =
            | Slice (_, _, _, _, Slice _) -> false
            | _ -> true
 
+    let ``slice computes correct indices`` (a : int QuadRope)
+                                           (NonNegativeInt i)
+                                           (NonNegativeInt j)
+                                           (NonNegativeInt h)
+                                           (NonNegativeInt w) =
+        let b = QuadRope.slice a i j h w
+        if QuadRope.rows a <= i || h = 0 || QuadRope.cols a <= j || w = 0 then
+            QuadRope.isEmpty b
+        else
+            QuadRope.rows b = min (QuadRope.rows a - i) h &&
+            QuadRope.cols b = min (QuadRope.cols a - j) w
+
+    let ``recursive slice computes correct indices`` (a : int QuadRope) (d : NonNegativeInt) =
+        let i = 1
+        let j = 1
+        let h = QuadRope.rows a - 1
+        let w = QuadRope.cols a - 1
+        let b = QuadRope.slice a i j h w
+        QuadRope.rows (QuadRope.slice b (i + d.Get) j h w) <= QuadRope.rows b &&
+        QuadRope.cols (QuadRope.slice b i (j + d.Get) h w) <= QuadRope.cols b &&
+        QuadRope.rows (QuadRope.slice b (i - d.Get) j h w) <= QuadRope.rows b &&
+        QuadRope.cols (QuadRope.slice b i (j - d.Get) h w) <= QuadRope.cols b &&
+        QuadRope.rows (QuadRope.slice b i j (h + d.Get) w) <= QuadRope.rows b &&
+        QuadRope.cols (QuadRope.slice b i j h (w + d.Get)) <= QuadRope.cols b &&
+        QuadRope.rows (QuadRope.slice b i j (h - d.Get) w) <= QuadRope.rows b &&
+        QuadRope.cols (QuadRope.slice b i j h (w - d.Get)) <= QuadRope.cols b
+
     let ``hslice produces ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
         w <= QuadRope.cols a ==>
         lazy (let b = QuadRope.slice a 0 0 (QuadRope.rows a) w

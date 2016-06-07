@@ -475,7 +475,7 @@ let zip f lope rope =
                  let sw0 = zip0 f sw (slice rope (rows nw) 0 (rows sw) (cols sw))
                  let se0 = zip0 f se (slice rope (rows ne) (cols sw) (rows se) (cols se))
                  Node (d, h, w, ne0, nw0, sw0, se0)
-             | Slice _ -> Slicing.slice lope
+             | Slice _ -> zip0 f (Slicing.slice lope) rope
     if cols lope <> cols rope || rows lope <> rows rope then
         failwith "ropes must have the same shape"
     zip0 f lope rope

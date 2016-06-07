@@ -74,8 +74,13 @@ let inline thinNode n s =
 let inline private withinRange root i j =
     0 <= i && i < rows root && 0 <= j && j < cols root
 
+let inline private checkBounds rope i j =
+    if rows rope <= i || cols rope <= j then
+        failwith "Index out of bounds."
+
 /// Get the value of a location in the tree.
 let rec get root i j =
+    checkBounds root i j
     match root with
         | Empty -> failwith "Empty tree cannot contain values."
         | Leaf vs -> Array2DView.get vs i j
@@ -91,12 +96,12 @@ let rec get root i j =
                     if withinRange sw i0 j then
                         get sw i0 j
                     else
-                        (* Either contains or ends in out-of-bounds. *)
                         get se (i - rows ne) (j - cols sw)
         | Slice (x, y, _, _, rope) -> get rope (i + x) (j + y)
 
 /// Update a tree location without modifying the original tree.
 let rec set root i j v =
+    checkBounds root i j
     match root with
         | Empty -> failwith "Empty tree cannot contain values."
         | Leaf vs -> Leaf (RadTrees.Array2DView.set vs i j v)
@@ -117,6 +122,7 @@ let rec set root i j v =
 
 /// Write to a tree location destructively.
 let rec write root i j v =
+    checkBounds root i j
     match root with
         | Empty -> failwith "Empty tree cannot contain values."
         | Leaf vs -> Array2DView.write vs i j v

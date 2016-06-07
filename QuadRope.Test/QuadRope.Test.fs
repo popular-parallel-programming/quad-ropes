@@ -114,10 +114,10 @@ module QuadRopeTest =
                                                             (NonNegativeInt h)
                                                             (NonNegativeInt w) =
         (i < QuadRope.rows a && i < h && j < QuadRope.cols a && j < w) ==>
-            lazy (let b = QuadRope.slice a i j h w
-                  Seq.forall
-                      (fun (i0, j0) -> QuadRope.get b i0 j0 = QuadRope.get a (i + i0) (j + j0))
-                      (makeIndicesFrom b))
+        lazy (let b = QuadRope.slice a i j h w
+              Seq.forall
+                (fun (i0, j0) -> QuadRope.get b i0 j0 = QuadRope.get a (i + i0) (j + j0))
+                (makeIndicesFrom b))
 
     let ``slices never nest`` (a: int QuadRope) =
        (* Using generated limits for slices results in very few run tests, this is more reliable. *)

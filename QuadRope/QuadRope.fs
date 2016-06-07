@@ -321,13 +321,10 @@ let slice root i j h w =
         root
     else
         match root with
-            | Slice (_, _, h0, w0, _) when h0 <= i || w0 <= j -> Empty
             | Slice (x, y, h0, w0, rope) ->
-                Slice ((min (x + (max 0 i)) x),
-                       (min (y + (max 0 j)) y),
-                       (min h0 h),
-                       (min w0 w),
-                       rope)
+                let i0 = min (x + (max 0 i)) x
+                let j0 = min (y + (max 0 j)) y
+                Slice (i0, j0, min (h0 + i0) h, min (w0 + j0) w, rope)
             | _ -> Slice (i, j, (min h (rows root - i)), (min w (cols root - j)), root)
 
 /// Split rope vertically from row i, taking h rows.

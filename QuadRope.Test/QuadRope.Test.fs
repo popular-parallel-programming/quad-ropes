@@ -206,12 +206,14 @@ module QuadRopeTest =
     let ``hfold maintains order`` (a : int QuadRope) =
         let empties = QuadRope.initAll (QuadRope.rows a) 1 []
         let b = QuadRope.hfold snoc empties a
-        (Seq.map (Seq.toList >> List.rev) (QuadRope.toRows a) |> List.ofSeq) = (Seq.concat (QuadRope.toRows b) |> List.ofSeq)
+        (Seq.map (Seq.toList >> List.rev) (QuadRope.toRows a) |> List.ofSeq)
+            = (Seq.concat (QuadRope.toRows b) |> List.ofSeq)
 
     let ``vfold maintains order`` (a : int QuadRope) =
         let empties = QuadRope.initAll 1 (QuadRope.cols a) []
         let b = QuadRope.vfold snoc empties a
-        (Seq.map (Seq.toList >> List.rev) (QuadRope.toCols a) |> List.ofSeq) = (Seq.concat (QuadRope.toCols b) |> List.ofSeq)
+        (Seq.map (Seq.toList >> List.rev) (QuadRope.toCols a) |> List.ofSeq)
+            = (Seq.concat (QuadRope.toCols b) |> List.ofSeq)
 
     let ``last of hscan equals hfold`` (a : int QuadRope) =
         let b = QuadRope.map List.singleton a

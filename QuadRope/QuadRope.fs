@@ -199,19 +199,26 @@ module private Slicing =
 
     // Auxiliary function to recursively slice a tree structure.
     let rec private slice0 rope i j h w =
-        match rope with
-            | Empty -> Empty
-            | Leaf vs -> leaf (Array2DView.subArr i j h w vs)
-            | Node (_, _, _, ne, nw, sw, se) ->
-                let nw0 = slice0 nw i j h w
-                let ne0 = slice0 ne i (j - cols nw) h (w - cols nw0)
-                let sw0 = slice0 sw (i - rows nw) j (h - rows nw0) w
-                let se0 = slice0 se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
-                node ne0 nw0 sw0 se0
-            | Slice (x, y, h, w, rope) -> slice0 rope (x + i) (y + j) h w
+        if i <= 0 && j <= 0 && rows rope <= h && cols rope <= w then
+            rope
+        else if rows rope <= i || cols rope <= j || h <= 0 || w <= 0 then
+            Empty
+        else
+            match rope with
+                | Empty -> Empty
+                | Leaf vs -> leaf (Array2DView.subArr i j h w vs)
+                | Node (_, _, _, ne, nw, sw, se) ->
+                    let nw0 = slice0 nw i j h w
+                    let ne0 = slice0 ne i (j - cols nw) h (w - cols nw0)
+                    let sw0 = slice0 sw (i - rows nw) j (h - rows nw0) w
+                    let se0 = slice0 se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
+                    node ne0 nw0 sw0 se0
+                | Slice (x, y, h, w, rope) -> slice0 rope (x + i) (y + j) h w
 
     // Actually compute a slice.
-    let inline slice rope = slice0 rope 0 0 (rows rope) (cols rope)
+    let slice = function
+        | Slice (i, j, h, w, rope) -> slice0 rope i j h w
+        | rope -> slice0 rope 0 0 (rows rope) (cols rope)
 
     // Compute a slice and map in the same traversal.
     let rec private map0 f rope i j h w =

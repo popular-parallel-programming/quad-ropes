@@ -10,23 +10,29 @@ let inline private all arr =
 let inline private view i j h w arr =
     View (i, j, h, w, arr)
 
+// Compute a new array using some function f that operates on 2D
+// arrays, e.g. mapBased.
 let inline private toArray f = function
     | All arr ->
         all (f 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr)
     | View (i0, j0, h, w, arr) ->
         all (f i0 j0 h w arr)
 
+// Compute a new single scalar value from an array using some function
+// f that operates on 2D arrays, e.g. reduceBased.
 let inline private toScalar f = function
     | All arr ->
         f 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
     | View (i0, j0, h, w, arr) ->
         f i0 j0 h w arr
 
+// Compute the number of rows of the array.
 let inline length1 varr =
     match varr with
         | All arr -> Array2D.length1 arr
         | View (_, _, h, _, _) -> h
 
+// Compute the number of columns of the array.
 let inline length2 varr =
     match varr with
         | All arr -> Array2D.length2 arr
@@ -38,11 +44,13 @@ let inline init h w f =
 let inline initZeros h w =
     init h w (fun _ _ -> 0)
 
+// Index into an array.
 let inline get varr i j =
     match varr with
         | All arr -> arr.[i, j]
         | View (i0, j0, _, _, arr) -> arr.[i0 + i, j0 + j]
 
+// Return a new array with v at i, j.
 let inline set varr i j v =
     match varr with
         | All arr ->
@@ -54,6 +62,7 @@ let inline set varr i j v =
             arr'.[i, j] <- v
             view i0 j0 h w arr'
 
+// Write to i, j in-place.
 let inline write varr i j v =
     match varr with
         | All arr ->
@@ -62,6 +71,7 @@ let inline write varr i j v =
         | _ ->
             set varr i j v
 
+// Compute a slice of the given array.
 let inline subArr i j h w varr =
     if i <= 0 && j <= 0 && length1 varr <= h && length2 varr <= w then
         varr
@@ -76,10 +86,12 @@ let inline subArr i j h w varr =
             | View (i0, j0, h0, w0, arr) ->
                 view (min (i0 + (max 0 i)) i0) (min j0 (j0 + (max 0 j))) (min h0 h) (min w0 w) arr
 
+// Apply a function f to all elements of the array.
 let inline map f = function
     | All arr -> all (Array2D.map f arr)
     | View (i0, j0, h, w, arr) -> all (Array2D.init h w (fun i j -> f arr.[i0 + i, j0 + j]))
 
+// Apply a function f to all elements of the array and their indices.
 let inline mapi f = function
     | All arr -> all (Array2D.mapi f arr)
     | View (i0, j0, h, w, arr) -> all (Array2D.init h w (fun i j -> f i j arr.[i0 + i, j0 + j]))
@@ -89,6 +101,7 @@ let inline copy rope = map id rope
 let inline rev1 varr = toArray Array2D.revBased1 varr
 let inline rev2 varr = toArray Array2D.revBased2 varr
 
+// Concatenate two arrays vertically.
 let inline cat1 upper lower =
     if length2 upper <> length2 lower then failwith "length2 must be equal!"
     let l1 = length1 upper + length1 lower
@@ -96,6 +109,7 @@ let inline cat1 upper lower =
     let l1u = length1 upper
     all (Array2D.init l1 l2 (fun i j -> if i < l1u then get upper i j else get lower (i - l1u) j))
 
+// Concatenate two arrays horizontally.
 let inline cat2 left right =
     if length1 left <> length1 right then failwith "length1 must be equal!"
     let l1 = length1 left

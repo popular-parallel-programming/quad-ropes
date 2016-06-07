@@ -205,7 +205,7 @@ let vbalance rope =
 
 module private Slicing =
 
-    // Auxiliary function to recursively slice a tree structure.
+    /// Auxiliary function to recursively slice a tree structure.
     let rec private slice0 rope i j h w =
         if i <= 0 && j <= 0 && rows rope <= h && cols rope <= w then
             rope
@@ -223,12 +223,12 @@ module private Slicing =
                     node ne0 nw0 sw0 se0
                 | Slice (x, y, h, w, rope) -> slice0 rope (x + i) (y + j) h w
 
-    // Actually compute a slice.
+    /// Actually compute a slice.
     let slice = function
         | Slice (i, j, h, w, rope) -> slice0 rope i j h w
         | rope -> slice0 rope 0 0 (rows rope) (cols rope)
 
-    // Compute a slice and map in the same traversal.
+    /// Compute a slice and map in the same traversal.
     let rec private map0 f rope i j h w =
         match rope with
             | Empty -> Empty
@@ -241,6 +241,7 @@ module private Slicing =
                 node ne0 nw0 sw0 se0
             | Slice (x, y, h, w, rope) -> map0 f rope (x + i) (y + j) h w
 
+    /// Map over a slice while computing it.
     let inline map f rope = map0 f rope 0 0 (rows rope) (cols rope)
 
 /// Concatenate two trees vertically.

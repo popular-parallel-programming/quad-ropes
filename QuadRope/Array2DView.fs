@@ -84,7 +84,11 @@ let inline subArr i j h w varr =
                 let w0 = min (Array2D.length2 arr - j0) w
                 view i0 j0 h0 w0 arr
             | View (i0, j0, h0, w0, arr) ->
-                view (min (i0 + (max 0 i)) i0) (min j0 (j0 + (max 0 j))) (min h0 h) (min w0 w) arr
+                let i0 = min (i0 + (max 0 i)) i0
+                let j0 = min (j0 + (max 0 j)) j0
+                let h0 = min h0 h
+                let w0 = min w0 w
+                view i0 j0 h0 w0 arr
 
 // Apply a function f to all elements of the array.
 let inline map f = function

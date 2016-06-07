@@ -480,7 +480,7 @@ let zip f lope rope =
         failwith "ropes must have the same shape"
     zip0 f lope rope
 
-// Map f to every element of the rope and reduce column-wise with g.
+// Map f to every element of the rope and reduce rows with g.
 let rec hmapreduce f g = function
     | Empty -> Empty
     | Leaf vs -> leaf (Array2DView.mapreduce2 f g vs)
@@ -493,7 +493,7 @@ let rec hmapreduce f g = function
             | _ -> zip g w e
     | Slice _ as rope -> hmapreduce f g (Slicing.slice rope)
 
-// Map f to every element of the rope and reduce row-wise with g.
+// Map f to every element of the rope and reduce columns with g.
 let rec vmapreduce f g = function
     | Empty -> Empty
     | Leaf vs -> leaf (Array2DView.mapreduce1 f g vs)

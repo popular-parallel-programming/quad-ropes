@@ -501,7 +501,7 @@ let zip f lope rope =
         failwith "ropes must have the same shape"
     zip0 f lope rope
 
-// Map f to every element of the rope and reduce rows with g.
+/// Map f to every element of the rope and reduce rows with g.
 let rec hmapreduce f g = function
     | Empty -> Empty
     | Leaf vs -> leaf (Array2DView.mapreduce2 f g vs)
@@ -514,7 +514,7 @@ let rec hmapreduce f g = function
             | _ -> zip g w e
     | Slice _ as rope -> hmapreduce f g (Slicing.slice rope)
 
-// Map f to every element of the rope and reduce columns with g.
+/// Map f to every element of the rope and reduce columns with g.
 let rec vmapreduce f g = function
     | Empty -> Empty
     | Leaf vs -> leaf (Array2DView.mapreduce1 f g vs)
@@ -552,8 +552,8 @@ let inline reduce f rope = mapreduce id f rope
 let inline private offset f x =
     ((+) x) >> f
 
-// Compute the row-wise prefix sum of the rope for f starting with
-// states.
+/// Compute the row-wise prefix sum of the rope for f starting with
+/// states.
 let rec hscan f states = function
     | Empty -> Empty
     | Leaf vs -> Leaf (Array2DView.scan2 f states vs)
@@ -567,8 +567,8 @@ let rec hscan f states = function
         node ne' nw' sw' se'
     | Slice _ as rope -> hscan f states (Slicing.slice rope)
 
-// Compute the column-wise prefix sum of the rope for f starting
-// with states.
+/// Compute the column-wise prefix sum of the rope for f starting
+/// with states.
 let rec vscan f states = function
     | Empty -> Empty
     | Leaf vs -> Leaf (Array2DView.scan1 f states vs)
@@ -600,20 +600,20 @@ let forallCols p = function
         let xs = vfold (fun xs x -> x :: xs) (initAll 1 (cols rope) []) rope
         get (hmapreduce (List.rev >> List.pairwise >> List.forall p) (&&) xs) 0 0
 
-// Apply predicate p to all elements of rope and reduce the
-// elements in both dimension using logical and.
+/// Apply predicate p to all elements of rope and reduce the
+/// elements in both dimension using logical and.
 let forall p = function
     | Empty -> true
     | rope -> mapreduce p (&&) rope
 
-// Apply predicate p to all elements of rope and reduce the
-// elements in both dimensions using logical or.
+/// Apply predicate p to all elements of rope and reduce the
+/// elements in both dimensions using logical or.
 let exists p = function
     | Empty -> false
     | rope -> mapreduce p (||) rope
 
-// Remove all elements from rope for which p does not hold. Input
-// rope must be of height 1.
+/// Remove all elements from rope for which p does not hold. Input
+/// rope must be of height 1.
 let rec hfilter p = function
     | Empty -> Empty
     | Leaf vs -> leaf (Array2DView.filter2 p vs)
@@ -621,8 +621,8 @@ let rec hfilter p = function
         flatNode (hfilter p nw) (hfilter p ne)
     | _ -> failwith "hight must be exactly 1"
 
-// Remove all elements from rope for which p does not hold. Input
-// rope must be of width 1.
+/// Remove all elements from rope for which p does not hold. Input
+/// rope must be of width 1.
 let rec vfilter p = function
     | Empty -> Empty
     | Leaf vs -> leaf (Array2DView.filter1 p vs)
@@ -630,8 +630,8 @@ let rec vfilter p = function
         thinNode (vfilter p nw) (vfilter p sw)
     | _ -> failwith "width must be exactly 1"
 
-// Transpose the quad rope. This is equal to swapping indices,
-// such that get rope i j = get (reverse rope) j i.
+/// Transpose the quad rope. This is equal to swapping indices,
+/// such that get rope i j = get (reverse rope) j i.
 let rec transpose = function
     | Empty -> Empty
     | Leaf vs -> leaf (Array2DView.transpose vs)
@@ -639,7 +639,7 @@ let rec transpose = function
         node (transpose sw) (transpose nw) (transpose ne) (transpose se)
     | Slice _ as rope -> transpose (Slicing.slice rope)
 
-// Straightforward conversion into a 2D array.
+/// Straightforward conversion into a 2D array.
 let toArray rope =
     Array2D.init (rows rope) (cols rope) (get rope)
 

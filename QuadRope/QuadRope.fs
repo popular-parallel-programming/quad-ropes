@@ -416,7 +416,7 @@ let inline initZeros h w = initAll h w 0
 
 /// Initialize a rope from a native 2D-array.
 let fromArray vss =
-    init (Array2DView.length1 vss) (Array2DView.length2 vss) (Array2DView.get vss)
+    init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)
 
 /// Apply a function to every element in the tree and preserves the
 /// tree structure.

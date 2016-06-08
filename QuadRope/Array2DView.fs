@@ -78,16 +78,12 @@ let inline subArr i j h w varr =
     else
         match varr with
             | All arr ->
-                let i0 = max 0 i
-                let j0 = max 0 j
-                let h0 = min (Array2D.length1 arr - i0) h
-                let w0 = min (Array2D.length2 arr - j0) w
-                view i0 j0 h0 w0 arr
+                let h0 = min (Array2D.length1 arr - i) h
+                let w0 = min (Array2D.length2 arr - j) w
+                view i j h0 w0 arr
             | View (i0, j0, h0, w0, arr) ->
-                let i0 = min (i0 + (max 0 i)) i0
-                let j0 = min (j0 + (max 0 j)) j0
-                let h0 = min h0 h
-                let w0 = min w0 w
+                let h0 = min (h0 - i) h
+                let w0 = min (w0 - j) w
                 view i0 j0 h0 w0 arr
 
 // Apply a function f to all elements of the array.

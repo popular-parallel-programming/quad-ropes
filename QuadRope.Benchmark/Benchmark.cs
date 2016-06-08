@@ -87,14 +87,14 @@ namespace RadTrees.Benchmark
 	    Mark("QuadRope.hcat", () => DoNTimes(100, (l, r) => QuadRopeModule.hcat(l, r), rope));
 	    Mark("QuadRope.hcat + hbalance",
 		 () => QuadRopeModule.hbalance(DoNTimes(100, (l, r) => QuadRopeModule.hcat(l, r), rope)));
-	    Mark("QuadRope.hcat + reallocate",
-		 () => QuadRopeModule.reallocate(QuadRopeModule.hcat(rope, rope)));
+//	    Mark("QuadRope.hcat + reallocate",
+//		 () => QuadRopeModule.reallocate(QuadRopeModule.hcat(rope, rope)));
 
 	    Mark("QuadRope.vcat", () => DoNTimes(100, (u, l) => QuadRopeModule.vcat(u, l), rope));
 	    Mark("QuadRope.vcat + vbalance",
 		 () => QuadRopeModule.vbalance(DoNTimes(100, (u, l) => QuadRopeModule.vcat(u, l), rope)));
-	    Mark("QuadRope.vcat + reallocate",
-		 () => QuadRopeModule.reallocate(QuadRopeModule.vcat(rope, rope)));
+//	    Mark("QuadRope.vcat + reallocate",
+//		 () => QuadRopeModule.reallocate(QuadRopeModule.vcat(rope, rope)));
 
 	    // Indexing.
 	    {
@@ -123,8 +123,8 @@ namespace RadTrees.Benchmark
 	    Mark("Array2D.vscan", () => Utils.Array2D.scan1(times, getZeros, arr));
 	    Mark("Array2D.reduce", () => Utils.Array2D.reduce(plus, arr));
             Mark("Array2D.zip", () => Utils.Array2D.map2(plus, arr, arr));
-	    Mark("Array2D.hcat", () => DoNTimes(100, (l, r) => Utils.Array2D.cat2(l, r), arr));
-	    Mark("Array2D.vcat", () => DoNTimes(100, (l, r) => Utils.Array2D.cat1(l, r), arr));
+//	    Mark("Array2D.hcat", () => DoNTimes(100, (l, r) => Utils.Array2D.cat2(l, r), arr));
+//	    Mark("Array2D.vcat", () => DoNTimes(100, (l, r) => Utils.Array2D.cat1(l, r), arr));
 
 	    // Indexing.
 	    {

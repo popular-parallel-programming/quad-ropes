@@ -483,7 +483,9 @@ let zip f lope rope =
     let rec zip0 f lope rope =
          match lope with
              | Empty -> Empty
-             | Leaf vs -> leaf (Array2DView.mapi (fun i j e -> f e (get rope i j)) vs)
+             | Leaf vs ->
+                 let rope = Slicing.slice rope
+                 leaf (Array2DView.mapi (fun i j e -> f e (get rope i j)) vs)
              | Node (d, h, w, ne, nw, sw, se) ->
                  let nw0 = zip0 f nw (slice rope 0 0 (rows nw) (cols nw))
                  let ne0 = zip0 f ne (slice rope 0 (cols nw) (rows ne) (cols ne))

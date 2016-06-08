@@ -76,15 +76,17 @@ let inline subArr i j h w varr =
     if i <= 0 && j <= 0 && length1 varr <= h && length2 varr <= w then
         varr
     else
+        let i0 = max 0 i
+        let j0 = max 0 j
         match varr with
             | All arr ->
-                let h0 = min (Array2D.length1 arr - i) h
-                let w0 = min (Array2D.length2 arr - j) w
-                view i j h0 w0 arr
-            | View (i0, j0, h0, w0, arr) ->
-                let h0 = min (h0 - i) h
-                let w0 = min (w0 - j) w
+                let h0 = min (Array2D.length1 arr - i0) h
+                let w0 = min (Array2D.length2 arr - j0) w
                 view i0 j0 h0 w0 arr
+            | View (x, y, h0, w0, arr) ->
+                let h0 = min (h0 - i0) h
+                let w0 = min (w0 - j0) w
+                view (x + i0) (y + j0) h0 w0 arr
 
 // Apply a function f to all elements of the array.
 let inline map f = function

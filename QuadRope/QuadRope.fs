@@ -334,19 +334,13 @@ let slice root i j h w =
     else if i <= 0 && rows root <= h && j <= 0 && cols root <= w then
         root
     else
+        let i0 = max 0 i
+        let j0 = max 0 j
         match root with
             | Slice (x, y, h0, w0, rope) ->
-                Slice (x + i,
-                       y + j,
-                       min (h0 - i) h,
-                       min (w0 - j) w,
-                       rope)
+                Slice (x + i0, y + j0, min (h0 - i0) h, min (w0 - j0) w, rope)
             | _ ->
-                Slice (i,
-                       j,
-                       min (rows root - i) h,
-                       min (cols root - j) w,
-                       root)
+                Slice (i0, j0, min (rows root - i0) h, min (cols root - j0) w, root)
 
 /// Split rope vertically from row i, taking h rows.
 let inline vsplit rope i h =

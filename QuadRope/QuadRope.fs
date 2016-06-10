@@ -556,6 +556,7 @@ let rec hscan f states = function
     | Node (_, _, _, ne, nw, sw, se) ->
         let nw' = hscan f states nw
         let sw' = hscan f (offset states (rows nw')) sw
+        (* NW and SW might differ in height and width, we cannot join them to a thin node. *)
         let estate i =
             if i < rows nw' then get nw' i (cols nw' - 1) else get sw' (i - rows nw') (cols sw' - 1)
         let ne' = hscan f estate ne
@@ -571,6 +572,7 @@ let rec vscan f states = function
     | Node (_, _, _, ne, nw, sw, se) ->
         let nw' = vscan f states nw
         let ne' = vscan f (offset states (cols nw')) ne
+        (* NW and NE might differ in height and width, we cannot join them to a flat node. *)
         let sstate j =
             if j < cols nw' then get nw' (rows nw' - 1) j else get ne' (rows ne' - 1) (j - cols nw')
         let sw' = vscan f sstate sw

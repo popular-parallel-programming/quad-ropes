@@ -45,13 +45,15 @@ let ``DEBUG leaf sizes enabled`` () =
 let ``init produces correct height`` (NonNegativeInt h) (NonNegativeInt w) =
     (0 < h && 0 < w) ==>
     lazy (let rope = QuadRope.init h w (*)
-          QuadRope.rows rope = h)
+          QuadRope.rows rope = h &&
+          QuadRope.get (QuadRope.vfold (fun s _ -> s + 1) (QuadRope.initZeros 1 w) rope) 0 0 = h)
 
 (* Width of generated rope is equal to width parameter. *)
 let ``init produces correct width`` (NonNegativeInt h) (NonNegativeInt w) =
     (0 < h && 0 < w) ==>
     lazy (let rope = QuadRope.init h w (*)
-          QuadRope.cols rope = w)
+          QuadRope.cols rope = w &&
+          QuadRope.get (QuadRope.hfold (fun s _ -> s + 1) (QuadRope.initZeros h 1) rope) 0 0 = w)
 
 (* Wavefront initialization with multiplication produces correct values at positions. *)
 let ``init produces correct values`` (NonNegativeInt h) (NonNegativeInt w) =

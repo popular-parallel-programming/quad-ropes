@@ -132,7 +132,7 @@ let rec vmapreduce f g = function
         let n = QuadRope.flatNode nw0 ne0
         let s = QuadRope.flatNode sw0 se0
         zip g n s
-    | rope -> QuadRope.hmapreduce f g rope
+    | rope -> QuadRope.vmapreduce f g rope
 
 /// Reduce all rows of rope by f.
 let inline hreduce f rope = hmapreduce id f rope

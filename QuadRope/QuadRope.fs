@@ -201,10 +201,10 @@ let vbalance rope =
             | _ -> rope :: rs
     vbalance0 rope
 
-module private Slicing =
+module internal Slicing =
 
     /// Auxiliary function to recursively slice a tree structure.
-    let rec private slice0 rope i j h w =
+    let rec slice0 rope i j h w =
         if i <= 0 && j <= 0 && rows rope <= h && cols rope <= w then
             rope
         else if rows rope <= i || cols rope <= j || h <= 0 || w <= 0 then
@@ -227,7 +227,7 @@ module private Slicing =
         | rope -> slice0 rope 0 0 (rows rope) (cols rope)
 
     /// Compute a slice and map in the same traversal.
-    let rec private map0 f rope i j h w =
+    let rec map0 f rope i j h w =
         match rope with
             | Empty -> Empty
             | Leaf vs -> leaf (Array2DView.map f (Array2DView.subArr i j h w vs))

@@ -53,7 +53,7 @@ namespace RadTrees.Benchmark
 	    Mark("QuadRope.init", () => QuadRopeModule.init(opts.Size, opts.Size, times));
 	    var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
 	    Mark("QuadRope.map", () => QuadRopeModule.map(timesTwo, rope));
-	    Mark("QuadRope.reduce", () => QuadRopeModule.hreduce(plus, rope));
+	    Mark("QuadRope.reduce", () => QuadRopeModule.reduce(plus, rope));
 	    Mark("QuadRope.zip", () => QuadRopeModule.zip(times, rope,
 							  QuadRopeModule.hrev(QuadRopeModule.vrev(rope))));
 	}
@@ -65,13 +65,13 @@ namespace RadTrees.Benchmark
 		return;
 	    }
 	    SetThreads(opts.Threads);
-	    Mark("QuadRope.Parallel.init", () => Parallel.QuadRopeModule.init(opts.Size, opts.Size, times));
+            Mark("QuadRope.init", () => Parallel.QuadRopeModule.init(opts.Size, opts.Size, times));
 	    var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-	    Mark("QuadRope.Parallel.map", () => Parallel.QuadRopeModule.map(timesTwo, rope));
-	    Mark("QuadRope.Parallel.hreduce", () => Parallel.QuadRopeModule.hreduce(plus, rope));
-	    Mark("QuadRope.Parallel.vreduce", () => Parallel.QuadRopeModule.vreduce(plus, rope));
-	    Mark("QuadRope.Parallel.zip", () =>
-		 Parallel.QuadRopeModule.zip(times, rope, QuadRopeModule.hrev(QuadRopeModule.vrev(rope))));
+	    Mark("QuadRope.map", () => Parallel.QuadRopeModule.map(timesTwo, rope));
+	    Mark("QuadRope.reduce", () => Parallel.QuadRopeModule.reduce(plus, rope));
+	    Mark("QuadRope.zip", () =>
+                 Parallel.QuadRopeModule.zip(times, rope,
+                                             QuadRopeModule.hrev(QuadRopeModule.vrev(rope))));
 	}
 
         public static void RunSequential(Options opts)
@@ -117,12 +117,12 @@ namespace RadTrees.Benchmark
             var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
 	    Mark("Array2D.init", () => Array2DModule.Initialize(opts.Size, opts.Size, times));
             Mark("Array2D.map", () => Array2DModule.Map(timesTwo, arr));
+            Mark("Array2D.reduce", () => Utils.Array2D.reduce(plus, arr));
+            Mark("Array2D.zip", () => Utils.Array2D.map2(plus, arr, arr));
 	    Mark("Array2D.hfold", () => Utils.Array2D.fold2(times, getZeros, arr));
 	    Mark("Array2D.vfold", () => Utils.Array2D.fold1(times, getZeros, arr));
 	    Mark("Array2D.hscan", () => Utils.Array2D.scan2(times, getZeros, arr));
 	    Mark("Array2D.vscan", () => Utils.Array2D.scan1(times, getZeros, arr));
-	    Mark("Array2D.reduce", () => Utils.Array2D.reduce(plus, arr));
-            Mark("Array2D.zip", () => Utils.Array2D.map2(plus, arr, arr));
 //	    Mark("Array2D.hcat", () => DoNTimes(100, (l, r) => Utils.Array2D.cat2(l, r), arr));
 //	    Mark("Array2D.vcat", () => DoNTimes(100, (l, r) => Utils.Array2D.cat1(l, r), arr));
 

@@ -59,7 +59,7 @@ let rec map f = function
                                       (fun () -> map f sw)
                                       (fun () -> map f se)
         QuadRope.node ne0 nw0 sw0 se0
-    | Slice _ as rope -> map f (QuadRope.Slicing.slice rope)
+    | Slice _ as rope -> map f (QuadRope.Slicing.reallocate rope)
     | rope -> QuadRope.map f rope
 
 /// Apply f in parallel to each (i, j) of lope and rope.
@@ -88,7 +88,7 @@ let zip f lope rope =
                                                           (QuadRope.rows se)
                                                           (QuadRope.cols se)))
                  Node (d, h, w, ne0, nw0, sw0, se0)
-             | Slice _ -> zip0 f (QuadRope.Slicing.slice lope) rope
+             | Slice _ -> zip0 f (QuadRope.Slicing.reallocate lope) rope
              | _ -> QuadRope.zip f lope rope
     if QuadRope.cols lope <> QuadRope.cols rope || QuadRope.rows lope <> QuadRope.rows rope then
         failwith "ropes must have the same shape"
@@ -113,7 +113,7 @@ let rec hmapreduce f g = function
         let w = QuadRope.thinNode nw0 sw0
         let e = QuadRope.thinNode ne0 se0
         zip g w e
-    | Slice _ as rope -> hmapreduce f g (QuadRope.Slicing.slice rope)
+    | Slice _ as rope -> hmapreduce f g (QuadRope.Slicing.reallocate rope)
     | rope -> QuadRope.hmapreduce f g rope
 
 /// Apply f to all scalars in parallel and reduce the results
@@ -135,7 +135,7 @@ let rec vmapreduce f g = function
         let n = QuadRope.flatNode nw0 ne0
         let s = QuadRope.flatNode sw0 se0
         zip g n s
-    | Slice _ as rope -> vmapreduce f g (QuadRope.Slicing.slice rope)
+    | Slice _ as rope -> vmapreduce f g (QuadRope.Slicing.reallocate rope)
     | rope -> QuadRope.vmapreduce f g rope
 
 /// Reduce all rows of rope by f.
@@ -159,7 +159,7 @@ let rec mapreduce f g = function
                                       (fun () -> mapreduce f g sw)
                                       (fun () -> mapreduce f g se)
         g (g ne' nw') (g sw' se')
-    | Slice _ as rope -> mapreduce f g (QuadRope.Slicing.slice rope)
+    | Slice _ as rope -> mapreduce f g (QuadRope.Slicing.reallocate rope)
     | rope -> QuadRope.mapreduce f g rope
 
 /// Reduce all values of the rope to a single scalar in parallel.
@@ -171,7 +171,7 @@ let rec hfilter p = function
     | Node (_, 1, _, ne, nw, Empty, Empty) ->
         let ne0, nw0 = par2 (fun () -> hfilter p ne) (fun () -> hfilter p nw)
         QuadRope.flatNode nw0 ne0
-    | Slice _ as rope -> hfilter p (QuadRope.Slicing.slice rope)
+    | Slice _ as rope -> hfilter p (QuadRope.Slicing.reallocate rope)
     | rope -> QuadRope.hfilter p rope
 
 /// Remove all elements from rope for which p does not hold in
@@ -180,7 +180,7 @@ let rec vfilter p = function
     | Node (_, _, 1, Empty, nw, sw, Empty) ->
         let nw0, sw0 = par2 (fun () -> vfilter p nw) (fun () -> vfilter p sw)
         QuadRope.thinNode nw0 sw0
-    | Slice _ as rope -> vfilter p (QuadRope.Slicing.slice rope)
+    | Slice _ as rope -> vfilter p (QuadRope.Slicing.reallocate rope)
     | rope -> QuadRope.vfilter p rope
 
 /// Reverse the quad rope horizontally in parallel.
@@ -191,7 +191,7 @@ let rec hrev = function
                                       (fun() -> hrev sw)
                                       (fun() -> hrev se)
         Node (d, h, w, nw0, ne0, se0, sw0)
-    | Slice _ as rope -> hrev (QuadRope.Slicing.slice rope)
+    | Slice _ as rope -> hrev (QuadRope.Slicing.reallocate rope)
     | rope -> QuadRope.hrev rope
 
 /// Reverse the quad rope vertically in parallel.
@@ -202,7 +202,7 @@ let rec vrev = function
                                       (fun() -> vrev sw)
                                       (fun() -> vrev se)
         Node (d, h, w, sw0, se0, nw0, ne0)
-    | Slice _ as rope -> vrev (QuadRope.Slicing.slice rope)
+    | Slice _ as rope -> vrev (QuadRope.Slicing.reallocate rope)
     | rope -> QuadRope.vrev rope
 
 
@@ -221,5 +221,5 @@ let rec transpose = function
                                       (fun () -> transpose sw)
                                       (fun () -> transpose se)
         QuadRope.node sw0 nw0 ne0 se0
-    | Slice _ as rope -> transpose (QuadRope.Slicing.slice rope)
+    | Slice _ as rope -> transpose (QuadRope.Slicing.reallocate rope)
     | rope -> QuadRope.transpose rope

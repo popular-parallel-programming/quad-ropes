@@ -204,7 +204,7 @@ let vbalance rope =
 module internal Slicing =
 
     /// Auxiliary function to recursively slice a tree structure.
-    let rec slice0 rope i j h w =
+    let rec reallocate0 rope i j h w =
         if i <= 0 && j <= 0 && rows rope <= h && cols rope <= w then
             rope
         else if rows rope <= i || cols rope <= j || h <= 0 || w <= 0 then
@@ -214,17 +214,17 @@ module internal Slicing =
                 | Empty -> Empty
                 | Leaf vs -> leaf (Array2DView.subArr i j h w vs)
                 | Node (_, _, _, ne, nw, sw, se) ->
-                    let nw0 = slice0 nw i j h w
-                    let ne0 = slice0 ne i (j - cols nw) h (w - cols nw0)
-                    let sw0 = slice0 sw (i - rows nw) j (h - rows nw0) w
-                    let se0 = slice0 se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
+                    let nw0 = reallocate0 nw i j h w
+                    let ne0 = reallocate0 ne i (j - cols nw) h (w - cols nw0)
+                    let sw0 = reallocate0 sw (i - rows nw) j (h - rows nw0) w
+                    let se0 = reallocate0 se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
                     node ne0 nw0 sw0 se0
-                | Slice (x, y, h, w, rope) -> slice0 rope (x + i) (y + j) h w
+                | Slice (x, y, h, w, rope) -> reallocate0 rope (x + i) (y + j) h w
 
     /// Actually compute a slice.
-    let slice = function
-        | Slice (i, j, h, w, rope) -> slice0 rope i j h w
-        | rope -> slice0 rope 0 0 (rows rope) (cols rope)
+    let reallocate = function
+        | Slice (i, j, h, w, rope) -> reallocate0 rope i j h w
+        | rope -> reallocate0 rope 0 0 (rows rope) (cols rope)
 
     /// Compute a slice and map in the same traversal.
     let rec map0 f rope i j h w =
@@ -252,8 +252,8 @@ let rec vcat upper lower =
     match upper, lower with
         | Empty, _ -> lower
         | _, Empty -> upper
-        | Slice _, _ -> vcat (Slicing.slice upper) lower
-        | _, Slice _ -> vcat upper (Slicing.slice lower)
+        | Slice _, _ -> vcat (Slicing.reallocate upper) lower
+        | _, Slice _ -> vcat upper (Slicing.reallocate lower)
 
         | Leaf us, Leaf ls when canCopy us ls ->
             leaf (Array2DView.cat1 us ls)
@@ -294,8 +294,8 @@ let rec hcat left right =
     match left, right with
         | Empty, _ -> right
         | _, Empty -> left
-        | Slice _, _ -> hcat (Slicing.slice left) right
-        | _, Slice _ -> hcat left (Slicing.slice right)
+        | Slice _, _ -> hcat (Slicing.reallocate left) right
+        | _, Slice _ -> hcat left (Slicing.reallocate right)
 
         | Leaf ls, Leaf rs when canCopy ls rs ->
             leaf (Array2DView.cat2 ls rs)
@@ -457,7 +457,7 @@ let hfold f states rope =
         | Empty -> states
         | Leaf vs -> leaf (Array2DView.fold2 f (fun i -> get states i 0) vs)
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
-        | Slice _ as rope -> fold1 states (Slicing.slice rope)
+        | Slice _ as rope -> fold1 states (Slicing.reallocate rope)
     and fold2 states n s =
         let nstates, sstates = vsplit2 states (rows n)
         thinNode (fold1 nstates n) (fold1 sstates s)
@@ -472,7 +472,7 @@ let vfold f states rope =
         | Empty -> states
         | Leaf vs -> leaf (Array2DView.fold1 f (get states 0) vs)
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
-        | Slice _ as rope -> fold1 states (Slicing.slice rope)
+        | Slice _ as rope -> fold1 states (Slicing.reallocate rope)
     and fold2 states w e =
         let wstates, estates = hsplit2 states (cols w)
         flatNode (fold1 wstates w) (fold1 estates e)
@@ -484,7 +484,7 @@ let zip f lope rope =
          match lope with
              | Empty -> Empty
              | Leaf vs ->
-                 let rope = Slicing.slice rope
+                 let rope = Slicing.reallocate rope
                  leaf (Array2DView.mapi (fun i j e -> f e (get rope i j)) vs)
              | Node (d, h, w, ne, nw, sw, se) ->
                  let nw0 = zip0 f nw (slice rope 0 0 (rows nw) (cols nw))
@@ -492,7 +492,7 @@ let zip f lope rope =
                  let sw0 = zip0 f sw (slice rope (rows nw) 0 (rows sw) (cols sw))
                  let se0 = zip0 f se (slice rope (rows ne) (cols sw) (rows se) (cols se))
                  Node (d, h, w, ne0, nw0, sw0, se0)
-             | Slice _ -> zip0 f (Slicing.slice lope) rope
+             | Slice _ -> zip0 f (Slicing.reallocate lope) rope
     if cols lope <> cols rope || rows lope <> rows rope then
         failwith "ropes must have the same shape"
     zip0 f lope rope
@@ -508,7 +508,7 @@ let rec hmapreduce f g = function
         match e with
             | Empty -> w
             | _ -> zip g w e
-    | Slice _ as rope -> hmapreduce f g (Slicing.slice rope)
+    | Slice _ as rope -> hmapreduce f g (Slicing.reallocate rope)
 
 /// Map f to every element of the rope and reduce columns with g.
 let rec vmapreduce f g = function
@@ -521,7 +521,7 @@ let rec vmapreduce f g = function
         match s with
             | Empty -> n
             | _ -> zip g n s
-    | Slice _ as rope -> vmapreduce f g (Slicing.slice rope)
+    | Slice _ as rope -> vmapreduce f g (Slicing.reallocate rope)
 
 /// Reduce all rows of rope with f.
 let inline hreduce f rope = hmapreduce id f rope
@@ -540,7 +540,7 @@ let rec mapreduce f g = function
         g (mapreduce f g nw) (mapreduce f g sw)
     | Node (_, _, _, ne, nw, sw, se) ->
         g (g (mapreduce f g ne) (mapreduce f g nw)) (g (mapreduce f g sw) (mapreduce f g se))
-    | Slice _ as rope -> mapreduce f g (Slicing.slice rope)
+    | Slice _ as rope -> mapreduce f g (Slicing.reallocate rope)
 
 /// Reduce all values of the rope to a single scalar.
 let inline reduce f rope = mapreduce id f rope
@@ -562,7 +562,7 @@ let rec hscan f states = function
         let ne' = hscan f estate ne
         let se' = hscan f (offset estate (rows ne')) se
         node ne' nw' sw' se'
-    | Slice _ as rope -> hscan f states (Slicing.slice rope)
+    | Slice _ as rope -> hscan f states (Slicing.reallocate rope)
 
 /// Compute the column-wise prefix sum of the rope for f starting
 /// with states.
@@ -578,7 +578,7 @@ let rec vscan f states = function
         let sw' = vscan f sstate sw
         let se' = vscan f (offset sstate (cols sw')) se
         node ne' nw' sw' se'
-    | Slice _ as rope -> vscan f states (Slicing.slice rope)
+    | Slice _ as rope -> vscan f states (Slicing.reallocate rope)
 
 /// Checks that some relation p holds between each two adjacent
 /// elements in each row. This is slow and should not really be
@@ -635,7 +635,7 @@ let rec transpose = function
     | Leaf vs -> leaf (Array2DView.transpose vs)
     | Node (_, _, _, ne, nw, sw, se) ->
         node (transpose sw) (transpose nw) (transpose ne) (transpose se)
-    | Slice _ as rope -> transpose (Slicing.slice rope)
+    | Slice _ as rope -> transpose (Slicing.reallocate rope)
 
 /// Straightforward conversion into a 2D array.
 let toArray rope =
@@ -665,6 +665,6 @@ let tikzify h w rope =
                   yield! tikz (i + h0) (j + w0) h0 w0 ne
                   yield line i (j + w0) (i + h) (j + w0)
                   yield line (i + h0) j (i + h0) (j + w) }
-        | Slice _ as rope -> tikz i j h w (Slicing.slice rope)
+        | Slice _ as rope -> tikz i j h w (Slicing.reallocate rope)
     let cmds = List.ofSeq (seq { yield! tikz 0.0 0.0 h w rope; yield rect 0.0 0.0 h w });
     printfn "%s" (String.concat "\n" cmds)

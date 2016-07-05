@@ -201,6 +201,38 @@ let vbalance rope =
             | _ -> rope :: rs
     vbalance0 rope
 
+/// Compute the "subrope" starting from indexes i, j taking h and w
+/// elements in vertical and horizontal direction.
+let slice root i j h w =
+    if rows root <= i || cols root <= j || h <= 0 || w <= 0 then
+        Empty
+    else if i <= 0 && rows root <= h && j <= 0 && cols root <= w then
+        root
+    else
+        let i0 = max 0 i
+        let j0 = max 0 j
+        match root with
+            | Slice (x, y, h0, w0, rope) ->
+                Slice (x + i0, y + j0, min (h0 - i0) h, min (w0 - j0) w, rope)
+            | _ ->
+                Slice (i0, j0, min (rows root - i0) h, min (cols root - j0) w, root)
+
+/// Split rope vertically from row i, taking h rows.
+let inline vsplit rope i h =
+    slice rope i 0 h (cols rope)
+
+/// Split rope horizontally from column j, taking w columns.
+let inline hsplit rope j w =
+    slice rope 0 j (rows rope) w
+
+/// Split rope in two at row i.
+let inline vsplit2 rope i =
+    vsplit rope 0 i, vsplit rope i (rows rope)
+
+/// Split rope in two at column j.
+let inline hsplit2 rope j =
+    hsplit rope 0 j, hsplit rope j (cols rope)
+
 module internal Slicing =
 
     /// Auxiliary function to recursively slice a tree structure.
@@ -325,38 +357,6 @@ let rec hcat left right =
             node rnw lnw lsw rsw
 
         | _ -> flatNode left right
-
-/// Compute the "subrope" starting from indexes i, j taking h and w
-/// elements in vertical and horizontal direction.
-let slice root i j h w =
-    if rows root <= i || cols root <= j || h <= 0 || w <= 0 then
-        Empty
-    else if i <= 0 && rows root <= h && j <= 0 && cols root <= w then
-        root
-    else
-        let i0 = max 0 i
-        let j0 = max 0 j
-        match root with
-            | Slice (x, y, h0, w0, rope) ->
-                Slice (x + i0, y + j0, min (h0 - i0) h, min (w0 - j0) w, rope)
-            | _ ->
-                Slice (i0, j0, min (rows root - i0) h, min (cols root - j0) w, root)
-
-/// Split rope vertically from row i, taking h rows.
-let inline vsplit rope i h =
-    slice rope i 0 h (cols rope)
-
-/// Split rope horizontally from column j, taking w columns.
-let inline hsplit rope j w =
-    slice rope 0 j (rows rope) w
-
-/// Split rope in two at row i.
-let inline vsplit2 rope i =
-    vsplit rope 0 i, vsplit rope i (rows rope)
-
-/// Split rope in two at column j.
-let inline hsplit2 rope j =
-    hsplit rope 0 j, hsplit rope j (cols rope)
 
 /// Reverse rope horizontally.
 let rec hrev = function

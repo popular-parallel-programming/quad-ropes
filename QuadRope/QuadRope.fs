@@ -676,6 +676,20 @@ let rec transpose = function
 let toArray rope =
     Array2D.init (rows rope) (cols rope) (get rope)
 
+/// Apply a function with side effects to all elements of the rope.
+let rec apply f = function
+    | Empty -> ()
+    | Leaf vs ->
+        for i in 0 .. (Array2DView.length1 vs) - 1 do
+            for j in 0 .. (Array2DView.length2 vs) - 1 do
+                f (Array2DView.get vs i j)
+    | Node (_, _, _, ne, nw, sw, se) ->
+        apply f ne
+        apply f nw
+        apply f sw
+        apply f se
+    | Slice _ as rope -> apply f (Slicing.reallocate rope)
+
 /// Produce a string with the tikz code for printing the rope as a
 /// box diagram. This is useful for illustrating algorithms on
 /// quad ropes.

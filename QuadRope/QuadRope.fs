@@ -258,6 +258,41 @@ module internal Slicing =
         | Slice (i, j, h, w, rope) -> reallocate0 rope i j h w
         | rope -> rope
 
+    /// Check whether i j h w forms a rectangle that is inside the
+    /// domain of rope.
+    let inline private dom rope i j h w =
+        0 <= i && i <= rows rope && i + h <= rows rope &&
+        0 <= j && j <= cols rope && j + w <= cols rope
+
+    /// Auxiliary function to find the minimal sub-rope that contains
+    /// the indexes in [i, h][j, w].
+    let rec private minimize0 rope i j h w =
+        if i = 0 && j = 0 && h = rows rope && w = cols rope then
+            rope
+        else
+            match rope with
+                | Empty -> Empty
+                | Leaf vs -> leaf (Array2DView.slice i j h w vs) // Just return a view on arrays.
+                | Node (_, _, _, ne, nw, sw, se) ->
+                    if dom nw i j h w then
+                        minimize0 nw i j h w
+                    else if dom ne i (j - cols nw) h w then
+                        minimize0 ne i (j - cols nw) h w
+                    else if dom sw (i - rows nw) j h w then
+                        minimize0 sw (i - rows nw) j h w
+                    else if dom se (i - rows ne) (j - cols sw) h w then
+                        minimize0 se (i - rows ne) (j - cols sw) h w
+                    else
+                        slice rope i j h w // If the slice spans across sub-ropes, stop and make a new slice.
+                | Slice (i, j, h, w, rope) -> minimize0 rope i j h w
+
+    /// Find the smallest sub-rope that includes the indices of a
+    /// slice. This is similar to slicing but does not perform new
+    /// node allocations.
+    let minimize = function
+        | Slice (i, j, h, w, rope) -> minimize0 rope i j h w
+        | rope -> rope
+
     /// Compute a slice and map in the same traversal.
     let rec map0 f rope i j h w =
         match rope with
@@ -484,7 +519,7 @@ let zip f lope rope =
          match lope with
              | Empty -> Empty
              | Leaf vs ->
-                 let rope = Slicing.reallocate rope
+                 let rope = Slicing.minimize rope
                  leaf (Array2DView.mapi (fun i j e -> f e (get rope i j)) vs)
              | Node (d, h, w, ne, nw, sw, se) ->
                  let nw0 = zip0 f nw (slice rope 0 0 (rows nw) (cols nw))

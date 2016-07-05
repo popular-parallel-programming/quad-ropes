@@ -212,7 +212,7 @@ module internal Slicing =
         else
             match rope with
                 | Empty -> Empty
-                | Leaf vs -> leaf (Array2DView.subArr i j h w vs)
+                | Leaf vs -> leaf (Array2DView.slice i j h w vs)
                 | Node (_, _, _, ne, nw, sw, se) ->
                     let nw0 = reallocate0 nw i j h w
                     let ne0 = reallocate0 ne i (j - cols nw) h (w - cols nw0)
@@ -230,7 +230,7 @@ module internal Slicing =
     let rec map0 f rope i j h w =
         match rope with
             | Empty -> Empty
-            | Leaf vs -> leaf (Array2DView.map f (Array2DView.subArr i j h w vs))
+            | Leaf vs -> leaf (Array2DView.map f (Array2DView.slice i j h w vs))
             | Node (_, _, _, ne, nw, sw, se) ->
                 let nw0 = map0 f nw i j h w
                 let ne0 = map0 f ne i (j - cols nw) h (w - cols nw0)

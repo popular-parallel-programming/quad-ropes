@@ -72,7 +72,7 @@ let inline write varr i j v =
             set varr i j v
 
 // Compute a slice of the given array.
-let inline subArr i j h w varr =
+let inline slice i j h w varr =
     if i <= 0 && j <= 0 && length1 varr <= h && length2 varr <= w then
         varr
     else

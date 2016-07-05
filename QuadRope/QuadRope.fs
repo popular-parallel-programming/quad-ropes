@@ -76,7 +76,7 @@ let inline private withinRange root i j =
 
 let inline private checkBounds rope i j =
     if rows rope <= i || cols rope <= j then
-        failwith "Index out of bounds."
+        failwith (sprintf "Index out of bounds: (%d, %d) exceeds  %A" i j rope)
 
 /// Get the value of a location in the tree.
 let rec get root i j =

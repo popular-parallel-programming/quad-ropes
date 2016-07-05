@@ -236,7 +236,7 @@ let inline hsplit2 rope j =
 module internal Slicing =
 
     /// Auxiliary function to recursively slice a tree structure.
-    let rec reallocate0 rope i j h w =
+    let rec private reallocate0 rope i j h w =
         if i <= 0 && j <= 0 && rows rope <= h && cols rope <= w then
             rope
         else if rows rope <= i || cols rope <= j || h <= 0 || w <= 0 then
@@ -256,7 +256,7 @@ module internal Slicing =
     /// Actually compute a slice.
     let reallocate = function
         | Slice (i, j, h, w, rope) -> reallocate0 rope i j h w
-        | rope -> reallocate0 rope 0 0 (rows rope) (cols rope)
+        | rope -> rope
 
     /// Compute a slice and map in the same traversal.
     let rec map0 f rope i j h w =

@@ -8,7 +8,10 @@ let inline private all arr =
     All arr
 
 let inline private view i j h w arr =
-    View (i, j, h, w, arr)
+    if i = 0 && j = 0 && h = Array2D.length1 arr && w = Array2D.length2 arr then
+        all arr
+    else
+        View (i, j, h, w, arr)
 
 // Compute a new array using some function f that operates on 2D
 // arrays, e.g. mapBased.

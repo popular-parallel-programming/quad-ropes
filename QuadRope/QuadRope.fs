@@ -79,67 +79,73 @@ let inline private checkBounds rope i j =
         failwith (sprintf "Index out of bounds: (%d, %d) exceeds  %A" i j rope)
 
 /// Get the value of a location in the tree.
-let rec get root i j =
-    checkBounds root i j
-    match root with
-        | Empty -> failwith "Empty tree cannot contain values."
-        | Leaf vs -> Array2DView.get vs i j
-        | Node (_, _, _, ne, nw, sw, se) ->
-            if withinRange nw i j then
-                get nw i j
-            else
-                let j0 = j - cols nw
-                if withinRange ne i j0 then
-                    get ne i j0
+let get root i j =
+    let rec get0 rope i j =
+        match rope with
+            | Empty -> failwith "Empty tree cannot contain values."
+            | Leaf vs -> Array2DView.get vs i j
+            | Node (_, _, _, ne, nw, sw, se) ->
+                if withinRange nw i j then
+                    get0 nw i j
                 else
-                    let i0 = i - rows nw
-                    if withinRange sw i0 j then
-                        get sw i0 j
+                    let j0 = j - cols nw
+                    if withinRange ne i j0 then
+                        get0 ne i j0
                     else
-                        get se (i - rows ne) (j - cols sw)
-        | Slice (x, y, _, _, rope) -> get rope (i + x) (j + y)
+                        let i0 = i - rows nw
+                        if withinRange sw i0 j then
+                            get0 sw i0 j
+                        else
+                            get0 se (i - rows ne) (j - cols sw)
+            | Slice (x, y, _, _, rope) -> get0 rope (i + x) (j + y)
+    checkBounds root i j
+    get0 root i j
 
 /// Update a tree location without modifying the original tree.
-let rec set root i j v =
-    checkBounds root i j
-    match root with
-        | Empty -> failwith "Empty tree cannot contain values."
-        | Leaf vs -> Leaf (RadTrees.Array2DView.set vs i j v)
-        | Node (d, h, w, ne, nw, sw, se) ->
-            if withinRange nw i j then
-                Node (d, h, w, ne, set nw i j v, sw, se)
-            else
-                let j0 = j - (cols nw)
-                if withinRange ne i j0 then
-                    Node (d, h, w, set ne i j0 v, nw, sw, se)
+let set root i j v =
+    let rec set0 rope i j v =
+        match rope with
+            | Empty -> failwith "Empty tree cannot contain values."
+            | Leaf vs -> Leaf (RadTrees.Array2DView.set vs i j v)
+            | Node (d, h, w, ne, nw, sw, se) ->
+                if withinRange nw i j then
+                    Node (d, h, w, ne, set0 nw i j v, sw, se)
                 else
-                    let i0 = i - (rows nw)
-                    if withinRange sw i0 j then
-                        Node (d, h, w, ne, nw, set sw i0 j v, se)
+                    let j0 = j - (cols nw)
+                    if withinRange ne i j0 then
+                        Node (d, h, w, set0 ne i j0 v, nw, sw, se)
                     else
-                        Node (d, h, w, ne, nw, sw, set se (i - rows ne) (j - cols sw) v)
-        | Slice (x, y, h, w, rope) -> Slice (x, y, h, w, set rope (i + x) (j + y) v)
+                        let i0 = i - (rows nw)
+                        if withinRange sw i0 j then
+                            Node (d, h, w, ne, nw, set0 sw i0 j v, se)
+                        else
+                            Node (d, h, w, ne, nw, sw, set0 se (i - rows ne) (j - cols sw) v)
+            | Slice (x, y, h, w, rope) -> Slice (x, y, h, w, set0 rope (i + x) (j + y) v)
+    checkBounds root i j
+    set0 root i j v
 
 /// Write to a tree location destructively.
-let rec write root i j v =
-    checkBounds root i j
-    match root with
-        | Empty -> failwith "Empty tree cannot contain values."
-        | Leaf vs -> Array2DView.write vs i j v
-        | Node (_, _, _, ne, nw, sw, se) ->
-            if withinRange nw i j then
-                write nw i j v
-            else
-                let j0 = j - (cols nw)
-                if withinRange ne i j0 then
-                    write ne i j0 v
+let write root i j v =
+    let rec write0 rope i j v =
+        match rope with
+            | Empty -> failwith "Empty tree cannot contain values."
+            | Leaf vs -> Array2DView.write vs i j v
+            | Node (_, _, _, ne, nw, sw, se) ->
+                if withinRange nw i j then
+                    write0 nw i j v
                 else
-                    let i0 = i - (rows nw)
-                    if withinRange sw i0 j then
-                        write sw i0 j v
+                    let j0 = j - (cols nw)
+                    if withinRange ne i j0 then
+                        write0 ne i j0 v
                     else
-                        write se (i - rows ne) (j - cols sw) v
-        | Slice (x, y, _, _, rope) -> write rope (x + i) (y + j) v
+                        let i0 = i - (rows nw)
+                        if withinRange sw i0 j then
+                            write0 sw i0 j v
+                        else
+                            write0 se (i - rows ne) (j - cols sw) v
+            | Slice (x, y, _, _, rope) -> write0 rope (x + i) (y + j) v
+    checkBounds root i j
+    write0 root i j v
 
 let private isBalanced d s =
     d <= 1 || d <= d_max && Fibonacci.fib (d + 1) <= s

@@ -57,22 +57,13 @@ module Array2D =
         arr0.[i, j] <- v
         arr0
 
-    let inline subArr arr i j h w =
-        if i <= 0 && Array2D.length1 arr <= h && j <= 0 && Array2D.length2 arr <= w then
+    let inline slice arr i j h w =
+        if i <= 0 && j <= 0 && Array2D.length1 arr <= h && Array2D.length2 arr <= w then
             arr
-        else if Array2D.length1 arr <= i || h <= 0 then
-            Array2D.zeroCreate 0 w
-        else if Array2D.length2 arr <= j || w <= 0 then
-            Array2D.zeroCreate h 0
         else
             let i0 = max 0 i
             let j0 = max 0 j
-            let h0 = min h (Array2D.length1 arr)
-            let w0 = min w (Array2D.length2 arr)
-            Array2D.init h0 w0 (fun i j -> Array2D.get arr (i0 + i) (j0 + j))
-
-    let inline slice arr imin jmin imax jmax =
-         subArr arr imin jmin (imax - imin) (jmax - jmin)
+            Array2D.init (min h (Array2D.length1 arr - i0)) (min w (Array2D.length2 arr - j0)) (fun i j -> arr.[i0 + i, j0 + j])
 
     let inline isSingleton arr =
         Array2D.length1 arr = 1 && Array2D.length2 arr = 1

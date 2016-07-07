@@ -184,6 +184,17 @@ module Array2D =
     let inline initZeros h w =
         Array2D.init h w (fun _ _ -> 0)
 
+    let inline transpose arr =
+        Array2D.init (Array2D.length2 arr) (Array2D.length1 arr) (fun i j -> arr.[j, i])
+
+    let inline filter1 p arr =
+        let vs = Seq.filter p (Seq.init (Array2D.length1 arr) (fun i -> arr.[i, 0])) |> Array.ofSeq
+        Array2D.init (Array.length vs) 1 (fun i _ -> Array.get vs i)
+
+    let inline filter2 p arr =
+        let vs = Seq.filter p (Seq.init (Array2D.length2 arr) (Array2D.get arr 0)) |> Array.ofSeq
+        Array2D.init 1 (Array.length vs) (fun _ j -> Array.get vs j)
+
 module Fibonacci =
 
     let private fibs =

@@ -87,16 +87,12 @@ let get root i j =
             | Node (_, _, _, ne, nw, sw, se) ->
                 if withinRange nw i j then
                     get0 nw i j
+                else if withinRange ne i (j - cols nw) then
+                    get0 ne i (j - cols nw)
+                else if withinRange sw (i - rows nw) j then
+                    get0 sw (i - rows nw) j
                 else
-                    let j0 = j - cols nw
-                    if withinRange ne i j0 then
-                        get0 ne i j0
-                    else
-                        let i0 = i - rows nw
-                        if withinRange sw i0 j then
-                            get0 sw i0 j
-                        else
-                            get0 se (i - rows ne) (j - cols sw)
+                    get0 se (i - rows ne) (j - cols sw)
             | Slice (x, y, _, _, rope) -> get0 rope (i + x) (j + y)
     checkBounds root i j
     get0 root i j
@@ -110,16 +106,12 @@ let set root i j v =
             | Node (d, h, w, ne, nw, sw, se) ->
                 if withinRange nw i j then
                     Node (d, h, w, ne, set0 nw i j v, sw, se)
+                else if withinRange ne i (j - cols nw) then
+                    Node (d, h, w, set0 ne i (j - cols nw) v, nw, sw, se)
+                else if withinRange sw (i - rows nw) j then
+                    Node (d, h, w, ne, nw, set0 sw (i - rows nw) j v, se)
                 else
-                    let j0 = j - (cols nw)
-                    if withinRange ne i j0 then
-                        Node (d, h, w, set0 ne i j0 v, nw, sw, se)
-                    else
-                        let i0 = i - (rows nw)
-                        if withinRange sw i0 j then
-                            Node (d, h, w, ne, nw, set0 sw i0 j v, se)
-                        else
-                            Node (d, h, w, ne, nw, sw, set0 se (i - rows ne) (j - cols sw) v)
+                    Node (d, h, w, ne, nw, sw, set0 se (i - rows ne) (j - cols sw) v)
             | Slice (x, y, h, w, rope) -> Slice (x, y, h, w, set0 rope (i + x) (j + y) v)
     checkBounds root i j
     set0 root i j v
@@ -133,16 +125,12 @@ let write root i j v =
             | Node (_, _, _, ne, nw, sw, se) ->
                 if withinRange nw i j then
                     write0 nw i j v
+                else if withinRange ne i (j - cols nw) then
+                    write0 ne i (j - cols nw) v
+                else if withinRange sw (i - rows nw) j then
+                    write0 sw (i - rows nw) j v
                 else
-                    let j0 = j - (cols nw)
-                    if withinRange ne i j0 then
-                        write0 ne i j0 v
-                    else
-                        let i0 = i - (rows nw)
-                        if withinRange sw i0 j then
-                            write0 sw i0 j v
-                        else
-                            write0 se (i - rows ne) (j - cols sw) v
+                    write0 se (i - rows ne) (j - cols sw) v
             | Slice (x, y, _, _, rope) -> write0 rope (x + i) (y + j) v
     checkBounds root i j
     write0 root i j v

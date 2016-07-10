@@ -6,6 +6,8 @@ let inline set arr i j v =
     arr0.[i, j] <- v
     arr0
 
+/// Allocate a new array of the required dimensions with values taken
+/// from the original array.
 let inline slice arr i j h w =
     if i <= 0 && j <= 0 && Array2D.length1 arr <= h && Array2D.length2 arr <= w then
         arr
@@ -16,6 +18,7 @@ let inline slice arr i j h w =
                      (min w (Array2D.length2 arr - j0))
                      (fun i j -> arr.[i0 + i, j0 + j])
 
+/// True if array contains only a single element.
 let inline isSingleton arr =
     Array2D.length1 arr = 1 && Array2D.length2 arr = 1
 

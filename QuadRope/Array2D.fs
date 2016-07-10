@@ -1,8 +1,5 @@
 module internal RadTrees.Array2D
 
-let inline call f arr =
-    f 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
-
 /// Return a fresh copy of arr with the value at i,j replaced with v.
 let inline set arr i j v =
     let arr0 = Array2D.copy arr
@@ -39,100 +36,74 @@ let inline cat2 left right =
     Array2D.init l1 l2 (fun i j -> if j < l2l then left.[i, j] else right.[i, j - l2l])
 
 /// Revert an array in first dimension.
-let inline revBased1 i0 j0 h w (arr : _ [,]) =
-    let h0 = h - 1
-    Array2D.init h w (fun i j -> arr.[h0 - (i0 + i), j0 + j])
+let inline rev1 (arr : _ [,]) =
+    let h0 = Array2D.length1 arr - 1
+    Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> arr.[h0 - i, j])
 
 /// Revert an array in second dimension.
-let inline revBased2 i0 j0 h w (arr : _ [,]) =
-    let w0 = w - 1
-    Array2D.init h w (fun i j -> arr.[i0 + i, w0 - (j0 + j)])
-
-let inline rev1 arr = call revBased1 arr
-let inline rev2 arr = call revBased2 arr
+let inline rev2 (arr : _ [,]) =
+    let w0 = Array2D.length2 arr - 1
+    Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> arr.[i, w0 - j])
 
 /// Fold each column of a 2D array, calling state with each column to get the state.
-let inline foldBased1 f state i0 j0 h w (arr : _ [,]) =
-    let inline fold _ j =
-        Seq.fold f (state j) (seq { for i in i0 .. i0 + h - 1 -> arr.[i, j0 + j] })
-    Array2D.init 1 w fold
+let inline fold1 f state (arr : _ [,]) =
+    let fold = fun _ j -> Seq.fold f (state j) (seq { for i in 0 .. Array2D.length1 arr - 1 -> arr.[i, j] })
+    Array2D.init 1 (Array2D.length2 arr) fold
 
 /// Fold each row of a 2D array, calling state with each row to get the state.
-let inline foldBased2 f state i0 j0 h w (arr : _ [,]) =
-    let inline fold i _ =
-        Seq.fold f (state i) (seq { for j in j0 .. j0 + w - 1 -> arr.[i0 + i, j] })
-    Array2D.init h 1 fold
+let inline fold2 f state (arr : _ [,]) =
+    let fold = fun i _ -> Seq.fold f (state i) (seq { for j in 0 .. Array2D.length2 arr - 1 -> arr.[i, j] })
+    Array2D.init (Array2D.length1 arr) 1 fold
 
-let inline fold1 f state arr = call (foldBased1 f state) arr
-let inline fold2 f state arr = call (foldBased2 f state) arr
-
-let unfold p f g (i, s) =
-    if p i then
-        let s' = f s (g i)
-        Some (s', (i + 1, s'))
-    else
-        None
-
-let inline exclusiveScan f s p g = Array.unfold (unfold p f g) (0, s)
+let inline exclusiveScan f s p g =
+    let unfold = (fun (i, s) ->
+        if p i then
+            let s' = f s (g i)
+            Some (s', (i + 1, s'))
+        else
+            None)
+    Array.unfold unfold (0, s)
 
 /// Compute the column-wise prefix sum for f.
-let inline scanBased1 f state i0 j0 h w (arr : _ [,]) =
-    let arr' = [| for j in 0 .. w - 1 ->
-                   exclusiveScan f (state j) ((>) h) (fun i -> Array2D.get arr (i0 + i) (j0 + j)) |]
-    Array2D.init h w (fun i j -> Array.get (Array.get arr' j) i)
+let inline scan1 f state (arr : _ [,]) =
+    let arr' = [| for j in 0 .. Array2D.length2 arr - 1 ->
+                   exclusiveScan f (state j) ((>) (Array2D.length1 arr)) (fun i -> Array2D.get arr i j) |]
+    Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> Array.get (Array.get arr' j) i)
 
 /// Compute the row-wise prefix sum for f.
-let inline scanBased2 f state i0 j0 h w (arr : _ [,]) =
-    array2D [| for i in 0 .. h - 1 ->
-                exclusiveScan f (state i) ((>) w) (fun j -> Array2D.get arr (i0 + i) (j0 + j)) |]
-
-let inline scan1 f state arr = call (scanBased1 f state) arr
-let inline scan2 f state arr = call (scanBased2 f state) arr
+let inline scan2 f state (arr : _ [,]) =
+    array2D [| for i in 0 .. Array2D.length1 arr - 1 ->
+                exclusiveScan f (state i) ((>) (Array2D.length2 arr)) (fun j -> Array2D.get arr i j) |]
 
 let inline map2 f (arr0 : _ [,]) (arr1 : _ [,]) =
     Array2D.init (Array2D.length1 arr0) (Array2D.length2 arr0) (fun i j -> f arr0.[i, j] arr1.[i, j])
 
 /// Reduce each column of a 2D array.
-let inline mapReduceBased1 f g i0 j0 h w (arr : _ [,]) =
-    let inline reduce _ j =
-        Seq.reduce g (seq { for i in i0 .. i0 + h - 1 -> f arr.[i0 + i, j0 + j] })
-    Array2D.init 1 w reduce
+let inline mapReduce1 f g (arr : _ [,]) =
+    Array2D.init 1 (Array2D.length2 arr)
+                   (fun _ j -> Seq.reduce g (seq { for i in 0 .. Array2D.length1 arr - 1 -> f arr.[i, j] }))
 
 /// Reduce each row of a 2D array.
-let inline mapReduceBased2 f g i0 j0 h w (arr : _ [,]) =
-    let inline reduce i _ =
-        Seq.reduce g (seq { for j in j0 .. j0 + w - 1 -> f arr.[i0 + i, j0 + j] })
-    Array2D.init h 1 reduce
+let inline mapReduce2 f g (arr : _ [,]) =
+    Array2D.init (Array2D.length1 arr) 1
+                 (fun i _ -> Seq.reduce g (seq { for j in 0 .. Array2D.length2 arr - 1 -> f arr.[i, j] }))
 
-let inline mapReduce1 f g arr = call (mapReduceBased1 f g) arr
-let inline mapReduce2 f g arr = call (mapReduceBased2 f g) arr
+let inline reduce1 f arr = mapReduce1 id f arr
+let inline reduce2 f arr = mapReduce2 id f arr
 
-let inline reduceBased1 f i0 j0 h w arr = mapReduceBased1 id f i0 j0 h w arr
-let inline reduceBased2 f i0 j0 h w arr = mapReduceBased2 id f i0 j0 h w arr
+let inline mapReduce f g (arr : _ [,]) =
+    Seq.reduce g (Seq.map f (seq { for i in 0 .. (Array2D.length1 arr - 1) do for j in 0 .. (Array2D.length2 arr - 1) -> arr.[i, j] }))
 
-let inline reduce1 f arr = call (reduceBased1 f) arr
-let inline reduce2 f arr = call (reduceBased2 f) arr
+let inline reduce f arr = mapReduce id f arr
 
-let inline mapReduceBased f g i0 j0 h w (arr : _ [,]) =
-    Seq.reduce g (Seq.map f (seq { for i in i0 .. h - 1 do for j in j0 .. w - 1 -> arr.[i, j] }))
+let inline sort1 p (arr : _ [,]) =
+    let sort = fun j -> Array.sortBy p [| for i in 0 .. Array2D.length1 arr - 1 -> arr.[i, + j] |]
+    let arr' = [| for j in 0 .. Array2D.length2 arr - 1 -> sort j |]
+    Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> Array.get (Array.get arr' j) i)
 
-let inline mapReduce f g arr = call (mapReduceBased f g) arr
-let inline reduceBased f i0 j0 h w arr = mapReduceBased id f i0 j0 h w arr
-let inline reduce f arr = call (reduceBased f) arr
-
-let inline sortBased1 p i0 j0 h w (arr : _ [,]) =
-    let inline sort j =
-        Array.sortBy p [| for i in i0 .. i0 + h - 1 -> arr.[i, + j] |]
-    let arr' = [| for j in j0 .. j0 + w - 1 -> sort j |]
-    Array2D.init h w (fun i j -> Array.get (Array.get arr' j) i)
-
-let inline sortBased2 p i0 j0 h w (arr : _ [,]) =
-    let inline sort i =
-        Array.sortBy p [| for j in j0 .. j0 + w - 1 -> arr.[i, j] |]
-    array2D [| for i in i0 .. i0 + h - 1 -> sort i |]
-
-let inline sort1 p arr = call p arr
-let inline sort2 p arr = call p arr
+let inline sort2 p (arr : _ [,]) =
+    let sort = fun i -> Array.sortBy p [| for j in 0 .. Array2D.length2 arr - 1 -> arr.[i, j] |]
+    array2D [| for i in 0 .. Array2D.length1 arr - 1 -> sort i |]
 
 /// Initialize a 2D array with all zeros.
 let inline initZeros h w =

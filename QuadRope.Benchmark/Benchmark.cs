@@ -117,14 +117,14 @@ namespace RadTrees.Benchmark
             var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
 	    Mark("Array2D.init", () => Array2DModule.Initialize(opts.Size, opts.Size, times));
             Mark("Array2D.map", () => Array2DModule.Map(timesTwo, arr));
-            Mark("Array2D.reduce", () => Utils.Array2D.reduce(plus, arr));
-            Mark("Array2D.zip", () => Utils.Array2D.map2(plus, arr, arr));
-	    Mark("Array2D.hfold", () => Utils.Array2D.fold2(times, getZeros, arr));
-	    Mark("Array2D.vfold", () => Utils.Array2D.fold1(times, getZeros, arr));
-	    Mark("Array2D.hscan", () => Utils.Array2D.scan2(times, getZeros, arr));
-	    Mark("Array2D.vscan", () => Utils.Array2D.scan1(times, getZeros, arr));
-//	    Mark("Array2D.hcat", () => DoNTimes(100, (l, r) => Utils.Array2D.cat2(l, r), arr));
-//	    Mark("Array2D.vcat", () => DoNTimes(100, (l, r) => Utils.Array2D.cat1(l, r), arr));
+            Mark("Array2D.reduce", () => Array2D.reduce<int>(plus, arr));
+            Mark("Array2D.zip", () => Array2D.map2(plus, arr, arr));
+            Mark("Array2D.hfold", () => Array2D.fold2(times, getZeros, arr));
+	    Mark("Array2D.vfold", () => Array2D.fold1(times, getZeros, arr));
+	    Mark("Array2D.hscan", () => Array2D.scan2(times, getZeros, arr));
+	    Mark("Array2D.vscan", () => Array2D.scan1(times, getZeros, arr));
+//	    Mark("Array2D.hcat", () => DoNTimes(100, (l, r) => Array2D.cat2(l, r), arr));
+//	    Mark("Array2D.vcat", () => DoNTimes(100, (l, r) => Array2D.cat1(l, r), arr));
 
 	    // Indexing.
 	    {
@@ -139,7 +139,7 @@ namespace RadTrees.Benchmark
 		Random rnd = new Random(368);
 		int i = rnd.Next(opts.Size);
 		int j = rnd.Next(opts.Size);
-		Mark("Array2D.set", () => Utils.Array2D.set(arr, i, j, 0));
+		Mark("Array2D.set", () => Array2D.set(arr, i, j, 0));
 	    }
         }
 

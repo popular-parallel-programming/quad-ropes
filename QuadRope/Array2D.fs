@@ -1,4 +1,4 @@
-module internal RadTrees.Array2D
+module RadTrees.Array2D
 
 /// Return a fresh copy of arr with the value at i,j replaced with v.
 let inline set arr i j v =

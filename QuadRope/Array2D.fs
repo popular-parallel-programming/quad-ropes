@@ -19,6 +19,10 @@ let inline slice arr i j h w =
 let inline isSingleton arr =
     Array2D.length1 arr = 1 && Array2D.length2 arr = 1
 
+/// True if array contains no elements.
+let inline isEmpty arr =
+    Array2D.length1 arr = 0 || Array2D.length2 arr = 0
+
 /// Concatenate two arrays in first dimension.
 let inline cat1 left right =
     if Array2D.length2 left <> Array2D.length2 right then failwith "length2 must be equal!"

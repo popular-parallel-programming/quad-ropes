@@ -143,6 +143,11 @@ namespace RadTrees.Benchmark
 	    }
         }
 
+        public static void vanDerCorput(Options opts) {
+            Mark("vdc Array2D", () => Examples.Array2D.vanDerCorput(opts.Size));
+            Mark("vdc QuadRope", () => Examples.QuadRope.vanDerCorput(opts.Size));
+        }
+
 	public static void Main(string[] args)
         {
 	    Options opts = new Options();
@@ -158,6 +163,9 @@ namespace RadTrees.Benchmark
 		    case "parallel":
 			RunParallel(opts);
 			break;
+                    case "vdc":
+                        vanDerCorput(opts);
+                        break;
 		    default:
 			Console.WriteLine("Mode not supported: \"{0}\"", opts.Mode);
 			break;

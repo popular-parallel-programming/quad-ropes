@@ -18,6 +18,9 @@ let inline slice arr i j h w =
                      (min w (Array2D.length2 arr - j0))
                      (fun i j -> arr.[i0 + i, j0 + j])
 
+let inline singleton v =
+    Array2D.create 1 1 v
+
 /// True if array contains only a single element.
 let inline isSingleton arr =
     Array2D.length1 arr = 1 && Array2D.length2 arr = 1

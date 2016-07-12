@@ -440,8 +440,16 @@ let inline reallocate rope =
 let inline initAll h w e =
     init h w (fun _ _ -> e)
 
+/// Generate a singleton quad rope.
+let inline singleton v =
+    initAll 1 1 v
+
 /// Initialize a rope with all zeros.
 let inline initZeros h w = initAll h w 0
+
+/// True if rope is a singleton, false otherwise.
+let isSingleton rope =
+    rows rope = 1 && cols rope = 1
 
 /// Initialize a rope from a native 2D-array.
 let fromArray vss =

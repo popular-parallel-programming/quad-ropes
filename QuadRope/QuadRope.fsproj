@@ -52,6 +52,7 @@
     <Compile Include="Array2D.fs" />
     <Compile Include="QuadRope.fs" />
     <Compile Include="QuadRope.Parallel.fs" />
+    <Compile Include="Examples.fs" />
   </ItemGroup>
   <PropertyGroup>
     <MinimumVisualStudioVersion Condition="'$(MinimumVisualStudioVersion)' == ''">11</MinimumVisualStudioVersion>

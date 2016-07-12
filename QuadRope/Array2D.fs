@@ -54,13 +54,21 @@ let inline rev2 (arr : _ [,]) =
 
 /// Fold each column of a 2D array, calling state with each column to get the state.
 let inline fold1 f state (arr : _ [,]) =
-    let fold = fun _ j -> Seq.fold f (state j) (seq { for i in 0 .. Array2D.length1 arr - 1 -> arr.[i, j] })
-    Array2D.init 1 (Array2D.length2 arr) fold
+    Array2D.init 1 (Array2D.length2 arr)
+                   (fun _ j ->
+                    let mutable acc = state j
+                    for i in 0 .. Array2D.length1 arr - 1 do
+                        acc <- f acc arr.[i, j]
+                    acc)
 
 /// Fold each row of a 2D array, calling state with each row to get the state.
 let inline fold2 f state (arr : _ [,]) =
-    let fold = fun i _ -> Seq.fold f (state i) (seq { for j in 0 .. Array2D.length2 arr - 1 -> arr.[i, j] })
-    Array2D.init (Array2D.length1 arr) 1 fold
+        Array2D.init (Array2D.length1 arr) 1
+                 (fun i _ ->
+                  let mutable acc = state i
+                  for j in 0 .. Array2D.length2 arr - 1 do
+                      acc <- f acc arr.[i, j]
+                  acc)
 
 let inline exclusiveScan f s p g =
     let unfold = (fun (i, s) ->
@@ -88,18 +96,34 @@ let inline map2 f (arr0 : _ [,]) (arr1 : _ [,]) =
 /// Reduce each column of a 2D array.
 let inline mapReduce1 f g (arr : _ [,]) =
     Array2D.init 1 (Array2D.length2 arr)
-                   (fun _ j -> Seq.reduce g (seq { for i in 0 .. Array2D.length1 arr - 1 -> f arr.[i, j] }))
+                   (fun _ j ->
+                    let mutable acc = f arr.[0, j]
+                    for i in 1 .. Array2D.length1 arr - 1 do
+                        acc <- g acc (f arr.[i, j])
+                    acc)
 
 /// Reduce each row of a 2D array.
 let inline mapReduce2 f g (arr : _ [,]) =
     Array2D.init (Array2D.length1 arr) 1
-                 (fun i _ -> Seq.reduce g (seq { for j in 0 .. Array2D.length2 arr - 1 -> f arr.[i, j] }))
+                 (fun i _ ->
+                  let mutable acc = f arr.[i, 0]
+                  for j in 1 .. Array2D.length2 arr - 1 do
+                      acc <- g acc (f arr.[i, j])
+                  acc)
 
 let inline reduce1 f arr = mapReduce1 id f arr
 let inline reduce2 f arr = mapReduce2 id f arr
 
+/// Map a function f to all values in the array and combine the
+/// results using g.
 let inline mapReduce f g (arr : _ [,]) =
-    Seq.reduce g (Seq.map f (seq { for i in 0 .. (Array2D.length1 arr - 1) do for j in 0 .. (Array2D.length2 arr - 1) -> arr.[i, j] }))
+    let mutable acc = f arr.[0,0]
+    for j in 1 .. Array2D.length2 arr - 1 do
+        acc <- g acc (f arr.[0, j])
+    for i in 1 .. Array2D.length1 arr - 1 do
+        for j in 0 .. Array2D.length2 arr - 1 do
+            acc <- g acc (f arr.[i, j])
+    acc
 
 let inline reduce f arr = mapReduce id f arr
 

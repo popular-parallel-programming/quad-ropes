@@ -195,6 +195,41 @@ let vbalance rope =
             | _ -> rope :: rs
     vbalance0 rope
 
+/// Balancing after Boehm et al. It turns out that this is slightly
+/// slower than reduce-rebuild sorting.
+module Balancing =
+    let hbalance rope =
+        let rec insert rope n = function
+            | r0 :: r1 :: ropes when depth r1 <= n -> insert rope n ((flatNode r1 r0) :: ropes)
+            | r0 :: ropes when depth r0 <= n -> (flatNode r0 rope) :: ropes
+            | ropes -> rope :: ropes
+        let rec hbalance rope (ropes : 'a QuadRope list) =
+            match rope with
+                | Empty -> ropes
+                | Leaf _ -> insert rope (Fibonacci.nth (cols rope)) ropes
+                | Node (_, _, _, ne, nw, Empty, Empty) -> hbalance ne (hbalance nw ropes)
+                | rope -> rope :: ropes
+        if isBalancedH rope then
+            rope
+        else
+            List.reduce (fun ne nw -> flatNode nw ne) (hbalance rope [])
+
+    let vbalance rope =
+        let rec insert rope n = function
+            | r0 :: r1 :: ropes when depth r1 <= n -> insert rope n ((thinNode r1 r0) :: ropes)
+            | r0 :: ropes when depth r0 <= n -> (thinNode r0 rope) :: ropes
+            | ropes -> rope :: ropes
+        let rec vbalance rope (ropes : 'a QuadRope list) =
+            match rope with
+                | Empty -> ropes
+                | Leaf _ -> insert rope (Fibonacci.nth (rows rope)) ropes
+                | Node (_, _, _, Empty, nw, sw, Empty) -> vbalance sw (vbalance nw ropes)
+                | rope -> rope :: ropes
+        if isBalancedV rope then
+            rope
+        else
+            List.reduce (fun sw nw -> thinNode nw sw) (vbalance rope [])
+
 /// Compute the "subrope" starting from indexes i, j taking h and w
 /// elements in vertical and horizontal direction.
 let slice root i j h w =

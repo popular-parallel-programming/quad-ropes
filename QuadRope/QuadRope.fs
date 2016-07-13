@@ -136,16 +136,16 @@ let write root i j v =
     write0 root i j v
 
 let private isBalanced d s =
-    d <= 1 || d <= d_max && Fibonacci.fib (d + 1) <= s
+    Fibonacci.fib (d + 2) <= s
 
 /// True if rope is balanced horizontally. False otherwise.
 let isBalancedH = function
-    | Node (d, h, _, _, _, _, _) -> isBalanced d h
+    | Node (d, _, w, _, _, _, _) -> isBalanced d w
     | _ -> true
 
 /// True if rope is balanced vertically. False otherwise.
 let isBalancedV = function
-    | Node (d, _, w, _, _, _, _) -> isBalanced d w
+    | Node (d, h, _, _, _, _, _) -> isBalanced d h
     | _ -> true
 
 let rec private reduceList f = function

@@ -196,8 +196,8 @@ let vbalance rope =
     vbalance0 rope
 
 /// Balancing after Boehm et al. It turns out that this is slightly
-/// slower than reduce-rebuild sorting.
-module Balancing =
+/// slower than reduce-rebuild balancing.
+module Boehm =
     let hbalance rope =
         let rec insert rope n = function
             | r0 :: r1 :: ropes when depth r1 <= n -> insert rope n ((flatNode r1 r0) :: ropes)

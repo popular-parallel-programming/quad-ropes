@@ -203,7 +203,7 @@ module Boehm =
             | r0 :: r1 :: ropes when depth r1 <= n -> insert rope n ((flatNode r1 r0) :: ropes)
             | r0 :: ropes when depth r0 <= n -> (flatNode r0 rope) :: ropes
             | ropes -> rope :: ropes
-        let rec hbalance rope (ropes : 'a QuadRope list) =
+        let rec hbalance rope ropes =
             match rope with
                 | Empty -> ropes
                 | Leaf _ -> insert rope (Fibonacci.nth (cols rope)) ropes
@@ -219,7 +219,7 @@ module Boehm =
             | r0 :: r1 :: ropes when depth r1 <= n -> insert rope n ((thinNode r1 r0) :: ropes)
             | r0 :: ropes when depth r0 <= n -> (thinNode r0 rope) :: ropes
             | ropes -> rope :: ropes
-        let rec vbalance rope (ropes : 'a QuadRope list) =
+        let rec vbalance rope ropes =
             match rope with
                 | Empty -> ropes
                 | Leaf _ -> insert rope (Fibonacci.nth (rows rope)) ropes

@@ -7,6 +7,7 @@ module TestRunner =
         RadTrees.Test.Gen.register() |> ignore
         Check.QuickAll (typeof<Utils.Handle>.DeclaringType)
         Check.QuickAll (typeof<QuadRope.Handle>.DeclaringType)
+        Check.QuickAll (typeof<Parallel.QuadRope.Handle>.DeclaringType)
 
     [<EntryPoint>]
     let main _ =

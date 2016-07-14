@@ -87,12 +87,16 @@ namespace RadTrees.Benchmark
 	    Mark("QuadRope.hcat", () => DoNTimes(100, (l, r) => QuadRopeModule.hcat(l, r), rope));
 	    Mark("QuadRope.hcat + hbalance",
 		 () => QuadRopeModule.hbalance(DoNTimes(100, (l, r) => QuadRopeModule.hcat(l, r), rope)));
+            Mark("QuadRope.hcat + hbalance2",
+		 () => QuadRopeModule.Boehm.hbalance(DoNTimes(100, (l, r) => QuadRopeModule.hcat(l, r), rope)));
 //	    Mark("QuadRope.hcat + reallocate",
 //		 () => QuadRopeModule.reallocate(QuadRopeModule.hcat(rope, rope)));
 
 	    Mark("QuadRope.vcat", () => DoNTimes(100, (u, l) => QuadRopeModule.vcat(u, l), rope));
 	    Mark("QuadRope.vcat + vbalance",
 		 () => QuadRopeModule.vbalance(DoNTimes(100, (u, l) => QuadRopeModule.vcat(u, l), rope)));
+            Mark("QuadRope.vcat + vbalance",
+		 () => QuadRopeModule.Boehm.vbalance(DoNTimes(100, (u, l) => QuadRopeModule.vcat(u, l), rope)));
 //	    Mark("QuadRope.vcat + reallocate",
 //		 () => QuadRopeModule.reallocate(QuadRopeModule.vcat(rope, rope)));
 

@@ -68,6 +68,7 @@ let hfold f states rope =
     if QuadRope.rows states <> QuadRope.rows rope then
         failwith "states and rope must have same height"
     let rec fold1 states = function
+        | Empty -> states
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
         | Slice _ as rope -> fold1 states (QuadRope.Slicing.reallocate rope)
         | rope -> QuadRope.hfold f states rope
@@ -83,6 +84,7 @@ let vfold f states rope =
     if QuadRope.cols states <> QuadRope.cols rope then
         failwith "states and rope must have same width"
     let rec fold1 states = function
+        | Empty -> states
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
         | Slice _ as rope -> fold1 states (QuadRope.Slicing.reallocate rope)
         | rope -> QuadRope.vfold f states rope
@@ -158,10 +160,10 @@ let rec vmapreduce f g = function
             | Empty -> nw0
             | _ -> zip g nw0 sw0
     | Node (_, _, _, ne, nw, sw, se) ->
-        let ne0, nw0, sw0, se0 = par4 (fun () -> hmapreduce f g ne)
-                                      (fun () -> hmapreduce f g nw)
-                                      (fun () -> hmapreduce f g sw)
-                                      (fun () -> hmapreduce f g se)
+        let ne0, nw0, sw0, se0 = par4 (fun () -> vmapreduce f g ne)
+                                      (fun () -> vmapreduce f g nw)
+                                      (fun () -> vmapreduce f g sw)
+                                      (fun () -> vmapreduce f g se)
         let n = QuadRope.flatNode nw0 ne0
         let s = QuadRope.flatNode sw0 se0
         zip g n s
@@ -215,6 +217,9 @@ let rec vfilter p = function
 
 /// Reverse the quad rope horizontally in parallel.
 let rec hrev = function
+    | Node (d, h, w, Empty, nw, sw, Empty) ->
+        let nw0, sw0 = par2 (fun () -> hrev nw) (fun () -> hrev sw)
+        Node (d, h, w, Empty, nw0, sw0, Empty)
     | Node (d, h, w, ne, nw, sw, se) ->
         let ne0, nw0, sw0, se0 = par4 (fun() -> hrev ne)
                                       (fun() -> hrev nw)
@@ -226,12 +231,15 @@ let rec hrev = function
 
 /// Reverse the quad rope vertically in parallel.
 let rec vrev = function
+    | Node (d, h, w, ne, nw, Empty, Empty) ->
+        let ne0, nw0 = par2 (fun () -> vrev ne) (fun () -> vrev nw)
+        Node (d, h, w, ne0, nw0, Empty, Empty)
     | Node (d, h, w, ne, nw, sw, se) ->
         let ne0, nw0, sw0, se0 = par4 (fun() -> vrev ne)
                                       (fun() -> vrev nw)
                                       (fun() -> vrev sw)
                                       (fun() -> vrev se)
-        Node (d, h, w, sw0, se0, nw0, ne0)
+        Node (d, h, w, se0, sw0, nw0, ne0)
     | Slice _ as rope -> vrev (QuadRope.Slicing.reallocate rope)
     | rope -> QuadRope.vrev rope
 

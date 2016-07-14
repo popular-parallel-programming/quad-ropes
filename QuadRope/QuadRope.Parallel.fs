@@ -62,6 +62,36 @@ let rec map f = function
     | Slice _ as rope -> map f (QuadRope.Slicing.reallocate rope)
     | rope -> QuadRope.map f rope
 
+/// Fold each row of rope with f in parallel, starting with the
+/// according state in states.
+let hfold f states rope =
+    if QuadRope.rows states <> QuadRope.rows rope then
+        failwith "states and rope must have same height"
+    let rec fold1 states = function
+        | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
+        | Slice _ as rope -> fold1 states (QuadRope.Slicing.reallocate rope)
+        | rope -> QuadRope.hfold f states rope
+    and fold2 states n s =
+        let nstates, sstates = QuadRope.vsplit2 states (QuadRope.rows n)
+        let nstates0, sstates0 = par2 (fun () -> fold1 nstates n) (fun () -> fold1 sstates s)
+        QuadRope.thinNode nstates0 sstates0
+    fold1 states rope
+
+/// Fold each column of rope with f in parallel, starting with the
+/// according state in states.
+let vfold f states rope =
+    if QuadRope.cols states <> QuadRope.cols rope then
+        failwith "states and rope must have same width"
+    let rec fold1 states = function
+        | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
+        | Slice _ as rope -> fold1 states (QuadRope.Slicing.reallocate rope)
+        | rope -> QuadRope.vfold f states rope
+    and fold2 states w e =
+        let wstates, estates = QuadRope.hsplit2 states (QuadRope.cols w)
+        let wstates0, estates0 = par2 (fun () -> fold1 wstates w) (fun () -> fold1 estates e)
+        QuadRope.flatNode wstates0 estates0
+    fold1 states rope
+
 /// Apply f in parallel to each (i, j) of lope and rope.
 let zip f lope rope =
     let rec zip0 f lope rope =

@@ -714,18 +714,29 @@ let toArray rope =
     Array2D.init (rows rope) (cols rope) (get rope)
 
 /// Apply a function with side effects to all elements of the rope.
-let rec apply f = function
+let rec iter f = function
     | Empty -> ()
-    | Leaf vs ->
-        for i in 0 .. (Array2D.length1 vs) - 1 do
-            for j in 0 .. (Array2D.length2 vs) - 1 do
-                f (Array2D.get vs i j)
+    | Leaf vs -> Array2D.iter f vs
     | Node (_, _, _, ne, nw, sw, se) ->
-        apply f ne
-        apply f nw
-        apply f sw
-        apply f se
-    | Slice _ as rope -> apply f (Slicing.reallocate rope)
+        iter f ne
+        iter f nw
+        iter f sw
+        iter f se
+    | Slice _ as rope -> iter f (Slicing.reallocate rope)
+
+/// Apply a function with side effects to all elements and their
+/// corresponding index pair.
+let iteri f rope =
+    let rec iteri f i j = function
+        | Empty -> ()
+        | Leaf vs -> Array2D.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
+        | Node (_, _, _, ne, nw, sw, se) ->
+            iteri f i j nw
+            iteri f i (j + cols nw) ne
+            iteri f (i + rows nw) j sw
+            iteri f (i + rows ne) (j + cols sw) se
+        | Slice _ as rope -> iteri f i j (Slicing.reallocate rope)
+    iteri f 0 0 rope
 
 /// Produce a string with the tikz code for printing the rope as a
 /// box diagram. This is useful for illustrating algorithms on

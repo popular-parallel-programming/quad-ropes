@@ -1,5 +1,6 @@
 ﻿// -*- c-basic-offset: 4; indent-tabs-mode: nil-*-
 using System;
+using System.Collections.Generic;
 using Microsoft.FSharp.Collections;
 using Microsoft.FSharp.Core;
 
@@ -48,134 +49,144 @@ namespace RadTrees.Benchmark
             return acc;
         }
 
-	public static void RunBaseline(Options opts)
-	{
-	    Mark("QuadRope.init", () => QuadRopeModule.init(opts.Size, opts.Size, times));
-	    var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-	    Mark("QuadRope.map", () => QuadRopeModule.map(timesTwo, rope));
-	    Mark("QuadRope.reduce", () => QuadRopeModule.reduce(plus, rope));
-	    Mark("QuadRope.zip", () => QuadRopeModule.zip(times, rope,
-							  QuadRopeModule.hrev(QuadRopeModule.vrev(rope))));
-	}
-
-	public static void RunParallel(Options opts)
-	{
-	    if (opts.Threads == 1) {
-		RunBaseline(opts);
-		return;
-	    }
-	    SetThreads(opts.Threads);
-            Mark("QuadRope.init", () => Parallel.QuadRopeModule.init(opts.Size, opts.Size, times));
-	    var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-	    Mark("QuadRope.map", () => Parallel.QuadRopeModule.map(timesTwo, rope));
-	    Mark("QuadRope.reduce", () => Parallel.QuadRopeModule.reduce(plus, rope));
-	    Mark("QuadRope.zip", () =>
-                 Parallel.QuadRopeModule.zip(times, rope,
-                                             QuadRopeModule.hrev(QuadRopeModule.vrev(rope))));
-	}
-
-        public static void RunSequential(Options opts)
+        public static void RunSequentialRope(Options opts)
         {
-	    RunBaseline(opts);
 	    var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-	    Mark("QuadRope.hfold",
-		 () => QuadRopeModule.hfold(times, QuadRopeModule.initZeros(opts.Size, 1), rope));
-	    Mark("QuadRope.vfold",
-		 () => QuadRopeModule.vfold(times, QuadRopeModule.initZeros(1, opts.Size), rope));
-	    Mark("QuadRope.hscan", () => QuadRopeModule.hscan(times, getZeros, rope));
-	    Mark("QuadRope.vscan", () => QuadRopeModule.vscan(times, getZeros, rope));
-	    Mark("QuadRope.hcat", () => DoNTimes(100, (l, r) => QuadRopeModule.hcat(l, r), rope));
-	    Mark("QuadRope.hcat + hbalance",
-		 () => QuadRopeModule.hbalance(DoNTimes(100, (l, r) => QuadRopeModule.hcat(l, r), rope)));
-            Mark("QuadRope.hcat + hbalance2",
-		 () => QuadRopeModule.Boehm.hbalance(DoNTimes(100, (l, r) => QuadRopeModule.hcat(l, r), rope)));
-//	    Mark("QuadRope.hcat + reallocate",
-//		 () => QuadRopeModule.reallocate(QuadRopeModule.hcat(rope, rope)));
-
-	    Mark("QuadRope.vcat", () => DoNTimes(100, (u, l) => QuadRopeModule.vcat(u, l), rope));
-	    Mark("QuadRope.vcat + vbalance",
-		 () => QuadRopeModule.vbalance(DoNTimes(100, (u, l) => QuadRopeModule.vcat(u, l), rope)));
-            Mark("QuadRope.vcat + vbalance",
-		 () => QuadRopeModule.Boehm.vbalance(DoNTimes(100, (u, l) => QuadRopeModule.vcat(u, l), rope)));
-//	    Mark("QuadRope.vcat + reallocate",
-//		 () => QuadRopeModule.reallocate(QuadRopeModule.vcat(rope, rope)));
-
-	    // Indexing.
-	    {
-	        Random rnd = new Random(892);
-		int i = rnd.Next(opts.Size);
-		int j = rnd.Next(opts.Size);
-		Mark("QuadRope.index", () => QuadRopeModule.get(rope, i, j));
-	    }
-
-	    // Persistent update of a pseudo-random index pair.
-	    {
-		Random rnd = new Random(368);
-		int i = rnd.Next(opts.Size);
-		int j = rnd.Next(opts.Size);
-		Mark("QuadRope.set", () => QuadRopeModule.set(rope, i, j, 0));
-	    }
+            var hzeros = QuadRopeModule.initZeros(opts.Size, 1);
+            var vzeros = QuadRopeModule.initZeros(1, opts.Size);
+            Mark("QuadRope.init",    () => QuadRopeModule.init(opts.Size, opts.Size, times));
+            Mark("QuadRope.map",     () => QuadRopeModule.map(timesTwo, rope));
+            Mark("QuadRope.reduce",  () => QuadRopeModule.reduce<int>(plus, rope));
+            Mark("QuadRope.zip",     () => QuadRopeModule.zip(plus, rope, rope));
+            Mark("QuadRope.hfold",   () => QuadRopeModule.hfold(times, hzeros, rope));
+	    Mark("QuadRope.vfold",   () => QuadRopeModule.vfold(times, vzeros, rope));
+            Mark("QuadRope.hreduce", () => QuadRopeModule.hreduce(times, rope));
+	    Mark("QuadRope.vreduce", () => QuadRopeModule.vreduce(times, rope));
+//	    Mark("QuadRope.hscan",   () => QuadRopeModule.hscan(times, getZeros, rope));
+//	    Mark("QuadRope.vscan",   () => QuadRopeModule.vscan(times, getZeros, rope));
 	}
 
-	public static void RunArray(Options opts) {
+        public static void RunParallelRope(Options opts)
+        {
+	    var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
+            var hzeros = QuadRopeModule.initZeros(opts.Size, 1);
+            var vzeros = QuadRopeModule.initZeros(1, opts.Size);
+            Mark("QuadRope.init",    () => Parallel.QuadRopeModule.init(opts.Size, opts.Size, times));
+            Mark("QuadRope.map",     () => Parallel.QuadRopeModule.map(timesTwo, rope));
+            Mark("QuadRope.reduce",  () => Parallel.QuadRopeModule.reduce<int>(plus, rope));
+            Mark("QuadRope.zip",     () => Parallel.QuadRopeModule.zip(plus, rope, rope));
+            Mark("QuadRope.hfold",   () => Parallel.QuadRopeModule.hfold(times, hzeros, rope));
+	    Mark("QuadRope.vfold",   () => Parallel.QuadRopeModule.vfold(times, vzeros, rope));
+            Mark("QuadRope.hreduce", () => Parallel.QuadRopeModule.hreduce(times, rope));
+	    Mark("QuadRope.vreduce", () => Parallel.QuadRopeModule.vreduce(times, rope));
+//	    Mark("QuadRope.hscan",   () => Parallel.QuadRopeModule.hscan(times, getZeros, rope));
+//	    Mark("QuadRope.vscan",   () => Parallel.QuadRopeModule.vscan(times, getZeros, rope));
+	}
+
+	public static void RunSequentialArray(Options opts)
+        {
             var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
-	    Mark("Array2D.init", () => Array2DModule.Initialize(opts.Size, opts.Size, times));
-            Mark("Array2D.map", () => Array2DModule.Map(timesTwo, arr));
-            Mark("Array2D.reduce", () => Array2D.reduce<int>(plus, arr));
-            Mark("Array2D.zip", () => Array2D.map2(plus, arr, arr));
-            Mark("Array2D.hfold", () => Array2D.fold2(times, getZeros, arr));
-	    Mark("Array2D.vfold", () => Array2D.fold1(times, getZeros, arr));
-	    Mark("Array2D.hscan", () => Array2D.scan2(times, getZeros, arr));
-	    Mark("Array2D.vscan", () => Array2D.scan1(times, getZeros, arr));
-//	    Mark("Array2D.hcat", () => DoNTimes(100, (l, r) => Array2D.cat2(l, r), arr));
-//	    Mark("Array2D.vcat", () => DoNTimes(100, (l, r) => Array2D.cat1(l, r), arr));
-
-	    // Indexing.
-	    {
-	        Random rnd = new Random(892);
-		int i = rnd.Next(opts.Size);
-		int j = rnd.Next(opts.Size);
-		Mark("Array2D.index", () => Array2DModule.Get(arr, i, j));
-	    }
-
-	    // Persistent update of a pseudo-random index pair.
-	    {
-		Random rnd = new Random(368);
-		int i = rnd.Next(opts.Size);
-		int j = rnd.Next(opts.Size);
-		Mark("Array2D.set", () => Array2D.set(arr, i, j, 0));
-	    }
+	    Mark("Array2D.init",    () => Array2DModule.Initialize(opts.Size, opts.Size, times));
+            Mark("Array2D.map",     () => Array2DModule.Map(timesTwo, arr));
+            Mark("Array2D.reduce",  () => Array2D.reduce<int>(plus, arr));
+            Mark("Array2D.zip",     () => Array2D.map2(plus, arr, arr));
+            Mark("Array2D.hfold",   () => Array2D.fold2(times, getZeros, arr));
+	    Mark("Array2D.vfold",   () => Array2D.fold1(times, getZeros, arr));
+            Mark("Array2D.hreduce", () => Array2D.reduce2(times, arr));
+	    Mark("Array2D.vreduce", () => Array2D.reduce1(times, arr));
+//	    Mark("Array2D.hscan",   () => Array2D.scan2(times, getZeros, arr));
+//	    Mark("Array2D.vscan",   () => Array2D.scan1(times, getZeros, arr));
         }
 
-        public static void vanDerCorput(Options opts) {
+        public static void RunParallelArray(Options opts)
+        {
+            var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
+	    Mark("Array2D.init",    () => Parallel.Array2D.init(opts.Size, opts.Size, times));
+            Mark("Array2D.map",     () => Parallel.Array2D.map(timesTwo, arr));
+            Mark("Array2D.reduce",  () => Parallel.Array2D.reduce<int>(plus, arr));
+            Mark("Array2D.zip",     () => Parallel.Array2D.map2(plus, arr, arr));
+            Mark("Array2D.hfold",   () => Parallel.Array2D.fold2(times, getZeros, arr));
+	    Mark("Array2D.vfold",   () => Parallel.Array2D.fold1(times, getZeros, arr));
+            Mark("Array2D.hreduce", () => Parallel.Array2D.reduce2(times, arr));
+	    Mark("Array2D.vreduce", () => Parallel.Array2D.reduce1(times, arr));
+//	    Mark("Array2D.hscan",   () => Parallel.Array2D.scan2(times, getZeros, arr));
+//	    Mark("Array2D.vscan",   () => Parallel.Array2D.scan1(times, getZeros, arr));
+        }
+
+        public static void Run(Options opts)
+        {
+            if (opts.Threads == 1) {
+                RunSequentialRope(opts);
+                RunSequentialArray(opts);
+            } else {
+                SetThreads(opts.Threads);
+                RunParallelRope(opts);
+                RunParallelArray(opts);
+            }
+        }
+
+        public static void Indexing(Options opts)
+        {
+            Random rnd = new Random(892);
+            int i = rnd.Next(opts.Size);
+            int j = rnd.Next(opts.Size);
+
+            var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
+            Mark("Array2D.get", () => Array2DModule.Get(arr, i, j));
+            Mark("Array2D.set", () => Array2D.set(arr, i, j, 0));
+
+            var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
+            Mark("QuadRope.get", () => QuadRopeModule.get(rope, i, j));
+            Mark("QuadRope.set", () => QuadRopeModule.set(rope, i, j, 0));
+        }
+
+        public static void Concatenating(Options opts)
+        {
+            var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
+            var vskewed = DoNTimes(100, (l, r) => QuadRopeModule.vcat(l, r), rope);
+            var hskewed = DoNTimes(100, (l, r) => QuadRopeModule.hcat(l, r), rope);
+            var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
+
+            Mark("QuadRope.hcat", () => QuadRopeModule.hcat(rope, rope));
+	    Mark("QuadRope.hbalance", () => QuadRopeModule.hbalance(hskewed));
+            Mark("QuadRope.hbalance (Boehm et al.)", () => QuadRopeModule.Boehm.hbalance(hskewed));
+
+            Mark("QuadRope.vcat", () => QuadRopeModule.vcat(rope, rope));
+	    Mark("QuadRope.vbalance", () => QuadRopeModule.vbalance(vskewed));
+            Mark("QuadRope.vbalance (Boehm et al.)", () => QuadRopeModule.Boehm.vbalance(vskewed));
+
+            Mark("Array2D.hcat", () => Array2D.cat2(arr, arr));
+            Mark("Array2D.vcat", () => Array2D.cat1(arr, arr));
+        }
+
+        public static void vanDerCorput(Options opts)
+        {
             Mark("vdc Array2D", () => Examples.Array2D.vanDerCorput(opts.Size));
+            Mark("vdc Array2D.Parallel", () => Examples.Array2D.Parallel.vanDerCorput(opts.Size));
             Mark("vdc QuadRope", () => Examples.QuadRope.vanDerCorput(opts.Size));
+            Mark("vdc QuadRope.Parallel", () => Examples.QuadRope.Parallel.vanDerCorput(opts.Size));
         }
+
+        static Dictionary<string, Action<Options>> tests = new Dictionary<string, Action<Options>>()
+        {
+            {"all", Run},
+            {"index", Indexing},
+            {"cat", Concatenating},
+            {"vdc", vanDerCorput}
+        };
 
 	public static void Main(string[] args)
         {
 	    Options opts = new Options();
 	    if (Parser.Default.ParseArguments(args, opts)) {
 		Infrastructure.SystemInfo();
-		switch (opts.Mode) {
-		    case "array":
-			RunArray(opts);
-			break;
-		    case "sequential":
-			RunSequential(opts);
-			break;
-		    case "parallel":
-			RunParallel(opts);
-			break;
-                    case "vdc":
-                        vanDerCorput(opts);
-                        break;
-		    default:
-			Console.WriteLine("Mode not supported: \"{0}\"", opts.Mode);
-			break;
-		}
-	    }
-	}
+                try {
+                    tests[opts.Mode].Invoke(opts);
+                } catch (KeyNotFoundException e) {
+                    Console.WriteLine("No such configuration: "+ opts.Mode);
+                }
+            }
+        }
     }
 
 

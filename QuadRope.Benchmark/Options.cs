@@ -11,8 +11,8 @@ namespace RadTrees.Benchmark
     {
 	private string mode;
 
-	[Option('m', "mode", DefaultValue = "sequential",
-		HelpText = "Mode to run. One of \"sequential\", \"parallel\" or \"array\".")]
+	[Option('m', "mode", DefaultValue = "all",
+		HelpText = "Mode to run. One of \"all\", \"index\", \"cat\" or \"idx\".")]
 	public string Mode {
 	    get { return mode;}
 	    set { mode = value.ToLower(); }
@@ -24,7 +24,7 @@ namespace RadTrees.Benchmark
 
 	private int threads;
 
-	[Option('t', "threads", DefaultValue = 0,
+	[Option('t', "threads", DefaultValue = 1,
 		HelpText = "Number of threads to use.")]
 	public int Threads
 	{

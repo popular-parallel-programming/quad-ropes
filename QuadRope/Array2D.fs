@@ -73,7 +73,7 @@ let fold2 f state (arr : _ [,]) =
                       acc <- f acc arr.[i, j]
                   acc)
 
-let exclusiveScan f s p g =
+let private exclusiveScan f s p g =
     let unfold = (fun (i, s) ->
         if p i then
             let s' = f s (g i)

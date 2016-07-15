@@ -7,7 +7,7 @@ let init h w f =
     array2D (Array.Parallel.init h (fun i -> Array.init w (fun j -> f i j)))
 
 /// Concatenate two arrays in first dimension.
-let inline cat1 left right =
+let cat1 left right =
     if Array2D.length2 left <> Array2D.length2 right then failwith "length2 must be equal!"
     let l1 = Array2D.length1 left + Array2D.length1 right
     let l2 = Array2D.length2 left
@@ -15,7 +15,7 @@ let inline cat1 left right =
     init l1 l2 (fun i j -> if i < l1l then left.[i, j] else right.[i - l1l, j])
 
 /// Concatenate two arrays in second dimension.
-let inline cat2 left right =
+let cat2 left right =
     if Array2D.length1 left <> Array2D.length1 right then failwith "length1 must be equal!"
     let l1 = Array2D.length1 left
     let l2 = Array2D.length2 left + Array2D.length2 right
@@ -100,5 +100,5 @@ let mapReduce f g (arr : _ [,]) =
 
 let reduce f arr = mapReduce id f arr
 
-let inline transpose arr =
+let transpose arr =
     init (Array2D.length2 arr) (Array2D.length1 arr) (fun i j -> arr.[j, i])

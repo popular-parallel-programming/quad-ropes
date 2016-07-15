@@ -12,7 +12,7 @@ let init h w f =
         let h = h1 - h0
         let w = w1 - w0
         if h <= QuadRope.h_max && w <= QuadRope.w_max then
-            QuadRope.init h w (fun i j -> f (h0 + i) (w0 + j))
+            QuadRope.leaf (Array2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
         else if w <= QuadRope.w_max then
             let hpv = h0 + h / 2
             let n, s = par2 (fun () -> init0 h0 w0 hpv w1) (fun () -> init0 hpv w0 h1 w1)
@@ -34,16 +34,16 @@ let init h w f =
 /// Reallocate a rope form the ground up in parallel. Sometimes,
 /// this is the only way to improve performance of a badly
 /// composed quad rope.
-let inline reallocate rope =
+let reallocate rope =
     init (QuadRope.rows rope) (QuadRope.cols rope) (QuadRope.get rope)
 
 /// Initialize a rope in parallel where all elements are
 /// <code>e</code>.
-let inline initAll h w e =
+let initAll h w e =
     init h w (fun _ _ -> e)
 
 /// Initialize a rope in parallel with all zeros.
-let inline initZeros h w = initAll h w 0
+let initZeros h w = initAll h w 0
 
 /// Apply a function f to all scalars in parallel.
 let rec map f = function
@@ -171,10 +171,10 @@ let rec vmapreduce f g = function
     | rope -> QuadRope.vmapreduce f g rope
 
 /// Reduce all rows of rope by f.
-let inline hreduce f rope = hmapreduce id f rope
+let hreduce f rope = hmapreduce id f rope
 
 /// Reduce all columns of rope by f.
-let inline vreduce f rope = vmapreduce id f rope
+let vreduce f rope = vmapreduce id f rope
 
 /// Apply f to all values of the rope and reduce the resulting
 /// values to a single scalar using g in parallel.
@@ -195,7 +195,7 @@ let rec mapreduce f g = function
     | rope -> QuadRope.mapreduce f g rope
 
 /// Reduce all values of the rope to a single scalar in parallel.
-let inline reduce f rope = mapreduce id f rope
+let reduce f rope = mapreduce id f rope
 
 /// Remove all elements from rope for which p does not hold in
 /// parallel. Input rope must be of height 1.

@@ -1,14 +1,14 @@
 module RadTrees.Array2D
 
 /// Return a fresh copy of arr with the value at i,j replaced with v.
-let inline set arr i j v =
+let set arr i j v =
     let arr0 = Array2D.copy arr
     arr0.[i, j] <- v
     arr0
 
 /// Allocate a new array of the required dimensions with values taken
 /// from the original array.
-let inline slice arr i j h w =
+let slice arr i j h w =
     if i <= 0 && j <= 0 && Array2D.length1 arr <= h && Array2D.length2 arr <= w then
         arr
     else
@@ -18,19 +18,19 @@ let inline slice arr i j h w =
                      (min w (Array2D.length2 arr - j0))
                      (fun i j -> arr.[i0 + i, j0 + j])
 
-let inline singleton v =
+let singleton v =
     Array2D.create 1 1 v
 
 /// True if array contains only a single element.
-let inline isSingleton arr =
+let isSingleton arr =
     Array2D.length1 arr = 1 && Array2D.length2 arr = 1
 
 /// True if array contains no elements.
-let inline isEmpty arr =
+let isEmpty arr =
     Array2D.length1 arr = 0 || Array2D.length2 arr = 0
 
 /// Concatenate two arrays in first dimension.
-let inline cat1 left right =
+let cat1 left right =
     if Array2D.length2 left <> Array2D.length2 right then failwith "length2 must be equal!"
     let l1 = Array2D.length1 left + Array2D.length1 right
     let l2 = Array2D.length2 left
@@ -38,7 +38,7 @@ let inline cat1 left right =
     Array2D.init l1 l2 (fun i j -> if i < l1l then left.[i, j] else right.[i - l1l, j])
 
 /// Concatenate two arrays in second dimension.
-let inline cat2 left right =
+let cat2 left right =
     if Array2D.length1 left <> Array2D.length1 right then failwith "length1 must be equal!"
     let l1 = Array2D.length1 left
     let l2 = Array2D.length2 left + Array2D.length2 right
@@ -46,17 +46,17 @@ let inline cat2 left right =
     Array2D.init l1 l2 (fun i j -> if j < l2l then left.[i, j] else right.[i, j - l2l])
 
 /// Revert an array in first dimension.
-let inline rev1 (arr : _ [,]) =
+let rev1 (arr : _ [,]) =
     let h0 = Array2D.length1 arr - 1
     Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> arr.[h0 - i, j])
 
 /// Revert an array in second dimension.
-let inline rev2 (arr : _ [,]) =
+let rev2 (arr : _ [,]) =
     let w0 = Array2D.length2 arr - 1
     Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> arr.[i, w0 - j])
 
 /// Fold each column of a 2D array, calling state with each column to get the state.
-let inline fold1 f state (arr : _ [,]) =
+let fold1 f state (arr : _ [,]) =
     Array2D.init 1 (Array2D.length2 arr)
                    (fun _ j ->
                     let mutable acc = state j
@@ -65,7 +65,7 @@ let inline fold1 f state (arr : _ [,]) =
                     acc)
 
 /// Fold each row of a 2D array, calling state with each row to get the state.
-let inline fold2 f state (arr : _ [,]) =
+let fold2 f state (arr : _ [,]) =
         Array2D.init (Array2D.length1 arr) 1
                  (fun i _ ->
                   let mutable acc = state i
@@ -73,7 +73,7 @@ let inline fold2 f state (arr : _ [,]) =
                       acc <- f acc arr.[i, j]
                   acc)
 
-let inline exclusiveScan f s p g =
+let exclusiveScan f s p g =
     let unfold = (fun (i, s) ->
         if p i then
             let s' = f s (g i)
@@ -83,21 +83,21 @@ let inline exclusiveScan f s p g =
     Array.unfold unfold (0, s)
 
 /// Compute the column-wise prefix sum for f.
-let inline scan1 f state (arr : _ [,]) =
+let scan1 f state (arr : _ [,]) =
     let arr' = [| for j in 0 .. Array2D.length2 arr - 1 ->
                    exclusiveScan f (state j) ((>) (Array2D.length1 arr)) (fun i -> Array2D.get arr i j) |]
     Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> Array.get (Array.get arr' j) i)
 
 /// Compute the row-wise prefix sum for f.
-let inline scan2 f state (arr : _ [,]) =
+let scan2 f state (arr : _ [,]) =
     array2D [| for i in 0 .. Array2D.length1 arr - 1 ->
                 exclusiveScan f (state i) ((>) (Array2D.length2 arr)) (fun j -> Array2D.get arr i j) |]
 
-let inline map2 f (arr0 : _ [,]) (arr1 : _ [,]) =
+let map2 f (arr0 : _ [,]) (arr1 : _ [,]) =
     Array2D.init (Array2D.length1 arr0) (Array2D.length2 arr0) (fun i j -> f arr0.[i, j] arr1.[i, j])
 
 /// Reduce each column of a 2D array.
-let inline mapReduce1 f g (arr : _ [,]) =
+let mapReduce1 f g (arr : _ [,]) =
     Array2D.init 1 (Array2D.length2 arr)
                    (fun _ j ->
                     let mutable acc = f arr.[0, j]
@@ -106,7 +106,7 @@ let inline mapReduce1 f g (arr : _ [,]) =
                     acc)
 
 /// Reduce each row of a 2D array.
-let inline mapReduce2 f g (arr : _ [,]) =
+let mapReduce2 f g (arr : _ [,]) =
     Array2D.init (Array2D.length1 arr) 1
                  (fun i _ ->
                   let mutable acc = f arr.[i, 0]
@@ -114,12 +114,12 @@ let inline mapReduce2 f g (arr : _ [,]) =
                       acc <- g acc (f arr.[i, j])
                   acc)
 
-let inline reduce1 f arr = mapReduce1 id f arr
-let inline reduce2 f arr = mapReduce2 id f arr
+let reduce1 f arr = mapReduce1 id f arr
+let reduce2 f arr = mapReduce2 id f arr
 
 /// Map a function f to all values in the array and combine the
 /// results using g.
-let inline mapReduce f g (arr : _ [,]) =
+let mapReduce f g (arr : _ [,]) =
     let mutable acc = f arr.[0,0]
     for j in 1 .. Array2D.length2 arr - 1 do
         acc <- g acc (f arr.[0, j])
@@ -128,28 +128,28 @@ let inline mapReduce f g (arr : _ [,]) =
             acc <- g acc (f arr.[i, j])
     acc
 
-let inline reduce f arr = mapReduce id f arr
+let reduce f arr = mapReduce id f arr
 
-let inline sort1 p (arr : _ [,]) =
+let sort1 p (arr : _ [,]) =
     let sort = fun j -> Array.sortBy p [| for i in 0 .. Array2D.length1 arr - 1 -> arr.[i, + j] |]
     let arr' = [| for j in 0 .. Array2D.length2 arr - 1 -> sort j |]
     Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> Array.get (Array.get arr' j) i)
 
-let inline sort2 p (arr : _ [,]) =
+let sort2 p (arr : _ [,]) =
     let sort = fun i -> Array.sortBy p [| for j in 0 .. Array2D.length2 arr - 1 -> arr.[i, j] |]
     array2D [| for i in 0 .. Array2D.length1 arr - 1 -> sort i |]
 
 /// Initialize a 2D array with all zeros.
-let inline initZeros h w =
+let initZeros h w =
     Array2D.init h w (fun _ _ -> 0)
 
-let inline transpose arr =
+let transpose arr =
     Array2D.init (Array2D.length2 arr) (Array2D.length1 arr) (fun i j -> arr.[j, i])
 
-let inline filter1 p arr =
+let filter1 p arr =
     let vs = Seq.filter p (Seq.init (Array2D.length1 arr) (fun i -> arr.[i, 0])) |> Array.ofSeq
     Array2D.init (Array.length vs) 1 (fun i _ -> Array.get vs i)
 
-let inline filter2 p arr =
+let filter2 p arr =
     let vs = Seq.filter p (Seq.init (Array2D.length2 arr) (Array2D.get arr 0)) |> Array.ofSeq
     Array2D.init 1 (Array.length vs) (fun _ j -> Array.get vs j)

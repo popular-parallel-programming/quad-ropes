@@ -497,6 +497,47 @@ let fromArray vs w =
 let fromArray2D vss =
     init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)
 
+/// Apply a function with side effects to all elements of the rope.
+let rec iter f = function
+    | Empty -> ()
+    | Leaf vs -> Array2D.iter f vs
+    | Node (_, _, _, ne, nw, sw, se) ->
+        iter f ne
+        iter f nw
+        iter f sw
+        iter f se
+    | Slice _ as rope -> iter f (Slicing.reallocate rope)
+
+/// Apply a function with side effects to all elements and their
+/// corresponding index pair.
+let iteri f rope =
+    let rec iteri f i j = function
+        | Empty -> ()
+        | Leaf vs -> Array2D.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
+        | Node (_, _, _, ne, nw, sw, se) ->
+            iteri f i j nw
+            iteri f i (j + cols nw) ne
+            iteri f (i + rows nw) j sw
+            iteri f (i + rows ne) (j + cols sw) se
+        | Slice _ as rope -> iteri f i j (Slicing.reallocate rope)
+    iteri f 0 0 rope
+
+/// Conversion into 1D array.
+let toArray rope =
+    let arr = Array.create ((rows rope) * (cols rope)) (get rope 0 0)
+    // This avoids repeated calls to get; it is enough to traverse
+    // the rope once.
+    iteri (fun i j v -> arr.[i * cols rope + j] <- v) rope
+    arr
+
+/// Conversion into 2D array.
+let toArray2D rope =
+    let arr = Array2D.create (rows rope) (cols rope) (get rope 0 0)
+    // This avoids repeated calls to get; it is enough to traverse
+    // the rope once.
+    iteri (fun i j v -> arr.[i, j] <- v) rope
+    arr
+
 /// Apply a function to every element in the tree and preserves the
 /// tree structure.
 let rec map f root =
@@ -715,47 +756,6 @@ let rec transpose = function
     | Node (_, _, _, ne, nw, sw, se) ->
         node (transpose sw) (transpose nw) (transpose ne) (transpose se)
     | Slice _ as rope -> transpose (Slicing.reallocate rope)
-
-/// Apply a function with side effects to all elements of the rope.
-let rec iter f = function
-    | Empty -> ()
-    | Leaf vs -> Array2D.iter f vs
-    | Node (_, _, _, ne, nw, sw, se) ->
-        iter f ne
-        iter f nw
-        iter f sw
-        iter f se
-    | Slice _ as rope -> iter f (Slicing.reallocate rope)
-
-/// Apply a function with side effects to all elements and their
-/// corresponding index pair.
-let iteri f rope =
-    let rec iteri f i j = function
-        | Empty -> ()
-        | Leaf vs -> Array2D.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
-        | Node (_, _, _, ne, nw, sw, se) ->
-            iteri f i j nw
-            iteri f i (j + cols nw) ne
-            iteri f (i + rows nw) j sw
-            iteri f (i + rows ne) (j + cols sw) se
-        | Slice _ as rope -> iteri f i j (Slicing.reallocate rope)
-    iteri f 0 0 rope
-
-/// Conversion into 1D array.
-let toArray rope =
-    let arr = Array.create ((rows rope) * (cols rope)) (get rope 0 0)
-    // This avoids repeated calls to get; it is enough to traverse
-    // the rope once.
-    iteri (fun i j v -> arr.[i * cols rope + j] <- v) rope
-    arr
-
-/// Conversion into 2D array.
-let toArray2D rope =
-    let arr = Array2D.create (rows rope) (cols rope) (get rope 0 0)
-    // This avoids repeated calls to get; it is enough to traverse
-    // the rope once.
-    iteri (fun i j v -> arr.[i, j] <- v) rope
-    arr
 
 /// Produce a string with the tikz code for printing the rope as a
 /// box diagram. This is useful for illustrating algorithms on

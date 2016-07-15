@@ -35,12 +35,14 @@ module Tasks =
         await4 ft gt ht kt
         result ft, result gt, result ht, result kt
 
+    /// Get the number of maximum threads set0.
     let numthreads() =
         let mutable workers = 0
         let mutable completions = 0
         System.Threading.ThreadPool.GetMaxThreads (&workers, &completions)
         workers
 
+    /// Wrapper for System.Threading.Tasks.Parallel.For
     let parfor l u f =
         System.Threading.Tasks.Parallel.For(l, u, System.Action<int> f) |> ignore
 

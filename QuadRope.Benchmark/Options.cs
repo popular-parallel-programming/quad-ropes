@@ -12,7 +12,7 @@ namespace RadTrees.Benchmark
 	private string mode;
 
 	[Option('m', "mode", DefaultValue = "all",
-		HelpText = "Mode to run. One of \"all\", \"index\", \"cat\" or \"idx\".")]
+		HelpText = "Mode to run.")]
 	public string Mode {
 	    get { return mode;}
 	    set { mode = value.ToLower(); }

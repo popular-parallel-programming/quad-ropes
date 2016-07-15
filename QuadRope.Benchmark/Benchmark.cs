@@ -187,16 +187,28 @@ namespace RadTrees.Benchmark
             {"primes", Factorization}
         };
 
+        public static void PrintModes()
+        {
+            foreach(string key in tests.Keys)
+                Console.WriteLine("  " + key);
+        }
+
 	public static void Main(string[] args)
         {
 	    Options opts = new Options();
 	    if (Parser.Default.ParseArguments(args, opts)) {
-		Infrastructure.SystemInfo();
                 try {
-                    tests[opts.Mode].Invoke(opts);
+                    var run = tests[opts.Mode];
+                    Infrastructure.SystemInfo();
+                    run(opts);
                 } catch (KeyNotFoundException e) {
-                    Console.WriteLine("No such configuration: "+ opts.Mode);
+                    Console.WriteLine("No such mode: \"" + opts.Mode + "\". Available modes:");
+                    PrintModes();
                 }
+            } else {
+                Console.WriteLine(opts.ToString());
+                Console.WriteLine("Available modes:");
+                PrintModes();
             }
         }
     }

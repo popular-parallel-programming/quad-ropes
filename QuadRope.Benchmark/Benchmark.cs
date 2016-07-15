@@ -167,12 +167,24 @@ namespace RadTrees.Benchmark
             Mark("vdc QuadRope.Parallel", () => Examples.QuadRope.Parallel.vanDerCorput(opts.Size));
         }
 
+        public static void Factorization(Options opts)
+        {
+            int start = 1000;
+            var init = Utils.Functions.toFunc2<int, int, int>((i, j) => i * j + start);
+            var arr = Array2DModule.Initialize(opts.Size, opts.Size, init);
+            var rope = QuadRopeModule.init(opts.Size, opts.Size, init);
+
+            Mark("primes Array2D.Parallel", () => Examples.Array2D.Parallel.factorize(arr));
+            Mark("primes QuadRope.Parallel", () => Examples.QuadRope.Parallel.factorize(rope));
+        }
+
         static Dictionary<string, Action<Options>> tests = new Dictionary<string, Action<Options>>()
         {
             {"all", Run},
             {"index", Indexing},
             {"cat", Concatenating},
-            {"vdc", vanDerCorput}
+            {"vdc", vanDerCorput},
+            {"primes", Factorization}
         };
 
 	public static void Main(string[] args)

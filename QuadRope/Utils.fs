@@ -35,6 +35,15 @@ module Tasks =
         await4 ft gt ht kt
         result ft, result gt, result ht, result kt
 
+    let numthreads() =
+        let mutable workers = 0
+        let mutable completions = 0
+        System.Threading.ThreadPool.GetMaxThreads (&workers, &completions)
+        workers
+
+    let parfor l u f =
+        System.Threading.Tasks.Parallel.For(l, u, System.Action<int> f) |> ignore
+
 module Bits =
 
     let inline radix bits =

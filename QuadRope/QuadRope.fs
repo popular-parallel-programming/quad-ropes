@@ -486,8 +486,15 @@ let inline initZeros h w = initAll h w 0
 let isSingleton rope =
     rows rope = 1 && cols rope = 1
 
+/// Initialize a rope from a native array for a given width.
+let fromArray vs w =
+    if Array.length vs % w <> 0 then
+        failwithf "%d must be evenly divisible by %d" (Array.length vs) w
+    let h = Array.length vs / w
+    init h w (fun i j -> vs.[i * w + j])
+
 /// Initialize a rope from a native 2D-array.
-let fromArray vss =
+let fromArray2D vss =
     init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)
 
 /// Apply a function to every element in the tree and preserves the
@@ -709,10 +716,6 @@ let rec transpose = function
         node (transpose sw) (transpose nw) (transpose ne) (transpose se)
     | Slice _ as rope -> transpose (Slicing.reallocate rope)
 
-/// Straightforward conversion into a 2D array.
-let toArray rope =
-    Array2D.init (rows rope) (cols rope) (get rope)
-
 /// Apply a function with side effects to all elements of the rope.
 let rec iter f = function
     | Empty -> ()
@@ -737,6 +740,22 @@ let iteri f rope =
             iteri f (i + rows ne) (j + cols sw) se
         | Slice _ as rope -> iteri f i j (Slicing.reallocate rope)
     iteri f 0 0 rope
+
+/// Conversion into 1D array.
+let toArray rope =
+    let arr = Array.create ((rows rope) * (cols rope)) (get rope 0 0)
+    // This avoids repeated calls to get; it is enough to traverse
+    // the rope once.
+    iteri (fun i j v -> arr.[i * cols rope + j] <- v) rope
+    arr
+
+/// Conversion into 2D array.
+let toArray2D rope =
+    let arr = Array2D.create (rows rope) (cols rope) (get rope 0 0)
+    // This avoids repeated calls to get; it is enough to traverse
+    // the rope once.
+    iteri (fun i j v -> arr.[i, j] <- v) rope
+    arr
 
 /// Produce a string with the tikz code for printing the rope as a
 /// box diagram. This is useful for illustrating algorithms on

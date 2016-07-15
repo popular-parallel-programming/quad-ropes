@@ -50,6 +50,7 @@
     <Compile Include="Utils.fs" />
     <Compile Include="Types.fs" />
     <Compile Include="Array2D.fs" />
+    <Compile Include="Array2D.Parallel.fs" />
     <Compile Include="QuadRope.fs" />
     <Compile Include="QuadRope.Parallel.fs" />
     <Compile Include="Examples.fs" />

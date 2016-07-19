@@ -615,12 +615,12 @@ let rec private genZip f lope rope =
         | Slice _ -> genZip f (Slicing.reallocate lope) rope
 
 /// True if the shape of two ropes match.
-let private shapesMatch a b =
+let internal shapesMatch a b =
     rows a = rows b && cols a = cols b
 
 /// True if a and b are nodes and the shapes of all their sub-ropes in
 /// the same positions match.
-let private subShapesMatch a b =
+let internal subShapesMatch a b =
     match a, b with
         | Node (_, _, _, ane, anw, asw, ase),
           Node (_, _, _, bne, bnw, bsw, bse) ->

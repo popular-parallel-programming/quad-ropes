@@ -94,37 +94,53 @@ let vfold f states rope =
         QuadRope.flatNode wstates0 estates0
     fold1 states rope
 
-/// Apply f in parallel to each (i, j) of lope and rope.
+/// Zip implementation for the general case where we do not assume
+/// that both ropes have the same internal structure.
+let rec private genZip f lope rope =
+    match lope with
+        | Node (d, h, w, ne, nw, sw, se) ->
+            let ne0, nw0, sw0, se0 =
+                par4 (fun () -> genZip f ne (QuadRope.slice rope 0
+                                                                 (QuadRope.cols nw)
+                                                                 (QuadRope.rows ne)
+                                                                 (QuadRope.cols ne)))
+                     (fun () -> genZip f nw (QuadRope.slice rope 0
+                                                                 0
+                                                                 (QuadRope.rows nw)
+                                                                 (QuadRope.cols nw)))
+                     (fun () -> genZip f sw (QuadRope.slice rope (QuadRope.rows nw)
+                                                                 0
+                                                                 (QuadRope.rows sw)
+                                                                 (QuadRope.cols sw)))
+                     (fun () -> genZip f se (QuadRope.slice rope (QuadRope.rows ne)
+                                                                 (QuadRope.cols sw)
+                                                                 (QuadRope.rows se)
+                                                                 (QuadRope.cols se)))
+            Node (d, h, w, ne0, nw0, sw0, se0)
+        | Slice _ -> genZip f (QuadRope.Slicing.reallocate lope) rope
+        | _ -> QuadRope.zip f lope rope
+
+/// Zip function that assumes that the internal structure of two ropes
+/// matches. If not, it falls back to the slow, general case.
+let rec private fastZip f lope rope =
+    match lope, rope with
+        | Empty, Empty -> Empty
+        | Leaf ls, Leaf rs when QuadRope.shapesMatch lope rope -> QuadRope.leaf (Array2D.map2 f ls rs)
+        | Node (_, _, _, lne, lnw, lsw, lse), Node (_, _, _, rne, rnw, rsw, rse)
+            when QuadRope.subShapesMatch lope rope ->
+                let ne, nw, sw, se = par4 (fun () -> fastZip f lne rne)
+                                          (fun () -> fastZip f lnw rnw)
+                                          (fun () -> fastZip f lsw rsw)
+                                          (fun () -> fastZip f lse rse)
+                QuadRope.node ne nw sw se
+        | Slice _, _ -> fastZip f (QuadRope.Slicing.reallocate lope) rope
+        | _ -> genZip f lope rope
+
+/// Apply f to each (i, j) of lope and rope.
 let zip f lope rope =
-    let rec zip0 f lope rope =
-         match lope with
-             | Node (d, h, w, ne, nw, sw, se) ->
-                 let nw0, ne0, sw0, se0 =
-                     par4 (fun () ->
-                           zip0 f nw (QuadRope.slice rope 0 0
-                                                          (QuadRope.rows nw)
-                                                          (QuadRope.cols nw)))
-                          (fun () ->
-                           zip0 f ne (QuadRope.slice rope 0
-                                                          (QuadRope.cols nw)
-                                                          (QuadRope.rows ne)
-                                                          (QuadRope.cols ne)))
-                          (fun () ->
-                           zip0 f sw (QuadRope.slice rope (QuadRope.rows nw)
-                                                          0
-                                                          (QuadRope.rows sw)
-                                                          (QuadRope.cols sw)))
-                          (fun () ->
-                           zip0 f se (QuadRope.slice rope (QuadRope.rows ne)
-                                                          (QuadRope.cols sw)
-                                                          (QuadRope.rows se)
-                                                          (QuadRope.cols se)))
-                 Node (d, h, w, ne0, nw0, sw0, se0)
-             | Slice _ -> zip0 f (QuadRope.Slicing.reallocate lope) rope
-             | _ -> QuadRope.zip f lope rope
     if QuadRope.cols lope <> QuadRope.cols rope || QuadRope.rows lope <> QuadRope.rows rope then
         failwith "ropes must have the same shape"
-    zip0 f lope rope
+    fastZip f lope rope
 
 /// Apply f to all scalars in parallel and reduce the results
 /// row-wise using g.

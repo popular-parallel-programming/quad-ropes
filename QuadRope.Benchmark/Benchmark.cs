@@ -152,6 +152,7 @@ namespace RadTrees.Benchmark
 
         public static void Concatenating(Options opts)
         {
+            Console.WriteLine("# This benchmark is useless if balancing happens during concatenation.");
             var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
             var vskewed = DoNTimes(100, (l, r) => QuadRopeModule.vcat(l, r), rope);
             var hskewed = DoNTimes(100, (l, r) => QuadRopeModule.hcat(l, r), rope);

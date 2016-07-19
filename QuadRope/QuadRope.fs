@@ -339,88 +339,94 @@ module internal Slicing =
     let inline map f rope = map0 f rope 0 0 (rows rope) (cols rope)
 
 /// Concatenate two trees vertically.
-let rec vcat upper lower =
+let vcat upper lower =
     let canCopy us ls =
-        Array2D.length2 us = Array2D.length2 ls
-        && Array2D.length1 us + Array2D.length1 ls <= h_max
+        Array2D.length2 us = Array2D.length2 ls && Array2D.length1 us + Array2D.length1 ls <= h_max
+    let rec vcat upper lower =
+        match upper, lower with
+            | Empty, _ -> lower
+            | _, Empty -> upper
+            | Slice _, _ -> vcat (Slicing.reallocate upper) lower
+            | _, Slice _ -> vcat upper (Slicing.reallocate lower)
+
+            | Leaf us, Leaf ls when canCopy us ls ->
+                leaf (Array2D.cat1 us ls)
+
+            | Node (_, _, _, Empty, nwu, Leaf swus, Empty), Leaf ls when canCopy swus ls->
+                thinNode nwu (leaf (Array2D.cat1 swus ls))
+
+            | Leaf us, Node (_, _, _, Empty, Leaf nwls, swl, Empty) when canCopy us nwls ->
+                thinNode (leaf (Array2D.cat1 us nwls)) swl
+
+            | (Node (_, _, _, neu, nwu, Leaf swus, Leaf seus),
+               Node (_, _, _, Leaf nels, Leaf nwls, Empty, Empty))
+                when canCopy swus nwls && canCopy seus nels ->
+                    let sw = leaf (Array2D.cat1 swus nwls)
+                    let se = leaf (Array2D.cat1 seus nels)
+                    node neu nwu sw se
+
+            | (Node (_, _, _, Leaf neus, Leaf nwus, Empty, Empty),
+               Node (_, _, _, Leaf nels, Leaf nwls, swl, sel))
+                when canCopy nwus nwls && canCopy neus nels ->
+                    let nw = leaf (Array2D.cat1 nwus nwls)
+                    let ne = leaf (Array2D.cat1 neus nels)
+                    node ne nw swl sel
+
+            | (Node (_, _, _, neu, nwu, Empty, Empty),
+               Node (_, _, _, nel, nwl, Empty, Empty)) ->
+                node neu nwu nwl nel
+
+            | _ -> thinNode upper lower
+
     if (not ((isEmpty upper) || (isEmpty lower))) && cols upper <> cols lower then
         failwith (sprintf "Trees must be of same width! u = %A\nl = %A" upper lower)
-    match upper, lower with
-        | Empty, _ -> lower
-        | _, Empty -> upper
-        | Slice _, _ -> vcat (Slicing.reallocate upper) lower
-        | _, Slice _ -> vcat upper (Slicing.reallocate lower)
-
-        | Leaf us, Leaf ls when canCopy us ls ->
-            leaf (Array2D.cat1 us ls)
-
-        | Node (_, _, _, Empty, nwu, Leaf swus, Empty), Leaf ls when canCopy swus ls->
-            thinNode nwu (leaf (Array2D.cat1 swus ls))
-
-        | Leaf us, Node (_, _, _, Empty, Leaf nwls, swl, Empty) when canCopy us nwls ->
-            thinNode (leaf (Array2D.cat1 us nwls)) swl
-
-        | (Node (_, _, _, neu, nwu, Leaf swus, Leaf seus),
-           Node (_, _, _, Leaf nels, Leaf nwls, Empty, Empty))
-            when canCopy swus nwls && canCopy seus nels ->
-                let sw = leaf (Array2D.cat1 swus nwls)
-                let se = leaf (Array2D.cat1 seus nels)
-                node neu nwu sw se
-
-        | (Node (_, _, _, Leaf neus, Leaf nwus, Empty, Empty),
-           Node (_, _, _, Leaf nels, Leaf nwls, swl, sel))
-            when canCopy nwus nwls && canCopy neus nels ->
-                let nw = leaf (Array2D.cat1 nwus nwls)
-                let ne = leaf (Array2D.cat1 neus nels)
-                node ne nw swl sel
-
-        | (Node (_, _, _, neu, nwu, Empty, Empty),
-           Node (_, _, _, nel, nwl, Empty, Empty)) ->
-            node neu nwu nwl nel
-
-        | _ -> thinNode upper lower
+    else
+        vbalance (vcat upper lower)
 
 /// Concatenate two trees horizontally.
-let rec hcat left right =
+let hcat left right =
     let canCopy ls rs =
-        Array2D.length1 ls = Array2D.length1 rs
-        && Array2D.length2 ls + Array2D.length2 rs <= w_max
+        Array2D.length1 ls = Array2D.length1 rs && Array2D.length2 ls + Array2D.length2 rs <= w_max
+    let rec hcat left right =
+        match left, right with
+            | Empty, _ -> right
+            | _, Empty -> left
+            | Slice _, _ -> hcat (Slicing.reallocate left) right
+            | _, Slice _ -> hcat left (Slicing.reallocate right)
+
+            | Leaf ls, Leaf rs when canCopy ls rs ->
+                leaf (Array2D.cat2 ls rs)
+
+            | Node (_, _, _, Leaf lnes, lnw, Empty, Empty), Leaf rs when canCopy lnes rs->
+                flatNode lnw (leaf (Array2D.cat2 lnes rs))
+
+            | Leaf ls, Node (_, _, _, rne, Leaf rnws, Empty, Empty) when canCopy ls rnws ->
+                flatNode (leaf (Array2D.cat2 ls rnws)) rne
+
+            | (Node (_, _, _, Leaf lnes, lnw, lsw, Leaf lses),
+               Node (_, _, _, Empty, Leaf rnws, Leaf rsws, Empty))
+                when canCopy lnes rnws && canCopy lses rsws ->
+                    let ne = leaf (Array2D.cat2 lnes rnws)
+                    let se = leaf (Array2D.cat2 lses rsws)
+                    node ne lnw lsw se
+
+            | (Node (_, _, _, Empty, Leaf lnws, Leaf lsws, Empty),
+               Node (_, _, _, rne, Leaf rnws, Leaf rsws, rse))
+                when canCopy lnws rnws && canCopy lsws rsws ->
+                    let nw = leaf (Array2D.cat2 lnws rnws)
+                    let sw = leaf (Array2D.cat2 lsws rsws)
+                    node rne nw sw rse
+
+            | (Node (_, _, _, Empty, lnw, lsw, Empty),
+               Node (_, _, _, Empty, rnw, rsw, Empty)) ->
+                node rnw lnw lsw rsw
+
+            | _ -> flatNode left right
+
     if (not ((isEmpty left) || (isEmpty right))) && rows left <> rows right then
         failwith (sprintf "Trees must be of same height! l = %A\nr = %A" left right)
-    match left, right with
-        | Empty, _ -> right
-        | _, Empty -> left
-        | Slice _, _ -> hcat (Slicing.reallocate left) right
-        | _, Slice _ -> hcat left (Slicing.reallocate right)
-
-        | Leaf ls, Leaf rs when canCopy ls rs ->
-            leaf (Array2D.cat2 ls rs)
-
-        | Node (_, _, _, Leaf lnes, lnw, Empty, Empty), Leaf rs when canCopy lnes rs->
-            flatNode lnw (leaf (Array2D.cat2 lnes rs))
-
-        | Leaf ls, Node (_, _, _, rne, Leaf rnws, Empty, Empty) when canCopy ls rnws ->
-            flatNode (leaf (Array2D.cat2 ls rnws)) rne
-
-        | (Node (_, _, _, Leaf lnes, lnw, lsw, Leaf lses),
-           Node (_, _, _, Empty, Leaf rnws, Leaf rsws, Empty))
-            when canCopy lnes rnws && canCopy lses rsws ->
-                let ne = leaf (Array2D.cat2 lnes rnws)
-                let se = leaf (Array2D.cat2 lses rsws)
-                node ne lnw lsw se
-
-        | (Node (_, _, _, Empty, Leaf lnws, Leaf lsws, Empty),
-           Node (_, _, _, rne, Leaf rnws, Leaf rsws, rse))
-            when canCopy lnws rnws && canCopy lsws rsws ->
-                let nw = leaf (Array2D.cat2 lnws rnws)
-                let sw = leaf (Array2D.cat2 lsws rsws)
-                node rne nw sw rse
-
-        | (Node (_, _, _, Empty, lnw, lsw, Empty),
-           Node (_, _, _, Empty, rnw, rsw, Empty)) ->
-            node rnw lnw lsw rsw
-
-        | _ -> flatNode left right
+    else
+        hbalance (hcat left right)
 
 /// Reverse rope horizontally.
 let rec hrev = function

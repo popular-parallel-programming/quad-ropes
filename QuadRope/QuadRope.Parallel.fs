@@ -8,28 +8,28 @@ open Utils.Tasks
 
 /// Generate a new tree in parallel.
 let init h w f =
-    let rec init0 h0 w0 h1 w1 =
+    let rec init h0 w0 h1 w1 =
         let h = h1 - h0
         let w = w1 - w0
         if h <= QuadRope.h_max && w <= QuadRope.w_max then
             QuadRope.leaf (Array2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
         else if w <= QuadRope.w_max then
             let hpv = h0 + h / 2
-            let n, s = par2 (fun () -> init0 h0 w0 hpv w1) (fun () -> init0 hpv w0 h1 w1)
+            let n, s = par2 (fun () -> init h0 w0 hpv w1) (fun () -> init hpv w0 h1 w1)
             QuadRope.thinNode n s
         else if h <= QuadRope.h_max then
             let wpv = w0 + w / 2
-            let w, e = par2 (fun () -> init0 h0 w0 h1 wpv) (fun () -> init0 h0 wpv h1 w1)
+            let w, e = par2 (fun () -> init h0 w0 h1 wpv) (fun () -> init h0 wpv h1 w1)
             QuadRope.flatNode w e
         else
             let hpv = h0 + h / 2
             let wpv = w0 + w / 2
-            let ne, nw, sw, se = par4 (fun () -> init0 h0 wpv hpv w1)
-                                      (fun () -> init0 h0 w0 hpv wpv)
-                                      (fun () -> init0 hpv w0 h1 wpv)
-                                      (fun () -> init0 hpv wpv h1 w1)
+            let ne, nw, sw, se = par4 (fun () -> init h0 wpv hpv w1)
+                                      (fun () -> init h0 w0 hpv wpv)
+                                      (fun () -> init hpv w0 h1 wpv)
+                                      (fun () -> init hpv wpv h1 w1)
             QuadRope.node ne nw sw se
-    init0 0 0 h w
+    init 0 0 h w
 
 /// Reallocate a rope form the ground up in parallel. Sometimes,
 /// this is the only way to improve performance of a badly

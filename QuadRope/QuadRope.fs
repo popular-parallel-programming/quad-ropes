@@ -80,60 +80,60 @@ let inline private checkBounds rope i j =
 
 /// Get the value of a location in the tree.
 let get root i j =
-    let rec get0 rope i j =
+    let rec get rope i j =
         match rope with
             | Empty -> failwith "Empty tree cannot contain values."
             | Leaf vs -> Array2D.get vs i j
             | Node (_, _, _, ne, nw, sw, se) ->
                 if withinRange nw i j then
-                    get0 nw i j
+                    get nw i j
                 else if withinRange ne i (j - cols nw) then
-                    get0 ne i (j - cols nw)
+                    get ne i (j - cols nw)
                 else if withinRange sw (i - rows nw) j then
-                    get0 sw (i - rows nw) j
+                    get sw (i - rows nw) j
                 else
-                    get0 se (i - rows ne) (j - cols sw)
-            | Slice (x, y, _, _, rope) -> get0 rope (i + x) (j + y)
+                    get se (i - rows ne) (j - cols sw)
+            | Slice (x, y, _, _, rope) -> get rope (i + x) (j + y)
     checkBounds root i j
-    get0 root i j
+    get root i j
 
 /// Update a tree location without modifying the original tree.
 let set root i j v =
-    let rec set0 rope i j v =
+    let rec set rope i j v =
         match rope with
             | Empty -> failwith "Empty tree cannot contain values."
             | Leaf vs -> Leaf (Array2D.set vs i j v)
             | Node (d, h, w, ne, nw, sw, se) ->
                 if withinRange nw i j then
-                    Node (d, h, w, ne, set0 nw i j v, sw, se)
+                    Node (d, h, w, ne, set nw i j v, sw, se)
                 else if withinRange ne i (j - cols nw) then
-                    Node (d, h, w, set0 ne i (j - cols nw) v, nw, sw, se)
+                    Node (d, h, w, set ne i (j - cols nw) v, nw, sw, se)
                 else if withinRange sw (i - rows nw) j then
-                    Node (d, h, w, ne, nw, set0 sw (i - rows nw) j v, se)
+                    Node (d, h, w, ne, nw, set sw (i - rows nw) j v, se)
                 else
-                    Node (d, h, w, ne, nw, sw, set0 se (i - rows ne) (j - cols sw) v)
-            | Slice (x, y, h, w, rope) -> Slice (x, y, h, w, set0 rope (i + x) (j + y) v)
+                    Node (d, h, w, ne, nw, sw, set se (i - rows ne) (j - cols sw) v)
+            | Slice (x, y, h, w, rope) -> Slice (x, y, h, w, set rope (i + x) (j + y) v)
     checkBounds root i j
-    set0 root i j v
+    set root i j v
 
 /// Write to a tree location destructively.
 let write root i j v =
-    let rec write0 rope i j v =
+    let rec write rope i j v =
         match rope with
             | Empty -> failwith "Empty tree cannot contain values."
             | Leaf vs -> vs.[i, j] <- v
             | Node (_, _, _, ne, nw, sw, se) ->
                 if withinRange nw i j then
-                    write0 nw i j v
+                    write nw i j v
                 else if withinRange ne i (j - cols nw) then
-                    write0 ne i (j - cols nw) v
+                    write ne i (j - cols nw) v
                 else if withinRange sw (i - rows nw) j then
-                    write0 sw (i - rows nw) j v
+                    write sw (i - rows nw) j v
                 else
-                    write0 se (i - rows ne) (j - cols sw) v
-            | Slice (x, y, _, _, rope) -> write0 rope (x + i) (y + j) v
+                    write se (i - rows ne) (j - cols sw) v
+            | Slice (x, y, _, _, rope) -> write rope (x + i) (y + j) v
     checkBounds root i j
-    write0 root i j v
+    write root i j v
 
 let private isBalanced d s =
     Fibonacci.fib (d + 2) <= s
@@ -163,7 +163,7 @@ let rec private rebuild merge = function
 
 /// Balance rope horizontally.
 let hbalance rope =
-    let rec hbalance0 rope =
+    let rec hbalance rope =
         if isBalancedH rope then
             rope
         else
@@ -174,13 +174,13 @@ let hbalance rope =
             | Empty -> rs
             | Node (_, _, _, ne, nw, Empty, Empty) -> collect nw (collect ne rs)
             | Node (_, _, _, ne, nw, sw, se) ->
-                node (hbalance0 ne) (hbalance0 nw) (hbalance0 sw) (hbalance0 se) :: rs
+                node (hbalance ne) (hbalance nw) (hbalance sw) (hbalance se) :: rs
             | _ -> rope :: rs
-    hbalance0 rope
+    hbalance rope
 
 /// Balance rope vertically.
 let vbalance rope =
-    let rec vbalance0 rope =
+    let rec vbalance rope =
         if isBalancedV rope then
             rope
         else
@@ -191,12 +191,13 @@ let vbalance rope =
             | Empty -> rs
             | Node (_, _, _, Empty, nw, sw, Empty) -> collect nw (collect sw rs)
             | Node (_, _, _, ne, nw, sw, se) ->
-                node (vbalance0 ne) (vbalance0 nw) (vbalance0 sw) (vbalance0 se) :: rs
+                node (vbalance ne) (vbalance nw) (vbalance sw) (vbalance se) :: rs
             | _ -> rope :: rs
-    vbalance0 rope
+    vbalance rope
 
 /// Balancing after Boehm et al. It turns out that this is slightly
-/// slower than reduce-rebuild balancing.
+/// slower than reduce-rebuild balancing and the resulting tree is of
+/// greater height.
 module Boehm =
     let hbalance rope =
         let rec insert rope n = function
@@ -293,50 +294,45 @@ module internal Slicing =
         0 <= i && i <= rows rope && i + h <= rows rope &&
         0 <= j && j <= cols rope && j + w <= cols rope
 
-    /// Auxiliary function to find the minimal sub-rope that contains
-    /// the indexes in [i, h][j, w].
-    let rec private minimize0 rope i j h w =
-        if i = 0 && j = 0 && h = rows rope && w = cols rope then
-            rope
-        else
+    /// Find the smallest sub-rope that includes the indices of a
+    /// slice. This is similar to slicing but does not perform new
+    /// node allocations.
+    let minimize rope =
+        let rec minimize rope i j h w =
             match rope with
+                | _ when i = 0 && j = 0 && h = rows rope && w = cols rope -> rope
                 | Empty -> Empty
                 | Leaf vs -> leaf (Array2D.slice vs i j h w) // Just return a view on arrays.
                 | Node (_, _, _, ne, nw, sw, se) ->
                     if dom nw i j h w then
-                        minimize0 nw i j h w
+                        minimize nw i j h w
                     else if dom ne i (j - cols nw) h w then
-                        minimize0 ne i (j - cols nw) h w
+                        minimize ne i (j - cols nw) h w
                     else if dom sw (i - rows nw) j h w then
-                        minimize0 sw (i - rows nw) j h w
+                        minimize sw (i - rows nw) j h w
                     else if dom se (i - rows ne) (j - cols sw) h w then
-                        minimize0 se (i - rows ne) (j - cols sw) h w
-                    else
-                        slice rope i j h w // If the slice spans across sub-ropes, stop and make a new slice.
-                | Slice (i, j, h, w, rope) -> minimize0 rope i j h w
-
-    /// Find the smallest sub-rope that includes the indices of a
-    /// slice. This is similar to slicing but does not perform new
-    /// node allocations.
-    let minimize = function
-        | Slice (i, j, h, w, rope) -> minimize0 rope i j h w
-        | rope -> rope
+                        minimize se (i - rows ne) (j - cols sw) h w
+                    else // If the slice spans across sub-ropes, stop and make a new slice.
+                        slice rope i j h w
+                    | Slice (i, j, h, w, rope) -> minimize rope i j h w
+        match rope with
+            | Slice (i, j, h, w, rope) -> minimize rope i j h w
+            | rope -> rope
 
     /// Compute a slice and map in the same traversal.
-    let rec map0 f rope i j h w =
-        match rope with
-            | Empty -> Empty
-            | Leaf vs -> leaf (Array2D.map f (Array2D.slice vs i j h w))
-            | Node (_, _, _, ne, nw, sw, se) ->
-                let nw0 = map0 f nw i j h w
-                let ne0 = map0 f ne i (j - cols nw) h (w - cols nw0)
-                let sw0 = map0 f sw (i - rows nw) j (h - rows nw0) w
-                let se0 = map0 f se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
-                node ne0 nw0 sw0 se0
-            | Slice (x, y, h, w, rope) -> map0 f rope (x + i) (y + j) h w
-
-    /// Map over a slice while computing it.
-    let inline map f rope = map0 f rope 0 0 (rows rope) (cols rope)
+    let map f rope =
+        let rec map rope i j h w =
+            match rope with
+                | Empty -> Empty
+                | Leaf vs -> leaf (Array2D.map f (Array2D.slice vs i j h w))
+                | Node (_, _, _, ne, nw, sw, se) ->
+                    let nw0 = map nw i j h w
+                    let ne0 = map ne i (j - cols nw) h (w - cols nw0)
+                    let sw0 = map sw (i - rows nw) j (h - rows nw0) w
+                    let se0 = map se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
+                    node ne0 nw0 sw0 se0
+                | Slice (x, y, h, w, rope) -> map rope (x + i) (y + j) h w
+        map rope 0 0 (rows rope) (cols rope)
 
 /// Concatenate two trees vertically.
 let vcat upper lower =
@@ -450,7 +446,7 @@ let rec vrev = function
 
 /// Generate a new tree without any intermediate values.
 let init h w f =
-    let rec init0 h0 w0 h1 w1 =
+    let rec init h0 w0 h1 w1 =
         let h = h1 - h0
         let w = w1 - w0
         if h <= 0 || w <= 0 then
@@ -459,18 +455,18 @@ let init h w f =
             leaf (Array2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
         else if w <= w_max then
             let hpv = h0 + h / 2
-            thinNode (init0 h0 w0 hpv w1) (init0 hpv w0 h1 w1)
+            thinNode (init h0 w0 hpv w1) (init hpv w0 h1 w1)
         else if h <= h_max then
             let wpv = w0 + w / 2
-            flatNode (init0 h0 w0 h1 wpv) (init0 h0 wpv h1 w1)
+            flatNode (init h0 w0 h1 wpv) (init h0 wpv h1 w1)
         else
             let hpv = h0 + h / 2
             let wpv = w0 + w / 2
-            node (init0 h0 wpv hpv w1)
-                 (init0 h0 w0 hpv wpv)
-                 (init0 hpv w0 h1 wpv)
-                 (init0 hpv wpv h1 w1)
-    init0 0 0 h w
+            node (init h0 wpv hpv w1)
+                 (init h0 w0 hpv wpv)
+                 (init hpv w0 h1 wpv)
+                 (init hpv wpv h1 w1)
+    init 0 0 h w
 
 /// Reallocate a rope form the ground up. Sometimes, this is the
 /// only way to improve performance of a badly composed quad rope.

@@ -598,24 +598,55 @@ let vfold f states rope =
         flatNode (fold1 wstates w) (fold1 estates e)
     fold1 states rope
 
+/// Zip implementation for the general case where we do not assume
+/// that both ropes have the same internal structure.
+let rec private genZip f lope rope =
+    match lope with
+        | Empty -> Empty
+        | Leaf vs ->
+            let rope = Slicing.minimize rope
+            leaf (Array2D.mapi (fun i j e -> f e (get rope i j)) vs)
+        | Node (d, h, w, ne, nw, sw, se) ->
+            let nw0 = genZip f nw (slice rope 0 0 (rows nw) (cols nw))
+            let ne0 = genZip f ne (slice rope 0 (cols nw) (rows ne) (cols ne))
+            let sw0 = genZip f sw (slice rope (rows nw) 0 (rows sw) (cols sw))
+            let se0 = genZip f se (slice rope (rows ne) (cols sw) (rows se) (cols se))
+            Node (d, h, w, ne0, nw0, sw0, se0)
+        | Slice _ -> genZip f (Slicing.reallocate lope) rope
+
+/// True if the shape of two ropes match.
+let private shapesMatch a b =
+    rows a = rows b && cols a = cols b
+
+/// True if a and b are nodes and the shapes of all their sub-ropes in
+/// the same positions match.
+let private subShapesMatch a b =
+    match a, b with
+        | Node (_, _, _, ane, anw, asw, ase),
+          Node (_, _, _, bne, bnw, bsw, bse) ->
+            shapesMatch ane bne
+            && shapesMatch anw bnw
+            && shapesMatch asw bsw
+            && shapesMatch ase bse
+        | _ -> false
+
+/// Zip function that assumes that the internal structure of two ropes
+/// matches. If not, it falls back to the slow, general case.
+let rec private fastZip f lope rope =
+    match lope, rope with
+        | Empty, Empty -> Empty
+        | Leaf ls, Leaf rs when shapesMatch lope rope -> leaf (Array2D.map2 f ls rs)
+        | Node (_, _, _, lne, lnw, lsw, lse), Node (_, _, _, rne, rnw, rsw, rse)
+            when subShapesMatch lope rope ->
+                node (fastZip f lne rne) (fastZip f lnw rnw) (fastZip f lsw rsw) (fastZip f lse rse)
+        | Slice _, _ -> fastZip f (Slicing.reallocate lope) rope
+        | _ -> genZip f lope rope
+
 /// Apply f to each (i, j) of lope and rope.
 let zip f lope rope =
-    let rec zip0 f lope rope =
-         match lope with
-             | Empty -> Empty
-             | Leaf vs ->
-                 let rope = Slicing.minimize rope
-                 leaf (Array2D.mapi (fun i j e -> f e (get rope i j)) vs)
-             | Node (d, h, w, ne, nw, sw, se) ->
-                 let nw0 = zip0 f nw (slice rope 0 0 (rows nw) (cols nw))
-                 let ne0 = zip0 f ne (slice rope 0 (cols nw) (rows ne) (cols ne))
-                 let sw0 = zip0 f sw (slice rope (rows nw) 0 (rows sw) (cols sw))
-                 let se0 = zip0 f se (slice rope (rows ne) (cols sw) (rows se) (cols se))
-                 Node (d, h, w, ne0, nw0, sw0, se0)
-             | Slice _ -> zip0 f (Slicing.reallocate lope) rope
     if cols lope <> cols rope || rows lope <> rows rope then
         failwith "ropes must have the same shape"
-    zip0 f lope rope
+    fastZip f lope rope
 
 /// Map f to every element of the rope and reduce rows with g.
 let rec hmapreduce f g = function

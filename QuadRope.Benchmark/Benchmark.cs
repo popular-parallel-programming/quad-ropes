@@ -140,6 +140,16 @@ namespace RadTrees.Benchmark
             Mark("QuadRope.set", () => QuadRopeModule.set(rope, i, j, 0));
         }
 
+        public static void Zip(Options opts)
+        {
+            var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
+            var hrev = QuadRopeModule.hrev(rope);
+            var vrev = QuadRopeModule.vrev(rope);
+            Mark("QuadRope.zip opt",  () => QuadRopeModule.zip(plus, rope, rope));
+            Mark("QuadRope.zip hrev", () => QuadRopeModule.zip(plus, rope, hrev));
+            Mark("QuadRope.zip vrev", () => QuadRopeModule.zip(plus, rope, vrev));
+        }
+
         public static void Concatenating(Options opts)
         {
             var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
@@ -182,6 +192,7 @@ namespace RadTrees.Benchmark
         {
             {"all", Run},
             {"index", Indexing},
+            {"zip", Zip},
             {"cat", Concatenating},
             {"vdc", vanDerCorput},
             {"primes", Factorization}

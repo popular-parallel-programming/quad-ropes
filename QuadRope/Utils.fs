@@ -39,7 +39,7 @@ module Tasks =
     let numthreads() =
         let mutable workers = 0
         let mutable completions = 0
-        System.Threading.ThreadPool.GetMaxThreads (&workers, &completions)
+        System.Threading.ThreadPool.GetMaxThreads(&workers, &completions)
         workers
 
     /// Wrapper for System.Threading.Tasks.Parallel.For

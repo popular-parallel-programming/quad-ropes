@@ -9,8 +9,14 @@ module Tasks =
     let inline private result (t : _ Task) =
         t.Result
 
+    let inline private await  (t0 : _ Task) =
+        Task.WaitAll(t0)
+
     let inline private await2 (t0 : _ Task) t1 =
         Task.WaitAll(t0, t1)
+
+    let inline private await3 (t0 : _ Task) t1 t2 =
+        Task.WaitAll(t0, t1, t2)
 
     let inline private await4 (t0 : _ Task) t1 t2 t3 =
         Task.WaitAll(t0, t1, t2, t3)
@@ -20,9 +26,9 @@ module Tasks =
     /// returns their (unwrapped) results.
     let par2 f g =
         let ft = task f
-        let gt = task g
-        await2 ft gt
-        result ft, result gt
+        let gres = g()
+        await ft
+        result ft, gres
 
     /// Execute four functions in parallel. This function blocks the
     /// current thread until all functions are computed and returns
@@ -31,9 +37,9 @@ module Tasks =
         let ft = task f
         let gt = task g
         let ht = task h
-        let kt = task k
-        await4 ft gt ht kt
-        result ft, result gt, result ht, result kt
+        let kres = k()
+        await3 ft gt ht
+        result ft, result gt, result ht, kres
 
     /// Get the number of maximum threads set0.
     let numthreads() =

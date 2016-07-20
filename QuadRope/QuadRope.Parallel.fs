@@ -263,6 +263,9 @@ let rec vfilter p = function
 
 /// Reverse the quad rope horizontally in parallel.
 let rec hrev = function
+    | Node (d, h, w, ne, nw, Empty, Empty) ->
+        let ne0, nw0 = par2 (fun () -> hrev ne) (fun () -> hrev nw)
+        Node (d, h, w, nw0, ne0, Empty, Empty)
     | Node (d, h, w, Empty, nw, sw, Empty) ->
         let nw0, sw0 = par2 (fun () -> hrev nw) (fun () -> hrev sw)
         Node (d, h, w, Empty, nw0, sw0, Empty)
@@ -280,6 +283,9 @@ let rec vrev = function
     | Node (d, h, w, ne, nw, Empty, Empty) ->
         let ne0, nw0 = par2 (fun () -> vrev ne) (fun () -> vrev nw)
         Node (d, h, w, ne0, nw0, Empty, Empty)
+    | Node (d, h, w, Empty, nw, sw, Empty) ->
+        let nw0, sw0 = par2 (fun () -> vrev nw) (fun () -> vrev sw)
+        Node (d, h, w, Empty, sw0, nw0, Empty)
     | Node (d, h, w, ne, nw, sw, se) ->
         let ne0, nw0, sw0, se0 = par4 (fun() -> vrev ne)
                                       (fun() -> vrev nw)

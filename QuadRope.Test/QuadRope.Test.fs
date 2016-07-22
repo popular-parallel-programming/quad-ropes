@@ -39,7 +39,7 @@ open Utils
 type Handle = class end
 
 let ``DEBUG leaf sizes enabled`` () =
-    QuadRope.h_max = 4 && QuadRope.w_max = 4
+    QuadRope.s_max = 4
 
 (* Hight of generated rope is equal to height parameter. *)
 let ``init produces correct height`` (NonNegativeInt h) (NonNegativeInt w) =

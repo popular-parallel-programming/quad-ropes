@@ -7,11 +7,9 @@ open Utils
 
 (* The maximal size of a leaf array in any direction. *)
 #if DEBUG
-let h_max = 4
-let w_max = 4
+let s_max = 4
 #else
-let h_max = 32
-let w_max = 16
+let s_max = 16
 #endif
 let d_max = 32
 
@@ -337,7 +335,7 @@ module internal Slicing =
 /// Concatenate two trees vertically.
 let vcat upper lower =
     let canCopy us ls =
-        Array2D.length2 us = Array2D.length2 ls && Array2D.length1 us + Array2D.length1 ls <= h_max
+        Array2D.length2 us = Array2D.length2 ls && Array2D.length1 us + Array2D.length1 ls <= s_max
     let rec vcat upper lower =
         match upper, lower with
             | Empty, _ -> lower
@@ -382,7 +380,7 @@ let vcat upper lower =
 /// Concatenate two trees horizontally.
 let hcat left right =
     let canCopy ls rs =
-        Array2D.length1 ls = Array2D.length1 rs && Array2D.length2 ls + Array2D.length2 rs <= w_max
+        Array2D.length1 ls = Array2D.length1 rs && Array2D.length2 ls + Array2D.length2 rs <= s_max
     let rec hcat left right =
         match left, right with
             | Empty, _ -> right
@@ -451,12 +449,12 @@ let init h w f =
         let w = w1 - w0
         if h <= 0 || w <= 0 then
             Empty
-        else if h <= h_max && w <= w_max then
+        else if h <= s_max && w <= s_max then
             leaf (Array2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
-        else if w <= w_max then
+        else if w <= s_max then
             let hpv = h0 + h / 2
             thinNode (init h0 w0 hpv w1) (init hpv w0 h1 w1)
-        else if h <= h_max then
+        else if h <= s_max then
             let wpv = w0 + w / 2
             flatNode (init h0 w0 h1 wpv) (init h0 wpv h1 w1)
         else

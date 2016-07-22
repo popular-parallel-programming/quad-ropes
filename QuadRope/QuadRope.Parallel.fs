@@ -11,13 +11,13 @@ let init h w f =
     let rec init h0 w0 h1 w1 =
         let h = h1 - h0
         let w = w1 - w0
-        if h <= QuadRope.h_max && w <= QuadRope.w_max then
+        if h <= QuadRope.s_max && w <= QuadRope.s_max then
             QuadRope.leaf (Array2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
-        else if w <= QuadRope.w_max then
+        else if w <= QuadRope.s_max then
             let hpv = h0 + h / 2
             let n, s = par2 (fun () -> init h0 w0 hpv w1) (fun () -> init hpv w0 h1 w1)
             QuadRope.thinNode n s
-        else if h <= QuadRope.h_max then
+        else if h <= QuadRope.s_max then
             let wpv = w0 + w / 2
             let w, e = par2 (fun () -> init h0 w0 h1 wpv) (fun () -> init h0 wpv h1 w1)
             QuadRope.flatNode w e

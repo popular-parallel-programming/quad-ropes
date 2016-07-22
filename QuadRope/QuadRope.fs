@@ -155,7 +155,7 @@ let rec private rebuild merge = function
     | [x] -> [x]
     | [x ; y] -> [merge x y]
     | xs ->
-        let lxs, rxs = List.splitAt ((List.length xs) / 2) xs
+        let lxs, rxs = List.splitAt ((List.length xs) >>> 1) xs
         rebuild merge lxs @ rebuild merge rxs
 
 /// Balance rope horizontally.

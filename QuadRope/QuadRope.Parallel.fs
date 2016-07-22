@@ -177,9 +177,7 @@ let zip f lope rope =
 let rec hmapreduce f g = function
     | Node (_, _, _, ne, nw, Empty, Empty) ->
         let ne0, nw0 = par2 (fun () -> hmapreduce f g ne) (fun () -> hmapreduce f g nw)
-        match ne0 with
-            | Empty -> nw0
-            | _ -> zip g nw0 ne0
+        zip g nw0 ne0
     | Node (_, _, _, Empty, nw, sw, Empty) ->
         let nw0, sw0 = par2 (fun () -> hmapreduce f g nw) (fun () -> hmapreduce f g sw)
         QuadRope.thinNode nw0 sw0
@@ -202,9 +200,7 @@ let rec vmapreduce f g = function
         QuadRope.flatNode nw0 ne0
     | Node (_, _, _, Empty, nw, sw, Empty) ->
         let nw0, sw0 = par2 (fun () -> vmapreduce f g nw) (fun () -> vmapreduce f g sw)
-        match sw0 with
-            | Empty -> nw0
-            | _ -> zip g nw0 sw0
+        zip g nw0 sw0
     | Node (_, _, _, ne, nw, sw, se) ->
         let ne0, nw0, sw0, se0 = par4 (fun () -> vmapreduce f g ne)
                                       (fun () -> vmapreduce f g nw)

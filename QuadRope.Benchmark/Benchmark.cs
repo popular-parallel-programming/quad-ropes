@@ -189,6 +189,12 @@ namespace RadTrees.Benchmark
             Mark("primes QuadRope.Parallel", () => Examples.QuadRope.Parallel.factorize(rope));
         }
 
+        public static void Fibonacci(Options opts)
+        {
+            Mark("fibseq Array2D", () => Examples.Array2D.fibseq(opts.Size));
+            Mark("fibseq QuadRope", () => Examples.QuadRope.fibseq(opts.Size));
+        }
+
         static Dictionary<string, Action<Options>> tests = new Dictionary<string, Action<Options>>()
         {
             {"all", Run},
@@ -196,7 +202,8 @@ namespace RadTrees.Benchmark
             {"zip", Zip},
             {"cat", Concatenating},
             {"vdc", vanDerCorput},
-            {"primes", Factorization}
+            {"primes", Factorization},
+            {"fibseq", Fibonacci}
         };
 
         public static void PrintModes()

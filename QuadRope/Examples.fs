@@ -12,6 +12,7 @@ module Array2D =
     let map = Array2D.map
     let singleton = Array2D.singleton
     let empty = Array2D.initZeros 1 0
+    let get = Array2D.get
 
     let next i is =
         is @ (singleton i) @ (map ((+) i) is)
@@ -32,8 +33,18 @@ module Array2D =
                 factorize p (k + 1) ((singleton k) @ ks)
         map (fun p -> factorize p 2 empty) arr
 
+    let rec fibseq n =
+        match n with
+            | 0 -> singleton 0.0
+            | 1 -> singleton 1.0 @ singleton 1.0
+            | _ ->
+                let prefix = fibseq (n-1)
+                let fa = get prefix 0 (n-2)
+                let fb = get prefix 0 (n-1)
+                prefix @ singleton (fa + fb)
+
     module Parallel =
-        let (@) = Parallel.Array2D.cat2
+        let (@) = Parallel.Array2D.cat1
         let map = Parallel.Array2D.map
 
         let next i is =
@@ -60,6 +71,7 @@ module QuadRope =
     let map = QuadRope.map
     let singleton = QuadRope.singleton
     let empty = Types.QuadRope.Empty
+    let get = QuadRope.get
 
     let next i is =
         is @ (singleton i) @ (map ((+) i) is)
@@ -79,6 +91,16 @@ module QuadRope =
             else
                 factorize p (k + 1) ((singleton k) @ ks)
         map (fun p -> factorize p 2 empty) arr
+
+    let rec fibseq n =
+        match n with
+            | 0 -> singleton 0.0
+            | 1 -> singleton 1.0 @ singleton 1.0
+            | _ ->
+                let prefix = fibseq (n-1)
+                let fa = get prefix 0 (n-2)
+                let fb = get prefix 0 (n-1)
+                prefix @ singleton (fa + fb)
 
     module Parallel =
         let map = Parallel.QuadRope.map

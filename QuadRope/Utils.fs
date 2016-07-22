@@ -80,7 +80,7 @@ module Fibonacci =
 
     /// Return the n of the first Fibonacci number that is greater than m.
     let nth m =
-       Array.findIndex ((<=) m) fibs
+        Array.findIndex ((<=) m) fibs
 
 /// This module contains a bunch of functions that convert a C#
 /// function into an F# function conveniently. More versions for

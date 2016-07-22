@@ -142,11 +142,14 @@ let isBalancedV = function
     | Node (d, h, _, _, _, _, _) -> isBalanced d h
     | _ -> true
 
+/// Calls f recursively on a list of quad ropes until the list is
+/// reduced to a single quad rope.
 let rec private reduceList f = function
     | []  -> Empty
     | [n] -> n
     | ns  -> reduceList f (f ns)
 
+/// Recursively splits and merges a list of elements.
 let rec private rebuild merge = function
     | [] -> []
     | [x] -> [x]

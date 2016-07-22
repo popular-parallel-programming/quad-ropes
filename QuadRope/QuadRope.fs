@@ -448,14 +448,14 @@ let init h w f =
         else if h <= s_max && w <= s_max then
             leaf (Array2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
         else if w <= s_max then
-            let hpv = h0 + h / 2
+            let hpv = h0 + (h >>> 1)
             thinNode (init h0 w0 hpv w1) (init hpv w0 h1 w1)
         else if h <= s_max then
-            let wpv = w0 + w / 2
+            let wpv = w0 + (w >>> 1)
             flatNode (init h0 w0 h1 wpv) (init h0 wpv h1 w1)
         else
-            let hpv = h0 + h / 2
-            let wpv = w0 + w / 2
+            let hpv = h0 + (h >>> 1)
+            let wpv = w0 + (w >>> 1)
             node (init h0 wpv hpv w1)
                  (init h0 w0 hpv wpv)
                  (init hpv w0 h1 wpv)

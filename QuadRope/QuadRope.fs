@@ -11,10 +11,6 @@ let s_max = 4
 #else
 let s_max = 16
 #endif
-let d_max = 32
-
-(* Initialize Fibonacci numbers at module load time. *)
-ignore (Fibonacci.fib d_max)
 
 /// Number of rows in a rectangular tree.
 let rows = function

@@ -65,19 +65,22 @@ module Bits =
 
 module Fibonacci =
 
-    let private fibs =
-        let rec fibr n n0 n1 =
-            let n2 = n0 + n1
-            seq { yield (n, n2); yield! fibr (n + 1) n1 n2 }
-        seq { yield (0, 0); yield (1, 1); yield (2, 1); yield! fibr 3 1 1 } |> Seq.cache
+    /// Alternative using plain arrays
+    /// Enough to use 47 elements since fib 46 < 2^31 < fib 47.
 
-    /// Return the nth Fibonacci number and cache it.
+    /// With this code, fib 33 is 17 times faster for some reason.
+
+    let private fibs = Array.init 47 id
+
+    for i in [2 .. Array.length fibs - 1] do
+        fibs.[i] <- fibs.[i-1] + fibs.[i-2]
+
     let fib n =
-        (Seq.item n >> snd) fibs
+        fibs.[n]
 
     /// Return the n of the first Fibonacci number that is greater than m.
     let nth m =
-        fst (Seq.find (snd >> ((<=) m)) fibs)
+       Array.findIndex ((<=) m) fibs
 
 /// This module contains a bunch of functions that convert a C#
 /// function into an F# function conveniently. More versions for

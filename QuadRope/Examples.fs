@@ -43,6 +43,20 @@ module Array2D =
                 let fb = get prefix 0 (n-1)
                 prefix @ singleton (fa + fb)
 
+    let transpose = Array2D.transpose
+    let rows = Array2D.length1
+    let init = Array2D.init
+    let cols = Array2D.length2
+    let slice = Array2D.slice
+    let zip = Array2D.map2
+    let reduce = Array2D.reduce
+
+    let matmult lm rm =
+        let trm = transpose rm
+        let elm = init (rows lm) (cols rm) (fun i _ -> slice lm  i 0 1 (cols lm))
+        let erm = init (rows lm) (cols rm) (fun _ j -> slice trm j 0 1 (cols trm))
+        zip (fun l r -> reduce (+) (zip (*) l r)) elm erm
+
     module Parallel =
         let (@) = Parallel.Array2D.cat1
         let map = Parallel.Array2D.map

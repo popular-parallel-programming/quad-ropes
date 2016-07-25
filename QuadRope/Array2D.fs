@@ -120,7 +120,7 @@ let reduce2 f arr = mapReduce2 id f arr
 /// Map a function f to all values in the array and combine the
 /// results using g.
 let mapReduce f g (arr : _ [,]) =
-    let mutable acc = f arr.[0,0]
+    let mutable acc = f arr.[0, 0]
     for j in 1 .. Array2D.length2 arr - 1 do
         acc <- g acc (f arr.[0, j])
     for i in 1 .. Array2D.length1 arr - 1 do

@@ -195,6 +195,17 @@ namespace RadTrees.Benchmark
             Mark("fibseq QuadRope", () => Examples.QuadRope.fibseq(opts.Size));
         }
 
+        public static void MatrixMultiplication(Options opts)
+        {
+            var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
+            var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
+
+            Mark("mmult Array2D",           () => Examples.Array2D.matmult(arr, arr));
+//            Mark("mmult Array2D.Parallel",  () => Examples.Array2D.Parallel.matmult(arr, arr));
+            Mark("mmult QuadRope",          () => Examples.QuadRope.matmult(rope, rope));
+            Mark("mmult QuadRope.Parallel", () => Examples.QuadRope.Parallel.matmult(rope, rope));
+        }
+
         static Dictionary<string, Action<Options>> tests = new Dictionary<string, Action<Options>>()
         {
             {"all", Run},
@@ -203,7 +214,8 @@ namespace RadTrees.Benchmark
             {"cat", Concatenating},
             {"vdc", vanDerCorput},
             {"primes", Factorization},
-            {"fibseq", Fibonacci}
+            {"fibseq", Fibonacci},
+            {"mmult", MatrixMultiplication}
         };
 
         public static void PrintModes()

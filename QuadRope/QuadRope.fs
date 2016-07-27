@@ -320,6 +320,7 @@ module internal Slicing =
     let map f rope =
         let rec map rope i j h w =
             match rope with
+                | _ when rows rope <= i || cols rope <= j || h <= 0 || w <= 0 -> Empty
                 | Empty -> Empty
                 | Leaf vs -> leaf (Array2D.map f (Array2D.slice vs i j h w))
                 | Node (_, _, _, ne, nw, sw, se) ->

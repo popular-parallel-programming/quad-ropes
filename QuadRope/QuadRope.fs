@@ -691,7 +691,7 @@ let rec mapreduce f g = function
     | Slice _ as rope -> mapreduce f g (Slicing.reallocate rope)
 
 /// Reduce all values of the rope to a single scalar.
-let inline reduce f rope = mapreduce id f rope
+let reduce f rope = mapreduce id f rope
 
 let inline private offset f x =
     ((+) x) >> f

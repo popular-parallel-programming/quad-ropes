@@ -14,9 +14,9 @@ let slice arr i j h w =
     else
         let i0 = max 0 i
         let j0 = max 0 j
-        Array2D.init (min h (Array2D.length1 arr - i0))
-                     (min w (Array2D.length2 arr - j0))
-                     (fun i j -> arr.[i0 + i, j0 + j])
+        let h0 = (min (i0 + h) (Array2D.length1 arr)) - 1
+        let w0 = (min (j0 + w) (Array2D.length2 arr)) - 1
+        arr.[i0 .. h0, j0 .. w0]
 
 let singleton v =
     Array2D.create 1 1 v

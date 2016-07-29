@@ -61,7 +61,7 @@ module Array2D =
               reduce (+) (zip (*) l r))
 
     module Parallel =
-        let (@) = Parallel.Array2D.cat1
+        let (@) = Parallel.Array2D.cat2
         let map = Parallel.Array2D.map
 
         let next i is =

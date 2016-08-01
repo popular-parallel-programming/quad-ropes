@@ -25,8 +25,8 @@ module Gen =
 
     let genCatRope =
         let eq f (a, b) = f a = f b
-        let hs = Gen.oneof (seq { yield Gen.suchThat (eq QuadRope.rows) (Gen.two genRevRope) })
-        let vs = Gen.oneof (seq { yield Gen.suchThat (eq QuadRope.cols) (Gen.two genRevRope) })
+        let hs = Gen.oneof (seq { yield Gen.where (eq QuadRope.rows) (Gen.two genRevRope) })
+        let vs = Gen.oneof (seq { yield Gen.where (eq QuadRope.cols) (Gen.two genRevRope) })
         Gen.oneof ( seq { yield genRevRope;
                           yield Gen.map (fun (l, r) -> QuadRope.hcat l r) hs;
                           yield Gen.map (fun (u, l) -> QuadRope.vcat u l) vs })

@@ -1,2 +1,2 @@
 @echo off
-msbuild QuadRope.sln
+msbuild /m /nr:false

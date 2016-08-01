@@ -131,13 +131,11 @@ let mapReduce f g (arr : _ [,]) =
 let reduce f arr = mapReduce id f arr
 
 let sort1 p (arr : _ [,]) =
-    let sort = fun j -> Array.sortBy p [| for i in 0 .. Array2D.length1 arr - 1 -> arr.[i, + j] |]
-    let arr' = [| for j in 0 .. Array2D.length2 arr - 1 -> sort j |]
+    let arr' = [| for j in 0 .. Array2D.length2 arr - 1 -> Array.sortBy p arr.[0 .. , j] |]
     Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> Array.get (Array.get arr' j) i)
 
 let sort2 p (arr : _ [,]) =
-    let sort = fun i -> Array.sortBy p [| for j in 0 .. Array2D.length2 arr - 1 -> arr.[i, j] |]
-    array2D [| for i in 0 .. Array2D.length1 arr - 1 -> sort i |]
+    array2D [| for i in 0 .. Array2D.length1 arr - 1 -> Array.sortBy p arr.[i, 0 ..] |]
 
 /// Initialize a 2D array with all zeros.
 let initZeros h w =

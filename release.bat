@@ -1,2 +1,2 @@
 @echo off
-msbuild /property:Configuration=Release /m /nr:false
+msbuild /property:Configuration=Release

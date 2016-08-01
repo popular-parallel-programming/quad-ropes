@@ -441,27 +441,27 @@ let rec vrev = function
 
 /// Generate a new tree without any intermediate values.
 let init h w f =
-    let rec init h0 w0 h1 w1 =
+    let rec init h0 w0 h1 w1 arr =
         let h = h1 - h0
         let w = w1 - w0
         if h <= 0 || w <= 0 then
             Empty
         else if h <= s_max && w <= s_max then
-            leaf (Array2D.init h w (fun i j -> f (h0 + i) (w0 + j)))
+            leaf (Array2D.slice arr h0 w0 h w)
         else if w <= s_max then
             let hpv = h0 + (h >>> 1)
-            thinNode (init h0 w0 hpv w1) (init hpv w0 h1 w1)
+            thinNode (init h0 w0 hpv w1 arr) (init hpv w0 h1 w1 arr)
         else if h <= s_max then
             let wpv = w0 + (w >>> 1)
-            flatNode (init h0 w0 h1 wpv) (init h0 wpv h1 w1)
+            flatNode (init h0 w0 h1 wpv arr) (init h0 wpv h1 w1 arr)
         else
             let hpv = h0 + (h >>> 1)
             let wpv = w0 + (w >>> 1)
-            node (init h0 wpv hpv w1)
-                 (init h0 w0 hpv wpv)
-                 (init hpv w0 h1 wpv)
-                 (init hpv wpv h1 w1)
-    init 0 0 h w
+            node (init h0 wpv hpv w1 arr)
+                 (init h0 w0 hpv wpv arr)
+                 (init hpv w0 h1 wpv arr)
+                 (init hpv wpv h1 w1 arr)
+    init 0 0 h w (Array2D.init h w f)
 
 /// Reallocate a rope form the ground up. Sometimes, this is the
 /// only way to improve performance of a badly composed quad rope.

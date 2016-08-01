@@ -439,8 +439,8 @@ let rec vrev = function
         Node (d, h, w, vrev se, vrev sw, vrev nw, vrev ne)
     | Slice (i, j, h, w, rope) -> Slice (i, j, h, w, vrev rope)
 
-/// Generate a new tree without any intermediate values.
-let init h w f =
+/// Initialize a rope from a native 2D-array.
+let fromArray2D arr =
     let rec init h0 w0 h1 w1 arr =
         let h = h1 - h0
         let w = w1 - w0
@@ -461,12 +461,11 @@ let init h w f =
                  (init h0 w0 hpv wpv arr)
                  (init hpv w0 h1 wpv arr)
                  (init hpv wpv h1 w1 arr)
-    init 0 0 h w (Array2D.init h w f)
+    init 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
 
-/// Reallocate a rope form the ground up. Sometimes, this is the
-/// only way to improve performance of a badly composed quad rope.
-let inline reallocate rope =
-    init (rows rope) (cols rope) (get rope)
+/// Generate a new tree without any intermediate values.
+let inline init h w f =
+    fromArray2D (Array2D.init h w f)
 
 /// Initialize a rope where all elements are <code>e</code>.
 let inline initAll h w e =
@@ -489,10 +488,6 @@ let fromArray vs w =
         failwithf "%d must be evenly divisible by %d" (Array.length vs) w
     let h = Array.length vs / w
     init h w (fun i j -> vs.[i * w + j])
-
-/// Initialize a rope from a native 2D-array.
-let fromArray2D vss =
-    init (Array2D.length1 vss) (Array2D.length2 vss) (Array2D.get vss)
 
 /// Apply a function with side effects to all elements of the rope.
 let rec iter f = function
@@ -534,6 +529,11 @@ let toArray2D rope =
     // the rope once.
     iteri (fun i j v -> arr.[i, j] <- v) rope
     arr
+
+/// Reallocate a rope form the ground up. Sometimes, this is the
+/// only way to improve performance of a badly composed quad rope.
+let inline reallocate rope =
+    fromArray2D (toArray2D rope)
 
 /// Apply a function to every element in the tree and preserves the
 /// tree structure.

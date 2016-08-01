@@ -206,12 +206,19 @@ namespace RadTrees.Benchmark
             Mark("mmult QuadRope.Parallel", () => Examples.QuadRope.Parallel.matmult(rope, rope));
         }
 
+        public static void Reallocation(Options opts)
+        {
+            var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
+            Mark("QuadRope.reallocate", () => QuadRopeModule.reallocate(rope));
+        }
+
         static Dictionary<string, Action<Options>> tests = new Dictionary<string, Action<Options>>()
         {
             {"all", Run},
             {"index", Indexing},
             {"zip", Zip},
             {"cat", Concatenating},
+            {"realloc", Reallocation},
             {"vdc", vanDerCorput},
             {"primes", Factorization},
             {"fibseq", Fibonacci},

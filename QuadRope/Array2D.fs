@@ -73,25 +73,23 @@ let fold2 f state (arr : _ [,]) =
                       acc <- f acc arr.[i, j]
                   acc)
 
-let private exclusiveScan f s p g =
-    let unfold = (fun (i, s) ->
-        if p i then
-            let s' = f s (g i)
-            Some (s', (i + 1, s'))
-        else
-            None)
-    Array.unfold unfold (0, s)
-
 /// Compute the column-wise prefix sum for f.
 let scan1 f state (arr : _ [,]) =
-    let arr' = [| for j in 0 .. Array2D.length2 arr - 1 ->
-                   exclusiveScan f (state j) ((>) (Array2D.length1 arr)) (fun i -> Array2D.get arr i j) |]
-    Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> Array.get (Array.get arr' j) i)
+    let arr = Array2D.copy arr
+    for j in 0 .. Array2D.length2 arr - 1 do
+        arr.[0, j] <- f (state j) arr.[0, j]
+        for i in 1 .. Array2D.length1 arr - 1 do
+            arr.[i, j] <- f arr.[i - 1, j] arr.[i, j]
+    arr
 
 /// Compute the row-wise prefix sum for f.
 let scan2 f state (arr : _ [,]) =
-    array2D [| for i in 0 .. Array2D.length1 arr - 1 ->
-                exclusiveScan f (state i) ((>) (Array2D.length2 arr)) (fun j -> Array2D.get arr i j) |]
+    let arr = Array2D.copy arr
+    for i in 0 .. Array2D.length1 arr - 1 do
+        arr.[i, 0] <- f (state i) arr.[i, 0]
+        for j in 1 .. Array2D.length2 arr - 1 do
+            arr.[i, j] <- f arr.[i, j - 1] arr.[i, j]
+    arr
 
 let map2 f (arr0 : _ [,]) (arr1 : _ [,]) =
     Array2D.init (Array2D.length1 arr0) (Array2D.length2 arr0) (fun i j -> f arr0.[i, j] arr1.[i, j])

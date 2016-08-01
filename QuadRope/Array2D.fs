@@ -31,7 +31,7 @@ let isEmpty arr =
 
 /// Concatenate two arrays in first dimension.
 let cat1 left right =
-    if Array2D.length2 left <> Array2D.length2 right then failwith "length2 must be equal!"
+    if Array2D.length2 left <> Array2D.length2 right then invalidArg "right" "length2 must be equal."
     let l1 = Array2D.length1 left + Array2D.length1 right
     let l2 = Array2D.length2 left
     let l1l = Array2D.length1 left
@@ -39,7 +39,7 @@ let cat1 left right =
 
 /// Concatenate two arrays in second dimension.
 let cat2 left right =
-    if Array2D.length1 left <> Array2D.length1 right then failwith "length1 must be equal!"
+    if Array2D.length1 left <> Array2D.length1 right then invalidArg "right" "length1 must be equal."
     let l1 = Array2D.length1 left
     let l2 = Array2D.length2 left + Array2D.length2 right
     let l2l = Array2D.length2 left

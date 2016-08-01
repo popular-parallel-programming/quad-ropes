@@ -66,7 +66,7 @@ let rec map f = function
 /// according state in states.
 let hfold f states rope =
     if QuadRope.rows states <> QuadRope.rows rope then
-        failwith "states and rope must have same height"
+        invalidArg "states" "Must have the same height as rope."
     let rec fold1 states = function
         | Empty -> states
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
@@ -82,7 +82,7 @@ let hfold f states rope =
 /// according state in states.
 let vfold f states rope =
     if QuadRope.cols states <> QuadRope.cols rope then
-        failwith "states and rope must have same width"
+        invalidArg "states" "Must have the same width as rope."
     let rec fold1 states = function
         | Empty -> states
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
@@ -169,7 +169,7 @@ let rec private fastZip f lope rope =
 /// Apply f to each (i, j) of lope and rope.
 let zip f lope rope =
     if QuadRope.cols lope <> QuadRope.cols rope || QuadRope.rows lope <> QuadRope.rows rope then
-        failwith "ropes must have the same shape"
+        invalidArg "rope" "Must have the same shape as first argument."
     fastZip f lope rope
 
 /// Apply f to all scalars in parallel and reduce the results

@@ -69,14 +69,16 @@ let inline private withinRange root i j =
     0 <= i && i < rows root && 0 <= j && j < cols root
 
 let inline private checkBounds rope i j =
-    if rows rope <= i || cols rope <= j then
-        failwith (sprintf "Index out of bounds: (%d, %d) exceeds  %A" i j rope)
+    if rows rope <= i then
+        invalidArg "i" "First index must be within bounds of quad rope."
+    else if cols rope <= j then
+        invalidArg "j" "Second index must be within bounds of quad rope."
 
 /// Get the value of a location in the tree.
 let get root i j =
     let rec get rope i j =
         match rope with
-            | Empty -> failwith "Empty tree cannot contain values."
+            | Empty -> invalidArg "rope" "Empty tree cannot contain values."
             | Leaf vs -> Array2D.get vs i j
             | Node (_, _, _, ne, nw, sw, se) ->
                 if withinRange nw i j then
@@ -95,7 +97,7 @@ let get root i j =
 let set root i j v =
     let rec set rope i j v =
         match rope with
-            | Empty -> failwith "Empty tree cannot contain values."
+            | Empty -> invalidArg "rope" "Empty tree cannot contain values."
             | Leaf vs -> Leaf (Array2D.set vs i j v)
             | Node (d, h, w, ne, nw, sw, se) ->
                 if withinRange nw i j then
@@ -114,7 +116,7 @@ let set root i j v =
 let write root i j v =
     let rec write rope i j v =
         match rope with
-            | Empty -> failwith "Empty tree cannot contain values."
+            | Empty -> invalidArg "rope" "Empty tree cannot contain values."
             | Leaf vs -> vs.[i, j] <- v
             | Node (_, _, _, ne, nw, sw, se) ->
                 if withinRange nw i j then
@@ -370,7 +372,7 @@ let vcat upper lower =
             | _ -> thinNode upper lower
 
     if (not ((isEmpty upper) || (isEmpty lower))) && cols upper <> cols lower then
-        failwith (sprintf "Trees must be of same width! u = %A\nl = %A" upper lower)
+        invalidArg "lower" "Lower quad rope must be of same width as upper quad rope."
     else
         vbalance (vcat upper lower)
 
@@ -415,7 +417,7 @@ let hcat left right =
             | _ -> flatNode left right
 
     if (not ((isEmpty left) || (isEmpty right))) && rows left <> rows right then
-        failwith (sprintf "Trees must be of same height! l = %A\nr = %A" left right)
+        invalidArg "right" "Right quad rope must be of same width as left quad rope."
     else
         hbalance (hcat left right)
 
@@ -485,7 +487,7 @@ let isSingleton rope =
 /// Initialize a rope from a native array for a given width.
 let fromArray vs w =
     if Array.length vs % w <> 0 then
-        failwithf "%d must be evenly divisible by %d" (Array.length vs) w
+        invalidArg "w" "Must be evenly divisible by array length."
     let h = Array.length vs / w
     init h w (fun i j -> vs.[i * w + j])
 
@@ -569,7 +571,7 @@ let toRowsArray rope = (toRows >> Seq.concat >> Array.ofSeq) rope
 /// state in states.
 let hfold f states rope =
     if rows states <> rows rope then
-        failwith "states and rope must have same height"
+        invalidArg "states" "Must have the same height as rope."
     let rec fold1 states = function
         | Empty -> states
         | Leaf vs -> leaf (Array2D.fold2 f (fun i -> get states i 0) vs)
@@ -584,7 +586,7 @@ let hfold f states rope =
 /// state in states.
 let vfold f states rope =
     if cols states <> cols rope then
-        failwith "states and rope must have same width"
+        invalidArg "states" "Must have the same width as rope."
     let rec fold1 states = function
         | Empty -> states
         | Leaf vs -> leaf (Array2D.fold1 f (get states 0) vs)

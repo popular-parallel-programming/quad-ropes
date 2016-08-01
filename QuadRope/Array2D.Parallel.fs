@@ -8,7 +8,7 @@ let init h w f =
 
 /// Concatenate two arrays in first dimension.
 let cat1 left right =
-    if Array2D.length2 left <> Array2D.length2 right then failwith "length2 must be equal!"
+    if Array2D.length2 left <> Array2D.length2 right then invalidArg "right" "length2 must be equal."
     let l1 = Array2D.length1 left + Array2D.length1 right
     let l2 = Array2D.length2 left
     let l1l = Array2D.length1 left
@@ -16,7 +16,7 @@ let cat1 left right =
 
 /// Concatenate two arrays in second dimension.
 let cat2 left right =
-    if Array2D.length1 left <> Array2D.length1 right then failwith "length1 must be equal!"
+    if Array2D.length1 left <> Array2D.length1 right then invalidArg "right" "length1 must be equal."
     let l1 = Array2D.length1 left
     let l2 = Array2D.length2 left + Array2D.length2 right
     let l2l = Array2D.length2 left
@@ -55,7 +55,7 @@ let map f (arr : _ [,]) =
 /// Apply f to all elements of arr0 and arr1 in parallel.
 let map2 f (arr0 : _ [,]) (arr1 : _ [,]) =
     if Array2D.length1 arr0 <> Array2D.length1 arr1 || Array2D.length2 arr0 <> Array2D.length2 arr1 then
-        failwith "arrays must be of same shape."
+        invalidArg "arr1" "Both arrays must be of same shape."
     init (Array2D.length1 arr0) (Array2D.length2 arr0) (fun i j -> f arr0.[i, j] arr1.[i, j])
 
 /// Reduce each column of a 2D array.

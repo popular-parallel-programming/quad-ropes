@@ -638,7 +638,12 @@ let rec private fastZip f lope rope =
         | Node (_, _, _, lne, lnw, lsw, lse), Node (_, _, _, rne, rnw, rsw, rse)
             when subShapesMatch lope rope ->
                 node (fastZip f lne rne) (fastZip f lnw rnw) (fastZip f lsw rsw) (fastZip f lse rse)
-        | Slice _, _ -> fastZip f (Slicing.reallocate lope) rope
+        // It may pay off to reallocate first if both reallocated quad
+        // ropes have the same internal shape. This might be
+        // over-fitted to matrix multiplication.
+        | Slice _, Slice _ -> fastZip f (Slicing.reallocate lope) (Slicing.reallocate rope)
+        | Slice _, _ ->       fastZip f (Slicing.reallocate lope) rope
+        | Slice _, Slice _ -> fastZip f lope (Slicing.reallocate rope)
         | _ -> genZip f lope rope
 
 /// Apply f to each (i, j) of lope and rope.

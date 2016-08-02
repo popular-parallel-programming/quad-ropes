@@ -163,7 +163,12 @@ let rec private fastZip f lope rope =
                                           (fun () -> fastZip f lsw rsw)
                                           (fun () -> fastZip f lse rse)
                 Node (d, h, w, ne, nw, sw, se)
-        | Slice _, _ -> fastZip f (QuadRope.Slicing.reallocate lope) rope
+        // It may pay off to reallocate first if both reallocated quad
+        // ropes have the same internal shape. This might be
+        // over-fitted to matrix multiplication.
+        | Slice _, Slice _ -> fastZip f (QuadRope.Slicing.reallocate lope) (QuadRope.Slicing.reallocate rope)
+        | Slice _, _ ->       fastZip f (QuadRope.Slicing.reallocate lope) rope
+        | Slice _, Slice _ -> fastZip f lope (QuadRope.Slicing.reallocate rope)
         | _ -> genZip f lope rope
 
 /// Apply f to each (i, j) of lope and rope.

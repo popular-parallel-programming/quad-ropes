@@ -18,9 +18,11 @@ type 'a ArraySlice when 'a : equality = ArraySlice of int * int * int * int * 'a
             | :? ('a ArraySlice) as other -> ArraySlice.equals this other
             | _ -> false
 
-    override this.GetHashCode() = match this with ArraySlice (i, j, h, w, arr) ->
-        let hc = 17 + i + j
-        hc * h * w * hash arr
+    override this.GetHashCode() =
+        match this with
+            | ArraySlice (i, j, h, w, arr) ->
+                let hc = 17 + i + j
+                hc * h * w * hash arr
 
 [<CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
 type 'a QuadRope when 'a : equality =

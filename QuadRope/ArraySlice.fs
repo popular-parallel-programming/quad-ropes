@@ -72,12 +72,22 @@ let rev2 slice =
     apply Array2D.rev2 slice
 
 /// Fold each column of a 2D array, calling state with each column to get the state.
-let fold1 f state slice =
-    apply (Array2D.fold1 f state) slice
+let fold1 f state (ArraySlice (i, j, h, w, arr)) =
+    make (Array2D.init 1 w
+                   (fun _ y ->
+                    let mutable acc = state y
+                    for x in i .. i + h - 1 do
+                        acc <- f acc arr.[x, j + y]
+                    acc))
 
 /// Fold each row of a 2D array, calling state with each row to get the state.
-let fold2 f state slice =
-    apply (Array2D.fold2 f state) slice
+let fold2 f state (ArraySlice (i, j, h, w, arr)) =
+    make (Array2D.init h 1
+                       (fun x _ ->
+                        let mutable acc = state x
+                        for y in j .. j + w - 1 do
+                            acc <- f acc arr.[i + x, y]
+                        acc))
 
 /// Compute the column-wise prefix sum for f.
 let scan1 f state slice =

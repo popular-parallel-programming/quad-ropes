@@ -83,14 +83,14 @@ let scan1 f state slice =
 let scan2 f state slice =
     apply (Array2D.scan2 f state) slice
 
-let map f slice =
-    apply (Array2D.map f) slice
+let map f (ArraySlice (i, j, h, w, arr)) =
+    make (Array2D.init h w (fun x y -> f arr.[i + x, j + y]))
 
-let mapi f slice =
-    apply (Array2D.mapi f) slice
+let mapi f (ArraySlice (i, j, h, w, arr)) =
+    make (Array2D.init h w (fun x y -> f x y arr.[i + x, j + y]))
 
-let map2 f left right =
-    apply2 (Array2D.map2 f) left right
+let map2 f (ArraySlice (i0, j0, h0, w0, arr0)) (ArraySlice (i1, j1, _, _, arr1)) =
+    make (Array2D.init h0 w0 (fun x y -> f arr0.[x + i0, y + j0] arr1.[x + i1, y + j1]))
 
 /// Reduce each column of a 2D array.
 let mapReduce1 f g slice =
@@ -105,8 +105,14 @@ let reduce2 f arr = mapReduce2 id f arr
 
 /// Map a function f to all values in the array and combine the
 /// results using g.
-let mapReduce f g slice =
-    Array2D.mapReduce f g (sliceArray slice)
+let mapReduce f g (ArraySlice (i, j, h, w, arr)) =
+    let mutable acc = f arr.[i, j]
+    for y in j + 1 .. j + w - 1 do
+        acc <- g acc (f arr.[i, y])
+    for x in i + 1 .. i + h - 1 do
+        for y in j .. j + w - 1 do
+            acc <- g acc (f arr.[x, y])
+    acc
 
 let reduce f arr = mapReduce id f arr
 
@@ -120,8 +126,8 @@ let sort2 p slice =
 let initZeros h w =
     make (Array2D.initZeros h w)
 
-let transpose slice =
-    apply Array2D.transpose slice
+let transpose (ArraySlice (i, j, h, w, arr)) =
+    make (Array2D.init w h (fun x y -> arr.[y + i, x + j]))
 
 let filter1 p slice =
     apply (Array2D.filter1 p) slice

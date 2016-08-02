@@ -66,7 +66,7 @@ let fold1 f state (arr : _ [,]) =
 
 /// Fold each row of a 2D array, calling state with each row to get the state.
 let fold2 f state (arr : _ [,]) =
-        Array2D.init (Array2D.length1 arr) 1
+    Array2D.init (Array2D.length1 arr) 1
                  (fun i _ ->
                   let mutable acc = state i
                   for j in 0 .. Array2D.length2 arr - 1 do

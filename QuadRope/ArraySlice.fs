@@ -52,12 +52,16 @@ let isEmpty (ArraySlice (_, _, h0, w0, _)) =
     h0 = 0 || w0 = 0
 
 /// Concatenate two arrays in first dimension.
-let cat1 left right =
-    apply2 Array2D.cat1 left right
+let cat1 (ArraySlice (i0, j0, h0, w0, arr0)) (ArraySlice (i1, j1, h1, w1, arr1)) =
+    if w0 <> w1 then invalidArg "right" "length2 must be equal."
+    let h = h0 + h1
+    make (Array2D.init h w0 (fun i j -> if i < h0 then arr0.[i0 + i, j0 + j] else arr1.[i1 + i - h0, j1 + j]))
 
 /// Concatenate two arrays in second dimension.
-let cat2 left right =
-    apply2 Array2D.cat2 left right
+let cat2 (ArraySlice (i0, j0, h0, w0, arr0)) (ArraySlice (i1, j1, h1, w1, arr1)) =
+    if h0 <> h1 then invalidArg "right" "length1 must be equal."
+    let w = w0 + w1
+    make (Array2D.init h0 w (fun i j -> if j < w0 then arr0.[i0 + i, j0 + j] else arr1.[i1 + i, j1 + j - w0]))
 
 /// Revert an array in first dimension.
 let rev1 slice =

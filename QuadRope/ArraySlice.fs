@@ -30,17 +30,15 @@ let set (ArraySlice (i0, j0, h0, w0, arr)) i j v =
     arr0.[i, j] <- v
     ArraySlice (0, 0, h0, w0, arr0)
 
-/// Allocate a new array of the required dimensions with values taken
-/// from the original array.
 let slice (ArraySlice (i0, j0, h0, w0, arr) as slice) i j h w =
-    if i <= 0 && j <= 0 && Array2D.length1 arr <= h && Array2D.length2 arr <= w then
+    if i <= 0 && j <= 0 && h0 <= h && w0 <= w then
         slice
     else
-        let i0 = max i0 i
-        let j0 = max j0 j
-        let h0 = (min (i0 + h) h0) - 1
-        let w0 = (min (j0 + w) w0) - 1
-        ArraySlice (i0, j0, h0, w0, arr)
+        let i1 = max 0 i
+        let j1 = max 0 j
+        let h0 = min (h0 - i1) h
+        let w0 = min (w0 - j1) w
+        ArraySlice (i0 + i1, j0 + j1, h0, w0, arr)
 
 let singleton v =
     make (Array2D.singleton v)

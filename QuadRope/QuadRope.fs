@@ -15,14 +15,14 @@ let s_max = 16
 /// Number of rows in a rectangular tree.
 let rows = function
     | Empty -> 0
-    | Leaf vs -> Array2D.length1 vs
+    | Leaf vs -> ArraySlice.length1 vs
     | Node (_, h, _, _, _, _, _) -> h
     | Slice (_, _, h, _, _) -> h
 
 /// Number of columns in a rectangular tree.
 let cols = function
     | Empty -> 0
-    | Leaf vs -> Array2D.length2 vs
+    | Leaf vs -> ArraySlice.length2 vs
     | Node (_, _, w, _, _, _, _) -> w
     | Slice (_, _, _, w, _) -> w
 
@@ -38,7 +38,7 @@ let isEmpty = function
     | _ -> false
 
 let leaf vs =
-    if Array2D.length1 vs = 0 || Array2D.length2 vs = 0 then
+    if ArraySlice.length1 vs = 0 || ArraySlice.length2 vs = 0 then
         Empty
     else
         Leaf vs
@@ -79,7 +79,7 @@ let get root i j =
     let rec get rope i j =
         match rope with
             | Empty -> invalidArg "rope" "Empty tree cannot contain values."
-            | Leaf vs -> Array2D.get vs i j
+            | Leaf vs -> ArraySlice.get vs i j
             | Node (_, _, _, ne, nw, sw, se) ->
                 if withinRange nw i j then
                     get nw i j
@@ -98,7 +98,7 @@ let set root i j v =
     let rec set rope i j v =
         match rope with
             | Empty -> invalidArg "rope" "Empty tree cannot contain values."
-            | Leaf vs -> Leaf (Array2D.set vs i j v)
+            | Leaf vs -> Leaf (ArraySlice.set vs i j v)
             | Node (d, h, w, ne, nw, sw, se) ->
                 if withinRange nw i j then
                     Node (d, h, w, ne, set nw i j v, sw, se)
@@ -117,7 +117,7 @@ let write root i j v =
     let rec write rope i j v =
         match rope with
             | Empty -> invalidArg "rope" "Empty tree cannot contain values."
-            | Leaf vs -> vs.[i, j] <- v
+            | Leaf vs -> Leaf (ArraySlice.set vs i j v)
             | Node (_, _, _, ne, nw, sw, se) ->
                 if withinRange nw i j then
                     write nw i j v
@@ -270,7 +270,7 @@ module internal Slicing =
             | _ when i <= 0 && j <= 0 && rows rope <= h && cols rope <= w -> rope
             | _ when rows rope <= i || cols rope <= j || h <= 0 || w <= 0 -> Empty
             | Empty -> Empty
-            | Leaf vs -> leaf (Array2D.slice vs i j h w)
+            | Leaf vs -> leaf (ArraySlice.slice vs i j h w)
             | Node (_, _, _, ne, nw, sw, se) ->
                 let nw0 = reallocate0 nw i j h w
                 let ne0 = reallocate0 ne i (j - cols nw) h (w - cols nw0)
@@ -298,7 +298,7 @@ module internal Slicing =
             match rope with
                 | _ when i = 0 && j = 0 && h = rows rope && w = cols rope -> rope
                 | Empty -> Empty
-                | Leaf vs -> leaf (Array2D.slice vs i j h w) // Just return a view on arrays.
+                | Leaf vs -> leaf (ArraySlice.slice vs i j h w) // Just return a view on arrays.
                 | Node (_, _, _, ne, nw, sw, se) ->
                     if dom nw i j h w then
                         minimize nw i j h w
@@ -321,7 +321,7 @@ module internal Slicing =
             match rope with
                 | _ when rows rope <= i || cols rope <= j || h <= 0 || w <= 0 -> Empty
                 | Empty -> Empty
-                | Leaf vs -> leaf (Array2D.map f (Array2D.slice vs i j h w))
+                | Leaf vs -> leaf (ArraySlice.map f (ArraySlice.slice vs i j h w))
                 | Node (_, _, _, ne, nw, sw, se) ->
                     let nw0 = map nw i j h w
                     let ne0 = map ne i (j - cols nw) h (w - cols nw0)
@@ -334,7 +334,7 @@ module internal Slicing =
 /// Concatenate two trees vertically.
 let vcat upper lower =
     let canCopy us ls =
-        Array2D.length2 us = Array2D.length2 ls && Array2D.length1 us + Array2D.length1 ls <= s_max
+        ArraySlice.length2 us = ArraySlice.length2 ls && ArraySlice.length1 us + ArraySlice.length1 ls <= s_max
     let rec vcat upper lower =
         match upper, lower with
             | Empty, _ -> lower
@@ -343,26 +343,26 @@ let vcat upper lower =
             | _, Slice _ -> vcat upper (Slicing.reallocate lower)
 
             | Leaf us, Leaf ls when canCopy us ls ->
-                leaf (Array2D.cat1 us ls)
+                leaf (ArraySlice.cat1 us ls)
 
             | Node (_, _, _, Empty, nwu, Leaf swus, Empty), Leaf ls when canCopy swus ls->
-                thinNode nwu (leaf (Array2D.cat1 swus ls))
+                thinNode nwu (leaf (ArraySlice.cat1 swus ls))
 
             | Leaf us, Node (_, _, _, Empty, Leaf nwls, swl, Empty) when canCopy us nwls ->
-                thinNode (leaf (Array2D.cat1 us nwls)) swl
+                thinNode (leaf (ArraySlice.cat1 us nwls)) swl
 
             | (Node (_, _, _, neu, nwu, Leaf swus, Leaf seus),
                Node (_, _, _, Leaf nels, Leaf nwls, Empty, Empty))
                 when canCopy swus nwls && canCopy seus nels ->
-                    let sw = leaf (Array2D.cat1 swus nwls)
-                    let se = leaf (Array2D.cat1 seus nels)
+                    let sw = leaf (ArraySlice.cat1 swus nwls)
+                    let se = leaf (ArraySlice.cat1 seus nels)
                     node neu nwu sw se
 
             | (Node (_, _, _, Leaf neus, Leaf nwus, Empty, Empty),
                Node (_, _, _, Leaf nels, Leaf nwls, swl, sel))
                 when canCopy nwus nwls && canCopy neus nels ->
-                    let nw = leaf (Array2D.cat1 nwus nwls)
-                    let ne = leaf (Array2D.cat1 neus nels)
+                    let nw = leaf (ArraySlice.cat1 nwus nwls)
+                    let ne = leaf (ArraySlice.cat1 neus nels)
                     node ne nw swl sel
 
             | (Node (_, _, _, neu, nwu, Empty, Empty),
@@ -379,7 +379,7 @@ let vcat upper lower =
 /// Concatenate two trees horizontally.
 let hcat left right =
     let canCopy ls rs =
-        Array2D.length1 ls = Array2D.length1 rs && Array2D.length2 ls + Array2D.length2 rs <= s_max
+        ArraySlice.length1 ls = ArraySlice.length1 rs && ArraySlice.length2 ls + ArraySlice.length2 rs <= s_max
     let rec hcat left right =
         match left, right with
             | Empty, _ -> right
@@ -388,26 +388,26 @@ let hcat left right =
             | _, Slice _ -> hcat left (Slicing.reallocate right)
 
             | Leaf ls, Leaf rs when canCopy ls rs ->
-                leaf (Array2D.cat2 ls rs)
+                leaf (ArraySlice.cat2 ls rs)
 
             | Node (_, _, _, Leaf lnes, lnw, Empty, Empty), Leaf rs when canCopy lnes rs->
-                flatNode lnw (leaf (Array2D.cat2 lnes rs))
+                flatNode lnw (leaf (ArraySlice.cat2 lnes rs))
 
             | Leaf ls, Node (_, _, _, rne, Leaf rnws, Empty, Empty) when canCopy ls rnws ->
-                flatNode (leaf (Array2D.cat2 ls rnws)) rne
+                flatNode (leaf (ArraySlice.cat2 ls rnws)) rne
 
             | (Node (_, _, _, Leaf lnes, lnw, lsw, Leaf lses),
                Node (_, _, _, Empty, Leaf rnws, Leaf rsws, Empty))
                 when canCopy lnes rnws && canCopy lses rsws ->
-                    let ne = leaf (Array2D.cat2 lnes rnws)
-                    let se = leaf (Array2D.cat2 lses rsws)
+                    let ne = leaf (ArraySlice.cat2 lnes rnws)
+                    let se = leaf (ArraySlice.cat2 lses rsws)
                     node ne lnw lsw se
 
             | (Node (_, _, _, Empty, Leaf lnws, Leaf lsws, Empty),
                Node (_, _, _, rne, Leaf rnws, Leaf rsws, rse))
                 when canCopy lnws rnws && canCopy lsws rsws ->
-                    let nw = leaf (Array2D.cat2 lnws rnws)
-                    let sw = leaf (Array2D.cat2 lsws rsws)
+                    let nw = leaf (ArraySlice.cat2 lnws rnws)
+                    let sw = leaf (ArraySlice.cat2 lsws rsws)
                     node rne nw sw rse
 
             | (Node (_, _, _, Empty, lnw, lsw, Empty),
@@ -424,7 +424,7 @@ let hcat left right =
 /// Reverse rope horizontally.
 let rec hrev = function
     | Empty -> Empty
-    | Leaf vs -> Leaf (Array2D.rev2 vs)
+    | Leaf vs -> Leaf (ArraySlice.rev2 vs)
     | Node (d, h, w, Empty, nw, sw, Empty) ->
         Node (d, h, w, Empty, hrev nw, hrev sw, Empty)
     | Node (d, h, w, ne, nw, sw, se) ->
@@ -434,7 +434,7 @@ let rec hrev = function
 /// Reverse rope vertically.
 let rec vrev = function
     | Empty -> Empty
-    | Leaf vs -> Leaf (Array2D.rev1 vs)
+    | Leaf vs -> Leaf (ArraySlice.rev1 vs)
     | Node (d, h, w, ne, nw, Empty, Empty) ->
         Node (d, h, w, vrev ne, vrev nw, Empty, Empty)
     | Node (d, h, w, ne, nw, sw, se) ->
@@ -449,7 +449,7 @@ let fromArray2D arr =
         if h <= 0 || w <= 0 then
             Empty
         else if h <= s_max && w <= s_max then
-            leaf (Array2D.slice arr h0 w0 h w)
+            leaf (ArraySlice.makeSlice h0 w0 h w arr)
         else if w <= s_max then
             let hpv = h0 + (h >>> 1)
             thinNode (init h0 w0 hpv w1 arr) (init hpv w0 h1 w1 arr)
@@ -494,7 +494,7 @@ let fromArray vs w =
 /// Apply a function with side effects to all elements of the rope.
 let rec iter f = function
     | Empty -> ()
-    | Leaf vs -> Array2D.iter f vs
+    | Leaf vs -> ArraySlice.iter f vs
     | Node (_, _, _, ne, nw, sw, se) ->
         iter f ne
         iter f nw
@@ -507,7 +507,7 @@ let rec iter f = function
 let iteri f rope =
     let rec iteri f i j = function
         | Empty -> ()
-        | Leaf vs -> Array2D.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
+        | Leaf vs -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
         | Node (_, _, _, ne, nw, sw, se) ->
             iteri f i j nw
             iteri f i (j + cols nw) ne
@@ -542,7 +542,7 @@ let inline reallocate rope =
 let rec map f root =
     match root with
         | Empty -> Empty
-        | Leaf vs -> leaf (Array2D.map f vs)
+        | Leaf vs -> leaf (ArraySlice.map f vs)
         | Node (d, h, w, ne, nw, sw, se) ->
             Node (d, h, w,
                   map f ne,
@@ -574,7 +574,7 @@ let hfold f states rope =
         invalidArg "states" "Must have the same height as rope."
     let rec fold1 states = function
         | Empty -> states
-        | Leaf vs -> leaf (Array2D.fold2 f (fun i -> get states i 0) vs)
+        | Leaf vs -> leaf (ArraySlice.fold2 f (fun i -> get states i 0) vs)
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
         | Slice _ as rope -> fold1 states (Slicing.reallocate rope)
     and fold2 states n s =
@@ -589,7 +589,7 @@ let vfold f states rope =
         invalidArg "states" "Must have the same width as rope."
     let rec fold1 states = function
         | Empty -> states
-        | Leaf vs -> leaf (Array2D.fold1 f (get states 0) vs)
+        | Leaf vs -> leaf (ArraySlice.fold1 f (get states 0) vs)
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
         | Slice _ as rope -> fold1 states (Slicing.reallocate rope)
     and fold2 states w e =
@@ -604,7 +604,7 @@ let rec private genZip f lope rope =
         | Empty -> Empty
         | Leaf vs ->
             let rope = Slicing.minimize rope
-            leaf (Array2D.mapi (fun i j e -> f e (get rope i j)) vs)
+            leaf (ArraySlice.mapi (fun i j e -> f e (get rope i j)) vs)
         | Node (d, h, w, ne, nw, sw, se) ->
             let nw0 = genZip f nw (slice rope 0 0 (rows nw) (cols nw))
             let ne0 = genZip f ne (slice rope 0 (cols nw) (rows ne) (cols ne))
@@ -634,7 +634,7 @@ let internal subShapesMatch a b =
 let rec private fastZip f lope rope =
     match lope, rope with
         | Empty, Empty -> Empty
-        | Leaf ls, Leaf rs when shapesMatch lope rope -> leaf (Array2D.map2 f ls rs)
+        | Leaf ls, Leaf rs when shapesMatch lope rope -> leaf (ArraySlice.map2 f ls rs)
         | Node (_, _, _, lne, lnw, lsw, lse), Node (_, _, _, rne, rnw, rsw, rse)
             when subShapesMatch lope rope ->
                 node (fastZip f lne rne) (fastZip f lnw rnw) (fastZip f lsw rsw) (fastZip f lse rse)
@@ -650,7 +650,7 @@ let zip f lope rope =
 /// Map f to every element of the rope and reduce rows with g.
 let rec hmapreduce f g = function
     | Empty -> Empty
-    | Leaf vs -> leaf (Array2D.mapReduce2 f g vs)
+    | Leaf vs -> leaf (ArraySlice.mapReduce2 f g vs)
     | Node (_, _, _, ne, nw, sw, se) ->
         (* Both, w and e, are of width 1. *)
         let w = thinNode (hmapreduce f g nw) (hmapreduce f g sw)
@@ -663,7 +663,7 @@ let rec hmapreduce f g = function
 /// Map f to every element of the rope and reduce columns with g.
 let rec vmapreduce f g = function
     | Empty -> Empty
-    | Leaf vs -> leaf (Array2D.mapReduce1 f g vs)
+    | Leaf vs -> leaf (ArraySlice.mapReduce1 f g vs)
     | Node (_, _, _, ne, nw, sw, se) ->
         (* Both, n and s, are of height 1. *)
         let n = flatNode (vmapreduce f g nw) (vmapreduce f g ne)
@@ -683,7 +683,7 @@ let inline vreduce f rope = vmapreduce id f rope
 /// values to a single scalar using g.
 let rec mapreduce f g = function
     | Empty -> failwith "impossible to reduce an empty rope"
-    | Leaf vs -> Array2D.mapReduce f g vs
+    | Leaf vs -> ArraySlice.mapReduce f g vs
     | Node (_, _, _, ne, nw, Empty, Empty) ->
         g (mapreduce f g ne) (mapreduce f g nw)
     | Node (_, _, _, Empty, nw, sw, Empty) ->
@@ -702,7 +702,7 @@ let inline private offset f x =
 /// states.
 let rec hscan f states = function
     | Empty -> Empty
-    | Leaf vs -> Leaf (Array2D.scan2 f states vs)
+    | Leaf vs -> Leaf (ArraySlice.scan2 f states vs)
     | Node (_, _, _, ne, nw, sw, se) ->
         let nw' = hscan f states nw
         let sw' = hscan f (offset states (rows nw')) sw
@@ -718,7 +718,7 @@ let rec hscan f states = function
 /// with states.
 let rec vscan f states = function
     | Empty -> Empty
-    | Leaf vs -> Leaf (Array2D.scan1 f states vs)
+    | Leaf vs -> Leaf (ArraySlice.scan1 f states vs)
     | Node (_, _, _, ne, nw, sw, se) ->
         let nw' = vscan f states nw
         let ne' = vscan f (offset states (cols nw')) ne
@@ -764,7 +764,7 @@ let exists p = function
 /// rope must be of height 1.
 let rec hfilter p = function
     | Empty -> Empty
-    | Leaf vs -> leaf (Array2D.filter2 p vs)
+    | Leaf vs -> leaf (ArraySlice.filter2 p vs)
     | Node (_, 1, _, ne, nw, Empty, Empty) ->
         flatNode (hfilter p nw) (hfilter p ne)
     | _ -> failwith "hight must be exactly 1"
@@ -773,7 +773,7 @@ let rec hfilter p = function
 /// rope must be of width 1.
 let rec vfilter p = function
     | Empty -> Empty
-    | Leaf vs -> leaf (Array2D.filter1 p vs)
+    | Leaf vs -> leaf (ArraySlice.filter1 p vs)
     | Node (_, _, 1, Empty, nw, sw, Empty) ->
         thinNode (vfilter p nw) (vfilter p sw)
     | _ -> failwith "width must be exactly 1"
@@ -782,7 +782,7 @@ let rec vfilter p = function
 /// such that get rope i j = get (reverse rope) j i.
 let rec transpose = function
     | Empty -> Empty
-    | Leaf vs -> leaf (Array2D.transpose vs)
+    | Leaf vs -> leaf (ArraySlice.transpose vs)
     | Node (_, _, _, ne, nw, sw, se) ->
         node (transpose sw) (transpose nw) (transpose ne) (transpose se)
     | Slice _ as rope -> transpose (Slicing.reallocate rope)

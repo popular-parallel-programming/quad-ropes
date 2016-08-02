@@ -12,7 +12,7 @@ let init h w f =
         let h = h1 - h0
         let w = w1 - w0
         if h <= QuadRope.s_max && w <= QuadRope.s_max then
-            QuadRope.leaf (Array2D.slice arr h0 w0 h w)
+            QuadRope.leaf (ArraySlice.makeSlice h0 w0 h w arr)
         else if w <= QuadRope.s_max then
             let hpv = h0 + (h >>> 1)
             let n, s = par2 (fun () -> init h0 w0 hpv w1 arr) (fun () -> init hpv w0 h1 w1 arr)
@@ -147,7 +147,7 @@ let rec private genZip f lope rope =
 let rec private fastZip f lope rope =
     match lope, rope with
         | Empty, Empty -> Empty
-        | Leaf ls, Leaf rs when QuadRope.shapesMatch lope rope -> QuadRope.leaf (Array2D.map2 f ls rs)
+        | Leaf ls, Leaf rs when QuadRope.shapesMatch lope rope -> Leaf (ArraySlice.map2 f ls rs)
         | Node (d, h, w, lne, lnw, Empty, Empty), Node (_, _, _, rne, rnw, Empty, Empty)
             when QuadRope.subShapesMatch lope rope ->
                 let ne, nw = par2 (fun () -> fastZip f lne rne) (fun () -> fastZip f lnw rnw)

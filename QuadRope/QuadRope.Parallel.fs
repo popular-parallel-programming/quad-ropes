@@ -6,45 +6,6 @@ open RadTrees
 open Types
 open Utils.Tasks
 
-/// Generate a new tree in parallel.
-let init h w f =
-    let rec init h0 w0 h1 w1 arr =
-        let h = h1 - h0
-        let w = w1 - w0
-        if h <= QuadRope.s_max && w <= QuadRope.s_max then
-            QuadRope.leaf (ArraySlice.makeSlice h0 w0 h w arr)
-        else if w <= QuadRope.s_max then
-            let hpv = h0 + (h >>> 1)
-            let n, s = par2 (fun () -> init h0 w0 hpv w1 arr) (fun () -> init hpv w0 h1 w1 arr)
-            QuadRope.thinNode n s
-        else if h <= QuadRope.s_max then
-            let wpv = w0 + (w >>> 1)
-            let w, e = par2 (fun () -> init h0 w0 h1 wpv arr) (fun () -> init h0 wpv h1 w1 arr)
-            QuadRope.flatNode w e
-        else
-            let hpv = h0 + (h >>> 1)
-            let wpv = w0 + (w >>> 1)
-            let ne, nw, sw, se = par4 (fun () -> init h0 wpv hpv w1 arr)
-                                      (fun () -> init h0 w0 hpv wpv arr)
-                                      (fun () -> init hpv w0 h1 wpv arr)
-                                      (fun () -> init hpv wpv h1 w1 arr)
-            QuadRope.node ne nw sw se
-    init 0 0 h w (Parallel.Array2D.init h w f)
-
-/// Reallocate a rope form the ground up in parallel. Sometimes,
-/// this is the only way to improve performance of a badly
-/// composed quad rope.
-let reallocate rope =
-    init (QuadRope.rows rope) (QuadRope.cols rope) (QuadRope.get rope)
-
-/// Initialize a rope in parallel where all elements are
-/// <code>e</code>.
-let initAll h w e =
-    init h w (fun _ _ -> e)
-
-/// Initialize a rope in parallel with all zeros.
-let initZeros h w = initAll h w 0
-
 /// Apply a function f to all scalars in parallel.
 let rec map f = function
     | Node (_, _, _, ne, nw, Empty, Empty) ->
@@ -314,3 +275,68 @@ let rec transpose = function
         QuadRope.node sw0 nw0 ne0 se0
     | Slice _ as rope -> transpose (QuadRope.Slicing.reallocate rope)
     | rope -> QuadRope.transpose rope
+
+/// Apply a function with side effects to all elements and their
+/// corresponding index pair in parallel.
+let iteri f rope =
+    let rec iteri f i j = function
+        | Empty -> ()
+        | Leaf vs -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
+        | Node (_, _, _, ne, nw, sw, se) ->
+            par4 (fun () -> iteri f i j nw)
+                 (fun () -> iteri f i (j + QuadRope.cols nw) ne)
+                 (fun () -> iteri f (i + QuadRope.rows nw) j sw)
+                 (fun () -> iteri f (i + QuadRope.rows ne) (j + QuadRope.cols sw) se)
+            |> ignore
+        | Slice _ as rope -> iteri f i j (QuadRope.Slicing.reallocate rope)
+    iteri f 0 0 rope
+
+/// Conversion into 2D array.
+let toArray2D rope =
+    let arr = Array2D.zeroCreate (QuadRope.rows rope) (QuadRope.cols rope)
+    // This avoids repeated calls to get; it is enough to traverse
+    // the rope once.
+    iteri (fun i j v -> arr.[i, j] <- v) rope
+    arr
+
+/// Initialize a rope from a native 2D-array in parallel.
+let fromArray2D arr =
+    let rec init h0 w0 h1 w1 arr =
+        let h = h1 - h0
+        let w = w1 - w0
+        if h <= QuadRope.s_max && w <= QuadRope.s_max then
+            QuadRope.leaf (ArraySlice.makeSlice h0 w0 h w arr)
+        else if w <= QuadRope.s_max then
+            let hpv = h0 + (h >>> 1)
+            let n, s = par2 (fun () -> init h0 w0 hpv w1 arr) (fun () -> init hpv w0 h1 w1 arr)
+            QuadRope.thinNode n s
+        else if h <= QuadRope.s_max then
+            let wpv = w0 + (w >>> 1)
+            let w, e = par2 (fun () -> init h0 w0 h1 wpv arr) (fun () -> init h0 wpv h1 w1 arr)
+            QuadRope.flatNode w e
+        else
+            let hpv = h0 + (h >>> 1)
+            let wpv = w0 + (w >>> 1)
+            let ne, nw, sw, se = par4 (fun () -> init h0 wpv hpv w1 arr)
+                                      (fun () -> init h0 w0 hpv wpv arr)
+                                      (fun () -> init hpv w0 h1 wpv arr)
+                                      (fun () -> init hpv wpv h1 w1 arr)
+            QuadRope.node ne nw sw se
+    init 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
+
+/// Generate a new quad rope in parallel.
+let inline init h w f =
+    fromArray2D (Parallel.Array2D.init h w f)
+
+/// Reallocate a rope form the ground up. Sometimes, this is the
+/// only way to improve performance of a badly composed quad rope.
+let inline reallocate rope =
+    fromArray2D (toArray2D rope)
+
+/// Initialize a rope in parallel where all elements are
+/// <code>e</code>.
+let initAll h w e =
+    init h w (fun _ _ -> e)
+
+/// Initialize a rope in parallel with all zeros.
+let initZeros h w = initAll h w 0

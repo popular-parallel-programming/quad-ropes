@@ -91,11 +91,11 @@ let rev2 slice =
 /// to get the corresponding state.
 let fold1 f state (ArraySlice (i, j, h, w, arr)) =
     make (Array2D.init 1 w
-                   (fun _ y ->
-                    let mutable acc = state y
-                    for x in i .. i + h - 1 do
-                        acc <- f acc arr.[x, j + y]
-                    acc))
+                       (fun _ y ->
+                        let mutable acc = state y
+                        for x in i .. i + h - 1 do
+                            acc <- f acc arr.[x, j + y]
+                        acc))
 
 /// Fold each row of an array slice, calling state with each row to
 /// get the corresponding state.

@@ -209,7 +209,8 @@ namespace RadTrees.Benchmark
         public static void Reallocation(Options opts)
         {
             var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-            Mark("QuadRope.reallocate", () => QuadRopeModule.reallocate(rope));
+            Mark("seq reallocate", () => QuadRopeModule.reallocate(rope));
+            Mark("par reallocate", () => Parallel.QuadRopeModule.reallocate(rope));
         }
 
         static Dictionary<string, Action<Options>> tests = new Dictionary<string, Action<Options>>()

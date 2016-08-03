@@ -3,33 +3,46 @@ module RadTrees.ArraySlice
 open RadTrees
 open Types
 
+/// Instantiate a new array slice that allows accessing the entire
+/// array.
 let inline make arr =
     ArraySlice (0, 0, Array2D.length1 arr, Array2D.length2 arr, arr)
 
+/// Instantiate a new array slice that allows accessing the array only
+/// in the specified area.
 let inline makeSlice i j h w arr =
     ArraySlice (max 0 i, max 0 j, min h (Array2D.length1 arr), min w (Array2D.length2 arr), arr)
 
+/// Compute a new array from a slice.
 let inline private sliceArray (ArraySlice (i, j, h, w, arr)) =
     Array2D.slice arr i j h w
 
+/// Compute a new array from a slice, apply function f to it and make
+/// a new array slice from the resulting array.
 let inline private apply f slice =
     make (f (sliceArray slice))
 
-let inline private apply2 f slice0 slice1 =
-    make (f (sliceArray slice0) (sliceArray slice1))
-
+/// The height of an array slice.
 let inline length1 (ArraySlice (_, _, h0, _, _)) = h0
 
+/// The width of an array slice.
 let inline length2 (ArraySlice (_, _, _, w0, _)) = w0
 
-let get (ArraySlice (i0, j0, _, _, arr)) i j =
+/// Return the value are i, j.
+let get (ArraySlice (i0, j0, h0, w0, arr)) i j =
+    if h0 <= i then invalidArg "i" "May not access array slice outside of specified bounds."
+    if w0 <= j then invalidArg "j" "May not access array slice outside of specified bounds."
     arr.[i0 + i, j0 + j]
 
+/// Copy the underlying array, set the value at i, j to v and return a
+/// new array slice from the copy.
 let set (ArraySlice (i0, j0, h0, w0, arr)) i j v =
     let arr0 = arr.[i0 .. i0 + h0, j0 .. j0 + w0]
     arr0.[i, j] <- v
-    ArraySlice (0, 0, h0, w0, arr0)
+    make arr0
 
+/// Slice up an array slice. This is a constant time operation and no
+/// arrays are re-allocated.
 let slice (ArraySlice (i0, j0, h0, w0, arr) as slice) i j h w =
     if i <= 0 && j <= 0 && h0 <= h && w0 <= w then
         slice
@@ -40,18 +53,19 @@ let slice (ArraySlice (i0, j0, h0, w0, arr) as slice) i j h w =
         let w0 = min (w0 - j1) w
         ArraySlice (i0 + i1, j0 + j1, h0, w0, arr)
 
+/// Produce a singleton array slice.
 let singleton v =
     make (Array2D.singleton v)
 
-/// True if array contains only a single element.
+/// True if array slice contains only a single element.
 let isSingleton (ArraySlice (_, _, h0, w0, _)) =
     h0 = 1 && w0 = 1
 
-/// True if array contains no elements.
+/// True if array slice contains no elements.
 let isEmpty (ArraySlice (_, _, h0, w0, _)) =
     h0 = 0 || w0 = 0
 
-/// Concatenate two arrays in first dimension.
+/// Concatenate two array slices in first dimension.
 let cat1 (ArraySlice (i0, j0, h0, w0, arr0)) (ArraySlice (i1, j1, h1, w1, arr1)) =
     if w0 <> w1 then invalidArg "right" "length2 must be equal."
     let h = h0 + h1
@@ -65,15 +79,16 @@ let cat2 (ArraySlice (i0, j0, h0, w0, arr0)) (ArraySlice (i1, j1, h1, w1, arr1))
     Array2D.init h0 w (fun i j -> if j < w0 then arr0.[i0 + i, j0 + j] else arr1.[i1 + i, j1 + j - w0])
     |> make
 
-/// Revert an array in first dimension.
+/// Revert an array slice in first dimension.
 let rev1 slice =
     apply Array2D.rev1 slice
 
-/// Revert an array in second dimension.
+/// Revert an array slice in second dimension.
 let rev2 slice =
     apply Array2D.rev2 slice
 
-/// Fold each column of a 2D array, calling state with each column to get the state.
+/// Fold each column of an array slice, calling state with each column
+/// to get the corresponding state.
 let fold1 f state (ArraySlice (i, j, h, w, arr)) =
     make (Array2D.init 1 w
                    (fun _ y ->
@@ -82,7 +97,8 @@ let fold1 f state (ArraySlice (i, j, h, w, arr)) =
                         acc <- f acc arr.[x, j + y]
                     acc))
 
-/// Fold each row of a 2D array, calling state with each row to get the state.
+/// Fold each row of an array slice, calling state with each row to
+/// get the corresponding state.
 let fold2 f state (ArraySlice (i, j, h, w, arr)) =
     make (Array2D.init h 1
                        (fun x _ ->
@@ -99,9 +115,13 @@ let scan1 f state slice =
 let scan2 f state slice =
     apply (Array2D.scan2 f state) slice
 
+/// Apply f to all elements in the area of the array slice. This
+/// causes reallocation of the underlying array.
 let map f (ArraySlice (i, j, h, w, arr)) =
     make (Array2D.init h w (fun x y -> f arr.[i + x, j + y]))
 
+/// Apply f to all elements and their indices in the area of the array slice. This
+/// causes reallocation of the underlying array.
 let mapi f (ArraySlice (i, j, h, w, arr)) =
     make (Array2D.init h w (fun x y -> f x y arr.[i + x, j + y]))
 

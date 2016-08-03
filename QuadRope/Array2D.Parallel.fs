@@ -3,8 +3,13 @@ module RadTrees.Parallel.Array2D
 open RadTrees.Utils.Tasks
 
 /// Initialize a 2D array in parallel.
-let init h w f =
-    array2D (Array.Parallel.init h (fun i -> Array.init w (fun j -> f i j)))
+let init h w (f : int -> int -> 'a) =
+    let arr = (Array2D.zeroCreate h w : 'a[,])
+    if h < w then
+        parfor 0 w (fun j -> for i = 0 to h - 1 do arr.[i, j] <- f i j)
+    else
+        parfor 0 h (fun i -> for j = 0 to w - 1 do arr.[i, j] <- f i j)
+    arr
 
 /// Concatenate two arrays in first dimension.
 let cat1 left right =

@@ -65,13 +65,12 @@ let map2 f (arr0 : _ [,]) (arr1 : _ [,]) =
 
 /// Reduce each column of a 2D array.
 let mapReduce1 f g (arr : _ [,]) =
-    let mapreduce j =
-        let mutable acc = f arr.[0, j]
-        for i in 1 .. Array2D.length1 arr - 1 do
-            acc <- g acc (f arr.[i, j])
-        acc
-    let arr0 = Array.Parallel.init (Array2D.length2 arr) mapreduce
-    init 1 (Array2D.length2 arr) (fun _ j -> arr0.[j])
+    init 1 (Array2D.length2 arr)
+         (fun _ j ->
+          let mutable acc = f arr.[0, j]
+          for i in 1 .. Array2D.length1 arr - 1 do
+              acc <- g acc (f arr.[i, j])
+          acc)
 
 /// Reduce each row of a 2D array.
 let mapReduce2 f g (arr : _ [,]) =

@@ -518,7 +518,7 @@ let iteri f rope =
 
 /// Conversion into 1D array.
 let toArray rope =
-    let arr = Array.create ((rows rope) * (cols rope)) (get rope 0 0)
+    let arr = Array.zeroCreate ((rows rope) * (cols rope))
     // This avoids repeated calls to get; it is enough to traverse
     // the rope once.
     iteri (fun i j v -> arr.[i * cols rope + j] <- v) rope
@@ -526,7 +526,7 @@ let toArray rope =
 
 /// Conversion into 2D array.
 let toArray2D rope =
-    let arr = Array2D.create (rows rope) (cols rope) (get rope 0 0)
+    let arr = Array2D.zeroCreate (rows rope) (cols rope)
     // This avoids repeated calls to get; it is enough to traverse
     // the rope once.
     iteri (fun i j v -> arr.[i, j] <- v) rope

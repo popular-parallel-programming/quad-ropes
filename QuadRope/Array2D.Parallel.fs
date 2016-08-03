@@ -39,7 +39,7 @@ let rev2 (arr : _ [,]) =
 
 /// Fold each column of a 2D array, calling state with each column to get the state.
 let fold1 f state (arr : _ [,]) =
-    let res = Array2D.init 1 (Array2D.length2 arr) (fun _ j -> state j)
+    let res = init 1 (Array2D.length2 arr) (fun _ j -> state j)
     parfor 0 (Array2D.length2 res) (fun j ->
                                     for i in 0 .. Array2D.length1 arr - 1 do
                                         res.[0, j] <- f res.[0, j] arr.[i, j])
@@ -47,7 +47,7 @@ let fold1 f state (arr : _ [,]) =
 
 /// Fold each row of a 2D array, calling state with each row to get the state.
 let fold2 f state (arr : _ [,]) =
-    let res = Array2D.init (Array2D.length1 arr) 1 (fun i _ -> state i)
+    let res = init (Array2D.length1 arr) 1 (fun i _ -> state i)
     parfor 0 (Array2D.length1 arr) (fun i ->
                                     for j in 0 .. Array2D.length2 arr - 1 do
                                         res.[i, 0] <- f res.[i, 0] arr.[i, j])

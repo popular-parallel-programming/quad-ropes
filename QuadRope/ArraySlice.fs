@@ -107,12 +107,22 @@ let map2 f (ArraySlice (i0, j0, h0, w0, arr0)) (ArraySlice (i1, j1, _, _, arr1))
     make (Array2D.init h0 w0 (fun x y -> f arr0.[x + i0, y + j0] arr1.[x + i1, y + j1]))
 
 /// Reduce each column of a 2D array.
-let mapReduce1 f g slice =
-    apply (Array2D.mapReduce1 f g) slice
+let mapReduce1 f g (ArraySlice (i, j, h, w, arr)) =
+    make (Array2D.init 1 w
+                       (fun _ y ->
+                        let mutable acc = f arr.[i, j + y]
+                        for x in i + 1 .. i + h - 1 do
+                            acc <- g acc (f arr.[x, j + y])
+                        acc))
 
 /// Reduce each row of a 2D array.
-let mapReduce2 f g slice =
-    apply (Array2D.mapReduce2 f g) slice
+let mapReduce2 f g (ArraySlice (i, j, h, w, arr)) =
+    make (Array2D.init h 1
+                       (fun x _ ->
+                        let mutable acc = f arr.[i + x, j]
+                        for y in j + 1 .. j + w - 1 do
+                            acc <- g acc (f arr.[i + x, y])
+                        acc))
 
 let reduce1 f arr = mapReduce1 id f arr
 let reduce2 f arr = mapReduce2 id f arr

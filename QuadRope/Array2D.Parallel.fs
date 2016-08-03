@@ -3,8 +3,8 @@ module RadTrees.Parallel.Array2D
 open RadTrees.Utils.Tasks
 
 /// Initialize a 2D array in parallel.
-let init h w (f : int -> int -> 'a) =
-    let arr = (Array2D.zeroCreate h w : 'a[,])
+let init h w f =
+    let arr = Array2D.zeroCreate h w
     if h < w then
         parfor 0 w (fun j -> for i = 0 to h - 1 do arr.[i, j] <- f i j)
     else

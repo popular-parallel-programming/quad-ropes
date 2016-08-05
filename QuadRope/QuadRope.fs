@@ -151,14 +151,11 @@ let rec private reduceList f = function
     | [n] -> n
     | ns  -> reduceList f (f ns)
 
-/// Recursively splits and merges a list of elements.
-let rec private rebuild merge = function
-    | [] -> []
-    | [x] -> [x]
-    | [x ; y] -> [merge x y]
-    | xs ->
-        let lxs, rxs = List.splitAt ((List.length xs) >>> 1) xs
-        rebuild merge lxs @ rebuild merge rxs
+let rec rebuild merge nodes =
+    match nodes with
+        | [] -> []
+        | [x] -> [x]
+        | x :: y :: nodes -> merge x y :: (rebuildWith merge nodes)
 
 /// Balance rope horizontally.
 let hbalance rope =

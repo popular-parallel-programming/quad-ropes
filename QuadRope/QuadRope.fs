@@ -739,7 +739,7 @@ let forallRows p = function
     | Empty -> true
     | rope ->
         let xs = hfold (fun xs x -> x :: xs) (initAll (rows rope) 1 []) rope
-        get (vmapreduce (List.rev >> List.pairwise >> List.forall p) (&&) xs) 0 0
+        get (vmapreduce (List.rev >> List.pairwise >> List.forall (fun (x, y) -> p x y)) (&&) xs) 0 0
 
 /// Checks that some relation p holds between each two adjacent
 /// elements in each column. This is slow and should not really be
@@ -748,7 +748,7 @@ let forallCols p = function
     | Empty -> true
     | rope ->
         let xs = vfold (fun xs x -> x :: xs) (initAll 1 (cols rope) []) rope
-        get (hmapreduce (List.rev >> List.pairwise >> List.forall p) (&&) xs) 0 0
+        get (hmapreduce (List.rev >> List.pairwise >> List.forall (fun (x, y) -> p x y)) (&&) xs) 0 0
 
 /// Apply predicate p to all elements of rope and reduce the
 /// elements in both dimension using logical and.

@@ -189,7 +189,7 @@ let vreduce f rope = vmapreduce id f rope
 let rec mapreduce f g = function
     | Node (_, _, _, ne, nw, Empty, Empty) ->
         let ne', nw' = par2 (fun () -> mapreduce f g ne) (fun () -> mapreduce f g nw)
-        g ne' nw'
+        g nw' ne'
     | Node (_, _, _, Empty, nw, sw, Empty) ->
         let nw', sw' = par2 (fun () -> mapreduce f g nw) (fun () -> mapreduce f g sw)
         g nw' sw'
@@ -198,7 +198,7 @@ let rec mapreduce f g = function
                                       (fun () -> mapreduce f g nw)
                                       (fun () -> mapreduce f g sw)
                                       (fun () -> mapreduce f g se)
-        g (g ne' nw') (g sw' se')
+        g (g nw' ne') (g sw' se')
     | Slice _ as rope -> mapreduce f g (QuadRope.Slicing.reallocate rope)
     | rope -> QuadRope.mapreduce f g rope
 

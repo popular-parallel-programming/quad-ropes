@@ -689,11 +689,11 @@ let rec mapreduce f g = function
     | Empty -> failwith "impossible to reduce an empty rope"
     | Leaf vs -> ArraySlice.mapReduce f g vs
     | Node (_, _, _, ne, nw, Empty, Empty) ->
-        g (mapreduce f g ne) (mapreduce f g nw)
+        g (mapreduce f g nw) (mapreduce f g ne)
     | Node (_, _, _, Empty, nw, sw, Empty) ->
         g (mapreduce f g nw) (mapreduce f g sw)
     | Node (_, _, _, ne, nw, sw, se) ->
-        g (g (mapreduce f g ne) (mapreduce f g nw)) (g (mapreduce f g sw) (mapreduce f g se))
+        g (g (mapreduce f g nw) (mapreduce f g ne)) (g (mapreduce f g sw) (mapreduce f g se))
     | Slice _ as rope -> mapreduce f g (Slicing.reallocate rope)
 
 /// Reduce all values of the rope to a single scalar.

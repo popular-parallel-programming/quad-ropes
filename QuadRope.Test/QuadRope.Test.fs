@@ -74,6 +74,18 @@ let ``vcat height is equal to height sum`` (a : int QuadRope) (b : int QuadRope)
     (QuadRope.cols a = QuadRope.cols b) ==>
     lazy (QuadRope.rows a + QuadRope.rows b = QuadRope.rows (QuadRope.vcat a b))
 
+let ``hbalance maintains order`` (NonNegativeInt x) =
+    let mutable r = QuadRope.singleton 0
+    for i in 1 .. x do
+        r <- QuadRope.hcat r (QuadRope.singleton i)
+    QuadRope.forallRows (<) r
+
+let ``vbalance maintains order`` (NonNegativeInt x) =
+    let mutable r = QuadRope.singleton 0
+    for i in 1 .. x do
+        r <- QuadRope.vcat r (QuadRope.singleton i)
+    QuadRope.forallCols (<) r
+
 let ``hrev maintains uper-left invariant`` (a: int QuadRope) =
     maintainsTight (QuadRope.hrev a)
 

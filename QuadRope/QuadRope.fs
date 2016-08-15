@@ -231,7 +231,7 @@ module Boehm =
 
 /// Compute the "subrope" starting from indexes i, j taking h and w
 /// elements in vertical and horizontal direction.
-let slice root i j h w =
+let slice i j h w root =
     if rows root <= i || cols root <= j || h <= 0 || w <= 0 then
         Empty
     else if i <= 0 && rows root <= h && j <= 0 && cols root <= w then
@@ -246,20 +246,20 @@ let slice root i j h w =
                 Slice (i0, j0, min (rows root - i0) h, min (cols root - j0) w, root)
 
 /// Split rope vertically from row i, taking h rows.
-let inline vsplit rope i h =
-    slice rope i 0 h (cols rope)
+let inline vsplit i h rope =
+    slice i 0 h (cols rope) rope
 
 /// Split rope horizontally from column j, taking w columns.
-let inline hsplit rope j w =
-    slice rope 0 j (rows rope) w
+let inline hsplit j w rope =
+    slice 0 j (rows rope) w rope
 
 /// Split rope in two at row i.
 let inline vsplit2 rope i =
-    vsplit rope 0 i, vsplit rope i (rows rope)
+    vsplit 0 i rope, vsplit i (rows rope) rope
 
 /// Split rope in two at column j.
 let inline hsplit2 rope j =
-    hsplit rope 0 j, hsplit rope j (cols rope)
+    hsplit 0 j rope, hsplit j (cols rope) rope
 
 module internal Slicing =
 
@@ -308,7 +308,7 @@ module internal Slicing =
                     else if dom se (i - rows ne) (j - cols sw) h w then
                         minimize se (i - rows ne) (j - cols sw) h w
                     else // If the slice spans across sub-ropes, stop and make a new slice.
-                        slice rope i j h w
+                        slice i j h w rope
                     | Slice (i, j, h, w, rope) -> minimize rope i j h w
         match rope with
             | Slice (i, j, h, w, rope) -> minimize rope i j h w
@@ -605,10 +605,10 @@ let rec private genZip f lope rope =
             let rope = Slicing.minimize rope
             leaf (ArraySlice.mapi (fun i j e -> f e (get rope i j)) vs)
         | Node (d, h, w, ne, nw, sw, se) ->
-            let nw0 = genZip f nw (slice rope 0 0 (rows nw) (cols nw))
-            let ne0 = genZip f ne (slice rope 0 (cols nw) (rows ne) (cols ne))
-            let sw0 = genZip f sw (slice rope (rows nw) 0 (rows sw) (cols sw))
-            let se0 = genZip f se (slice rope (rows ne) (cols sw) (rows se) (cols se))
+            let nw0 = genZip f nw (slice 0 0 (rows nw) (cols nw) rope)
+            let ne0 = genZip f ne (slice 0 (cols nw) (rows ne) (cols ne) rope)
+            let sw0 = genZip f sw (slice (rows nw) 0 (rows sw) (cols sw) rope)
+            let se0 = genZip f se (slice (rows ne) (cols sw) (rows se) (cols se) rope)
             Node (d, h, w, ne0, nw0, sw0, se0)
         | Slice _ -> genZip f (Slicing.reallocate lope) rope
 

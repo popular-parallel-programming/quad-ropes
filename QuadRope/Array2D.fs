@@ -8,7 +8,7 @@ let set arr i j v =
 
 /// Allocate a new array of the required dimensions with values taken
 /// from the original array.
-let slice arr i j h w =
+let slice i j h w arr =
     if i <= 0 && j <= 0 && Array2D.length1 arr <= h && Array2D.length2 arr <= w then
         arr
     else

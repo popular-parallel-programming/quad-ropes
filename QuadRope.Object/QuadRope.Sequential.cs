@@ -113,7 +113,7 @@ namespace RadTrees.QuadRope.Object
 
         public override IQuadRope<T> Slice(int row, int col, int rows, int cols)
         {
-            return new SequentialQuadRope<T>(QuadRopeModule.slice(rope, row, col, rows, cols));
+            return new SequentialQuadRope<T>(QuadRopeModule.slice(row, col, rows, cols, rope));
         }
 
         public override IQuadRope<T> Transpose()

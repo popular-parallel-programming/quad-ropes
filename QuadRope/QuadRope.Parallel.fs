@@ -61,44 +61,52 @@ let rec private genZip f lope rope =
     match lope with
         | Node (d, h, w, ne, nw, Empty, Empty) ->
             let ne0, nw0 =
-                par2 (fun () -> genZip f ne (QuadRope.slice rope 0
-                                                                 (QuadRope.cols nw)
-                                                                 (QuadRope.rows ne)
-                                                                 (QuadRope.cols ne)))
-                     (fun () -> genZip f nw (QuadRope.slice rope 0
-                                                                 0
-                                                                 (QuadRope.rows nw)
-                                                                 (QuadRope.cols nw)))
+                par2 (fun () -> genZip f ne (QuadRope.slice 0
+                                                            (QuadRope.cols nw)
+                                                            (QuadRope.rows ne)
+                                                            (QuadRope.cols ne)
+                                                            rope))
+                     (fun () -> genZip f nw (QuadRope.slice 0
+                                                            0
+                                                            (QuadRope.rows nw)
+                                                            (QuadRope.cols nw)
+                                                            rope))
             Node (d, h, w, ne0, nw0, Empty, Empty)
         | Node (d, h, w, Empty, nw, sw, Empty) ->
             let nw0, sw0 =
-                par2 (fun () -> genZip f nw (QuadRope.slice rope 0
-                                                                 0
-                                                                 (QuadRope.rows nw)
-                                                                 (QuadRope.cols nw)))
-                     (fun () -> genZip f sw (QuadRope.slice rope (QuadRope.rows nw)
-                                                                 0
-                                                                 (QuadRope.rows sw)
-                                                                 (QuadRope.cols sw)))
+                par2 (fun () -> genZip f nw (QuadRope.slice 0
+                                                            0
+                                                            (QuadRope.rows nw)
+                                                            (QuadRope.cols nw)
+                                                            rope))
+                     (fun () -> genZip f sw (QuadRope.slice (QuadRope.rows nw)
+                                                            0
+                                                            (QuadRope.rows sw)
+                                                            (QuadRope.cols sw)
+                                                            rope))
             Node (d, h, w, Empty, nw0, sw0, Empty)
         | Node (d, h, w, ne, nw, sw, se) ->
             let ne0, nw0, sw0, se0 =
-                par4 (fun () -> genZip f ne (QuadRope.slice rope 0
-                                                                 (QuadRope.cols nw)
-                                                                 (QuadRope.rows ne)
-                                                                 (QuadRope.cols ne)))
-                     (fun () -> genZip f nw (QuadRope.slice rope 0
-                                                                 0
-                                                                 (QuadRope.rows nw)
-                                                                 (QuadRope.cols nw)))
-                     (fun () -> genZip f sw (QuadRope.slice rope (QuadRope.rows nw)
-                                                                 0
-                                                                 (QuadRope.rows sw)
-                                                                 (QuadRope.cols sw)))
-                     (fun () -> genZip f se (QuadRope.slice rope (QuadRope.rows ne)
-                                                                 (QuadRope.cols sw)
-                                                                 (QuadRope.rows se)
-                                                                 (QuadRope.cols se)))
+                par4 (fun () -> genZip f ne (QuadRope.slice 0
+                                                            (QuadRope.cols nw)
+                                                            (QuadRope.rows ne)
+                                                            (QuadRope.cols ne)
+                                                            rope))
+                     (fun () -> genZip f nw (QuadRope.slice 0
+                                                            0
+                                                            (QuadRope.rows nw)
+                                                            (QuadRope.cols nw)
+                                                            rope))
+                     (fun () -> genZip f sw (QuadRope.slice (QuadRope.rows nw)
+                                                            0
+                                                            (QuadRope.rows sw)
+                                                            (QuadRope.cols sw)
+                                                            rope))
+                     (fun () -> genZip f se (QuadRope.slice (QuadRope.rows ne)
+                                                            (QuadRope.cols sw)
+                                                            (QuadRope.rows se)
+                                                            (QuadRope.cols se)
+                                                            rope))
             Node (d, h, w, ne0, nw0, sw0, se0)
         | Slice _ -> genZip f (QuadRope.Slicing.reallocate lope) rope
         | _ -> QuadRope.zip f lope rope

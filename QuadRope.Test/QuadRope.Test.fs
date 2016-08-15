@@ -127,7 +127,7 @@ let ``get accesses slice correctly`` (a : int QuadRope) (NonNegativeInt i)
                                                         (NonNegativeInt h)
                                                         (NonNegativeInt w) =
     (i < QuadRope.rows a && i < h && j < QuadRope.cols a && j < w) ==>
-    lazy (let b = QuadRope.slice a i j h w
+    lazy (let b = QuadRope.slice i j h w a
           Seq.forall
             (fun (i0, j0) -> QuadRope.get b i0 j0 = QuadRope.get a (i + i0) (j + j0))
             (makeIndicesFrom b))
@@ -145,7 +145,7 @@ let ``slice computes correct indices`` (a : int QuadRope)
                                        (NonNegativeInt j)
                                        (NonNegativeInt h)
                                        (NonNegativeInt w) =
-    let b = QuadRope.slice a i j h w
+    let b = QuadRope.slice i j h w a
     if QuadRope.rows a <= i || h = 0 || QuadRope.cols a <= j || w = 0 then
         QuadRope.isEmpty b
     else
@@ -157,19 +157,19 @@ let ``recursive slice computes correct indices`` (a : int QuadRope) (d : NonNega
     let j = 1
     let h = QuadRope.rows a - 1
     let w = QuadRope.cols a - 1
-    let b = QuadRope.slice a i j h w
-    QuadRope.rows (QuadRope.slice b (i + d.Get) j h w) <= QuadRope.rows b &&
-    QuadRope.cols (QuadRope.slice b i (j + d.Get) h w) <= QuadRope.cols b &&
-    QuadRope.rows (QuadRope.slice b (i - d.Get) j h w) <= QuadRope.rows b &&
-    QuadRope.cols (QuadRope.slice b i (j - d.Get) h w) <= QuadRope.cols b &&
-    QuadRope.rows (QuadRope.slice b i j (h + d.Get) w) <= QuadRope.rows b &&
-    QuadRope.cols (QuadRope.slice b i j h (w + d.Get)) <= QuadRope.cols b &&
-    QuadRope.rows (QuadRope.slice b i j (h - d.Get) w) <= QuadRope.rows b &&
-    QuadRope.cols (QuadRope.slice b i j h (w - d.Get)) <= QuadRope.cols b
+    let b = QuadRope.slice i j h w a
+    QuadRope.rows (QuadRope.slice (i + d.Get) j h w b) <= QuadRope.rows b &&
+    QuadRope.cols (QuadRope.slice i (j + d.Get) h w b) <= QuadRope.cols b &&
+    QuadRope.rows (QuadRope.slice (i - d.Get) j h w b) <= QuadRope.rows b &&
+    QuadRope.cols (QuadRope.slice i (j - d.Get) h w b) <= QuadRope.cols b &&
+    QuadRope.rows (QuadRope.slice i j (h + d.Get) w b) <= QuadRope.rows b &&
+    QuadRope.cols (QuadRope.slice i j h (w + d.Get) b) <= QuadRope.cols b &&
+    QuadRope.rows (QuadRope.slice i j (h - d.Get) w b) <= QuadRope.rows b &&
+    QuadRope.cols (QuadRope.slice i j h (w - d.Get) b) <= QuadRope.cols b
 
 let ``hslice produces ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
     w <= QuadRope.cols a ==>
-    lazy (let b = QuadRope.slice a 0 0 (QuadRope.rows a) w
+    lazy (let b = QuadRope.slice 0 0 (QuadRope.rows a) w a
           QuadRope.cols b = w)
 
 let ``hsplit2 produces two ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
@@ -179,7 +179,7 @@ let ``hsplit2 produces two ropes of correct width`` (a : int QuadRope) (NonNegat
 
 let ``vslice produces ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =
     h <= QuadRope.rows a ==>
-    lazy (let b = QuadRope.slice a 0 0 h (QuadRope.cols a)
+    lazy (let b = QuadRope.slice 0 0 h (QuadRope.cols a) a
           QuadRope.rows b = h)
 
 let ``vsplit2 produces two ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =

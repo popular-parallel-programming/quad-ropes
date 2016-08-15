@@ -56,9 +56,9 @@ module Array2D =
         init (rows lm)
              (cols rm)
              (fun i j ->
-              let l = slice lm  i 0 1 (cols lm)
-              let r = slice trm j 0 1 (cols trm)
-              reduce (+) (zip (*) l r))
+              let lr = slice i 0 1 (cols lm) lm
+              let rr = slice j 0 1 (cols trm) trm
+              reduce (+) (zip (*) lr rr))
 
     module Parallel =
         let (@) = Parallel.Array2D.cat2
@@ -94,9 +94,9 @@ module Array2D =
             init (rows lm)
                  (cols rm)
                  (fun i j ->
-                  let l = slice lm  i 0 1 (cols lm)
-                  let r = slice trm j 0 1 (cols trm)
-                  reduce (+) (zip (*) l r))
+                  let lr = slice i 0 1 (cols lm) lm
+                  let rr = slice j 0 1 (cols trm) trm
+                  reduce (+) (zip (*) lr rr))
 
 module QuadRope =
     let (@) = QuadRope.hcat
@@ -147,9 +147,9 @@ module QuadRope =
         init (rows lm)
              (cols rm)
              (fun i j ->
-              let l = slice lm  i 0 1 (cols lm)
-              let r = slice trm j 0 1 (cols trm)
-              reduce (+) (zip (*) l r))
+              let lr = slice i 0 1 (cols lm) lm
+              let rr = slice j 0 1 (cols trm) trm
+              reduce (+) (zip (*) lr rr))
 
     module Parallel =
         let map = Parallel.QuadRope.map
@@ -183,6 +183,6 @@ module QuadRope =
             init (rows lm)
                  (cols rm)
                  (fun i j ->
-                  let l = slice lm  i 0 1 (cols lm)
-                  let r = slice trm j 0 1 (cols trm)
-                  reduce (+) (zip (*) l r))
+                  let lr = slice i 0 1 (cols lm) lm
+                  let rr = slice j 0 1 (cols trm) trm
+                  reduce (+) (zip (*) lr rr))

@@ -15,7 +15,7 @@ let inline makeSlice i j h w arr =
 
 /// Compute a new array from a slice.
 let inline private sliceArray (ArraySlice (i, j, h, w, arr)) =
-    Array2D.slice arr i j h w
+    Array2D.slice i j h w arr
 
 /// Compute a new array from a slice, apply function f to it and make
 /// a new array slice from the resulting array.

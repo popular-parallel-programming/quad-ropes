@@ -332,7 +332,7 @@ module internal Slicing =
 
 /// Concatenate two trees vertically.
 let vcat upper lower =
-    let canCopy us ls =
+    let canMerge us ls =
         ArraySlice.length2 us = ArraySlice.length2 ls && ArraySlice.length1 us + ArraySlice.length1 ls <= s_max
     let rec vcat upper lower =
         match upper, lower with
@@ -341,25 +341,25 @@ let vcat upper lower =
             | Slice _, _ -> vcat (Slicing.reallocate upper) lower
             | _, Slice _ -> vcat upper (Slicing.reallocate lower)
 
-            | Leaf us, Leaf ls when canCopy us ls ->
+            | Leaf us, Leaf ls when canMerge us ls ->
                 leaf (ArraySlice.cat1 us ls)
 
-            | Node (_, _, _, Empty, nwu, Leaf swus, Empty), Leaf ls when canCopy swus ls->
+            | Node (_, _, _, Empty, nwu, Leaf swus, Empty), Leaf ls when canMerge swus ls->
                 thinNode nwu (leaf (ArraySlice.cat1 swus ls))
 
-            | Leaf us, Node (_, _, _, Empty, Leaf nwls, swl, Empty) when canCopy us nwls ->
+            | Leaf us, Node (_, _, _, Empty, Leaf nwls, swl, Empty) when canMerge us nwls ->
                 thinNode (leaf (ArraySlice.cat1 us nwls)) swl
 
             | (Node (_, _, _, neu, nwu, Leaf swus, Leaf seus),
                Node (_, _, _, Leaf nels, Leaf nwls, Empty, Empty))
-                when canCopy swus nwls && canCopy seus nels ->
+                when canMerge swus nwls && canMerge seus nels ->
                     let sw = leaf (ArraySlice.cat1 swus nwls)
                     let se = leaf (ArraySlice.cat1 seus nels)
                     node neu nwu sw se
 
             | (Node (_, _, _, Leaf neus, Leaf nwus, Empty, Empty),
                Node (_, _, _, Leaf nels, Leaf nwls, swl, sel))
-                when canCopy nwus nwls && canCopy neus nels ->
+                when canMerge nwus nwls && canMerge neus nels ->
                     let nw = leaf (ArraySlice.cat1 nwus nwls)
                     let ne = leaf (ArraySlice.cat1 neus nels)
                     node ne nw swl sel
@@ -377,7 +377,7 @@ let vcat upper lower =
 
 /// Concatenate two trees horizontally.
 let hcat left right =
-    let canCopy ls rs =
+    let canMerge ls rs =
         ArraySlice.length1 ls = ArraySlice.length1 rs && ArraySlice.length2 ls + ArraySlice.length2 rs <= s_max
     let rec hcat left right =
         match left, right with
@@ -386,25 +386,25 @@ let hcat left right =
             | Slice _, _ -> hcat (Slicing.reallocate left) right
             | _, Slice _ -> hcat left (Slicing.reallocate right)
 
-            | Leaf ls, Leaf rs when canCopy ls rs ->
+            | Leaf ls, Leaf rs when canMerge ls rs ->
                 leaf (ArraySlice.cat2 ls rs)
 
-            | Node (_, _, _, Leaf lnes, lnw, Empty, Empty), Leaf rs when canCopy lnes rs->
+            | Node (_, _, _, Leaf lnes, lnw, Empty, Empty), Leaf rs when canMerge lnes rs->
                 flatNode lnw (leaf (ArraySlice.cat2 lnes rs))
 
-            | Leaf ls, Node (_, _, _, rne, Leaf rnws, Empty, Empty) when canCopy ls rnws ->
+            | Leaf ls, Node (_, _, _, rne, Leaf rnws, Empty, Empty) when canMerge ls rnws ->
                 flatNode (leaf (ArraySlice.cat2 ls rnws)) rne
 
             | (Node (_, _, _, Leaf lnes, lnw, lsw, Leaf lses),
                Node (_, _, _, Empty, Leaf rnws, Leaf rsws, Empty))
-                when canCopy lnes rnws && canCopy lses rsws ->
+                when canMerge lnes rnws && canMerge lses rsws ->
                     let ne = leaf (ArraySlice.cat2 lnes rnws)
                     let se = leaf (ArraySlice.cat2 lses rsws)
                     node ne lnw lsw se
 
             | (Node (_, _, _, Empty, Leaf lnws, Leaf lsws, Empty),
                Node (_, _, _, rne, Leaf rnws, Leaf rsws, rse))
-                when canCopy lnws rnws && canCopy lsws rsws ->
+                when canMerge lnws rnws && canMerge lsws rsws ->
                     let nw = leaf (ArraySlice.cat2 lnws rnws)
                     let sw = leaf (ArraySlice.cat2 lsws rsws)
                     node rne nw sw rse

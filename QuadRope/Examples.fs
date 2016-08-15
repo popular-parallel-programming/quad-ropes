@@ -51,7 +51,7 @@ module Array2D =
     let zip = Array2D.map2
     let reduce = Array2D.reduce
 
-    let matmult lm rm =
+    let mmult lm rm =
         let trm = transpose rm
         init (rows lm)
              (cols rm)
@@ -89,7 +89,7 @@ module Array2D =
         let zip = Parallel.Array2D.map2
         let reduce = Parallel.Array2D.reduce
 
-        let matmult lm rm =
+        let mmult lm rm =
             let trm = transpose rm
             init (rows lm)
                  (cols rm)
@@ -142,7 +142,7 @@ module QuadRope =
     let zip = QuadRope.zip
     let reduce = QuadRope.reduce
 
-    let matmult lm rm =
+    let mmult lm rm =
         let trm = transpose rm
         init (rows lm)
              (cols rm)
@@ -178,7 +178,7 @@ module QuadRope =
         let zip = Parallel.QuadRope.zip
         let reduce = Parallel.QuadRope.reduce
 
-        let matmult lm rm =
+        let mmult lm rm =
             let trm = transpose rm
             init (rows lm)
                  (cols rm)

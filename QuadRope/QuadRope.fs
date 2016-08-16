@@ -199,8 +199,8 @@ let vbalance rope =
 module Boehm =
     let hbalance rope =
         let rec insert rope n = function
-            | r0 :: r1 :: ropes when cols r1 <= n -> insert rope n (flatNode r1 r0 :: ropes)
-            | r0 :: ropes when cols r0 <= n -> (flatNode r0 rope) :: ropes
+            | r0 :: r1 :: ropes when depth r1 <= n -> insert rope n (flatNode r1 r0 :: ropes)
+            | r0 :: ropes when depth r0 <= n -> (flatNode r0 rope) :: ropes
             | ropes -> rope :: ropes
         let rec hbalance rope ropes =
             match rope with
@@ -208,7 +208,7 @@ module Boehm =
                 | Node (_, _, _, ne, nw, Empty, Empty) when not (isBalancedH rope) ->
                     hbalance ne (hbalance nw ropes)
                 | _ ->
-                    insert rope (cols rope) ropes
+                    insert rope (Fibonacci.nth (cols rope)) ropes
         if isBalancedH rope then
             rope
         else
@@ -216,8 +216,8 @@ module Boehm =
 
     let vbalance rope =
         let rec insert rope n = function
-            | r0 :: r1 :: ropes when rows r1 <= n -> insert rope n (thinNode r1 r0 :: ropes)
-            | r0 :: ropes when rows r0 <= n -> (thinNode r0 rope) :: ropes
+            | r0 :: r1 :: ropes when depth r1 <= n -> insert rope n (thinNode r1 r0 :: ropes)
+            | r0 :: ropes when depth r0 <= n -> (thinNode r0 rope) :: ropes
             | ropes -> rope :: ropes
         let rec vbalance rope ropes =
             match rope with
@@ -225,7 +225,7 @@ module Boehm =
                 | Node (_, _, _, Empty, nw, sw, Empty) when not (isBalancedH rope) ->
                     vbalance sw (vbalance nw ropes)
                 | _ ->
-                    insert rope (rows rope) ropes
+                    insert rope (Fibonacci.nth (rows rope)) ropes
         if isBalancedV rope then
             rope
         else

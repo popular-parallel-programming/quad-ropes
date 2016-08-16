@@ -9,7 +9,7 @@ namespace RadTrees.Benchmark
 	    Console.WriteLine("# OS          {0}",
 			      Environment.OSVersion.VersionString);
 	    Console.WriteLine("# .NET vers.  {0}",
-			      Environment.Version);
+			      Get45PlusFromRegistry());
 	    Console.WriteLine("# 64-bit OS   {0}",
 			      Environment.Is64BitOperatingSystem);
 	    Console.WriteLine("# 64-bit proc {0}",
@@ -20,6 +20,34 @@ namespace RadTrees.Benchmark
 	    Console.WriteLine("# Date        {0:s}",
 			      DateTime.Now);
 	}
+
+	// ONLY ON WINDOWS + .NET >= 4.5; COMMENT OUT IN ALL OTHER CASES:
+	public static String Get45PlusFromRegistry() {
+	    const string subkey = "SOFTWARE\\Microsoft\\NET Framework Setup\\NDP\\v4\\Full\\";
+	    using (var ndpKey = Microsoft.Win32.RegistryKey
+		   .OpenBaseKey(Microsoft.Win32.RegistryHive.LocalMachine,
+				Microsoft.Win32.RegistryView.Registry32)
+		   .OpenSubKey(subkey))
+	    {
+		if (ndpKey != null && ndpKey.GetValue("Release") != null)
+		    return CheckFor45PlusVersion((int) ndpKey.GetValue("Release"));
+		else
+		    return null;
+	    }
+	}
+
+	// Checking the version using >= will enable forward compatibility.
+	private static string CheckFor45PlusVersion(int releaseKey) {
+	    if (releaseKey >= 394802) return "4.6.2 or later";
+	    if (releaseKey >= 394254) return "4.6.1";
+	    if (releaseKey >= 393295) return "4.6";
+	    if (releaseKey >= 379893) return "4.5.2";
+	    if (releaseKey >= 378675) return "4.5.1";
+	    if (releaseKey >= 378389) return "4.5";
+	    return null;
+	}
+
+	// End of MS-induced stupidity
 
 	public static double Mark8(String msg, String info, Func<int,double> f,
 				   int n = 10, double minTime = 0.25) {

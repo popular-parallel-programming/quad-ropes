@@ -333,7 +333,8 @@ module internal Slicing =
 /// Concatenate two trees vertically.
 let vcat upper lower =
     let canMerge us ls =
-        ArraySlice.length2 us = ArraySlice.length2 ls && ArraySlice.length1 us + ArraySlice.length1 ls <= s_max
+        ArraySlice.length2 us = ArraySlice.length2 ls &&
+        ArraySlice.length1 us + ArraySlice.length1 ls <= s_max
     let rec vcat upper lower =
         match upper, lower with
             | Empty, _ -> lower
@@ -378,7 +379,8 @@ let vcat upper lower =
 /// Concatenate two trees horizontally.
 let hcat left right =
     let canMerge ls rs =
-        ArraySlice.length1 ls = ArraySlice.length1 rs && ArraySlice.length2 ls + ArraySlice.length2 rs <= s_max
+        ArraySlice.length1 ls = ArraySlice.length1 rs &&
+        ArraySlice.length2 ls + ArraySlice.length2 rs <= s_max
     let rec hcat left right =
         match left, right with
             | Empty, _ -> right

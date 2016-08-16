@@ -132,7 +132,7 @@ let write root i j v =
     write root i j v
 
 let private isBalanced d s =
-    d < 46 && Fibonacci.fib (d + 1) <= s
+    d < 45 && Fibonacci.fib (d + 2) <= s
 
 /// True if rope is balanced horizontally. False otherwise.
 let isBalancedH = function

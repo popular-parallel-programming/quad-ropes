@@ -152,22 +152,37 @@ namespace RadTrees.Benchmark
 
         public static void Concatenating(Options opts)
         {
-            Console.WriteLine("# This benchmark is useless if balancing happens during concatenation.");
-            var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-            var vskewed = DoNTimes(100, (l, r) => QuadRopeModule.vcat(l, r), rope);
-            var hskewed = DoNTimes(100, (l, r) => QuadRopeModule.hcat(l, r), rope);
-            var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
+            Random rnd = new Random();
 
-            Mark("QuadRope.hcat", () => QuadRopeModule.hcat(rope, rope));
-	    Mark("QuadRope.hbalance", () => QuadRopeModule.hbalance(hskewed));
-            Mark("QuadRope.hbalance (Boehm et al.)", () => QuadRopeModule.Boehm.hbalance(hskewed));
+            // Initialize ropes for hcat, hight must be equal.
+            Types.QuadRope<int>[] ropes = new Types.QuadRope<int>[100];
+            for (int i = 0; i < ropes.Length; ++i)
+                ropes[i] = QuadRopeModule.init(opts.Size, rnd.Next(1, opts.Size), times);
 
-            Mark("QuadRope.vcat", () => QuadRopeModule.vcat(rope, rope));
-	    Mark("QuadRope.vbalance", () => QuadRopeModule.vbalance(vskewed));
-            Mark("QuadRope.vbalance (Boehm et al.)", () => QuadRopeModule.Boehm.vbalance(vskewed));
+            var rope = QuadRopeModule.init(opts.Size, 1, times);
+            Mark("QuadRope.hcat x 100", () =>
+                    {
+                     for (int i = 0; i < 100; ++i)
+                         rope = QuadRopeModule.hcat(rope, ropes[i]);
+                    });
+            Console.WriteLine("# Resulting rope depth is " + QuadRopeModule.depth(rope));
+            Console.WriteLine("# Resulting rope is "
+                              + (QuadRopeModule.isBalancedH(rope) ? "balanced." : "unbalanced."));
 
-            Mark("Array2D.hcat", () => Array2D.cat2(arr, arr));
-            Mark("Array2D.vcat", () => Array2D.cat1(arr, arr));
+            // Initialize ropes for vcat, width must be equal.
+            for (int i = 0; i < ropes.Length; ++i)
+                ropes[i] = QuadRopeModule.init(rnd.Next(1, opts.Size), opts.Size, times);
+
+            rope = QuadRopeModule.init(1, opts.Size, times);
+            Mark("QuadRope.vcat x 100", () =>
+                    {
+                     for (int i = 0; i < 100; ++i)
+                         rope = QuadRopeModule.vcat(rope, ropes[i]);
+                    });
+            Console.WriteLine("# Resulting rope depth is " + QuadRopeModule.depth(rope));
+            Console.WriteLine("# Resulting rope is "
+                              + (QuadRopeModule.isBalancedV(rope) ? "balanced." : "unbalanced."));
+
         }
 
         public static void vanDerCorput(Options opts)

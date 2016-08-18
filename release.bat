@@ -1,2 +1,2 @@
 @echo off
-msbuild /property:Configuration=Release
+msbuild /p:VisualStudioVersion=14.0 /property:Configuration=Release

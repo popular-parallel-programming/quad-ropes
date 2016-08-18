@@ -1,2 +1,2 @@
 @echo off
-msbuild
+msbuild /p:VisualStudioVersion=14.0

@@ -20,13 +20,19 @@ namespace RadTrees.Benchmark
 	    }
         }
 
+        // Set the number of available hardware threads. This does not
+        // limit the number of software threads and leaves the TPL
+        // scheduler alone. Changing the number of software threads
+        // heavily affects performance in unpredictable ways.
 	public static void SetThreads(int nthreads)
 	{
-	    // Set min threads first, otherwise setting max threads might fail.
-	    System.Threading.ThreadPool.SetMinThreads(1, 0);
-	    if (!System.Threading.ThreadPool.SetMaxThreads(nthreads, 0))
-		Console.WriteLine("# Error: could not change the number of thread pool threads.");
-	    Console.WriteLine("# Threads     {0}", nthreads);
+            // Every n-th bit represents the n-th processor.
+            int procs = (1 << nthreads) - 1;
+            var currectProcess = System.Diagnostics.Process.GetCurrentProcess();
+            // Allow each thread to be scheduled on the predefined
+            // processors only.
+            foreach(System.Diagnostics.ProcessThread thread in currectProcess.Threads)
+                thread.ProcessorAffinity = (IntPtr)procs;
 	}
 
 	// Functions of type int * int -> int.
@@ -252,8 +258,9 @@ namespace RadTrees.Benchmark
 	    if (Parser.Default.ParseArguments(args, opts)) {
                 try {
                     var run = tests[opts.Mode];
-                    Infrastructure.SystemInfo();
                     SetThreads(opts.Threads);
+                    Infrastructure.SystemInfo();
+                    Console.WriteLine("# Threads     {0}", opts.Threads);
                     run(opts);
                 } catch (KeyNotFoundException e) {
                     Console.WriteLine("No such mode: \"" + opts.Mode + "\". Available modes:");

@@ -119,7 +119,6 @@ namespace RadTrees.Benchmark
                 RunSequentialRope(opts);
                 RunSequentialArray(opts);
             } else {
-                SetThreads(opts.Threads);
                 RunParallelRope(opts);
                 RunParallelArray(opts);
             }
@@ -254,6 +253,7 @@ namespace RadTrees.Benchmark
                 try {
                     var run = tests[opts.Mode];
                     Infrastructure.SystemInfo();
+                    SetThreads(opts.Threads);
                     run(opts);
                 } catch (KeyNotFoundException e) {
                     Console.WriteLine("No such mode: \"" + opts.Mode + "\". Available modes:");

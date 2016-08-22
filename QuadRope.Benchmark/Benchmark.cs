@@ -28,6 +28,9 @@ namespace RadTrees.Benchmark
 	{
             // Every n-th bit represents the n-th processor.
             int procs = (1 << nthreads) - 1;
+
+            // See http://stackoverflow.com/a/11642395/804397
+
             var currectProcess = System.Diagnostics.Process.GetCurrentProcess();
             // Allow each thread to be scheduled on the predefined
             // processors only.

@@ -55,6 +55,45 @@ let vfold f states rope =
         QuadRope.flatNode wstates0 estates0
     fold1 states rope
 
+
+// Aliasing for better readability.
+let private rows = QuadRope.rows
+let private cols = QuadRope.cols
+
+/// Slice two quad ropes into the same shape.
+let inline private slice2 i j h w lope rope =
+    QuadRope.slice i j h w lope, QuadRope.slice i j h w rope
+
+/// Parallel zip implementation for the slice case. If the left hand
+/// side is a slice, we have no structure to recurse on, so instead we
+/// split the slice repeatedly until both sides are less or equal to
+/// s_max. Then, we use Slicing.mapi to reallocate and zip in one
+/// traversal.
+let rec private sliceZip f lope rope =
+    if QuadRope.s_max < QuadRope.rows lope && QuadRope.s_max < QuadRope.cols lope then
+        let h = QuadRope.rows lope >>> 1
+        let w = QuadRope.cols lope >>> 1
+        let nw, ne, sw, se =
+            par4 (fun () -> let lope, rope = slice2 0 0 h w lope rope in sliceZip f lope rope)
+                 (fun () -> let lope, rope = slice2 0 w h (cols lope) lope rope in sliceZip f lope rope)
+                 (fun () -> let lope, rope = slice2 h 0 (rows lope) w lope rope in sliceZip f lope rope)
+                 (fun () -> let lope, rope = slice2 h w (rows lope) (cols lope) lope rope in sliceZip f lope rope)
+        QuadRope.node ne nw sw se
+    else if QuadRope.s_max < QuadRope.rows lope then
+        let urope, lrope = QuadRope.vsplit2 rope (rows lope >>> 1)
+        let ulope, llope = QuadRope.vsplit2 lope (rows lope >>> 1)
+        let nw, sw = par2 (fun () -> sliceZip f ulope urope) (fun () -> sliceZip f llope lrope)
+        QuadRope.thinNode nw sw
+    else if QuadRope.s_max < QuadRope.cols lope then
+        let lrope, rrope = QuadRope.hsplit2 rope (cols lope >>> 1)
+        let llope, rlope = QuadRope.hsplit2 lope (cols lope >>> 1)
+        let nw, ne = par2 (fun () -> sliceZip f llope lrope) (fun () -> sliceZip f rlope rrope)
+        QuadRope.flatNode nw ne
+    else // if rows lope <= s_max && cols lope <= s_max then
+        let rope = QuadRope.Slicing.minimize rope
+        let lope = QuadRope.Slicing.minimize lope
+        QuadRope.Slicing.mapi (fun i j e -> f e (QuadRope.fastGet rope i j)) lope
+
 /// Zip implementation for the general case where we do not assume
 /// that both ropes have the same internal structure.
 let rec private genZip f lope rope =
@@ -108,7 +147,7 @@ let rec private genZip f lope rope =
                                                             (QuadRope.cols se)
                                                             rope))
             Node (d, h, w, ne0, nw0, sw0, se0)
-        | Slice _ -> genZip f (QuadRope.Slicing.reallocate lope) rope
+        | Slice _ -> sliceZip f lope rope
         | _ -> QuadRope.zip f lope rope
 
 /// Zip function that assumes that the internal structure of two ropes
@@ -132,12 +171,7 @@ let rec private fastZip f lope rope =
                                           (fun () -> fastZip f lsw rsw)
                                           (fun () -> fastZip f lse rse)
                 Node (d, h, w, ne, nw, sw, se)
-        // It may pay off to reallocate first if both reallocated quad
-        // ropes have the same internal shape. This might be
-        // over-fitted to matrix multiplication.
-        | Slice _, Slice _ -> fastZip f (QuadRope.Slicing.reallocate lope) (QuadRope.Slicing.reallocate rope)
-        | Slice _, _ ->       fastZip f (QuadRope.Slicing.reallocate lope) rope
-        | Slice _, Slice _ -> fastZip f lope (QuadRope.Slicing.reallocate rope)
+        | Slice _, _ -> sliceZip f lope rope
         | _ -> genZip f lope rope
 
 /// Apply f to each (i, j) of lope and rope.

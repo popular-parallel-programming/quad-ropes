@@ -214,11 +214,13 @@ namespace RadTrees.Benchmark
         {
             var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
             var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-
-            Mark("mmult Array2D",           () => Examples.Array2D.mmult(arr, arr));
-            Mark("mmult Array2D.Parallel",  () => Examples.Array2D.Parallel.mmult(arr, arr));
-            Mark("mmult QuadRope",          () => Examples.QuadRope.mmult(rope, rope));
-            Mark("mmult QuadRope.Parallel", () => Examples.QuadRope.Parallel.mmult(rope, rope));
+            if (opts.Threads == 1) {
+                Mark("mmult Array2D",           () => Examples.Array2D.mmult(arr, arr));
+                Mark("mmult QuadRope",          () => Examples.QuadRope.mmult(rope, rope));
+            } else {
+                Mark("mmult Array2D.Parallel",  () => Examples.Array2D.Parallel.mmult(arr, arr));
+                Mark("mmult QuadRope.Parallel", () => Examples.QuadRope.Parallel.mmult(rope, rope));
+            }
         }
 
         public static void Reallocation(Options opts)

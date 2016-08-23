@@ -74,24 +74,27 @@ let inline private checkBounds rope i j =
     else if cols rope <= j then
         invalidArg "j" "Second index must be within bounds of quad rope."
 
+/// Get the value of a location in the tree. This function does not
+/// check whether i, j are within bounds.
+let rec internal fastGet rope i j =
+    match rope with
+        | Empty -> invalidArg "rope" "Empty tree cannot contain values."
+        | Leaf vs -> ArraySlice.get vs i j
+        | Node (_, _, _, ne, nw, sw, se) ->
+            if withinRange nw i j then
+                fastGet nw i j
+            else if withinRange ne i (j - cols nw) then
+                fastGet ne i (j - cols nw)
+            else if withinRange sw (i - rows nw) j then
+                fastGet sw (i - rows nw) j
+            else
+                fastGet se (i - rows ne) (j - cols sw)
+        | Slice (x, y, _, _, rope) -> fastGet rope (i + x) (j + y)
+
 /// Get the value of a location in the tree.
 let get root i j =
-    let rec get rope i j =
-        match rope with
-            | Empty -> invalidArg "rope" "Empty tree cannot contain values."
-            | Leaf vs -> ArraySlice.get vs i j
-            | Node (_, _, _, ne, nw, sw, se) ->
-                if withinRange nw i j then
-                    get nw i j
-                else if withinRange ne i (j - cols nw) then
-                    get ne i (j - cols nw)
-                else if withinRange sw (i - rows nw) j then
-                    get sw (i - rows nw) j
-                else
-                    get se (i - rows ne) (j - cols sw)
-            | Slice (x, y, _, _, rope) -> get rope (i + x) (j + y)
     checkBounds root i j
-    get root i j
+    fastGet root i j
 
 /// Update a tree location without modifying the original tree.
 let set root i j v =
@@ -577,7 +580,7 @@ let hfold f states rope =
         invalidArg "states" "Must have the same height as rope."
     let rec fold1 states = function
         | Empty -> states
-        | Leaf vs -> leaf (ArraySlice.fold2 f (fun i -> get states i 0) vs)
+        | Leaf vs -> leaf (ArraySlice.fold2 f (fun i -> fastGet states i 0) vs)
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
         | Slice _ as rope -> fold1 states (Slicing.reallocate rope)
     and fold2 states n s =
@@ -592,7 +595,7 @@ let vfold f states rope =
         invalidArg "states" "Must have the same width as rope."
     let rec fold1 states = function
         | Empty -> states
-        | Leaf vs -> leaf (ArraySlice.fold1 f (get states 0) vs)
+        | Leaf vs -> leaf (ArraySlice.fold1 f (fastGet states 0) vs)
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
         | Slice _ as rope -> fold1 states (Slicing.reallocate rope)
     and fold2 states w e =
@@ -607,7 +610,7 @@ let rec private genZip f lope rope =
         | Empty -> Empty
         | Leaf vs ->
             let rope = Slicing.minimize rope
-            leaf (ArraySlice.mapi (fun i j e -> f e (get rope i j)) vs)
+            leaf (ArraySlice.mapi (fun i j e -> f e (fastGet rope i j)) vs)
         | Node (d, h, w, ne, nw, sw, se) ->
             let nw0 = genZip f nw (slice 0 0 (rows nw) (cols nw) rope)
             let ne0 = genZip f ne (slice 0 (cols nw) (rows ne) (cols ne) rope)
@@ -716,7 +719,7 @@ let rec hscan f states = function
         let sw' = hscan f (offset states (rows nw')) sw
         (* NW and SW might differ in height and width, we cannot join them to a thin node. *)
         let estate i =
-            if i < rows nw' then get nw' i (cols nw' - 1) else get sw' (i - rows nw') (cols sw' - 1)
+            if i < rows nw' then fastGet nw' i (cols nw' - 1) else fastGet sw' (i - rows nw') (cols sw' - 1)
         let ne' = hscan f estate ne
         let se' = hscan f (offset estate (rows ne')) se
         node ne' nw' sw' se'
@@ -732,7 +735,7 @@ let rec vscan f states = function
         let ne' = vscan f (offset states (cols nw')) ne
         (* NW and NE might differ in height and width, we cannot join them to a flat node. *)
         let sstate j =
-            if j < cols nw' then get nw' (rows nw' - 1) j else get ne' (rows ne' - 1) (j - cols nw')
+            if j < cols nw' then fastGet nw' (rows nw' - 1) j else fastGet ne' (rows ne' - 1) (j - cols nw')
         let sw' = vscan f sstate sw
         let se' = vscan f (offset sstate (cols sw')) se
         node ne' nw' sw' se'

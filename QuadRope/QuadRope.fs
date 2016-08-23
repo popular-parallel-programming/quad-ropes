@@ -335,23 +335,6 @@ module internal Slicing =
                 | Slice (x, y, h, w, rope) -> map rope (x + i) (y + j) h w
         map rope 0 0 (rows rope) (cols rope)
 
-    /// Compute a slice and map in the same traversal.
-    let mapi f rope =
-        let rec mapi rope i0 j0 i j h w =
-            match rope with
-                | _ when rows rope <= i || cols rope <= j || h <= 0 || w <= 0 -> Empty
-                | Empty -> Empty
-                | Leaf vs ->
-                    leaf (ArraySlice.mapi (fun x y e -> f (i0 + x) (y + j0) e) (ArraySlice.slice vs i j h w))
-                | Node (_, _, _, ne, nw, sw, se) ->
-                    let nw0 = mapi nw i0 j0 i j h w
-                    let ne0 = mapi ne i0 (j0 + cols nw0) i (j - cols nw) h (w - cols nw0)
-                    let sw0 = mapi sw (i0 + rows nw0) j0 (i - rows nw) j (h - rows nw0) w
-                    let se0 = mapi se (i0 + rows ne0) (j0 + cols sw0) (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
-                    node ne0 nw0 sw0 se0
-                | Slice (x, y, h, w, rope) -> mapi rope i0 j0 (x + i) (y + j) h w
-        mapi rope 0 0 0 0 (rows rope) (cols rope)
-
 /// Concatenate two trees vertically.
 let vcat upper lower =
     let canMerge us ls =
@@ -620,33 +603,6 @@ let vfold f states rope =
         flatNode (fold1 wstates w) (fold1 estates e)
     fold1 states rope
 
-/// Zip implementation for the slice case. If the left hand side is a
-/// slice, we have no structure to recurse on, so instead we split the
-/// slice repeatedly until both sides are less or equal to
-/// s_max. Then, we use Slicing.mapi to reallocate and zip in one
-/// traversal.
-let rec private sliceZip f lope rope =
-    match lope with
-        | _ when s_max < rows lope && s_max < cols lope ->
-            let h = rows lope >>> 1
-            let w = cols lope >>> 1
-            node (sliceZip f (slice 0 w h (cols lope) lope) (slice 0 w h (cols lope) rope))
-                 (sliceZip f (slice 0 0 h w lope) (slice 0 0 h w rope))
-                 (sliceZip f (slice h 0 (rows lope) w lope) (slice h 0 (rows lope) w rope))
-                 (sliceZip f (slice h w (rows lope) (cols lope) lope) (slice h w (rows lope) (cols lope) rope))
-        | _ when s_max < rows lope ->
-            let urope, lrope = vsplit2 rope (rows lope >>> 1)
-            let ulope, llope = vsplit2 lope (rows lope >>> 1)
-            thinNode (sliceZip f ulope urope) (sliceZip f llope lrope)
-        | _ when s_max < cols lope ->
-            let lrope, rrope = hsplit2 rope (cols lope >>> 1)
-            let llope, rlope = hsplit2 lope (cols lope >>> 1)
-            flatNode (sliceZip f llope lrope) (sliceZip f rlope rrope)
-        | _ -> // if rows lope <= s_max && cols lope <= s_max then
-            let rope = Slicing.minimize rope
-            let lope = Slicing.minimize lope
-            Slicing.mapi (fun i j e -> f e (fastGet rope i j)) lope
-
 /// Zip implementation for the general case where we do not assume
 /// that both ropes have the same internal structure.
 let rec private genZip f lope rope =
@@ -661,7 +617,7 @@ let rec private genZip f lope rope =
             let sw0 = genZip f sw (slice (rows nw) 0 (rows sw) (cols sw) rope)
             let se0 = genZip f se (slice (rows ne) (cols sw) (rows se) (cols se) rope)
             Node (d, h, w, ne0, nw0, sw0, se0)
-        | Slice _ -> sliceZip f lope rope
+        | Slice _ -> genZip f (Slicing.reallocate lope) rope
 
 /// True if the shape of two ropes match.
 let internal shapesMatch a b =
@@ -688,7 +644,12 @@ let rec private fastZip f lope rope =
         | Node (_, _, _, lne, lnw, lsw, lse), Node (_, _, _, rne, rnw, rsw, rse)
             when subShapesMatch lope rope ->
                 node (fastZip f lne rne) (fastZip f lnw rnw) (fastZip f lsw rsw) (fastZip f lse rse)
-        | Slice _, _ -> sliceZip f lope rope
+        // It may pay off to reallocate first if both reallocated quad
+        // ropes have the same internal shape. This might be
+        // over-fitted to matrix multiplication.
+        | Slice _, Slice _ -> fastZip f (Slicing.reallocate lope) (Slicing.reallocate rope)
+        | Slice _, _ ->       fastZip f (Slicing.reallocate lope) rope
+        | Slice _, Slice _ -> fastZip f lope (Slicing.reallocate rope)
         | _ -> genZip f lope rope
 
 /// Apply f to each (i, j) of lope and rope.

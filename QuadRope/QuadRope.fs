@@ -9,7 +9,7 @@ open Utils
 #if DEBUG
 let s_max = 4
 #else
-let s_max = 16
+let s_max = 32
 #endif
 
 /// Number of rows in a rectangular tree.

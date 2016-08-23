@@ -47,12 +47,12 @@ let leaf vs =
 /// existing nodes.
 let rec node ne nw sw se =
     match ne, nw, sw, se with
-        | _, Empty, Empty, Empty -> ne
-        | Empty, _, Empty, Empty -> nw
-        | Empty, Empty, _, Empty -> sw
-        | Empty, Empty, Empty, _ -> se
-        | Empty, Empty, _, _ -> node se sw Empty Empty
-        | _, Empty, Empty, _ -> node Empty ne se Empty
+        | _,     Empty, Empty, Empty -> ne
+        | Empty, _,     Empty, Empty -> nw
+        | Empty, Empty, _,     Empty -> sw
+        | Empty, Empty, Empty, _     -> se
+        | Empty, Empty, _,     _     -> node se sw Empty Empty
+        | _,     Empty, Empty, _     -> node Empty ne se Empty
         | _ ->
             let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se)) + 1
             let h = rows nw + rows sw

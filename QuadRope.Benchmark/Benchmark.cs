@@ -230,6 +230,8 @@ namespace RadTrees.Benchmark
             var init = Utils.Functions.toFunc2<int, int, int>((i, j) => i * j + start);
             var arr = Array2DModule.Initialize(opts.Size, opts.Size, init);
             var rope = QuadRopeModule.init(opts.Size, opts.Size, init);
+            MarkThreads("primes Array2D",      1, () => Examples.Array2D.factorize(arr));
+            MarkThreads("primes QuadRope",     1, () => Examples.QuadRope.factorize(rope));
             for (int t = 2; t <= opts.Threads; ++t) {
                 MarkThreads("primes Array2D",  t, () => Examples.Array2D.Parallel.factorize(arr));
                 MarkThreads("primes QuadRope", t, () => Examples.QuadRope.Parallel.factorize(rope));

@@ -11,23 +11,42 @@ namespace RadTrees.Benchmark
 
     class Benchmark
     {
+        /// <summary>
+        ///   Benchmark an action, no setup.
+        /// </summary>
         public static void Mark(string msg, Action f)
         {
 	    try {
-		Infrastructure.Mark8(msg, i => { f(); return i; });
+		Infrastructure.Mark8Setup(msg, i => { f(); return i; });
 	    } catch (Exception e) {
                 Console.WriteLine(e.ToString());
 	    }
         }
 
+        /// <summary>
+        ///   Benchmark an action, set the number of threads as setup.
+        /// </summary>
+        public static void MarkThreads(string msg, int threads, Action f)
+        {
+	    try {
+		Infrastructure.Mark8Setup(msg,
+                                          String.Format("{0,2}", threads),
+                                          i => { f(); return i; },
+                                          () => SetThreads(threads));
+	    } catch (Exception e) {
+                Console.WriteLine(e.ToString());
+	    }
+        }
+
+        /// <summary>
+        ///   Set maximum allowed threads of the thread pool
+        /// </summary>
 	public static void SetThreads(int nthreads)
 	{
 	    // Set min threads first, otherwise setting max threads might fail.
 	    System.Threading.ThreadPool.SetMinThreads(1, 1);
 	    if (!System.Threading.ThreadPool.SetMaxThreads(nthreads, nthreads))
 		Console.WriteLine("# Error: could not change the number of thread pool threads.");
-            else
-                Console.WriteLine("# Threads     {0}", nthreads);
 	}
 
 	// Functions of type int * int -> int.
@@ -42,6 +61,11 @@ namespace RadTrees.Benchmark
 	public static FSharpFunc<int, int> getZeros =
 	    Utils.Functions.toFunc1<int, int>(i => 0);
 
+        /// <summary>
+        ///   Repeat a function n times. The function is executed
+        ///   first with t on both sides, then the result is used on
+        ///   the left side in each successive iteration.
+        /// </summary>
         public static T DoNTimes<T>(int n, Func<T, T, T> f, T t)
         {
             T acc = t;
@@ -50,78 +74,85 @@ namespace RadTrees.Benchmark
             return acc;
         }
 
-        public static void RunSequentialRope(Options opts)
+        public static void RunSequentialRope(int size)
         {
-	    var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-            var hzeros = QuadRopeModule.initZeros(opts.Size, 1);
-            var vzeros = QuadRopeModule.initZeros(1, opts.Size);
-            Mark("QuadRope.init",    () => QuadRopeModule.init(opts.Size, opts.Size, times));
-            Mark("QuadRope.map",     () => QuadRopeModule.map(timesTwo, rope));
-            Mark("QuadRope.reduce",  () => QuadRopeModule.reduce<int>(plus, rope));
-            Mark("QuadRope.zip",     () => QuadRopeModule.zip(plus, rope, rope));
-            Mark("QuadRope.hfold",   () => QuadRopeModule.hfold(times, hzeros, rope));
-	    Mark("QuadRope.vfold",   () => QuadRopeModule.vfold(times, vzeros, rope));
-            Mark("QuadRope.hreduce", () => QuadRopeModule.hreduce(times, rope));
-	    Mark("QuadRope.vreduce", () => QuadRopeModule.vreduce(times, rope));
-//	    Mark("QuadRope.hscan",   () => QuadRopeModule.hscan(times, getZeros, rope));
-//	    Mark("QuadRope.vscan",   () => QuadRopeModule.vscan(times, getZeros, rope));
+	    var rope = QuadRopeModule.init(size, size, times);
+            var hzeros = QuadRopeModule.initZeros(size, 1);
+            var vzeros = QuadRopeModule.initZeros(1, size);
+            MarkThreads("QuadRope.init",    1, () => QuadRopeModule.init(size, size, times));
+            MarkThreads("QuadRope.map",     1, () => QuadRopeModule.map(timesTwo, rope));
+            MarkThreads("QuadRope.reduce",  1, () => QuadRopeModule.reduce<int>(plus, rope));
+            MarkThreads("QuadRope.zip",     1, () => QuadRopeModule.zip(plus, rope, rope));
+            MarkThreads("QuadRope.hfold",   1, () => QuadRopeModule.hfold(times, hzeros, rope));
+	    MarkThreads("QuadRope.vfold",   1, () => QuadRopeModule.vfold(times, vzeros, rope));
+            MarkThreads("QuadRope.hreduce", 1, () => QuadRopeModule.hreduce(times, rope));
+	    MarkThreads("QuadRope.vreduce", 1, () => QuadRopeModule.vreduce(times, rope));
+//	    MarkThreads("QuadRope.hscan",   1, () => QuadRopeModule.hscan(times, getZeros, rope));
+//	    MarkThreads("QuadRope.vscan",   1, () => QuadRopeModule.vscan(times, getZeros, rope));
 	}
 
-        public static void RunParallelRope(Options opts)
+        public static void RunParallelRope(int size, int threads)
         {
-	    var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-            var hzeros = QuadRopeModule.initZeros(opts.Size, 1);
-            var vzeros = QuadRopeModule.initZeros(1, opts.Size);
-            Mark("QuadRope.init",    () => Parallel.QuadRopeModule.init(opts.Size, opts.Size, times));
-            Mark("QuadRope.map",     () => Parallel.QuadRopeModule.map(timesTwo, rope));
-            Mark("QuadRope.reduce",  () => Parallel.QuadRopeModule.reduce<int>(plus, rope));
-            Mark("QuadRope.zip",     () => Parallel.QuadRopeModule.zip(plus, rope, rope));
-            Mark("QuadRope.hfold",   () => Parallel.QuadRopeModule.hfold(times, hzeros, rope));
-	    Mark("QuadRope.vfold",   () => Parallel.QuadRopeModule.vfold(times, vzeros, rope));
-            Mark("QuadRope.hreduce", () => Parallel.QuadRopeModule.hreduce(times, rope));
-	    Mark("QuadRope.vreduce", () => Parallel.QuadRopeModule.vreduce(times, rope));
-//	    Mark("QuadRope.hscan",   () => Parallel.QuadRopeModule.hscan(times, getZeros, rope));
-//	    Mark("QuadRope.vscan",   () => Parallel.QuadRopeModule.vscan(times, getZeros, rope));
+	    var rope = QuadRopeModule.init(size, size, times);
+            var hzeros = QuadRopeModule.initZeros(size, 1);
+            var vzeros = QuadRopeModule.initZeros(1, size);
+            MarkThreads("QuadRope.init",   threads, () => Parallel.QuadRopeModule.init(size, size, times));
+            MarkThreads("QuadRope.map",    threads, () => Parallel.QuadRopeModule.map(timesTwo, rope));
+            MarkThreads("QuadRope.reduce", threads, () => Parallel.QuadRopeModule.reduce<int>(plus, rope));
+            MarkThreads("QuadRope.zip",    threads, () => Parallel.QuadRopeModule.zip(plus, rope, rope));
+            MarkThreads("QuadRope.hfold",  threads, () => Parallel.QuadRopeModule.hfold(times, hzeros, rope));
+	    MarkThreads("QuadRope.vfold",  threads, () => Parallel.QuadRopeModule.vfold(times, vzeros, rope));
+            MarkThreads("QuadRope.hreduce",threads, () => Parallel.QuadRopeModule.hreduce(times, rope));
+	    MarkThreads("QuadRope.vreduce",threads, () => Parallel.QuadRopeModule.vreduce(times, rope));
+//	    MarkThreads("QuadRope.hscan",  threads,
+//                      () => Parallel.QuadRopeModule.hscan(times, getZeros, rope));
+//	    MarkThreads("QuadRope.vscan", threads
+//                      () => Parallel.QuadRopeModule.vscan(times, getZeros, rope));
 	}
 
-	public static void RunSequentialArray(Options opts)
+	public static void RunSequentialArray(int size)
         {
-            var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
-	    Mark("Array2D.init",    () => Array2DModule.Initialize(opts.Size, opts.Size, times));
-            Mark("Array2D.map",     () => Array2DModule.Map(timesTwo, arr));
-            Mark("Array2D.reduce",  () => Array2D.reduce<int>(plus, arr));
-            Mark("Array2D.zip",     () => Array2D.map2(plus, arr, arr));
-            Mark("Array2D.hfold",   () => Array2D.fold2(times, getZeros, arr));
-	    Mark("Array2D.vfold",   () => Array2D.fold1(times, getZeros, arr));
-            Mark("Array2D.hreduce", () => Array2D.reduce2(times, arr));
-	    Mark("Array2D.vreduce", () => Array2D.reduce1(times, arr));
-//	    Mark("Array2D.hscan",   () => Array2D.scan2(times, getZeros, arr));
-//	    Mark("Array2D.vscan",   () => Array2D.scan1(times, getZeros, arr));
+            var arr = Array2DModule.Initialize(size, size, times);
+	    MarkThreads("Array2D.init",    1, () => Array2DModule.Initialize(size, size, times));
+            MarkThreads("Array2D.map",     1, () => Array2DModule.Map(timesTwo, arr));
+            MarkThreads("Array2D.reduce",  1, () => Array2D.reduce<int>(plus, arr));
+            MarkThreads("Array2D.zip",     1, () => Array2D.map2(plus, arr, arr));
+            MarkThreads("Array2D.hfold",   1, () => Array2D.fold2(times, getZeros, arr));
+	    MarkThreads("Array2D.vfold",   1, () => Array2D.fold1(times, getZeros, arr));
+            MarkThreads("Array2D.hreduce", 1, () => Array2D.reduce2(times, arr));
+	    MarkThreads("Array2D.vreduce", 1, () => Array2D.reduce1(times, arr));
+//	    MarkThreads("Array2D.hscan",   1, () => Array2D.scan2(times, getZeros, arr));
+//	    MarkThreads("Array2D.vscan",   1, () => Array2D.scan1(times, getZeros, arr));
         }
 
-        public static void RunParallelArray(Options opts)
+        public static void RunParallelArray(int size, int threads)
         {
-            var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
-	    Mark("Array2D.init",    () => Parallel.Array2D.init(opts.Size, opts.Size, times));
-            Mark("Array2D.map",     () => Parallel.Array2D.map(timesTwo, arr));
-            Mark("Array2D.reduce",  () => Parallel.Array2D.reduce<int>(plus, arr));
-            Mark("Array2D.zip",     () => Parallel.Array2D.map2(plus, arr, arr));
-            Mark("Array2D.hfold",   () => Parallel.Array2D.fold2(times, getZeros, arr));
-	    Mark("Array2D.vfold",   () => Parallel.Array2D.fold1(times, getZeros, arr));
-            Mark("Array2D.hreduce", () => Parallel.Array2D.reduce2(times, arr));
-	    Mark("Array2D.vreduce", () => Parallel.Array2D.reduce1(times, arr));
-//	    Mark("Array2D.hscan",   () => Parallel.Array2D.scan2(times, getZeros, arr));
-//	    Mark("Array2D.vscan",   () => Parallel.Array2D.scan1(times, getZeros, arr));
+            var arr = Array2DModule.Initialize(size, size, times);
+	    MarkThreads("Array2D.init",    threads, () => Parallel.Array2D.init(size, size, times));
+            MarkThreads("Array2D.map",     threads, () => Parallel.Array2D.map(timesTwo, arr));
+            MarkThreads("Array2D.reduce",  threads, () => Parallel.Array2D.reduce<int>(plus, arr));
+            MarkThreads("Array2D.zip",     threads, () => Parallel.Array2D.map2(plus, arr, arr));
+            MarkThreads("Array2D.hfold",   threads, () => Parallel.Array2D.fold2(times, getZeros, arr));
+	    MarkThreads("Array2D.vfold",   threads, () => Parallel.Array2D.fold1(times, getZeros, arr));
+            MarkThreads("Array2D.hreduce", threads, () => Parallel.Array2D.reduce2(times, arr));
+	    MarkThreads("Array2D.vreduce", threads, () => Parallel.Array2D.reduce1(times, arr));
+//	    MarkThreads("Array2D.hscan",   threads, () => Parallel.Array2D.scan2(times, getZeros, arr));
+//	    MarkThreads("Array2D.vscan",   threads, () => Parallel.Array2D.scan1(times, getZeros, arr));
         }
 
+        /// <summary>
+        ///   Starts the correct version (sequential or parallel) of
+        ///   functions to benchmark, depending on the set number of
+        ///   threads.
+        /// </summary>
         public static void Run(Options opts)
         {
             if (opts.Threads == 1) {
-                RunSequentialRope(opts);
-                RunSequentialArray(opts);
+                RunSequentialRope(opts.Size);
+                RunSequentialArray(opts.Size);
             } else {
-                RunParallelRope(opts);
-                RunParallelArray(opts);
+                RunParallelRope(opts.Size, opts.Threads);
+                RunParallelArray(opts.Size, opts.Threads);
             }
         }
 
@@ -199,27 +230,27 @@ namespace RadTrees.Benchmark
             var init = Utils.Functions.toFunc2<int, int, int>((i, j) => i * j + start);
             var arr = Array2DModule.Initialize(opts.Size, opts.Size, init);
             var rope = QuadRopeModule.init(opts.Size, opts.Size, init);
-
-            Mark("primes Array2D.Parallel", () => Examples.Array2D.Parallel.factorize(arr));
-            Mark("primes QuadRope.Parallel", () => Examples.QuadRope.Parallel.factorize(rope));
+            for (int t = 2; t <= opts.Threads; ++t) {
+                MarkThreads("primes Array2D",  t, () => Examples.Array2D.Parallel.factorize(arr));
+                MarkThreads("primes QuadRope", t, () => Examples.QuadRope.Parallel.factorize(rope));
+            }
         }
 
         public static void Fibonacci(Options opts)
         {
-            Mark("fibseq Array2D", () => Examples.Array2D.fibseq(opts.Size));
-            Mark("fibseq QuadRope", () => Examples.QuadRope.fibseq(opts.Size));
+            MarkThreads("fibseq Array2D",  opts.Threads, () => Examples.Array2D.fibseq(opts.Size));
+            MarkThreads("fibseq QuadRope", opts.Threads, () => Examples.QuadRope.fibseq(opts.Size));
         }
 
         public static void MatrixMultiplication(Options opts)
         {
             var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
             var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-            if (opts.Threads == 1) {
-                Mark("mmult Array2D",           () => Examples.Array2D.mmult(arr, arr));
-                Mark("mmult QuadRope",          () => Examples.QuadRope.mmult(rope, rope));
-            } else {
-                Mark("mmult Array2D.Parallel",  () => Examples.Array2D.Parallel.mmult(arr, arr));
-                Mark("mmult QuadRope.Parallel", () => Examples.QuadRope.Parallel.mmult(rope, rope));
+            MarkThreads("mmult Array2D",      1, () => Examples.Array2D.mmult(arr, arr));
+            MarkThreads("mmult QuadRope",     1, () => Examples.QuadRope.mmult(rope, rope));
+            for (int t = 2; t <= opts.Threads; ++t) {
+                MarkThreads("mmult Array2D",  t, () => Examples.Array2D.Parallel.mmult(arr, arr));
+                MarkThreads("mmult QuadRope", t, () => Examples.QuadRope.Parallel.mmult(rope, rope));
             }
         }
 

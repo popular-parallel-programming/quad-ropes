@@ -1,9 +1,0 @@
-# OS          Microsoft Windows NT 6.2.9200.0
-# .NET vers.  4.6.2 or later
-# 64-bit OS   True
-# 64-bit proc False
-# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
-# Date        2016-08-23T11:05:36
-# Threads     7
-mmult Array2D.Parallel       1275500000,0 ns 287933634,33          2
-mmult QuadRope.Parallel       474500000,0 ns 52138171,13          2

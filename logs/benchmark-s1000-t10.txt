@@ -3,21 +3,20 @@
 # 64-bit OS   True
 # 64-bit proc False
 # CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
-# Date        2016-08-23T10:41:30
-# Threads     10
-QuadRope.init                   5732812,5 ns  305516,59         64
-QuadRope.map                    6909375,0 ns  308375,56         64
-QuadRope.reduce                 5210937,5 ns  115350,18         64
-QuadRope.zip                    8971875,0 ns  203831,57         32
-QuadRope.hfold                  6470312,5 ns  122024,04         64
-QuadRope.vfold                  6612500,0 ns  140103,20         64
-QuadRope.hreduce                5453125,0 ns  125433,28         64
-QuadRope.vreduce                5398437,5 ns  124183,53         64
-Array2D.init                    4950000,0 ns  278029,40         64
-Array2D.map                     7123437,5 ns  229810,88         64
-Array2D.reduce                  6075000,0 ns 1443541,05         32
-Array2D.zip                     8800000,0 ns  561380,06         32
-Array2D.hfold                   6667187,5 ns  147874,48         64
-Array2D.vfold                   5970312,5 ns  111815,53         64
-Array2D.hreduce                 4060937,5 ns  102181,61        128
-Array2D.vreduce                 4251562,5 ns  120006,60         64
+# Date        2016-08-24T05:09:53
+QuadRope.init             10      5460937,5 ns   79416,41         64
+QuadRope.map              10      6550000,0 ns  138349,65         64
+QuadRope.reduce           10      5171875,0 ns  105717,62         64
+QuadRope.zip              10      8962500,0 ns  205607,16         32
+QuadRope.hfold            10      6664062,5 ns  120187,30         64
+QuadRope.vfold            10      6343750,0 ns  169090,45         64
+QuadRope.hreduce          10      5432812,5 ns  166999,99         64
+QuadRope.vreduce          10      5659375,0 ns  170496,36         64
+Array2D.init              10      5465625,0 ns  280554,70         64
+Array2D.map               10      7396875,0 ns  551208,03         32
+Array2D.reduce            10      5223437,5 ns 1102077,67         64
+Array2D.zip               10      9246875,0 ns  521343,50         32
+Array2D.hfold             10      6695312,5 ns  265395,12         64
+Array2D.vfold             10      6189062,5 ns  122910,05         64
+Array2D.hreduce           10      3945312,5 ns  142873,61         64
+Array2D.vreduce           10      4048437,5 ns  172497,30         64

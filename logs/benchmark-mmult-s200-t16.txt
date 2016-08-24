@@ -1,0 +1,39 @@
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-24T05:31:11
+Array2D.mmult              1    584650000,0 ns 11568755,82          2
+Array2D.mmult              2    952300000,0 ns 36558324,79          2
+Array2D.mmult              3   1067900000,0 ns 94672182,94          2
+Array2D.mmult              4    994750000,0 ns 60415804,59          2
+Array2D.mmult              5    943450000,0 ns 32824829,69          2
+Array2D.mmult              6    914850000,0 ns 40283060,96          2
+Array2D.mmult              7    876700000,0 ns 64492549,10          2
+Array2D.mmult              8    835300000,0 ns 63699904,06          2
+Array2D.mmult              9    956750000,0 ns 57474269,61          2
+Array2D.mmult             10    971600000,0 ns 59519277,92          2
+Array2D.mmult             11    931450000,0 ns 71958494,98          2
+Array2D.mmult             12   1034200000,0 ns 60810360,96          2
+Array2D.mmult             13   1030800000,0 ns 69463099,72          2
+Array2D.mmult             14   1016250000,0 ns 80361077,51          2
+Array2D.mmult             15   1003550000,0 ns 70561812,93          2
+Array2D.mmult             16   1068150000,0 ns 109583060,84          2
+
+QuadRope.mmult             1    758150000,0 ns 2848488,88          2
+QuadRope.mmult             2    764450000,0 ns 40563016,82          2
+QuadRope.mmult             3    713850000,0 ns 223792817,13          2
+QuadRope.mmult             4    480000000,0 ns 42960576,24          2
+QuadRope.mmult             5    393100000,0 ns 34229454,50          2
+QuadRope.mmult             6    419200000,0 ns 47635887,50          2
+QuadRope.mmult             7    301800000,0 ns 25887792,06          2
+QuadRope.mmult             8    298800000,0 ns 14154308,34          2
+QuadRope.mmult             9    292900000,0 ns 30345968,06          2
+QuadRope.mmult            10    287500000,0 ns 13812232,90          2
+QuadRope.mmult            11    278900000,0 ns 12905209,97          2
+QuadRope.mmult            12    280900000,0 ns 16175770,63          2
+QuadRope.mmult            13    275900000,0 ns 17129895,89          2
+QuadRope.mmult            14    265550000,0 ns 5560025,98          2
+QuadRope.mmult            15    269000000,0 ns 6437735,97          2
+QuadRope.mmult            16    264300000,0 ns 4626013,40          2

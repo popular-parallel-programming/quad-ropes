@@ -4,35 +4,36 @@
 # 64-bit proc False
 # CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
 # Date        2016-08-24T05:23:02
-primes Array2D             1    184000000,0 ns 11616559,06          2
-primes QuadRope            1    194200000,0 ns 1619327,71          2
-primes Array2D             2   1428100000,0 ns 39148435,47          2
-primes QuadRope            2    135500000,0 ns 11791004,10          4
-primes Array2D             3   1347550000,0 ns 12726721,67          2
-primes QuadRope            3    109250000,0 ns 25583469,06          2
-primes Array2D             4   1349850000,0 ns 35118885,39          2
-primes QuadRope            4    133550000,0 ns 41463136,24          4
-primes Array2D             5   1364700000,0 ns 75493266,81          2
-primes QuadRope            5    105575000,0 ns 22286658,32          4
-primes Array2D             6   1339800000,0 ns 42207292,68          2
-primes QuadRope            6    123600000,0 ns 43937645,21          4
-primes Array2D             7   1305400000,0 ns 24049486,02          2
-primes QuadRope            7    163500000,0 ns 32919936,55          2
-primes Array2D             8   1401100000,0 ns 56435213,59          2
-primes QuadRope            8    143175000,0 ns 45144990,19          4
-primes Array2D             9   1300650000,0 ns 68722893,65          2
-primes QuadRope            9     77825000,0 ns 17469835,11          4
-primes Array2D            10   1267000000,0 ns 42924352,06          2
-primes QuadRope           10     68625000,0 ns 17889805,45          4
-primes Array2D            11   1282350000,0 ns 35482429,14          2
-primes QuadRope           11     68700000,0 ns 9348796,71          4
-primes Array2D            12   1259600000,0 ns 23249611,71          2
-primes QuadRope           12     72400000,0 ns 7243004,29          4
-primes Array2D            13   1292800000,0 ns 50558107,38          2
-primes QuadRope           13     72737500,0 ns 4865357,27          8
-primes Array2D            14   1275300000,0 ns 43131710,43          2
-primes QuadRope           14     74700000,0 ns 10002638,54          4
-primes Array2D            15   1341850000,0 ns 57523932,22          2
-primes QuadRope           15     79100000,0 ns 7405140,86          4
-primes Array2D            16   1313000000,0 ns 44085774,98          2
-primes QuadRope           16     77475000,0 ns 6115156,49          4
+Array2D.primes             1    184000000,0 ns 11616559,06          2
+Array2D.primes             2   1428100000,0 ns 39148435,47          2
+Array2D.primes             3   1347550000,0 ns 12726721,67          2
+Array2D.primes             4   1349850000,0 ns 35118885,39          2
+Array2D.primes             5   1364700000,0 ns 75493266,81          2
+Array2D.primes             6   1339800000,0 ns 42207292,68          2
+Array2D.primes             7   1305400000,0 ns 24049486,02          2
+Array2D.primes             8   1401100000,0 ns 56435213,59          2
+Array2D.primes             9   1300650000,0 ns 68722893,65          2
+Array2D.primes            10   1267000000,0 ns 42924352,06          2
+Array2D.primes            11   1282350000,0 ns 35482429,14          2
+Array2D.primes            12   1259600000,0 ns 23249611,71          2
+Array2D.primes            13   1292800000,0 ns 50558107,38          2
+Array2D.primes            14   1275300000,0 ns 43131710,43          2
+Array2D.primes            15   1341850000,0 ns 57523932,22          2
+Array2D.primes            16   1313000000,0 ns 44085774,98          2
+
+QuadRope.primes            1    194200000,0 ns 1619327,71          2
+QuadRope.primes            2    135500000,0 ns 11791004,10          4
+QuadRope.primes            3    109250000,0 ns 25583469,06          2
+QuadRope.primes            4    133550000,0 ns 41463136,24          4
+QuadRope.primes            5    105575000,0 ns 22286658,32          4
+QuadRope.primes            6    123600000,0 ns 43937645,21          4
+QuadRope.primes            7    163500000,0 ns 32919936,55          2
+QuadRope.primes            8    143175000,0 ns 45144990,19          4
+QuadRope.primes            9     77825000,0 ns 17469835,11          4
+QuadRope.primes           10     68625000,0 ns 17889805,45          4
+QuadRope.primes           11     68700000,0 ns 9348796,71          4
+QuadRope.primes           12     72400000,0 ns 7243004,29          4
+QuadRope.primes           13     72737500,0 ns 4865357,27          8
+QuadRope.primes           14     74700000,0 ns 10002638,54          4
+QuadRope.primes           15     79100000,0 ns 7405140,86          4
+QuadRope.primes           16     77475000,0 ns 6115156,49          4

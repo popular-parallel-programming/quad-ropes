@@ -19,11 +19,9 @@ call benchmark -s 100 -t 16 >> logs\benchmark-s100-t16.txt
 :: Scaling benchmarks for primes
 call benchmark -m primes -s 100 -t 16 > logs\benchmark-primes-s100-t16.txt
 
-:: Scaling benchmarks for mmult
-call benchmark -m mmult -s  20 -t 16 > logs\benchmark-mmult-s020-t16.txt
-call benchmark -m mmult -s  40 -t 16 > logs\benchmark-mmult-s040-t16.txt
-call benchmark -m mmult -s  80 -t 16 > logs\benchmark-mmult-s080-t16.txt
+:: Scaling and size scaling benchmarks for mmult
 call benchmark -m mmult -s 100 -t 16 > logs\benchmark-mmult-s100-t16.txt
+call benchmark -m mmult -s 200 -t 16 > logs\benchmark-mmult-s200-t16.txt
 
 :: Size scaling benchmarks for vdc
 call benchmark -m vdc -s  5 -t 1 > logs\benchmark-vdc-s05-t01.txt

@@ -1,23 +1,38 @@
 :: Scaling benchmarks for single functions
-call benchmark       > logs\benchmark-s1000-t01.txt
-call benchmark -t 2  > logs\benchmark-s1000-t02.txt
-call benchmark -t 3  > logs\benchmark-s1000-t03.txt
-call benchmark -t 4  > logs\benchmark-s1000-t04.txt
-call benchmark -t 5  > logs\benchmark-s1000-t05.txt
-call benchmark -t 6  > logs\benchmark-s1000-t06.txt
-call benchmark -t 7  > logs\benchmark-s1000-t07.txt
-call benchmark -t 8  > logs\benchmark-s1000-t08.txt
-call benchmark -t 9  > logs\benchmark-s1000-t09.txt
-call benchmark -t 10 > logs\benchmark-s1000-t10.txt
-call benchmark -t 11 > logs\benchmark-s1000-t11.txt
-call benchmark -t 12 > logs\benchmark-s1000-t12.txt
-call benchmark -t 13 > logs\benchmark-s1000-t13.txt
-call benchmark -t 14 > logs\benchmark-s1000-t14.txt
-call benchmark -t 15 > logs\benchmark-s1000-t15.txt
-call benchmark -t 16 > logs\benchmark-s1000-t16.txt
+call benchmark -s 100       >  logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t  2 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t  3 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t  4 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t  5 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t  6 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t  7 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t  8 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t  9 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t 10 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t 11 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t 12 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t 13 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t 14 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t 15 >> logs\benchmark-s100-t16.txt
+call benchmark -s 100 -t 16 >> logs\benchmark-s100-t16.txt
 
 :: Scaling benchmarks for primes
 call benchmark -m primes -s 100 -t 16 > logs\benchmark-primes-s100-t16.txt
 
 :: Scaling benchmarks for mmult
-call benchmark -m mmult -s 200 -t 16 > logs\benchmark-mmult-s200-t01.txt
+call benchmark -m mmult -s  20 -t 16 > logs\benchmark-mmult-s020-t16.txt
+call benchmark -m mmult -s  40 -t 16 > logs\benchmark-mmult-s040-t16.txt
+call benchmark -m mmult -s  80 -t 16 > logs\benchmark-mmult-s080-t16.txt
+call benchmark -m mmult -s 100 -t 16 > logs\benchmark-mmult-s100-t16.txt
+
+:: Size scaling benchmarks for vdc
+call benchmark -m vdc -s  5 -t 1 > logs\benchmark-vdc-s05-t01.txt
+call benchmark -m vdc -s 10 -t 1 > logs\benchmark-vdc-s10-t01.txt
+call benchmark -m vdc -s 15 -t 1 > logs\benchmark-vdc-s15-t01.txt
+call benchmark -m vdc -s 20 -t 1 > logs\benchmark-vdc-s20-t01.txt
+
+:: Size scaling benchmarks for fibseq
+call benchmark -m fibseq -s  20 -t 1 logs\benchmark-fibseq-s020-t01.txt
+call benchmark -m fibseq -s  40 -t 1 logs\benchmark-fibseq-s040-t01.txt
+call benchmark -m fibseq -s  80 -t 1 logs\benchmark-fibseq-s080-t01.txt
+call benchmark -m fibseq -s 100 -t 1 logs\benchmark-fibseq-s100-t01.txt

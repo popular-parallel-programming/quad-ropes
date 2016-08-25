@@ -1,0 +1,8 @@
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T06:13:20
+Array2D.vdc                1      1537109,4 ns    2058,77        256
+QuadRope.vdc               1      1342187,5 ns    2731,27        256

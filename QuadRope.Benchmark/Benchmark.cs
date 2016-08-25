@@ -176,9 +176,9 @@ namespace RadTrees.Benchmark
             var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
             var hrev = QuadRopeModule.hrev(rope);
             var vrev = QuadRopeModule.vrev(rope);
-            Mark("QuadRope.zip opt",  () => QuadRopeModule.zip(plus, rope, rope));
-            Mark("QuadRope.zip hrev", () => QuadRopeModule.zip(plus, rope, hrev));
-            Mark("QuadRope.zip vrev", () => QuadRopeModule.zip(plus, rope, vrev));
+            Mark("QuadRope.zip.opt",  () => QuadRopeModule.zip(plus, rope, rope));
+            Mark("QuadRope.zip.hrev", () => QuadRopeModule.zip(plus, rope, hrev));
+            Mark("QuadRope.zip.vrev", () => QuadRopeModule.zip(plus, rope, vrev));
         }
 
         public static void Concatenating(Options opts)
@@ -191,7 +191,7 @@ namespace RadTrees.Benchmark
                 ropes[i] = QuadRopeModule.init(opts.Size, rnd.Next(1, opts.Size), times);
 
             var rope = QuadRopeModule.init(opts.Size, 1, times);
-            Mark("QuadRope.hcat x 100", () =>
+            Mark("QuadRope.hcatX100", () =>
                     {
                      for (int i = 0; i < 100; ++i)
                          rope = QuadRopeModule.hcat(rope, ropes[i]);
@@ -205,7 +205,7 @@ namespace RadTrees.Benchmark
                 ropes[i] = QuadRopeModule.init(rnd.Next(1, opts.Size), opts.Size, times);
 
             rope = QuadRopeModule.init(1, opts.Size, times);
-            Mark("QuadRope.vcat x 100", () =>
+            Mark("QuadRope.vcatX100", () =>
                     {
                      for (int i = 0; i < 100; ++i)
                          rope = QuadRopeModule.vcat(rope, ropes[i]);
@@ -218,49 +218,51 @@ namespace RadTrees.Benchmark
 
         public static void vanDerCorput(Options opts)
         {
-            Mark("vdc Array2D", () => Examples.Array2D.vanDerCorput(opts.Size));
-            Mark("vdc Array2D.Parallel", () => Examples.Array2D.Parallel.vanDerCorput(opts.Size));
-            Mark("vdc QuadRope", () => Examples.QuadRope.vanDerCorput(opts.Size));
-            Mark("vdc QuadRope.Parallel", () => Examples.QuadRope.Parallel.vanDerCorput(opts.Size));
+            MarkThreads("Array2D.vdc",  1, () => Examples.Array2D.vanDerCorput(opts.Size));
+            MarkThreads("QuadRope.vdc", 1, () => Examples.QuadRope.vanDerCorput(opts.Size));
+            for (int t = 2; t <= opts.Threads; ++t) {
+                MarkThreads("Array2D.vdc",  t, () => Examples.Array2D.Parallel.vanDerCorput(opts.Size));
+                MarkThreads("QuadRope.vdc", t, () => Examples.QuadRope.Parallel.vanDerCorput(opts.Size));
+            }
         }
 
         public static void Factorization(Options opts)
         {
-            int start = 1000;
+            int start = 100000;
             var init = Utils.Functions.toFunc2<int, int, int>((i, j) => i * j + start);
             var arr = Array2DModule.Initialize(opts.Size, opts.Size, init);
             var rope = QuadRopeModule.init(opts.Size, opts.Size, init);
-            MarkThreads("primes Array2D",      1, () => Examples.Array2D.factorize(arr));
-            MarkThreads("primes QuadRope",     1, () => Examples.QuadRope.factorize(rope));
+            MarkThreads("Array2D.primes",      1, () => Examples.Array2D.factorize(arr));
+            MarkThreads("QuadRope.primes",     1, () => Examples.QuadRope.factorize(rope));
             for (int t = 2; t <= opts.Threads; ++t) {
-                MarkThreads("primes Array2D",  t, () => Examples.Array2D.Parallel.factorize(arr));
-                MarkThreads("primes QuadRope", t, () => Examples.QuadRope.Parallel.factorize(rope));
+                MarkThreads("Array2D.primes",  t, () => Examples.Array2D.Parallel.factorize(arr));
+                MarkThreads("QuadRope.primes", t, () => Examples.QuadRope.Parallel.factorize(rope));
             }
         }
 
         public static void Fibonacci(Options opts)
         {
-            MarkThreads("fibseq Array2D",  opts.Threads, () => Examples.Array2D.fibseq(opts.Size));
-            MarkThreads("fibseq QuadRope", opts.Threads, () => Examples.QuadRope.fibseq(opts.Size));
+            MarkThreads("Array2D.fibseq",  opts.Threads, () => Examples.Array2D.fibseq(opts.Size));
+            MarkThreads("QuadRope.fibseq", opts.Threads, () => Examples.QuadRope.fibseq(opts.Size));
         }
 
         public static void MatrixMultiplication(Options opts)
         {
             var arr = Array2DModule.Initialize(opts.Size, opts.Size, times);
             var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-            MarkThreads("mmult Array2D",      1, () => Examples.Array2D.mmult(arr, arr));
-            MarkThreads("mmult QuadRope",     1, () => Examples.QuadRope.mmult(rope, rope));
+            MarkThreads("Array2D.mmult",      1, () => Examples.Array2D.mmult(arr, arr));
+            MarkThreads("QuadRope.mmult",     1, () => Examples.QuadRope.mmult(rope, rope));
             for (int t = 2; t <= opts.Threads; ++t) {
-                MarkThreads("mmult Array2D",  t, () => Examples.Array2D.Parallel.mmult(arr, arr));
-                MarkThreads("mmult QuadRope", t, () => Examples.QuadRope.Parallel.mmult(rope, rope));
+                MarkThreads("Array2D.mmult",  t, () => Examples.Array2D.Parallel.mmult(arr, arr));
+                MarkThreads("QuadRope.mmult", t, () => Examples.QuadRope.Parallel.mmult(rope, rope));
             }
         }
 
         public static void Reallocation(Options opts)
         {
             var rope = QuadRopeModule.init(opts.Size, opts.Size, times);
-            Mark("seq reallocate", () => QuadRopeModule.reallocate(rope));
-            Mark("par reallocate", () => Parallel.QuadRopeModule.reallocate(rope));
+            Mark("seq-reallocate", () => QuadRopeModule.reallocate(rope));
+            Mark("par-reallocate", () => Parallel.QuadRopeModule.reallocate(rope));
         }
 
         static Dictionary<string, Action<Options>> tests = new Dictionary<string, Action<Options>>()

@@ -30,8 +30,8 @@ module Array2D =
             else if p % k = 0 then
                 factorize (p / k) k ks
             else
-                factorize p (k + 1) ((singleton k) @ ks)
-        map (fun p -> factorize p 2 empty) arr
+                factorize p (k + 1) (k :: ks)
+        map (fun p -> factorize p 2 []) arr
 
     let rec fibseq n =
         match n with
@@ -80,8 +80,8 @@ module Array2D =
                 else if p % k = 0 then
                     factorize (p / k) k ks
                 else
-                    factorize p (k + 1) ((singleton k) @ ks)
-            map (fun p -> factorize p 2 empty) arr
+                    factorize p (k + 1) (k :: ks)
+            map (fun p -> factorize p 2 []) arr
 
         let transpose = Parallel.Array2D.transpose
         let init = Parallel.Array2D.init
@@ -121,8 +121,8 @@ module QuadRope =
             else if p % k = 0 then
                 factorize (p / k) k ks
             else
-                factorize p (k + 1) ((singleton k) @ ks)
-        map (fun p -> factorize p 2 empty) arr
+                factorize p (k + 1) (k :: ks)
+        map (fun p -> factorize p 2 []) arr
 
     let rec fibseq n =
         match n with
@@ -170,8 +170,8 @@ module QuadRope =
                 else if p % k = 0 then
                     factorize (p / k) k ks
                 else
-                    factorize p (k + 1) ((singleton k) @ ks)
-            map (fun p -> factorize p 2 empty) arr
+                    factorize p (k + 1) (k :: ks)
+            map (fun p -> factorize p 2 []) arr
 
         let transpose = Parallel.QuadRope.transpose
         let init = Parallel.QuadRope.init

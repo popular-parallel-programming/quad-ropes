@@ -612,19 +612,20 @@ let vfold f states rope =
 
 /// Zip implementation for the general case where we do not assume
 /// that both ropes have the same internal structure.
-let rec private genZip f lope rope =
+let rec private genZip f i j lope rope (arr : _ [,]) =
     match lope with
         | Empty -> Empty
         | Leaf vs ->
             let rope = Slicing.minimize rope
-            leaf (ArraySlice.mapi (fun i j e -> f e (fastGet rope i j)) vs)
+            ArraySlice.iteri (fun x y e1 -> arr.[x + i, y + j] <- f e1 (get rope x y)) vs
+            leaf (ArraySlice.makeSlice i j (rows lope) (cols lope) arr)
         | Node (d, h, w, ne, nw, sw, se) ->
-            let nw0 = genZip f nw (slice 0 0 (rows nw) (cols nw) rope)
-            let ne0 = genZip f ne (slice 0 (cols nw) (rows ne) (cols ne) rope)
-            let sw0 = genZip f sw (slice (rows nw) 0 (rows sw) (cols sw) rope)
-            let se0 = genZip f se (slice (rows ne) (cols sw) (rows se) (cols se) rope)
+            let nw0 = genZip f i             j             nw (slice 0 0 (rows nw) (cols nw) rope) arr
+            let ne0 = genZip f i             (j + cols nw) ne (slice 0 (cols nw) (rows ne) (cols ne) rope) arr
+            let sw0 = genZip f (i + rows nw)  j            sw (slice (rows nw) 0 (rows sw) (cols sw) rope) arr
+            let se0 = genZip f (i + rows ne) (j + cols sw) se (slice (rows ne) (cols sw) (rows se) (cols se) rope) arr
             Node (d, h, w, ne0, nw0, sw0, se0)
-        | Slice _ -> genZip f (Slicing.reallocate lope) rope
+        | Slice _ -> genZip f i j (Slicing.reallocate lope) rope arr
 
 /// True if the shape of two ropes match.
 let internal shapesMatch a b =
@@ -644,26 +645,33 @@ let internal subShapesMatch a b =
 
 /// Zip function that assumes that the internal structure of two ropes
 /// matches. If not, it falls back to the slow, general case.
-let rec private fastZip f lope rope =
+let rec private fastZip f i j lope rope (arr : _ [,]) =
     match lope, rope with
         | Empty, Empty -> Empty
-        | Leaf ls, Leaf rs when shapesMatch lope rope -> leaf (ArraySlice.map2 f ls rs)
+        | Leaf ls, Leaf rs when shapesMatch lope rope ->
+            // Map and write into target array.
+            ArraySlice.iteri2 (fun x y e1 e2 -> arr.[x + i, y + j] <- f e1 e2) ls rs
+            leaf (ArraySlice.makeSlice i j (rows lope) (cols lope) arr)
         | Node (_, _, _, lne, lnw, lsw, lse), Node (_, _, _, rne, rnw, rsw, rse)
             when subShapesMatch lope rope ->
-                node (fastZip f lne rne) (fastZip f lnw rnw) (fastZip f lsw rsw) (fastZip f lse rse)
+                node (fastZip f i              (j + cols lnw) lne rne arr)
+                     (fastZip f i              j              lnw rnw arr)
+                     (fastZip f (i + rows lnw) j              lsw rsw arr)
+                     (fastZip f (i + rows lne) (j + cols lsw) lse rse arr)
         // It may pay off to reallocate first if both reallocated quad
         // ropes have the same internal shape. This might be
         // over-fitted to matrix multiplication.
-        | Slice _, Slice _ -> fastZip f (Slicing.reallocate lope) (Slicing.reallocate rope)
-        | Slice _, _ ->       fastZip f (Slicing.reallocate lope) rope
-        | Slice _, Slice _ -> fastZip f lope (Slicing.reallocate rope)
-        | _ -> genZip f lope rope
+        | Slice _, Slice _ -> fastZip f i j (Slicing.reallocate lope) (Slicing.reallocate rope) arr
+        | Slice _, _ ->       fastZip f i j (Slicing.reallocate lope) rope arr
+        | Slice _, Slice _ -> fastZip f i j lope (Slicing.reallocate rope) arr
+        | _ -> genZip f i j lope rope arr
 
 /// Apply f to each (i, j) of lope and rope.
 let zip f lope rope =
     if cols lope <> cols rope || rows lope <> rows rope then
         failwith "ropes must have the same shape"
-    fastZip f lope rope
+    let arr = Array2D.zeroCreate (rows lope) (cols lope)
+    fastZip f 0 0 lope rope arr
 
 /// Map f to every element of the rope and reduce rows with g.
 let rec hmapreduce f g = function

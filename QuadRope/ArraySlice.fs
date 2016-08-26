@@ -128,6 +128,9 @@ let mapi f (ArraySlice (i, j, h, w, arr)) =
 let map2 f (ArraySlice (i0, j0, h0, w0, arr0)) (ArraySlice (i1, j1, _, _, arr1)) =
     make (Array2D.init h0 w0 (fun x y -> f arr0.[x + i0, y + j0] arr1.[x + i1, y + j1]))
 
+let mapi2 f (ArraySlice (i0, j0, h0, w0, arr0)) (ArraySlice (i1, j1, _, _, arr1)) =
+    make (Array2D.init h0 w0 (fun x y -> f x y arr0.[x + i0, y + j0] arr1.[x + i1, y + j1]))
+
 /// Reduce each column of a 2D array.
 let mapReduce1 f g (ArraySlice (i, j, h, w, arr)) =
     make (Array2D.init 1 w
@@ -190,3 +193,8 @@ let iteri f (ArraySlice (i, j, h, w, arr)) =
     for x in 0 .. h - 1 do
         for y in 0 .. w - 1 do
             f x y arr.[x + i, y + j]
+
+let iteri2 f (ArraySlice (i0, j0, h, w, arr0)) (ArraySlice (i1, j1, _, _, arr1)) =
+    for x in 0 .. h - 1 do
+        for y in 0 .. w - 1 do
+            f x y arr0.[x + i0, y + j0] arr1.[x + i1, y + j1]

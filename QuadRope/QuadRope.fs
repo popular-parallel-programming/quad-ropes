@@ -612,7 +612,7 @@ let vfold f states rope =
 
 /// Zip implementation for the general case where we do not assume
 /// that both ropes have the same internal structure.
-let rec private genZip f i j lope rope (arr : _ [,]) =
+let rec internal genZip f i j lope rope (arr : _ [,]) =
     match lope with
         | Empty -> Empty
         | Leaf vs ->
@@ -645,7 +645,7 @@ let internal subShapesMatch a b =
 
 /// Zip function that assumes that the internal structure of two ropes
 /// matches. If not, it falls back to the slow, general case.
-let rec private fastZip f i j lope rope (arr : _ [,]) =
+let rec internal fastZip f i j lope rope (arr : _ [,]) =
     match lope, rope with
         | Empty, Empty -> Empty
         | Leaf ls, Leaf rs when shapesMatch lope rope ->

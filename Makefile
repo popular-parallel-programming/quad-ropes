@@ -17,7 +17,4 @@ update:
 all: paket debug
 
 plots:
-	gnuplot gnuplot/primes.gnuplot
-	gnuplot gnuplot/mmult.gnuplot
-	gnuplot gnuplot/map.gnuplot
-	gnuplot gnuplot/reduce.gnuplot
+	gnuplot plot.gnuplot

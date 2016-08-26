@@ -320,12 +320,14 @@ module internal Slicing =
             | rope -> rope
 
     /// Compute a slice and map in the same traversal.
-    let map f rope =
+    let map f rope (arr : _ [,]) =
         let rec map rope i j h w =
             match rope with
                 | _ when rows rope <= i || cols rope <= j || h <= 0 || w <= 0 -> Empty
                 | Empty -> Empty
-                | Leaf vs -> leaf (ArraySlice.map f (ArraySlice.slice vs i j h w))
+                | Leaf vs ->
+                    ArraySlice.iteri (fun x y e -> arr.[x + i, y + j] <- f e) (ArraySlice.slice vs i j h w)
+                    leaf (ArraySlice.makeSlice i j h w arr)
                 | Node (_, _, _, ne, nw, sw, se) ->
                     let nw0 = map nw i j h w
                     let ne0 = map ne i (j - cols nw) h (w - cols nw0)
@@ -545,17 +547,22 @@ let inline reallocate rope =
 
 /// Apply a function to every element in the tree and preserves the
 /// tree structure.
-let rec map f root =
-    match root with
-        | Empty -> Empty
-        | Leaf vs -> leaf (ArraySlice.map f vs)
-        | Node (d, h, w, ne, nw, sw, se) ->
-            Node (d, h, w,
-                  map f ne,
-                  map f nw,
-                  map f sw,
-                  map f se)
-        | Slice _ as rope -> Slicing.map f rope
+let map f root =
+    let arr = Array2D.zeroCreate (rows root) (cols root)
+    let rec map i j rope =
+        match rope with
+            | Empty -> Empty
+            | Leaf vs ->
+                ArraySlice.iteri (fun x y e -> arr.[x + i, y + j] <- f e) vs
+                leaf (ArraySlice.makeSlice i j (rows rope) (cols rope) arr)
+            | Node (d, h, w, ne, nw, sw, se) ->
+                Node (d, h, w,
+                      map i (j + cols nw) ne,
+                      map i j nw,
+                      map (i + rows nw) j sw,
+                      map (i + rows ne) (j + cols sw) se)
+            | Slice _ as rope -> Slicing.map f rope arr
+    map 0 0 root
 
 let toCols = function
     | Empty -> Seq.empty

@@ -6,22 +6,38 @@ open RadTrees
 open Types
 open Utils.Tasks
 
+let private rows = QuadRope.rows
+let private cols = QuadRope.cols
+let private node = QuadRope.node
+let private leaf = QuadRope.leaf
+let private flatNode = QuadRope.flatNode
+let private thinNode = QuadRope.thinNode
+
 /// Apply a function f to all scalars in parallel.
-let rec map f = function
-    | Node (_, _, _, ne, nw, Empty, Empty) ->
-        let ne0, nw0 = par2 (fun () -> map f ne) (fun () -> map f nw)
-        QuadRope.flatNode nw0 ne0
-    | Node (_, _, _, Empty, nw, sw, Empty) ->
-        let nw0, sw0 = par2 (fun () -> map f nw) (fun () -> map f sw)
-        QuadRope.thinNode nw0 sw0
-    | Node (_, _, _, ne, nw, sw, se) ->
-        let ne0, nw0, sw0, se0 = par4 (fun () -> map f ne)
-                                      (fun () -> map f nw)
-                                      (fun () -> map f sw)
-                                      (fun () -> map f se)
-        QuadRope.node ne0 nw0 sw0 se0
-    | Slice _ as rope -> map f (QuadRope.Slicing.reallocate rope)
-    | rope -> QuadRope.map f rope
+let map f root =
+    let arr = Array2D.zeroCreate (rows root) (cols root)
+    let rec map i j rope =
+        match rope with
+            | Empty -> Empty
+            | Leaf vs ->
+                ArraySlice.iteri (fun x y e -> arr.[x + i, y + j] <- f e) vs
+                leaf (ArraySlice.makeSlice i j (rows rope) (cols rope) arr)
+            | Node (_, _, _, ne, nw, Empty, Empty) ->
+                let ne0, nw0 = par2 (fun () -> map i (j + cols nw) ne)
+                                    (fun () -> map i j nw)
+                flatNode nw0 ne0
+            | Node (_, _, _, Empty, nw, sw, Empty) ->
+                let nw0, sw0 = par2 (fun () -> map i j nw)
+                                    (fun () -> map (i + rows nw) j sw)
+                thinNode nw0 sw0
+            | Node (_, _, _, ne, nw, sw, se) ->
+                let ne0, nw0, sw0, se0 = par4 (fun () -> map i (cols nw + j) ne)
+                                              (fun () -> map i j nw)
+                                              (fun () -> map (i + rows nw) j sw)
+                                              (fun () -> map (i + rows ne) (j + cols sw) se)
+                node ne0 nw0 sw0 se0
+            | Slice _ as rope -> map i j (QuadRope.Slicing.reallocate rope)
+    map 0 0 root
 
 /// Fold each row of rope with f in parallel, starting with the
 /// according state in states.

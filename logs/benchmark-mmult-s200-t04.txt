@@ -1,0 +1,14 @@
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 58 Stepping 9, GenuineIntel; 4 "cores"
+# Date        2016-08-25T08:27:55
+Array2D.mmult              1    693450000,0 ns 5766040,43          2
+QuadRope.mmult             1    910750000,0 ns 8176015,06          2
+Array2D.mmult              2    640900000,0 ns 52992032,94          2
+QuadRope.mmult             2    913600000,0 ns 48119527,11          2
+Array2D.mmult              3    571350000,0 ns 74309805,69          2
+QuadRope.mmult             3    683750000,0 ns 127021050,31          2
+Array2D.mmult              4    586200000,0 ns 39217484,76          2
+QuadRope.mmult             4    599100000,0 ns 27796682,46          2

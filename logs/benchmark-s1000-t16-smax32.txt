@@ -1,0 +1,352 @@
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:19:27
+QuadRope.init              1     24881250,0 ns  497781,54         16
+QuadRope.map               1     43800000,0 ns  258198,89          8
+QuadRope.reduce            1     40625000,0 ns  176776,70          8
+QuadRope.zip               1     66550000,0 ns 4032506,80          4
+QuadRope.hfold             1     42000000,0 ns       0,00          8
+QuadRope.vfold             1     42837500,0 ns   60380,74          8
+QuadRope.hreduce           1     61887500,0 ns   92233,10          8
+QuadRope.vreduce           1     60975000,0 ns   98601,33          8
+Array2D.init               1     24068750,0 ns   99695,72         16
+Array2D.map                1     42725000,0 ns  129099,44          8
+Array2D.reduce             1     39962500,0 ns   84368,57          8
+Array2D.zip                1     62775000,0 ns  415832,50          4
+Array2D.hfold              1     39175000,0 ns  188193,16          8
+Array2D.vfold              1     40837500,0 ns 3295119,50          8
+Array2D.hreduce            1     41887500,0 ns   70955,78          8
+Array2D.vreduce            1     42325000,0 ns  197202,66          8
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:21:05
+QuadRope.init              2     37975000,0 ns 6234926,27          8
+QuadRope.map               2     33162500,0 ns 5330419,13          8
+QuadRope.reduce            2     27950000,0 ns 7185343,88          8
+QuadRope.zip               2     46325000,0 ns 4630139,79          8
+QuadRope.hfold             2     29962500,0 ns 4584109,78          8
+QuadRope.vfold             2     31843750,0 ns 3928865,09         16
+QuadRope.hreduce           2     33287500,0 ns 6114659,64          8
+QuadRope.vreduce           2     33500000,0 ns 6024256,52          8
+Array2D.init               2     17306250,0 ns 1642388,27         16
+Array2D.map                2     26062500,0 ns 1830490,22         16
+Array2D.reduce             2     24387500,0 ns 1475435,43         16
+Array2D.zip                2     33912500,0 ns 2165905,31         16
+Array2D.hfold              2     19337500,0 ns 2027416,25         16
+Array2D.vfold              2     20437500,0 ns 1308691,56         16
+Array2D.hreduce            2     17287500,0 ns 1779073,96         16
+Array2D.vreduce            2     18306250,0 ns 1519677,07         16
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:22:43
+QuadRope.init              3     25118750,0 ns 1860231,19         16
+QuadRope.map               3     23831250,0 ns 2110458,83         16
+QuadRope.reduce            3     17868750,0 ns  804015,53         32
+QuadRope.zip               3     33218750,0 ns 2102670,67         16
+QuadRope.hfold             3     20850000,0 ns 1243804,09         16
+QuadRope.vfold             3     20925000,0 ns  686425,93         16
+QuadRope.hreduce           3     21162500,0 ns 2212103,70         16
+QuadRope.vreduce           3     21581250,0 ns 2229079,05         16
+Array2D.init               3     16137500,0 ns 3858027,35         16
+Array2D.map                3     19806250,0 ns 1445614,18         16
+Array2D.reduce             3     15418750,0 ns 1474331,89         16
+Array2D.zip                3     26375000,0 ns 1159576,67         16
+Array2D.hfold              3     14028125,0 ns  614044,61         32
+Array2D.vfold              3     15856250,0 ns 1751004,18         16
+Array2D.hreduce            3     12825000,0 ns  718704,71         32
+Array2D.vreduce            3     16106250,0 ns 1766059,74         16
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:24:35
+QuadRope.init              4     18906250,0 ns 1613272,32         16
+QuadRope.map               4     17831250,0 ns  805821,91         16
+QuadRope.reduce            4     12975000,0 ns  672629,58         32
+QuadRope.zip               4     23812500,0 ns 1519834,15         16
+QuadRope.hfold             4     15803125,0 ns  803104,06         32
+QuadRope.vfold             4     16531250,0 ns 1208782,24         16
+QuadRope.hreduce           4     16587500,0 ns 1455413,74         16
+QuadRope.vreduce           4     16000000,0 ns 1202933,34         16
+Array2D.init               4     11390625,0 ns  654553,03         32
+Array2D.map                4     16106250,0 ns 1078535,05         16
+Array2D.reduce             4     12215625,0 ns  851169,79         32
+Array2D.zip                4     21337500,0 ns  912966,01         16
+Array2D.hfold              4     11071875,0 ns  655017,03         32
+Array2D.vfold              4     11856250,0 ns  688320,22         32
+Array2D.hreduce            4     10506250,0 ns  507495,89         32
+Array2D.vreduce            4     10718750,0 ns  471404,52         32
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:26:19
+QuadRope.init              5     15462500,0 ns  754730,45         16
+QuadRope.map               5     16100000,0 ns  983015,49         16
+QuadRope.reduce            5     11237500,0 ns  446630,91         32
+QuadRope.zip               5     21012500,0 ns  752195,86         16
+QuadRope.hfold             5     12781250,0 ns  398020,27         32
+QuadRope.vfold             5     13440625,0 ns  685832,89         32
+QuadRope.hreduce           5     13106250,0 ns  303766,86         32
+QuadRope.vreduce           5     12959375,0 ns  328760,96         32
+Array2D.init               5      9646875,0 ns  750730,26         32
+Array2D.map                5     13387500,0 ns  339206,08         32
+Array2D.reduce             5      9543750,0 ns   21850,18         32
+Array2D.zip                5     18075000,0 ns  626941,43         16
+Array2D.hfold              5     10331250,0 ns  493270,69         32
+Array2D.vfold              5     10778125,0 ns  567579,30         32
+Array2D.hreduce            5      8687500,0 ns  271233,68         32
+Array2D.vreduce            5      9031250,0 ns  362344,32         32
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:28:05
+QuadRope.init              6     12837500,0 ns  408195,13         32
+QuadRope.map               6     15625000,0 ns  596575,88         16
+QuadRope.reduce            6      8971875,0 ns  436370,07         32
+QuadRope.zip               6     18793750,0 ns  365682,87         16
+QuadRope.hfold             6     10962500,0 ns  292706,48         32
+QuadRope.vfold             6     11471875,0 ns  403018,67         32
+QuadRope.hreduce           6     11050000,0 ns  439035,01         32
+QuadRope.vreduce           6     10959375,0 ns  372692,55         32
+Array2D.init               6      8762500,0 ns  526881,55         32
+Array2D.map                6     11565625,0 ns  263708,36         32
+Array2D.reduce             6      8331250,0 ns  942371,60         32
+Array2D.zip                6     15500000,0 ns  493886,23         16
+Array2D.hfold              6      8190625,0 ns  339925,06         32
+Array2D.vfold              6      8643750,0 ns  284586,69         32
+Array2D.hreduce            6      7389062,5 ns  131854,18         64
+Array2D.vreduce            6      7728125,0 ns  122854,86         64
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:29:48
+QuadRope.init              7     11612500,0 ns 1129062,88         32
+QuadRope.map               7     12509375,0 ns  807147,16         32
+QuadRope.reduce            7      7784375,0 ns  366349,89         32
+QuadRope.zip               7     15675000,0 ns  576823,80         32
+QuadRope.hfold             7      9634375,0 ns  307618,12         32
+QuadRope.vfold             7     10034375,0 ns  295161,36         32
+QuadRope.hreduce           7      9428125,0 ns  333999,98         32
+QuadRope.vreduce           7      9459375,0 ns  331718,09         32
+Array2D.init               7      7907812,5 ns  409472,40         64
+Array2D.map                7     10440625,0 ns  348125,56         32
+Array2D.reduce             7      6764062,5 ns   13681,17         64
+Array2D.zip                7     13562500,0 ns  338180,90         32
+Array2D.hfold              7      7275000,0 ns  179547,80         64
+Array2D.vfold              7      7759375,0 ns  278750,47         32
+Array2D.hreduce            7      6453125,0 ns  238789,45         64
+Array2D.vreduce            7      6728125,0 ns  147718,47         64
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:31:47
+QuadRope.init              8     10431250,0 ns  632901,44         32
+QuadRope.map               8     13946875,0 ns  907512,29         32
+QuadRope.reduce            8      6950000,0 ns  117343,65         64
+QuadRope.zip               8     14193750,0 ns  245090,69         32
+QuadRope.hfold             8      8637500,0 ns  231615,70         32
+QuadRope.vfold             8      8959375,0 ns  281847,36         32
+QuadRope.hreduce           8      8437500,0 ns  360843,92         32
+QuadRope.vreduce           8      8300000,0 ns  220577,68         32
+Array2D.init               8      7212500,0 ns  189972,13         64
+Array2D.map                8      9740625,0 ns  436270,59         32
+Array2D.reduce             8     10471875,0 ns 2479011,29         32
+Array2D.zip                8     12400000,0 ns  168479,72         32
+Array2D.hfold              8      6668750,0 ns  220331,58         64
+Array2D.vfold              8      7023437,5 ns  174031,61         64
+Array2D.hreduce            8      5892187,5 ns   94456,25         64
+Array2D.vreduce            8      6026562,5 ns   94628,41         64
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:33:43
+QuadRope.init              9     11046875,0 ns 1028167,74         32
+QuadRope.map               9     13925000,0 ns 1031428,86         32
+QuadRope.reduce            9      6460937,5 ns  393375,73         64
+QuadRope.zip               9     14643750,0 ns  589476,58         32
+QuadRope.hfold             9      7906250,0 ns  190371,53         32
+QuadRope.vfold             9      8171875,0 ns  261144,82         32
+QuadRope.hreduce           9      7531250,0 ns  272829,18         32
+QuadRope.vreduce           9      7507812,5 ns  137059,35         64
+Array2D.init               9      6503125,0 ns  175976,94         64
+Array2D.map                9      9425000,0 ns  205290,28         32
+Array2D.reduce             9      7453125,0 ns 1754041,09         32
+Array2D.zip                9     12181250,0 ns  247732,77         32
+Array2D.hfold              9      6339062,5 ns  195995,33         64
+Array2D.vfold              9      6364062,5 ns  211184,91         64
+Array2D.hreduce            9      5240625,0 ns  161911,33         64
+Array2D.vreduce            9      5625000,0 ns  128636,34         64
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:35:36
+QuadRope.init             10      9312500,0 ns  447067,99         32
+QuadRope.map              10     13912500,0 ns  863239,42         32
+QuadRope.reduce           10      6007812,5 ns  238590,56         64
+QuadRope.zip              10     14312500,0 ns 1141468,96         32
+QuadRope.hfold            10      7181250,0 ns  129519,01         64
+QuadRope.vfold            10      7404687,5 ns  101382,05         64
+QuadRope.hreduce          10      6887500,0 ns  145982,07         64
+QuadRope.vreduce          10      6807812,5 ns  153279,05         64
+Array2D.init              10      5934375,0 ns  305458,87         64
+Array2D.map               10      8353125,0 ns  440724,72         32
+Array2D.reduce            10      6192187,5 ns  921714,62         64
+Array2D.zip               10     10709375,0 ns  533400,47         32
+Array2D.hfold             10      5846875,0 ns  230794,41         64
+Array2D.vfold             10      5753125,0 ns  134572,69         64
+Array2D.hreduce           10      4693750,0 ns  214644,00         64
+Array2D.vreduce           10      4900000,0 ns  146982,08         64
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:37:37
+QuadRope.init             11      8334375,0 ns  268842,85         32
+QuadRope.map              11     14034375,0 ns 1143316,36         32
+QuadRope.reduce           11      5801562,5 ns  328005,10         64
+QuadRope.zip              11     13656250,0 ns  656001,94         32
+QuadRope.hfold            11      6640625,0 ns  133398,42         64
+QuadRope.vfold            11      6870312,5 ns  105730,45         64
+QuadRope.hreduce          11      6403125,0 ns   76829,54         64
+QuadRope.vreduce          11      6207812,5 ns   90226,01         64
+Array2D.init              11      5889062,5 ns  247321,81         64
+Array2D.map               11      7842187,5 ns  174374,19         64
+Array2D.reduce            11      8359375,0 ns  916222,67         32
+Array2D.zip               11     10281250,0 ns  218004,68         32
+Array2D.hfold             11      5403125,0 ns  178121,95         64
+Array2D.vfold             11      5485937,5 ns   79484,70         64
+Array2D.hreduce           11      4279687,5 ns   20104,44         64
+Array2D.vreduce           11      4570312,5 ns   47307,04         64
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:39:34
+QuadRope.init             12      7796875,0 ns  160193,30         32
+QuadRope.map              12     14387500,0 ns 1081950,24         32
+QuadRope.reduce           12      5071875,0 ns  166210,31         64
+QuadRope.zip              12     13053125,0 ns  314248,58         32
+QuadRope.hfold            12      6429687,5 ns  131400,79         64
+QuadRope.vfold            12      6595312,5 ns   60939,73         64
+QuadRope.hreduce          12      5993750,0 ns   95527,14         64
+QuadRope.vreduce          12      5929687,5 ns   80096,65         64
+Array2D.init              12      5660937,5 ns  117862,64         64
+Array2D.map               12      7573437,5 ns   31293,37         64
+Array2D.reduce            12      6000000,0 ns  759809,97         64
+Array2D.zip               12      9640625,0 ns   86213,26         32
+Array2D.hfold             12      5254687,5 ns   59406,97         64
+Array2D.vfold             12      5618750,0 ns   75547,77         64
+Array2D.hreduce           12      4243750,0 ns   43700,37         64
+Array2D.vreduce           12      4667187,5 ns   83998,00         64
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:41:30
+QuadRope.init             13      7781250,0 ns  164041,83         32
+QuadRope.map              13     12978125,0 ns  938546,87         32
+QuadRope.reduce           13      5631250,0 ns  431078,87         64
+QuadRope.zip              13     12362500,0 ns  204761,04         32
+QuadRope.hfold            13      6389062,5 ns   50737,83         64
+QuadRope.vfold            13      6557812,5 ns   62954,08         64
+QuadRope.hreduce          13      5754687,5 ns   54650,28         64
+QuadRope.vreduce          13      5753125,0 ns   48187,64         64
+Array2D.init              13      5560937,5 ns   37881,45         64
+Array2D.map               13      7423437,5 ns   90346,19         64
+Array2D.reduce            13      5660937,5 ns  468695,02         64
+Array2D.zip               13      9550000,0 ns   97938,83         32
+Array2D.hfold             13      5212500,0 ns   51664,99         64
+Array2D.vfold             13      5567187,5 ns   25568,62         64
+Array2D.hreduce           13      4243750,0 ns   52704,63         64
+Array2D.vreduce           13      4728125,0 ns   40477,83         64
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:43:25
+QuadRope.init             14      7665625,0 ns   43075,15         64
+QuadRope.map              14     15175000,0 ns  281134,24         32
+QuadRope.reduce           14      4829687,5 ns  116799,12         64
+QuadRope.zip              14     13562500,0 ns 1123069,33         16
+QuadRope.hfold            14      6375000,0 ns  137009,86         64
+QuadRope.vfold            14      6626562,5 ns   51269,69         64
+QuadRope.hreduce          14      5781250,0 ns   30369,54         64
+QuadRope.vreduce          14      5646875,0 ns   64297,08         64
+Array2D.init              14      5343750,0 ns  122589,61         64
+Array2D.map               14      7243750,0 ns   80417,75         64
+Array2D.reduce            14      5248437,5 ns  381273,48         64
+Array2D.zip               14      9359375,0 ns  335685,06         32
+Array2D.hfold             14      5079687,5 ns   71203,84         64
+Array2D.vfold             14      5426562,5 ns  113405,40         64
+Array2D.hreduce           14      4098437,5 ns   54650,28         64
+Array2D.vreduce           14      4478125,0 ns   34704,86         64
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:45:18
+QuadRope.init             15      8071875,0 ns  348000,86         32
+QuadRope.map              15     12203125,0 ns 1066806,02         32
+QuadRope.reduce           15      4975000,0 ns  236414,74         64
+QuadRope.zip              15     12956250,0 ns  620679,51         32
+QuadRope.hfold            15      6379687,5 ns  156258,68         64
+QuadRope.vfold            15      6598437,5 ns   54650,28         64
+QuadRope.hreduce          15      6018750,0 ns  151454,18         64
+QuadRope.vreduce          15      5748437,5 ns   62260,83         64
+Array2D.init              15      5389062,5 ns  112781,77         64
+Array2D.map               15      7060937,5 ns   72337,73         64
+Array2D.reduce            15      5125000,0 ns  245510,91         64
+Array2D.zip               15      9018750,0 ns  132746,10         32
+Array2D.hfold             15      4732812,5 ns  144234,16         64
+Array2D.vfold             15      5235937,5 ns  190435,64         64
+Array2D.hreduce           15      3862500,0 ns   47048,29        128
+Array2D.vreduce           15      4217187,5 ns  137691,23         64
+# OS          Microsoft Windows NT 6.2.9200.0
+# .NET vers.  4.6.2 or later
+# 64-bit OS   True
+# 64-bit proc False
+# CPU         Intel64 Family 6 Model 63 Stepping 2, GenuineIntel; 32 "cores"
+# Date        2016-08-25T11:47:14
+QuadRope.init             16      7718750,0 ns  197505,05         64
+QuadRope.map              16     13634375,0 ns 1419272,27         32
+QuadRope.reduce           16      5337500,0 ns  562220,22         64
+QuadRope.zip              16     13425000,0 ns  663763,21         32
+QuadRope.hfold            16      6485937,5 ns  134703,65         64
+QuadRope.vfold            16      6607812,5 ns   39972,05         64
+QuadRope.hreduce          16      5787500,0 ns  103434,93         64
+QuadRope.vreduce          16      5687500,0 ns   52601,59         64
+Array2D.init              16      5370312,5 ns  131565,84         64
+Array2D.map               16      6932812,5 ns   51057,61         64
+Array2D.reduce            16      4928125,0 ns   99695,72         64
+Array2D.zip               16      8709375,0 ns   94384,43         32
+Array2D.hfold             16      4617187,5 ns  130780,00         64
+Array2D.vfold             16      5075000,0 ns  206081,58         64
+Array2D.hreduce           16      3680468,8 ns   14475,98        128
+Array2D.vreduce           16      4025000,0 ns   52704,63         64

@@ -46,5 +46,5 @@ plot "logs/benchmark-mmult-s200-t16.txt" every 2::0 using 2:3:5 title "2D array"
 # Plot primes benchmarks
 set output "benchmark-primes-s100-t16.ps"
 set title "Performance of \texttt{primes} on 16-core i7, size $100 \times 100$."
-plot "logs/benchmark-primes-s100-t16.txt" every 2::0 using 2:3:5 title "Array2D"  with errorlines,\
+plot "logs/benchmark-primes-s100-t16.txt" every 2::0 using 2:3:5 title "2D array"  with errorlines,\
      "logs/benchmark-primes-s100-t16.txt" every 2::1 using 2:3:5 title "QuadRope $s_{\max} = 32$" with errorlines

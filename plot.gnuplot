@@ -29,6 +29,11 @@ set title "Performance of \texttt{mmult} on 4-core i7, size $200 \times 200$."
 plot "logs/benchmark-mmult-s200-t04.txt" every 2::0 using 2:3:5 title "2D array"  with errorlines,\
      "logs/benchmark-mmult-s200-t04.txt" every 2::1 using 2:3:5 title "Quad rope $s_{\max} = 32$" with errorlines
 
+set output "benchmark-mmult-s100-t16.ps"
+set title "Performance of \texttt{mmult} on 16-core i7, size $100 \times 100$."
+plot "logs/benchmark-mmult-s100-t16.txt" every 2::0 using 2:3:5 title "2D array"  with errorlines,\
+     "logs/benchmark-mmult-s100-t16.txt" every 2::1 using 2:3:5 title "Quad rope $s_{\max} = 32$" with errorlines
+
 set output "benchmark-mmult-s200-t16.ps"
 set title "Performance of \texttt{mmult} on 16-core i7, size $200 \times 200$."
 plot "logs/benchmark-mmult-s200-t16.txt" every 2::0 using 2:3:5 title "2D array"  with errorlines,\

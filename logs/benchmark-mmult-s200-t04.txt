@@ -3,12 +3,12 @@
 # 64-bit OS   True
 # 64-bit proc False
 # CPU         Intel64 Family 6 Model 58 Stepping 9, GenuineIntel; 4 "cores"
-# Date        2016-08-25T08:27:55
-Array2D.mmult              1    693450000,0 ns 5766040,43          2
-QuadRope.mmult             1    910750000,0 ns 8176015,06          2
-Array2D.mmult              2    640900000,0 ns 52992032,94          2
-QuadRope.mmult             2    913600000,0 ns 48119527,11          2
-Array2D.mmult              3    571350000,0 ns 74309805,69          2
-QuadRope.mmult             3    683750000,0 ns 127021050,31          2
-Array2D.mmult              4    586200000,0 ns 39217484,76          2
-QuadRope.mmult             4    599100000,0 ns 27796682,46          2
+# Date        2016-08-27T04:21:39
+Array2D.mmult              1    711200000,0 ns 7775317,07          2
+QuadRope.mmult             1    845650000,0 ns 5121035,05          2
+Array2D.mmult              2    621700000,0 ns 39532124,77          2
+QuadRope.mmult             2    833000000,0 ns 41677331,97          2
+Array2D.mmult              3    576550000,0 ns 70709676,38          2
+QuadRope.mmult             3    547700000,0 ns 17941571,84          2
+Array2D.mmult              4    652850000,0 ns 94477525,25          2
+QuadRope.mmult             4    531950000,0 ns 24829921,47          2

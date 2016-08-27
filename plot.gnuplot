@@ -2,8 +2,10 @@ set term postscript
 
 # Labels are the same for all plots.
 set xlabel "Number of hardware-threads"
+set xtics 1
 set ylabel "Time elapsed in ns"
 
+set yrange [0:8e7]
 # Plot reduce benchmarks
 set output "benchmark-reduce-s1000-t16.ps"
 set title "Performance of \texttt{reduce} over double arrays."
@@ -17,6 +19,8 @@ set title "Performance of \texttt{map} over double arrays."
 plot "logs/benchmark-s1000-t16.txt" every :::3::3   using 2:3:5 title "2D array"     with errorlines,\
      "logs/benchmark-s1000-t16.txt" every :::11::11 using 2:3:5 title "Quad rope $s_{\max} = 16$" with errorlines,\
      "logs/benchmark-s1000-t16.txt" every :::19::19 using 2:3:5 title "Quad rope $s_{\max} = 32$" with errorlines
+
+set yrange [*:*]
 
 # Plot mmult benchmarks
 set output "benchmark-mmult-s100-t04.ps"

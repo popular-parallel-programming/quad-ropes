@@ -48,3 +48,19 @@ set output "benchmark-primes-s100-t16.ps"
 set title "Performance of \texttt{primes} on 16-core i7, size $100 \times 100$."
 plot "logs/benchmark-primes-s100-t16.txt" every 2::0 using 2:3:5 title "2D array"  with errorlines,\
      "logs/benchmark-primes-s100-t16.txt" every 2::1 using 2:3:5 title "QuadRope $s_{\max} = 32$" with errorlines
+
+# Plot vdC benchmarks
+
+set xlabel "$n$"
+set xtics 5
+set logscale y
+
+set output "benchmark-vdc-t01.ps"
+set title "Performance of sequential \texttt{vdc} on 4-core i7."
+plot "logs/benchmark-vdc-t01.txt" every 2::0 using 2:3:5 title "2D array"  with errorlines,\
+     "logs/benchmark-vdc-t01.txt" every 2::1 using 2:3:5 title "Quad rope $s_{\max} = 32$" with errorlines
+
+set output "benchmark-vdc-t04.ps"
+set title "Performance of parallel \texttt{vdc} on 4-core i7."
+plot "logs/benchmark-vdc-t04.txt" every 2::0 using 2:3:5 title "2D array"  with errorlines,\
+     "logs/benchmark-vdc-t04.txt" every 2::1 using 2:3:5 title "Quad rope $s_{\max} = 32$" with errorlines

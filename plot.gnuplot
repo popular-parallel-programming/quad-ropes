@@ -20,7 +20,7 @@ plot "logs/benchmark-s1000-t16.txt" every :::3::3   using 2:3:5 title "2D array"
      "logs/benchmark-s1000-t16.txt" every :::11::11 using 2:3:5 title "Quad rope $s_{\max} = 16$" with errorlines,\
      "logs/benchmark-s1000-t16.txt" every :::19::19 using 2:3:5 title "Quad rope $s_{\max} = 32$" with errorlines
 
-set yrange [*:*]
+unset yrange
 
 # Plot mmult benchmarks
 set output "benchmark-mmult-s100-t04.ps"

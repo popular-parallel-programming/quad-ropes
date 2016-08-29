@@ -24,6 +24,20 @@ namespace RadTrees.Benchmark
         }
 
         /// <summary>
+        ///   Benchmark an action, log size of work.
+        /// </summary>
+        public static void MarkWork(string msg, int work, Action f)
+        {
+            try {
+                Infrastructure.Mark8Setup(msg,
+                                          String.Format("{0,2}", work),
+                                          i => { f(); return i; });
+            } catch (Exception e) {
+                Console.WriteLine(e.ToString());
+	    }
+        }
+
+        /// <summary>
         ///   Benchmark an action, set the number of threads as setup.
         /// </summary>
         public static void MarkThreads(string msg, int threads, Action f)
@@ -222,11 +236,14 @@ namespace RadTrees.Benchmark
 
         public static void vanDerCorput(Options opts)
         {
-            MarkThreads("Array2D.vdc",  1, () => Examples.Array2D.vanDerCorput(opts.Size));
-            MarkThreads("QuadRope.vdc", 1, () => Examples.QuadRope.vanDerCorput(opts.Size));
-            for (int t = 2; t <= opts.Threads; ++t) {
-                MarkThreads("Array2D.vdc",  t, () => Examples.Array2D.Parallel.vanDerCorput(opts.Size));
-                MarkThreads("QuadRope.vdc", t, () => Examples.QuadRope.Parallel.vanDerCorput(opts.Size));
+
+            SetThreads(opts.Threads);
+            if (opts.Threads == 1) {
+                MarkWork("Array2D.vdc",  opts.Size, () => Examples.Array2D.vanDerCorput(opts.Size));
+                MarkWork("QuadRope.vdc", opts.Size, () => Examples.QuadRope.vanDerCorput(opts.Size));
+            } else {
+                MarkWork("Array2D.vdc",  opts.Size, () => Examples.Array2D.Parallel.vanDerCorput(opts.Size));
+                MarkWork("QuadRope.vdc", opts.Size, () => Examples.QuadRope.Parallel.vanDerCorput(opts.Size));
             }
         }
 

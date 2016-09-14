@@ -1,28 +1,40 @@
-# Rad Trees #
+# Quad Ropes #
 
-Trees are rad! See the [definition of "rad" at Urban Dictionary.](http://www.urbandictionary.com/define.php?term=Rad)
+A quad rope is an immutable, four-ary tree with two-dimensional arrays at its leaves. They combine the ideas of a [rope](https://en.wikipedia.org/wiki/Rope_(data_structure)) and [quad trees](https://en.wikipedia.org/wiki/Quadtree).
 
-This repository holds various implementations of trees in multiple rad dimensions.
+Two-dimensional array-like data structures are often used in declarative array programming. The overall idea is to allow for constant-time concatenation while retaining efficiency when compared to native 2D-arrays. Fast concatenation is important for immutable arrays as it allows a more complex gradual construction than a simple ```unfold```.
 
-## Purpose ##
+Another positive property of immutable trees is that they are inherently parallel. At each node, we can spawn two or four tasks, which are handled by the .Net Thread-Parallel Library (TPL).
 
-We want to explore different kinds of trees trees to back the implementation of two-dimensional arrays in Funcalc. Because these data structures are of general interest, they reside outside of the Funcalc repository.
+## Runtime Overview ##
 
-### Criteria ###
+-----------------------------------------------
+| Operation | Immutable 2D Array | Quad Rope  |
+-----------------------------------------------
+| Index     | O(1)               | O(log n)   |
+| Set       | O(n)               | O(log n)   |
+| Map       | O(n)               | O(n log n) |
+| Reduce    | O(n)               | O(n log n) |
+| Concatat  | O(n)               | O(1)       |
+-----------------------------------------------
 
-We need a number of efficient operations on 2D arrays in Funcalc. For instance, we want fast concatenation in both, horizontal and in vertical directions. Furthermore, we want to perform operations like ```zip``` or ```map``` in parallel.
+In benchmarks, quad ropes often have only little overhead compared to native 2D arrays. In more interesting algorithms, quad ropes are often faster. In particular, quad ropes can handle nested parallelism much better than nested for-loops over arrays without any tweaking of the TPL thread pool.
 
-### Ropes ###
+## Parallel Operations ##
 
-Bergstrom et al. have used ropes for dynamically scheduling parallel work. Ropes have other nice properties, like amortized O(1) concatenation and O(log n) update and indexing. There are some numeric computations, like computing van der Corput sequences, that require repeatedly concatenation of intermediate arrays. Therefore, we expand ropes to two dimensions and call them *quad ropes*.
+The majority of functions on quad ropes are available in a parallelized version. Currently, quad ropes use eager tree splitting. Recent research suggests that a more dynamic scheduling approach would be more appropriate.
 
-### Other Data Structures ###
+## Contributions ##
 
-Relaxed radix bound trees improve the performance of radix tree concatenation because they do not require the entire tree to be balanced. That is, we follow the approach outlined in section 2.5 of the technical report by Bagwell & Rompf.
+Please contribute by opening an issue, using quad ropes in your projects or making a pull request.
 
-## References ##
+## Things Left to Do ##
 
-- [Bergstrom et al., 2010: **Lazy Tree Splitting**](http://dl.acm.org/citation.cfm?id=1863558)
-- [Boehm et al., 1995: **Ropes: An Alternative to Strings**](http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.14.9450)
-- [Bagwell & Rompf, 2011: **RRB Trees: Efficient Immutable Vectors**](http://infoscience.epfl.ch/record/169879/files/RMTrees.pdf)
-- [Stucki et al., 2015: **RRB Vector: A Practical General Purpose Immutable Sequence**](http://dl.acm.org/citation.cfm?id=2784739)
+- [ ] Implement a general "wavefront" ```scan``` in two dimensions.
+- [ ] Parallelize ```scan```.
+- [ ] Re-implement all functions that do not yet allocate a single array.
+- [ ] Improve code quality and documentation.
+
+## Maintainers ##
+
+This repository is maintained by [Florian Biermann](https://github.com/fbie).

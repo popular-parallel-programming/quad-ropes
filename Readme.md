@@ -4,7 +4,7 @@ A quad rope is an immutable, four-ary tree with two-dimensional arrays at its le
 
 Two-dimensional array-like data structures are often used in declarative array programming. The overall idea is to allow for constant-time concatenation while retaining efficiency when compared to native 2D-arrays. Fast concatenation is important for immutable arrays as it allows a more complex gradual construction than a simple ```unfold```.
 
-Another positive property of immutable trees is that they are inherently parallel. At each node, we can spawn two or four tasks, which are handled by the .Net Thread-Parallel Library (TPL).
+Another positive property of immutable trees is that they are inherently parallel. At each node, we can spawn two or four tasks, which are handled by the .Net Task-Parallel Library (TPL).
 
 ## Runtime Overview ##
 

@@ -8,15 +8,14 @@ Another positive property of immutable trees is that they are inherently paralle
 
 ## Runtime Overview ##
 
------------------------------------------------
+
 | Operation | Immutable 2D Array | Quad Rope  |
------------------------------------------------
+|-----------|--------------------|------------|
 | Index     | O(1)               | O(log n)   |
 | Set       | O(n)               | O(log n)   |
 | Map       | O(n)               | O(n log n) |
 | Reduce    | O(n)               | O(n log n) |
 | Concatat  | O(n)               | O(1)       |
------------------------------------------------
 
 In benchmarks, quad ropes often have only little overhead compared to native 2D arrays. In more interesting algorithms, quad ropes are often faster. In particular, quad ropes can handle nested parallelism much better than nested for-loops over arrays without any tweaking of the TPL thread pool.
 

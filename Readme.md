@@ -1,6 +1,6 @@
 # Quad Ropes #
 
-A quad rope is an immutable, four-ary tree with two-dimensional arrays at its leaves. They combine the ideas of a [rope](https://en.wikipedia.org/wiki/Rope_(data_structure)) and [quad trees](https://en.wikipedia.org/wiki/Quadtree).
+A quad rope is an immutable, four-ary tree with two-dimensional arrays at its leaves. Quad ropes combine the ideas of a [rope](https://en.wikipedia.org/wiki/Rope_(data_structure)) and [quad trees](https://en.wikipedia.org/wiki/Quadtree).
 
 Two-dimensional array-like data structures are often used in declarative array programming. The overall idea is to allow for constant-time concatenation while retaining efficiency when compared to native 2D-arrays. Fast concatenation is important for immutable arrays as it allows a more complex gradual construction than a simple ```unfold```.
 

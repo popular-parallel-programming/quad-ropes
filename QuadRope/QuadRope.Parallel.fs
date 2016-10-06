@@ -37,12 +37,12 @@ let private thinNode = QuadRope.thinNode
 /// Apply a function f to all scalars in parallel.
 let map f root =
     let arr = Array2D.zeroCreate (rows root) (cols root)
-    let rec map i j rope =
-        match rope with
+    let rec map i j qr =
+        match qr with
             | Empty -> Empty
             | Leaf vs ->
                 ArraySlice.iteri (fun x y e -> arr.[x + i, y + j] <- f e) vs
-                leaf (ArraySlice.makeSlice i j (rows rope) (cols rope) arr)
+                leaf (ArraySlice.makeSlice i j (rows qr) (cols qr) arr)
             | Node (_, _, _, ne, nw, Empty, Empty) ->
                 let ne0, nw0 = par2 (fun () -> map i (j + cols nw) ne)
                                     (fun () -> map i j nw)
@@ -57,101 +57,101 @@ let map f root =
                                               (fun () -> map (i + rows nw) j sw)
                                               (fun () -> map (i + rows ne) (j + cols sw) se)
                 node ne0 nw0 sw0 se0
-            | Slice _ as rope -> map i j (QuadRope.Slicing.reallocate rope)
+            | Slice _ as qr -> map i j (QuadRope.Slicing.reallocate qr)
     map 0 0 root
 
 /// Fold each row of rope with f in parallel, starting with the
 /// according state in states.
-let hfold f states rope =
-    if QuadRope.rows states <> QuadRope.rows rope then
-        invalidArg "states" "Must have the same height as rope."
+let hfold f states qr =
+    if QuadRope.rows states <> QuadRope.rows qr then
+        invalidArg "states" "Must have the same height as qr."
     let rec fold1 states = function
         | Empty -> states
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
-        | Slice _ as rope -> fold1 states (QuadRope.Slicing.reallocate rope)
-        | rope -> QuadRope.hfold f states rope
+        | Slice _ as qr -> fold1 states (QuadRope.Slicing.reallocate qr)
+        | qr -> QuadRope.hfold f states qr
     and fold2 states n s =
         let nstates, sstates = QuadRope.vsplit2 states (QuadRope.rows n)
         let nstates0, sstates0 = par2 (fun () -> fold1 nstates n) (fun () -> fold1 sstates s)
         QuadRope.thinNode nstates0 sstates0
-    fold1 states rope
+    fold1 states qr
 
 /// Fold each column of rope with f in parallel, starting with the
 /// according state in states.
-let vfold f states rope =
-    if QuadRope.cols states <> QuadRope.cols rope then
-        invalidArg "states" "Must have the same width as rope."
+let vfold f states qr =
+    if QuadRope.cols states <> QuadRope.cols qr then
+        invalidArg "states" "Must have the same width as qr."
     let rec fold1 states = function
         | Empty -> states
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
-        | Slice _ as rope -> fold1 states (QuadRope.Slicing.reallocate rope)
-        | rope -> QuadRope.vfold f states rope
+        | Slice _ as qr -> fold1 states (QuadRope.Slicing.reallocate qr)
+        | qr -> QuadRope.vfold f states qr
     and fold2 states w e =
         let wstates, estates = QuadRope.hsplit2 states (QuadRope.cols w)
         let wstates0, estates0 = par2 (fun () -> fold1 wstates w) (fun () -> fold1 estates e)
         QuadRope.flatNode wstates0 estates0
-    fold1 states rope
+    fold1 states qr
 
 /// Zip implementation for the general case where we do not assume
 /// that both ropes have the same internal structure.
-let rec private genZip f i j lope rope arr =
-    match lope with
+let rec private genZip f i j lqr rqr arr =
+    match lqr with
         | Node (d, h, w, ne, nw, Empty, Empty) ->
             let ne0, nw0 =
                 par2 (fun () ->
-                      let rhs = QuadRope.slice 0 (cols nw) (rows ne) (cols ne) rope
+                      let rhs = QuadRope.slice 0 (cols nw) (rows ne) (cols ne) rqr
                       genZip f i (j + cols nw) ne rhs arr)
                      (fun () ->
-                      let rhs = QuadRope.slice 0 0 (rows nw) (cols nw) rope
+                      let rhs = QuadRope.slice 0 0 (rows nw) (cols nw) rqr
                       genZip f i j nw rhs arr)
             Node (d, h, w, ne0, nw0, Empty, Empty)
         | Node (d, h, w, Empty, nw, sw, Empty) ->
             let nw0, sw0 =
                 par2 (fun () ->
-                      let rhs = QuadRope.slice 0 0 (rows nw) (cols nw) rope
+                      let rhs = QuadRope.slice 0 0 (rows nw) (cols nw) rqr
                       genZip f i j nw rhs arr)
                      (fun () ->
-                      let rhs = QuadRope.slice (rows nw) 0 (rows sw) (cols sw) rope
+                      let rhs = QuadRope.slice (rows nw) 0 (rows sw) (cols sw) rqr
                       genZip f (i + rows nw) j sw rhs arr)
             Node (d, h, w, Empty, nw0, sw0, Empty)
         | Node (d, h, w, ne, nw, sw, se) ->
             let ne0, nw0, sw0, se0 =
                 par4 (fun () ->
-                      let rhs = QuadRope.slice 0 (cols nw) (rows ne) (cols ne) rope
+                      let rhs = QuadRope.slice 0 (cols nw) (rows ne) (cols ne) rqr
                       genZip f i (j + cols nw) ne rhs arr)
                      (fun () ->
-                      let rhs = QuadRope.slice 0 0 (rows nw) (cols nw) rope
+                      let rhs = QuadRope.slice 0 0 (rows nw) (cols nw) rqr
                       genZip f i j nw rhs arr)
                      (fun () ->
-                      let rhs = QuadRope.slice (rows nw) 0 (rows sw) (cols sw) rope
+                      let rhs = QuadRope.slice (rows nw) 0 (rows sw) (cols sw) rqr
                       genZip f (i + rows nw) j sw rhs arr)
                      (fun () ->
-                      let rhs = QuadRope.slice (rows ne) (cols sw) (rows se) (rows se) rope
+                      let rhs = QuadRope.slice (rows ne) (cols sw) (rows se) (rows se) rqr
                       genZip f (i + rows ne) (j + cols sw) se rhs arr)
             Node (d, h, w, ne0, nw0, sw0, se0)
-        | Slice _ -> genZip f i j (QuadRope.Slicing.reallocate lope) rope arr
-        | _ -> QuadRope.genZip f i j lope rope arr
+        | Slice _ -> genZip f i j (QuadRope.Slicing.reallocate lqr) rqr arr
+        | _ -> QuadRope.genZip f i j lqr rqr arr
 
 /// Zip function that assumes that the internal structure of two ropes
 /// matches. If not, it falls back to the slow, general case.
-let rec private fastZip f i j lope rope arr =
-    match lope, rope with
+let rec private fastZip f i j lqr rqr arr =
+    match lqr, rqr with
         | Empty, Empty -> Empty
         | Leaf _, Leaf _
-            when QuadRope.shapesMatch lope rope ->
-                QuadRope.fastZip f i j lope rope arr
+            when QuadRope.shapesMatch lqr rqr ->
+                QuadRope.fastZip f i j lqr rqr arr
         | Node (d, h, w, lne, lnw, Empty, Empty), Node (_, _, _, rne, rnw, Empty, Empty)
-            when QuadRope.subShapesMatch lope rope ->
+            when QuadRope.subShapesMatch lqr rqr ->
                 let ne, nw = par2 (fun () -> fastZip f i (j + cols lnw) lne rne arr)
                                   (fun () -> fastZip f i j              lnw rnw arr)
                 Node (d, h, w, ne, nw, Empty, Empty)
         | Node (d, h, w, Empty, lnw, lsw, Empty), Node (_, _, _, Empty, rnw, rsw, Empty)
-            when QuadRope.subShapesMatch lope rope ->
+            when QuadRope.subShapesMatch lqr rqr ->
                 let nw, sw = par2 (fun () -> fastZip f i              j lnw rnw arr)
                                   (fun () -> fastZip f (i + rows lnw) j lsw rsw arr)
                 Node (d, h, w, Empty, nw, sw, Empty)
         | Node (d, h, w, lne, lnw, lsw, lse), Node (_, _, _, rne, rnw, rsw, rse)
-            when QuadRope.subShapesMatch lope rope ->
+            when QuadRope.subShapesMatch lqr rqr ->
                 let ne, nw, sw, se = par4 (fun () -> fastZip f i              (j + cols lnw) lne rne arr)
                                           (fun () -> fastZip f i              j              lnw rnw arr)
                                           (fun () -> fastZip f (i + rows lnw) j              lsw rsw arr)
@@ -160,17 +160,17 @@ let rec private fastZip f i j lope rope arr =
         // It may pay off to reallocate first if both reallocated quad
         // ropes have the same internal shape. This might be
         // over-fitted to matrix multiplication.
-        | Slice _, Slice _ -> fastZip f i j (QuadRope.Slicing.reallocate lope) (QuadRope.Slicing.reallocate rope) arr
-        | Slice _, _ ->       fastZip f i j (QuadRope.Slicing.reallocate lope) rope arr
-        | Slice _, Slice _ -> fastZip f i j lope (QuadRope.Slicing.reallocate rope) arr
-        | _ -> genZip f i j lope rope arr
+        | Slice _, Slice _ -> fastZip f i j (QuadRope.Slicing.reallocate lqr) (QuadRope.Slicing.reallocate rqr) arr
+        | Slice _, _ ->       fastZip f i j (QuadRope.Slicing.reallocate lqr) rqr arr
+        | Slice _, Slice _ -> fastZip f i j lqr (QuadRope.Slicing.reallocate rqr) arr
+        | _ -> genZip f i j lqr rqr arr
 
-/// Apply f to each (i, j) of lope and rope.
-let zip f lope rope =
-    if QuadRope.cols lope <> QuadRope.cols rope || QuadRope.rows lope <> QuadRope.rows rope then
+/// Apply f to each (i, j) of lqr and rqr.
+let zip f lqr rqr =
+    if QuadRope.cols lqr <> QuadRope.cols rqr || QuadRope.rows lqr <> QuadRope.rows rqr then
         invalidArg "rope" "Must have the same shape as first argument."
-    let arr = Array2D.zeroCreate (rows lope) (cols lope)
-    fastZip f 0 0 lope rope arr
+    let arr = Array2D.zeroCreate (rows lqr) (cols lqr)
+    fastZip f 0 0 lqr rqr arr
 
 /// Apply f to all scalars in parallel and reduce the results
 /// row-wise using g.
@@ -189,8 +189,8 @@ let rec hmapreduce f g = function
         let w = QuadRope.thinNode nw0 sw0
         let e = QuadRope.thinNode ne0 se0
         zip g w e
-    | Slice _ as rope -> hmapreduce f g (QuadRope.Slicing.reallocate rope)
-    | rope -> QuadRope.hmapreduce f g rope
+    | Slice _ as qr -> hmapreduce f g (QuadRope.Slicing.reallocate qr)
+    | qr -> QuadRope.hmapreduce f g qr
 
 /// Apply f to all scalars in parallel and reduce the results
 /// column-wise using g.
@@ -209,14 +209,14 @@ let rec vmapreduce f g = function
         let n = QuadRope.flatNode nw0 ne0
         let s = QuadRope.flatNode sw0 se0
         zip g n s
-    | Slice _ as rope -> vmapreduce f g (QuadRope.Slicing.reallocate rope)
-    | rope -> QuadRope.vmapreduce f g rope
+    | Slice _ as qr -> vmapreduce f g (QuadRope.Slicing.reallocate qr)
+    | qr -> QuadRope.vmapreduce f g qr
 
 /// Reduce all rows of rope by f.
-let hreduce f rope = hmapreduce id f rope
+let hreduce f qr = hmapreduce id f qr
 
 /// Reduce all columns of rope by f.
-let vreduce f rope = vmapreduce id f rope
+let vreduce f qr = vmapreduce id f qr
 
 /// Apply f to all values of the rope and reduce the resulting
 /// values to a single scalar using g in parallel.
@@ -233,11 +233,11 @@ let rec mapreduce f g = function
                                       (fun () -> mapreduce f g sw)
                                       (fun () -> mapreduce f g se)
         g (g nw' ne') (g sw' se')
-    | Slice _ as rope -> mapreduce f g (QuadRope.Slicing.reallocate rope)
-    | rope -> QuadRope.mapreduce f g rope
+    | Slice _ as qr -> mapreduce f g (QuadRope.Slicing.reallocate qr)
+    | qr -> QuadRope.mapreduce f g qr
 
 /// Reduce all values of the rope to a single scalar in parallel.
-let reduce f rope = mapreduce id f rope
+let reduce f qr = mapreduce id f qr
 
 /// Remove all elements from rope for which p does not hold in
 /// parallel. Input rope must be of height 1.
@@ -245,8 +245,8 @@ let rec hfilter p = function
     | Node (_, 1, _, ne, nw, Empty, Empty) ->
         let ne0, nw0 = par2 (fun () -> hfilter p ne) (fun () -> hfilter p nw)
         QuadRope.flatNode nw0 ne0
-    | Slice _ as rope -> hfilter p (QuadRope.Slicing.reallocate rope)
-    | rope -> QuadRope.hfilter p rope
+    | Slice _ as qr -> hfilter p (QuadRope.Slicing.reallocate qr)
+    | qr -> QuadRope.hfilter p qr
 
 /// Remove all elements from rope for which p does not hold in
 /// parallel. Input rope must be of width 1.
@@ -254,8 +254,8 @@ let rec vfilter p = function
     | Node (_, _, 1, Empty, nw, sw, Empty) ->
         let nw0, sw0 = par2 (fun () -> vfilter p nw) (fun () -> vfilter p sw)
         QuadRope.thinNode nw0 sw0
-    | Slice _ as rope -> vfilter p (QuadRope.Slicing.reallocate rope)
-    | rope -> QuadRope.vfilter p rope
+    | Slice _ as qr -> vfilter p (QuadRope.Slicing.reallocate qr)
+    | qr -> QuadRope.vfilter p qr
 
 /// Reverse the quad rope horizontally in parallel.
 let rec hrev = function
@@ -271,8 +271,8 @@ let rec hrev = function
                                       (fun() -> hrev sw)
                                       (fun() -> hrev se)
         Node (d, h, w, nw0, ne0, se0, sw0)
-    | Slice _ as rope -> hrev (QuadRope.Slicing.reallocate rope)
-    | rope -> QuadRope.hrev rope
+    | Slice _ as qr -> hrev (QuadRope.Slicing.reallocate qr)
+    | qr -> QuadRope.hrev qr
 
 /// Reverse the quad rope vertically in parallel.
 let rec vrev = function
@@ -288,8 +288,8 @@ let rec vrev = function
                                       (fun() -> vrev sw)
                                       (fun() -> vrev se)
         Node (d, h, w, se0, sw0, nw0, ne0)
-    | Slice _ as rope -> vrev (QuadRope.Slicing.reallocate rope)
-    | rope -> QuadRope.vrev rope
+    | Slice _ as qr -> vrev (QuadRope.Slicing.reallocate qr)
+    | qr -> QuadRope.vrev qr
 
 
 /// Transpose the quad rope in parallel. This is equal to swapping
@@ -307,12 +307,12 @@ let rec transpose = function
                                       (fun () -> transpose sw)
                                       (fun () -> transpose se)
         QuadRope.node sw0 nw0 ne0 se0
-    | Slice _ as rope -> transpose (QuadRope.Slicing.reallocate rope)
-    | rope -> QuadRope.transpose rope
+    | Slice _ as qr -> transpose (QuadRope.Slicing.reallocate qr)
+    | qr -> QuadRope.transpose qr
 
 /// Apply a function with side effects to all elements and their
 /// corresponding index pair in parallel.
-let iteri f rope =
+let iteri f qr =
     let rec iteri f i j = function
         | Empty -> ()
         | Leaf vs -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
@@ -322,15 +322,15 @@ let iteri f rope =
                  (fun () -> iteri f (i + QuadRope.rows nw) j sw)
                  (fun () -> iteri f (i + QuadRope.rows ne) (j + QuadRope.cols sw) se)
             |> ignore
-        | Slice _ as rope -> iteri f i j (QuadRope.Slicing.reallocate rope)
-    iteri f 0 0 rope
+        | Slice _ as qr -> iteri f i j (QuadRope.Slicing.reallocate qr)
+    iteri f 0 0 qr
 
 /// Conversion into 2D array.
-let toArray2D rope =
-    let arr = Array2D.zeroCreate (QuadRope.rows rope) (QuadRope.cols rope)
+let toArray2D qr =
+    let arr = Array2D.zeroCreate (QuadRope.rows qr) (QuadRope.cols qr)
     // This avoids repeated calls to get; it is enough to traverse
     // the rope once.
-    iteri (fun i j v -> arr.[i, j] <- v) rope
+    iteri (fun i j v -> arr.[i, j] <- v) qr
     arr
 
 /// Initialize a rope from a native 2D-array in parallel.
@@ -388,8 +388,8 @@ let inline init h w (f : int -> int -> _) =
 
 /// Reallocate a rope form the ground up. Sometimes, this is the
 /// only way to improve performance of a badly composed quad rope.
-let inline reallocate rope =
-    fromArray2D (toArray2D rope)
+let inline reallocate qr =
+    fromArray2D (toArray2D qr)
 
 /// Initialize a rope in parallel where all elements are
 /// <code>e</code>.

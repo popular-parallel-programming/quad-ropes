@@ -32,8 +32,8 @@ module private Utils =
               for j in 0..w - 1 ->
               i, j }
 
-    let makeIndicesFrom rope =
-        makeIndices (QuadRope.rows rope) (QuadRope.cols rope)
+    let makeIndicesFrom qr =
+        makeIndices (QuadRope.rows qr) (QuadRope.cols qr)
 
     let rec maintainsTight = function
         | Empty
@@ -46,7 +46,7 @@ module private Utils =
         | Node (_, _, _, _, _, Empty, _) -> false
         | Node (_, _, _, ne, nw, sw, se) ->
             maintainsTight ne && maintainsTight nw && maintainsTight sw && maintainsTight se
-        | Slice _ as rope -> maintainsTight rope
+        | Slice _ as qr -> maintainsTight qr
 
     let access rope (i, j) =
         try
@@ -65,22 +65,22 @@ let ``DEBUG leaf sizes enabled`` () =
 (* Hight of generated rope is equal to height parameter. *)
 let ``init produces correct height`` (NonNegativeInt h) (NonNegativeInt w) =
     (0 < h && 0 < w) ==>
-    lazy (let rope = QuadRope.init h w (*)
-          QuadRope.rows rope = h &&
-          QuadRope.get (QuadRope.vfold (fun s _ -> s + 1) (QuadRope.initZeros 1 w) rope) 0 0 = h)
+    lazy (let qr = QuadRope.init h w (*)
+          QuadRope.rows qr = h &&
+          QuadRope.get (QuadRope.vfold (fun s _ -> s + 1) (QuadRope.initZeros 1 w) qr) 0 0 = h)
 
 (* Width of generated rope is equal to width parameter. *)
 let ``init produces correct width`` (NonNegativeInt h) (NonNegativeInt w) =
     (0 < h && 0 < w) ==>
-    lazy (let rope = QuadRope.init h w (*)
-          QuadRope.cols rope = w &&
-          QuadRope.get (QuadRope.hfold (fun s _ -> s + 1) (QuadRope.initZeros h 1) rope) 0 0 = w)
+    lazy (let qr = QuadRope.init h w (*)
+          QuadRope.cols qr = w &&
+          QuadRope.get (QuadRope.hfold (fun s _ -> s + 1) (QuadRope.initZeros h 1) qr) 0 0 = w)
 
 (* Wavefront initialization with multiplication produces correct values at positions. *)
 let ``init produces correct values`` (NonNegativeInt h) (NonNegativeInt w) =
     (0 < h && 0 < w) ==>
-    lazy (let rope = QuadRope.init h w (*)
-          Seq.forall (fun (i, j) -> QuadRope.get rope i j = i * j) (makeIndices h w))
+    lazy (let qr = QuadRope.init h w (*)
+          Seq.forall (fun (i, j) -> QuadRope.get qr i j = i * j) (makeIndices h w))
 
 let ``get is always inside bounds`` (a : int QuadRope) =
     Seq.forall (access a) (makeIndicesFrom a)

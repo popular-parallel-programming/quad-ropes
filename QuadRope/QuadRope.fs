@@ -52,7 +52,7 @@ let rec depth = function
     | Empty -> 0
     | Leaf _ -> 0
     | Node (d, _, _, _, _, _, _) -> d
-    | Slice (_, _, _, _, rope) -> depth rope
+    | Slice (_, _, _, _, qr) -> depth qr
 
 let isEmpty = function
     | Empty -> true
@@ -89,17 +89,17 @@ let inline thinNode n s =
 let inline private withinRange root i j =
     0 <= i && i < rows root && 0 <= j && j < cols root
 
-let inline private checkBounds rope i j =
-    if rows rope <= i then
+let inline private checkBounds qr i j =
+    if rows qr <= i then
         invalidArg "i" "First index must be within bounds of quad rope."
-    else if cols rope <= j then
+    else if cols qr <= j then
         invalidArg "j" "Second index must be within bounds of quad rope."
 
 /// Get the value of a location in the tree. This function does not
 /// check whether i, j are within bounds.
-let rec internal fastGet rope i j =
-    match rope with
-        | Empty -> invalidArg "rope" "Empty tree cannot contain values."
+let rec internal fastGet qr i j =
+    match qr with
+        | Empty -> invalidArg "qr" "Empty tree cannot contain values."
         | Leaf vs -> ArraySlice.get vs i j
         | Node (_, _, _, ne, nw, sw, se) ->
             if withinRange nw i j then
@@ -110,7 +110,7 @@ let rec internal fastGet rope i j =
                 fastGet sw (i - rows nw) j
             else
                 fastGet se (i - rows ne) (j - cols sw)
-        | Slice (x, y, _, _, rope) -> fastGet rope (i + x) (j + y)
+        | Slice (x, y, _, _, qr) -> fastGet qr (i + x) (j + y)
 
 /// Get the value of a location in the tree.
 let get root i j =
@@ -119,9 +119,9 @@ let get root i j =
 
 /// Update a tree location without modifying the original tree.
 let set root i j v =
-    let rec set rope i j v =
-        match rope with
-            | Empty -> invalidArg "rope" "Empty tree cannot contain values."
+    let rec set qr i j v =
+        match qr with
+            | Empty -> invalidArg "qr" "Empty tree cannot contain values."
             | Leaf vs -> Leaf (ArraySlice.set vs i j v)
             | Node (d, h, w, ne, nw, sw, se) ->
                 if withinRange nw i j then
@@ -132,15 +132,15 @@ let set root i j v =
                     Node (d, h, w, ne, nw, set sw (i - rows nw) j v, se)
                 else
                     Node (d, h, w, ne, nw, sw, set se (i - rows ne) (j - cols sw) v)
-            | Slice (x, y, h, w, rope) -> Slice (x, y, h, w, set rope (i + x) (j + y) v)
+            | Slice (x, y, h, w, qr) -> Slice (x, y, h, w, set qr (i + x) (j + y) v)
     checkBounds root i j
     set root i j v
 
 /// Write to a tree location destructively.
 let write root i j v =
-    let rec write rope i j v =
-        match rope with
-            | Empty -> invalidArg "rope" "Empty tree cannot contain values."
+    let rec write qr i j v =
+        match qr with
+            | Empty -> invalidArg "qr" "Empty tree cannot contain values."
             | Leaf vs -> Leaf (ArraySlice.set vs i j v)
             | Node (_, _, _, ne, nw, sw, se) ->
                 if withinRange nw i j then
@@ -151,7 +151,7 @@ let write root i j v =
                     write sw (i - rows nw) j v
                 else
                     write se (i - rows ne) (j - cols sw) v
-            | Slice (x, y, _, _, rope) -> write rope (x + i) (y + j) v
+            | Slice (x, y, _, _, qr) -> write qr (x + i) (y + j) v
     checkBounds root i j
     write root i j v
 
@@ -184,76 +184,76 @@ let rec private rebuild merge nodes =
         | x :: y :: nodes -> merge x y :: (rebuild merge nodes)
 
 /// Balance rope horizontally.
-let hbalance rope =
-    let rec hbalance rope =
-        if isBalancedH rope then
-            rope
+let hbalance qr =
+    let rec hbalance qr =
+        if isBalancedH qr then
+            qr
         else
-            let rs = collect rope []
+            let rs = collect qr []
             reduceList (rebuild flatNode) rs
-    and collect rope rs  =
-        match rope with
+    and collect qr rs  =
+        match qr with
             | Empty -> rs
             | Node (_, _, _, ne, nw, Empty, Empty) -> collect nw (collect ne rs)
             | Node (_, _, _, ne, nw, sw, se) ->
                 node (hbalance ne) (hbalance nw) (hbalance sw) (hbalance se) :: rs
-            | _ -> rope :: rs
-    hbalance rope
+            | _ -> qr :: rs
+    hbalance qr
 
 /// Balance rope vertically.
-let vbalance rope =
-    let rec vbalance rope =
-        if isBalancedV rope then
-            rope
+let vbalance qr =
+    let rec vbalance qr =
+        if isBalancedV qr then
+            qr
         else
-            let rs = collect rope []
+            let rs = collect qr []
             reduceList (rebuild thinNode) rs
-    and collect rope rs  =
-        match rope with
+    and collect qr rs  =
+        match qr with
             | Empty -> rs
             | Node (_, _, _, Empty, nw, sw, Empty) -> collect nw (collect sw rs)
             | Node (_, _, _, ne, nw, sw, se) ->
                 node (vbalance ne) (vbalance nw) (vbalance sw) (vbalance se) :: rs
-            | _ -> rope :: rs
-    vbalance rope
+            | _ -> qr :: rs
+    vbalance qr
 
 /// Balancing after Boehm et al. It turns out that this is slightly
 /// slower than reduce-rebuild balancing and the resulting tree is of
 /// greater height.
 module Boehm =
-    let hbalance rope =
-        let rec insert rope n = function
-            | r0 :: r1 :: ropes when depth r1 <= n -> insert rope n (flatNode r1 r0 :: ropes)
-            | r0 :: ropes when depth r0 <= n -> (flatNode r0 rope) :: ropes
-            | ropes -> rope :: ropes
-        let rec hbalance rope ropes =
-            match rope with
-                | Empty -> ropes
-                | Node (_, _, _, ne, nw, Empty, Empty) when not (isBalancedH rope) ->
-                    hbalance ne (hbalance nw ropes)
+    let hbalance qr =
+        let rec insert qr n = function
+            | r0 :: r1 :: qrs when depth r1 <= n -> insert qr n (flatNode r1 r0 :: qrs)
+            | r0 :: qrs when depth r0 <= n -> (flatNode r0 qr) :: qrs
+            | qrs -> qr :: qrs
+        let rec hbalance qr qrs =
+            match qr with
+                | Empty -> qrs
+                | Node (_, _, _, ne, nw, Empty, Empty) when not (isBalancedH qr) ->
+                    hbalance ne (hbalance nw qrs)
                 | _ ->
-                    insert rope (Fibonacci.nth (cols rope)) ropes
-        if isBalancedH rope then
-            rope
+                    insert qr (Fibonacci.nth (cols qr)) qrs
+        if isBalancedH qr then
+            qr
         else
-            List.reduce (fun ne nw -> flatNode nw ne) (hbalance rope [])
+            List.reduce (fun ne nw -> flatNode nw ne) (hbalance qr [])
 
-    let vbalance rope =
-        let rec insert rope n = function
-            | r0 :: r1 :: ropes when depth r1 <= n -> insert rope n (thinNode r1 r0 :: ropes)
-            | r0 :: ropes when depth r0 <= n -> (thinNode r0 rope) :: ropes
-            | ropes -> rope :: ropes
-        let rec vbalance rope ropes =
-            match rope with
-                | Empty -> ropes
-                | Node (_, _, _, Empty, nw, sw, Empty) when not (isBalancedH rope) ->
-                    vbalance sw (vbalance nw ropes)
+    let vbalance qr =
+        let rec insert qr n = function
+            | r0 :: r1 :: qrs when depth r1 <= n -> insert qr n (thinNode r1 r0 :: qrs)
+            | r0 :: qrs when depth r0 <= n -> (thinNode r0 qr) :: qrs
+            | qrs -> qr :: qrs
+        let rec vbalance qr qrs =
+            match qr with
+                | Empty -> qrs
+                | Node (_, _, _, Empty, nw, sw, Empty) when not (isBalancedH qr) ->
+                    vbalance sw (vbalance nw qrs)
                 | _ ->
-                    insert rope (Fibonacci.nth (rows rope)) ropes
-        if isBalancedV rope then
-            rope
+                    insert qr (Fibonacci.nth (rows qr)) qrs
+        if isBalancedV qr then
+            qr
         else
-            List.reduce (fun sw nw -> thinNode nw sw) (vbalance rope [])
+            List.reduce (fun sw nw -> thinNode nw sw) (vbalance qr [])
 
 /// Compute the "subrope" starting from indexes i, j taking h and w
 /// elements in vertical and horizontal direction.
@@ -266,34 +266,34 @@ let slice i j h w root =
         let i0 = max 0 i
         let j0 = max 0 j
         match root with
-            | Slice (x, y, h0, w0, rope) ->
-                Slice (x + i0, y + j0, min (h0 - i0) h, min (w0 - j0) w, rope)
+            | Slice (x, y, h0, w0, qr) ->
+                Slice (x + i0, y + j0, min (h0 - i0) h, min (w0 - j0) w, qr)
             | _ ->
                 Slice (i0, j0, min (rows root - i0) h, min (cols root - j0) w, root)
 
 /// Split rope vertically from row i, taking h rows.
-let inline vsplit i h rope =
-    slice i 0 h (cols rope) rope
+let inline vsplit i h qr =
+    slice i 0 h (cols qr) qr
 
 /// Split rope horizontally from column j, taking w columns.
-let inline hsplit j w rope =
-    slice 0 j (rows rope) w rope
+let inline hsplit j w qr =
+    slice 0 j (rows qr) w qr
 
 /// Split rope in two at row i.
-let inline vsplit2 rope i =
-    vsplit 0 i rope, vsplit i (rows rope) rope
+let inline vsplit2 qr i =
+    vsplit 0 i qr, vsplit i (rows qr) qr
 
 /// Split rope in two at column j.
-let inline hsplit2 rope j =
-    hsplit 0 j rope, hsplit j (cols rope) rope
+let inline hsplit2 qr j =
+    hsplit 0 j qr, hsplit j (cols qr) qr
 
 module internal Slicing =
 
     /// Auxiliary function to recursively slice a tree structure.
-    let rec private reallocate0 rope i j h w =
-        match rope with
-            | _ when i <= 0 && j <= 0 && rows rope <= h && cols rope <= w -> rope
-            | _ when rows rope <= i || cols rope <= j || h <= 0 || w <= 0 -> Empty
+    let rec private reallocate0 qr i j h w =
+        match qr with
+            | _ when i <= 0 && j <= 0 && rows qr <= h && cols qr <= w -> qr
+            | _ when rows qr <= i || cols qr <= j || h <= 0 || w <= 0 -> Empty
             | Empty -> Empty
             | Leaf vs -> leaf (ArraySlice.slice vs i j h w)
             | Node (_, _, _, ne, nw, sw, se) ->
@@ -302,26 +302,26 @@ module internal Slicing =
                 let sw0 = reallocate0 sw (i - rows nw) j (h - rows nw0) w
                 let se0 = reallocate0 se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
                 node ne0 nw0 sw0 se0
-            | Slice (x, y, h, w, rope) -> reallocate0 rope (x + i) (y + j) h w
+            | Slice (x, y, h, w, qr) -> reallocate0 qr (x + i) (y + j) h w
 
     /// Actually compute a slice.
     let reallocate = function
-        | Slice (i, j, h, w, rope) -> reallocate0 rope i j h w
-        | rope -> rope
+        | Slice (i, j, h, w, qr) -> reallocate0 qr i j h w
+        | qr -> qr
 
     /// Check whether i j h w forms a rectangle that is inside the
-    /// domain of rope.
-    let inline private dom rope i j h w =
-        0 <= i && i <= rows rope && i + h <= rows rope &&
-        0 <= j && j <= cols rope && j + w <= cols rope
+    /// domain of qr.
+    let inline private dom qr i j h w =
+        0 <= i && i <= rows qr && i + h <= rows qr &&
+        0 <= j && j <= cols qr && j + w <= cols qr
 
     /// Find the smallest sub-rope that includes the indices of a
     /// slice. This is similar to slicing but does not perform new
     /// node allocations.
-    let minimize rope =
-        let rec minimize rope i j h w =
-            match rope with
-                | _ when i = 0 && j = 0 && h = rows rope && w = cols rope -> rope
+    let minimize qr =
+        let rec minimize qr i j h w =
+            match qr with
+                | _ when i = 0 && j = 0 && h = rows qr && w = cols qr -> qr
                 | Empty -> Empty
                 | Leaf vs -> leaf (ArraySlice.slice vs i j h w) // Just return a view on arrays.
                 | Node (_, _, _, ne, nw, sw, se) ->
@@ -334,17 +334,17 @@ module internal Slicing =
                     else if dom se (i - rows ne) (j - cols sw) h w then
                         minimize se (i - rows ne) (j - cols sw) h w
                     else // If the slice spans across sub-ropes, stop and make a new slice.
-                        slice i j h w rope
-                    | Slice (i, j, h, w, rope) -> minimize rope i j h w
-        match rope with
-            | Slice (i, j, h, w, rope) -> minimize rope i j h w
-            | rope -> rope
+                        slice i j h w qr
+                    | Slice (i, j, h, w, qr) -> minimize qr i j h w
+        match qr with
+            | Slice (i, j, h, w, qr) -> minimize qr i j h w
+            | qr -> qr
 
     /// Compute a slice and map in the same traversal.
-    let map f rope (arr : _ [,]) =
-        let rec map rope i j h w =
-            match rope with
-                | _ when rows rope <= i || cols rope <= j || h <= 0 || w <= 0 -> Empty
+    let map f qr (arr : _ [,]) =
+        let rec map qr i j h w =
+            match qr with
+                | _ when rows qr <= i || cols qr <= j || h <= 0 || w <= 0 -> Empty
                 | Empty -> Empty
                 | Leaf vs ->
                     ArraySlice.iteri (fun x y e -> arr.[x + i, y + j] <- f e) (ArraySlice.slice vs i j h w)
@@ -355,8 +355,8 @@ module internal Slicing =
                     let sw0 = map sw (i - rows nw) j (h - rows nw0) w
                     let se0 = map se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
                     node ne0 nw0 sw0 se0
-                | Slice (x, y, h, w, rope) -> map rope (x + i) (y + j) h w
-        map rope 0 0 (rows rope) (cols rope)
+                | Slice (x, y, h, w, qr) -> map qr (x + i) (y + j) h w
+        map qr 0 0 (rows qr) (cols qr)
 
 /// Concatenate two trees vertically.
 let vcat upper lower =
@@ -458,7 +458,7 @@ let rec hrev = function
         Node (d, h, w, Empty, hrev nw, hrev sw, Empty)
     | Node (d, h, w, ne, nw, sw, se) ->
         Node (d, h, w, hrev nw, hrev ne, hrev se, hrev sw)
-    | Slice (i, j, h, w, rope) -> Slice (i, j, h, w, hrev rope)
+    | Slice (i, j, h, w, qr) -> Slice (i, j, h, w, hrev qr)
 
 /// Reverse rope vertically.
 let rec vrev = function
@@ -468,7 +468,7 @@ let rec vrev = function
         Node (d, h, w, vrev ne, vrev nw, Empty, Empty)
     | Node (d, h, w, ne, nw, sw, se) ->
         Node (d, h, w, vrev se, vrev sw, vrev nw, vrev ne)
-    | Slice (i, j, h, w, rope) -> Slice (i, j, h, w, vrev rope)
+    | Slice (i, j, h, w, qr) -> Slice (i, j, h, w, vrev qr)
 
 /// Initialize a rope from a native 2D-array.
 let fromArray2D arr =
@@ -510,8 +510,8 @@ let inline singleton v =
 let inline initZeros h w = initAll h w 0
 
 /// True if rope is a singleton, false otherwise.
-let isSingleton rope =
-    rows rope = 1 && cols rope = 1
+let isSingleton qr =
+    rows qr = 1 && cols qr = 1
 
 /// Initialize a rope from a native array for a given width.
 let fromArray vs w =
@@ -529,11 +529,11 @@ let rec iter f = function
         iter f nw
         iter f sw
         iter f se
-    | Slice _ as rope -> iter f (Slicing.reallocate rope)
+    | Slice _ as qr -> iter f (Slicing.reallocate qr)
 
 /// Apply a function with side effects to all elements and their
 /// corresponding index pair.
-let iteri f rope =
+let iteri f qr =
     let rec iteri f i j = function
         | Empty -> ()
         | Leaf vs -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
@@ -542,111 +542,111 @@ let iteri f rope =
             iteri f i (j + cols nw) ne
             iteri f (i + rows nw) j sw
             iteri f (i + rows ne) (j + cols sw) se
-        | Slice _ as rope -> iteri f i j (Slicing.reallocate rope)
-    iteri f 0 0 rope
+        | Slice _ as qr -> iteri f i j (Slicing.reallocate qr)
+    iteri f 0 0 qr
 
 /// Conversion into 1D array.
-let toArray rope =
-    let arr = Array.zeroCreate ((rows rope) * (cols rope))
+let toArray qr =
+    let arr = Array.zeroCreate ((rows qr) * (cols qr))
     // This avoids repeated calls to get; it is enough to traverse
     // the rope once.
-    iteri (fun i j v -> arr.[i * cols rope + j] <- v) rope
+    iteri (fun i j v -> arr.[i * cols qr + j] <- v) qr
     arr
 
 /// Conversion into 2D array.
-let toArray2D rope =
-    let arr = Array2D.zeroCreate (rows rope) (cols rope)
+let toArray2D qr =
+    let arr = Array2D.zeroCreate (rows qr) (cols qr)
     // This avoids repeated calls to get; it is enough to traverse
     // the rope once.
-    iteri (fun i j v -> arr.[i, j] <- v) rope
+    iteri (fun i j v -> arr.[i, j] <- v) qr
     arr
 
 /// Reallocate a rope form the ground up. Sometimes, this is the
 /// only way to improve performance of a badly composed quad rope.
-let inline reallocate rope =
-    fromArray2D (toArray2D rope)
+let inline reallocate qr =
+    fromArray2D (toArray2D qr)
 
 /// Apply a function to every element in the tree and preserves the
 /// tree structure.
 let map f root =
     let arr = Array2D.zeroCreate (rows root) (cols root)
-    let rec map i j rope =
-        match rope with
+    let rec map i j qr =
+        match qr with
             | Empty -> Empty
             | Leaf vs ->
                 ArraySlice.iteri (fun x y e -> arr.[x + i, y + j] <- f e) vs
-                leaf (ArraySlice.makeSlice i j (rows rope) (cols rope) arr)
+                leaf (ArraySlice.makeSlice i j (rows qr) (cols qr) arr)
             | Node (d, h, w, ne, nw, sw, se) ->
                 Node (d, h, w,
                       map i (j + cols nw) ne,
                       map i j nw,
                       map (i + rows nw) j sw,
                       map (i + rows ne) (j + cols sw) se)
-            | Slice _ as rope -> Slicing.map f rope arr
+            | Slice _ as qr -> Slicing.map f qr arr
     map 0 0 root
 
 let toCols = function
     | Empty -> Seq.empty
-    | rope ->
-        seq { for j in 0 .. cols rope - 1 ->
-              seq { for i in 0 .. rows rope - 1 -> get rope i j }}
+    | qr ->
+        seq { for j in 0 .. cols qr - 1 ->
+              seq { for i in 0 .. rows qr - 1 -> get qr i j }}
 
-let toColsArray rope = (toCols >> Seq.concat >> Array.ofSeq) rope
+let toColsArray qr = (toCols >> Seq.concat >> Array.ofSeq) qr
 
 let toRows = function
     | Empty -> Seq.empty
-    | rope ->
-        seq { for i in 0 .. rows rope - 1 ->
-              seq { for j in 0 .. cols rope - 1 -> get rope i j }}
+    | qr ->
+        seq { for i in 0 .. rows qr - 1 ->
+              seq { for j in 0 .. cols qr - 1 -> get qr i j }}
 
-let toRowsArray rope = (toRows >> Seq.concat >> Array.ofSeq) rope
+let toRowsArray qr = (toRows >> Seq.concat >> Array.ofSeq) qr
 
 /// Fold each row of rope with f, starting with the according
 /// state in states.
-let hfold f states rope =
-    if rows states <> rows rope then
-        invalidArg "states" "Must have the same height as rope."
+let hfold f states qr =
+    if rows states <> rows qr then
+        invalidArg "states" "Must have the same height as qr."
     let rec fold1 states = function
         | Empty -> states
         | Leaf vs -> leaf (ArraySlice.fold2 f (fun i -> fastGet states i 0) vs)
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
-        | Slice _ as rope -> fold1 states (Slicing.reallocate rope)
+        | Slice _ as qr -> fold1 states (Slicing.reallocate qr)
     and fold2 states n s =
         let nstates, sstates = vsplit2 states (rows n)
         thinNode (fold1 nstates n) (fold1 sstates s)
-    fold1 states rope
+    fold1 states qr
 
 /// Fold each column of rope with f, starting with the according
 /// state in states.
-let vfold f states rope =
-    if cols states <> cols rope then
-        invalidArg "states" "Must have the same width as rope."
+let vfold f states qr =
+    if cols states <> cols qr then
+        invalidArg "states" "Must have the same width as qr."
     let rec fold1 states = function
         | Empty -> states
         | Leaf vs -> leaf (ArraySlice.fold1 f (fastGet states 0) vs)
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
-        | Slice _ as rope -> fold1 states (Slicing.reallocate rope)
+        | Slice _ as qr -> fold1 states (Slicing.reallocate qr)
     and fold2 states w e =
         let wstates, estates = hsplit2 states (cols w)
         flatNode (fold1 wstates w) (fold1 estates e)
-    fold1 states rope
+    fold1 states qr
 
 /// Zip implementation for the general case where we do not assume
 /// that both ropes have the same internal structure.
-let rec internal genZip f i j lope rope (arr : _ [,]) =
-    match lope with
+let rec internal genZip f i j lqr rqr (arr : _ [,]) =
+    match lqr with
         | Empty -> Empty
         | Leaf vs ->
-            let rope = Slicing.minimize rope
-            ArraySlice.iteri (fun x y e1 -> arr.[x + i, y + j] <- f e1 (get rope x y)) vs
-            leaf (ArraySlice.makeSlice i j (rows lope) (cols lope) arr)
+            let rqr = Slicing.minimize rqr
+            ArraySlice.iteri (fun x y e1 -> arr.[x + i, y + j] <- f e1 (get rqr x y)) vs
+            leaf (ArraySlice.makeSlice i j (rows lqr) (cols lqr) arr)
         | Node (d, h, w, ne, nw, sw, se) ->
-            let nw0 = genZip f i             j             nw (slice 0 0 (rows nw) (cols nw) rope) arr
-            let ne0 = genZip f i             (j + cols nw) ne (slice 0 (cols nw) (rows ne) (cols ne) rope) arr
-            let sw0 = genZip f (i + rows nw)  j            sw (slice (rows nw) 0 (rows sw) (cols sw) rope) arr
-            let se0 = genZip f (i + rows ne) (j + cols sw) se (slice (rows ne) (cols sw) (rows se) (cols se) rope) arr
+            let nw0 = genZip f i              j            nw (slice 0 0 (rows nw) (cols nw) rqr) arr
+            let ne0 = genZip f i             (j + cols nw) ne (slice 0 (cols nw) (rows ne) (cols ne) rqr) arr
+            let sw0 = genZip f (i + rows nw)  j            sw (slice (rows nw) 0 (rows sw) (cols sw) rqr) arr
+            let se0 = genZip f (i + rows ne) (j + cols sw) se (slice (rows ne) (cols sw) (rows se) (cols se) rqr) arr
             Node (d, h, w, ne0, nw0, sw0, se0)
-        | Slice _ -> genZip f i j (Slicing.reallocate lope) rope arr
+        | Slice _ -> genZip f i j (Slicing.reallocate lqr) rqr arr
 
 /// True if the shape of two ropes match.
 let internal shapesMatch a b =
@@ -666,15 +666,15 @@ let internal subShapesMatch a b =
 
 /// Zip function that assumes that the internal structure of two ropes
 /// matches. If not, it falls back to the slow, general case.
-let rec internal fastZip f i j lope rope (arr : _ [,]) =
-    match lope, rope with
+let rec internal fastZip f i j lqr rqr (arr : _ [,]) =
+    match lqr, rqr with
         | Empty, Empty -> Empty
-        | Leaf ls, Leaf rs when shapesMatch lope rope ->
+        | Leaf ls, Leaf rs when shapesMatch lqr rqr ->
             // Map and write into target array.
             ArraySlice.iteri2 (fun x y e1 e2 -> arr.[x + i, y + j] <- f e1 e2) ls rs
-            leaf (ArraySlice.makeSlice i j (rows lope) (cols lope) arr)
+            leaf (ArraySlice.makeSlice i j (rows lqr) (cols lqr) arr)
         | Node (_, _, _, lne, lnw, lsw, lse), Node (_, _, _, rne, rnw, rsw, rse)
-            when subShapesMatch lope rope ->
+            when subShapesMatch lqr rqr ->
                 node (fastZip f i              (j + cols lnw) lne rne arr)
                      (fastZip f i              j              lnw rnw arr)
                      (fastZip f (i + rows lnw) j              lsw rsw arr)
@@ -682,17 +682,17 @@ let rec internal fastZip f i j lope rope (arr : _ [,]) =
         // It may pay off to reallocate first if both reallocated quad
         // ropes have the same internal shape. This might be
         // over-fitted to matrix multiplication.
-        | Slice _, Slice _ -> fastZip f i j (Slicing.reallocate lope) (Slicing.reallocate rope) arr
-        | Slice _, _ ->       fastZip f i j (Slicing.reallocate lope) rope arr
-        | Slice _, Slice _ -> fastZip f i j lope (Slicing.reallocate rope) arr
-        | _ -> genZip f i j lope rope arr
+        | Slice _, Slice _ -> fastZip f i j (Slicing.reallocate lqr) (Slicing.reallocate rqr) arr
+        | Slice _, _ ->       fastZip f i j (Slicing.reallocate lqr) rqr arr
+        | Slice _, Slice _ -> fastZip f i j lqr (Slicing.reallocate rqr) arr
+        | _ -> genZip f i j lqr rqr arr
 
-/// Apply f to each (i, j) of lope and rope.
-let zip f lope rope =
-    if cols lope <> cols rope || rows lope <> rows rope then
+/// Apply f to each (i, j) of lqr and rope.
+let zip f lqr rqr =
+    if cols lqr <> cols rqr || rows lqr <> rows rqr then
         failwith "ropes must have the same shape"
-    let arr = Array2D.zeroCreate (rows lope) (cols lope)
-    fastZip f 0 0 lope rope arr
+    let arr = Array2D.zeroCreate (rows lqr) (cols lqr)
+    fastZip f 0 0 lqr rqr arr
 
 /// Map f to every element of the rope and reduce rows with g.
 let rec hmapreduce f g = function
@@ -705,7 +705,7 @@ let rec hmapreduce f g = function
         match e with
             | Empty -> w
             | _ -> zip g w e
-    | Slice _ as rope -> hmapreduce f g (Slicing.reallocate rope)
+    | Slice _ as qr -> hmapreduce f g (Slicing.reallocate qr)
 
 /// Map f to every element of the rope and reduce columns with g.
 let rec vmapreduce f g = function
@@ -718,13 +718,13 @@ let rec vmapreduce f g = function
         match s with
             | Empty -> n
             | _ -> zip g n s
-    | Slice _ as rope -> vmapreduce f g (Slicing.reallocate rope)
+    | Slice _ as qr -> vmapreduce f g (Slicing.reallocate qr)
 
 /// Reduce all rows of rope with f.
-let inline hreduce f rope = hmapreduce id f rope
+let inline hreduce f qr = hmapreduce id f qr
 
 /// Reduce all columns of rope with f.
-let inline vreduce f rope = vmapreduce id f rope
+let inline vreduce f qr = vmapreduce id f qr
 
 /// Apply f to all values of the rope and reduce the resulting
 /// values to a single scalar using g.
@@ -737,10 +737,10 @@ let rec mapreduce f g = function
         g (mapreduce f g nw) (mapreduce f g sw)
     | Node (_, _, _, ne, nw, sw, se) ->
         g (g (mapreduce f g nw) (mapreduce f g ne)) (g (mapreduce f g sw) (mapreduce f g se))
-    | Slice _ as rope -> mapreduce f g (Slicing.reallocate rope)
+    | Slice _ as qr -> mapreduce f g (Slicing.reallocate qr)
 
 /// Reduce all values of the rope to a single scalar.
-let reduce f rope = mapreduce id f rope
+let reduce f qr = mapreduce id f qr
 
 let inline private offset f x =
     ((+) x) >> f
@@ -759,7 +759,7 @@ let rec hscan f states = function
         let ne' = hscan f estate ne
         let se' = hscan f (offset estate (rows ne')) se
         node ne' nw' sw' se'
-    | Slice _ as rope -> hscan f states (Slicing.reallocate rope)
+    | Slice _ as qr -> hscan f states (Slicing.reallocate qr)
 
 /// Compute the column-wise prefix sum of the rope for f starting
 /// with states.
@@ -775,15 +775,15 @@ let rec vscan f states = function
         let sw' = vscan f sstate sw
         let se' = vscan f (offset sstate (cols sw')) se
         node ne' nw' sw' se'
-    | Slice _ as rope -> vscan f states (Slicing.reallocate rope)
+    | Slice _ as qr -> vscan f states (Slicing.reallocate qr)
 
 /// Checks that some relation p holds between each two adjacent
 /// elements in each row. This is slow and should not really be
 /// used.
 let forallRows p = function
     | Empty -> true
-    | rope ->
-        let xs = hfold (fun xs x -> x :: xs) (initAll (rows rope) 1 []) rope
+    | qr ->
+        let xs = hfold (fun xs x -> x :: xs) (initAll (rows qr) 1 []) qr
         get (vmapreduce (List.rev >> List.pairwise >> List.forall (fun (x, y) -> p x y)) (&&) xs) 0 0
 
 /// Checks that some relation p holds between each two adjacent
@@ -791,21 +791,21 @@ let forallRows p = function
 /// used.
 let forallCols p = function
     | Empty -> true
-    | rope ->
-        let xs = vfold (fun xs x -> x :: xs) (initAll 1 (cols rope) []) rope
+    | qr ->
+        let xs = vfold (fun xs x -> x :: xs) (initAll 1 (cols qr) []) qr
         get (hmapreduce (List.rev >> List.pairwise >> List.forall (fun (x, y) -> p x y)) (&&) xs) 0 0
 
 /// Apply predicate p to all elements of rope and reduce the
 /// elements in both dimension using logical and.
 let forall p = function
     | Empty -> true
-    | rope -> mapreduce p (&&) rope
+    | qr -> mapreduce p (&&) qr
 
 /// Apply predicate p to all elements of rope and reduce the
 /// elements in both dimensions using logical or.
 let exists p = function
     | Empty -> false
-    | rope -> mapreduce p (||) rope
+    | qr -> mapreduce p (||) qr
 
 /// Remove all elements from rope for which p does not hold. Input
 /// rope must be of height 1.
@@ -832,12 +832,12 @@ let rec transpose = function
     | Leaf vs -> leaf (ArraySlice.transpose vs)
     | Node (_, _, _, ne, nw, sw, se) ->
         node (transpose sw) (transpose nw) (transpose ne) (transpose se)
-    | Slice _ as rope -> transpose (Slicing.reallocate rope)
+    | Slice _ as qr -> transpose (Slicing.reallocate qr)
 
 /// Produce a string with the tikz code for printing the rope as a
 /// box diagram. This is useful for illustrating algorithms on
 /// quad ropes.
-let tikzify h w rope =
+let tikzify h w qr =
     let line i0 j0 i1 j1 =
         sprintf "\\draw (%f, %f) -- (%f, %f);" j0 i0 j1 i1
     let thinLine i0 j0 i1 j1 =
@@ -858,6 +858,6 @@ let tikzify h w rope =
                   yield! tikz (i + h0) (j + w0) h0 w0 ne
                   yield line i (j + w0) (i + h) (j + w0)
                   yield line (i + h0) j (i + h0) (j + w) }
-        | Slice _ as rope -> tikz i j h w (Slicing.reallocate rope)
-    let cmds = List.ofSeq (seq { yield! tikz 0.0 0.0 h w rope; yield rect 0.0 0.0 h w });
+        | Slice _ as qr -> tikz i j h w (Slicing.reallocate qr)
+    let cmds = List.ofSeq (seq { yield! tikz 0.0 0.0 h w qr; yield rect 0.0 0.0 h w });
     printfn "%s" (String.concat "\n" cmds)

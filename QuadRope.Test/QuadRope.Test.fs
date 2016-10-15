@@ -318,7 +318,9 @@ let ``zip ignores internal shape`` (a : int QuadRope) (b : int QuadRope) (f : in
           Seq.forall (fun (i, j) -> QuadRope.get c i j = f (QuadRope.get a i j) (QuadRope.get b i j)) indices)
 
 let ``toArray -> fromArray produces equal rope`` (a : int QuadRope) =
-     QuadRope.forall id (QuadRope.zip (=) a (QuadRope.fromArray (QuadRope.toArray a) (QuadRope.cols a)))
+    not (QuadRope.isEmpty a) ==>
+    lazy (QuadRope.forall id (QuadRope.zip (=) a (QuadRope.fromArray (QuadRope.toArray a) (QuadRope.cols a))))
 
 let ``toArray2D -> fromArray2D produces equal rope`` (a : int QuadRope) =
-     QuadRope.forall id (QuadRope.zip (=) a (QuadRope.fromArray2D (QuadRope.toArray2D a)))
+    not (QuadRope.isEmpty a) ==>
+    lazy (QuadRope.forall id (QuadRope.zip (=) a (QuadRope.fromArray2D (QuadRope.toArray2D a))))

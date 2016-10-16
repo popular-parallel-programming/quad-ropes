@@ -67,14 +67,14 @@ let ``init produces correct height`` (NonNegativeInt h) (NonNegativeInt w) =
     (0 < h && 0 < w) ==>
     lazy (let qr = QuadRope.init h w (*)
           QuadRope.rows qr = h &&
-          QuadRope.get (QuadRope.vfold (fun s _ -> s + 1) (QuadRope.initZeros 1 w) qr) 0 0 = h)
+          QuadRope.get (QuadRope.vfold (fun s _ -> s + 1) (QuadRope.createZeros 1 w) qr) 0 0 = h)
 
 (* Width of generated rope is equal to width parameter. *)
 let ``init produces correct width`` (NonNegativeInt h) (NonNegativeInt w) =
     (0 < h && 0 < w) ==>
     lazy (let qr = QuadRope.init h w (*)
           QuadRope.cols qr = w &&
-          QuadRope.get (QuadRope.hfold (fun s _ -> s + 1) (QuadRope.initZeros h 1) qr) 0 0 = w)
+          QuadRope.get (QuadRope.hfold (fun s _ -> s + 1) (QuadRope.createZeros h 1) qr) 0 0 = w)
 
 (* Wavefront initialization with multiplication produces correct values at positions. *)
 let ``init produces correct values`` (NonNegativeInt h) (NonNegativeInt w) =
@@ -269,20 +269,20 @@ let ``vfilter removes elements correctly`` (a : int QuadRope) (Fun p) =
 let snoc xs x = x :: xs
 
 let ``hfold maintains order`` (a : int QuadRope) =
-    let empties = QuadRope.initAll (QuadRope.rows a) 1 []
+    let empties = QuadRope.create (QuadRope.rows a) 1 []
     let b = QuadRope.hfold snoc empties a
     (Seq.map (Seq.toList >> List.rev) (QuadRope.toRows a) |> List.ofSeq)
         = (Seq.concat (QuadRope.toRows b) |> List.ofSeq)
 
 let ``vfold maintains order`` (a : int QuadRope) =
-    let empties = QuadRope.initAll 1 (QuadRope.cols a) []
+    let empties = QuadRope.create 1 (QuadRope.cols a) []
     let b = QuadRope.vfold snoc empties a
     (Seq.map (Seq.toList >> List.rev) (QuadRope.toCols a) |> List.ofSeq)
         = (Seq.concat (QuadRope.toCols b) |> List.ofSeq)
 
 let ``last of hscan equals hfold`` (a : int QuadRope) =
     let b = QuadRope.map List.singleton a
-    let states = QuadRope.initAll (QuadRope.rows b) 1 []
+    let states = QuadRope.create (QuadRope.rows b) 1 []
     let c = QuadRope.hscan (@) (fun _ -> []) b
     let d = QuadRope.hfold (@) states b
     let x = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toCols c)))
@@ -291,7 +291,7 @@ let ``last of hscan equals hfold`` (a : int QuadRope) =
 
 let ``last of vscan equals vfold`` (a : int QuadRope) =
     let b = QuadRope.map List.singleton a
-    let states = QuadRope.initAll 1 (QuadRope.cols b) []
+    let states = QuadRope.create 1 (QuadRope.cols b) []
     let c = QuadRope.vscan (@) (fun _ -> []) b
     let d = QuadRope.vfold (@) states b
     let x = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toRows c)))

@@ -501,15 +501,15 @@ let inline init h w f =
     fromArray2D (Array2D.init h w f)
 
 /// Initialize a rope where all elements are <code>e</code>.
-let inline initAll h w e =
+let inline create h w e =
     init h w (fun _ _ -> e)
 
 /// Generate a singleton quad rope.
 let inline singleton v =
-    initAll 1 1 v
+    create 1 1 v
 
 /// Initialize a rope with all zeros.
-let inline initZeros h w = initAll h w 0
+let inline createZeros h w = create h w 0
 
 /// True if rope is a singleton, false otherwise.
 let isSingleton qr =
@@ -764,7 +764,7 @@ let rec vscan f states = function
 let forallRows p = function
     | Empty -> true
     | qr ->
-        let xs = hfold (fun xs x -> x :: xs) (initAll (rows qr) 1 []) qr
+        let xs = hfold (fun xs x -> x :: xs) (create (rows qr) 1 []) qr
         get (vmapreduce (List.rev >> List.pairwise >> List.forall (fun (x, y) -> p x y)) (&&) xs) 0 0
 
 /// Checks that some relation p holds between each two adjacent
@@ -773,7 +773,7 @@ let forallRows p = function
 let forallCols p = function
     | Empty -> true
     | qr ->
-        let xs = vfold (fun xs x -> x :: xs) (initAll 1 (cols qr) []) qr
+        let xs = vfold (fun xs x -> x :: xs) (create 1 (cols qr) []) qr
         get (hmapreduce (List.rev >> List.pairwise >> List.forall (fun (x, y) -> p x y)) (&&) xs) 0 0
 
 /// Apply predicate p to all elements of rope and reduce the

@@ -256,9 +256,9 @@ let ``reduce equals hreduce + vreduce`` (a : int QuadRope) =
     (not (QuadRope.isEmpty a)) ==>
       lazy (QuadRope.reduce (+) a = QuadRope.get (QuadRope.hreduce (+) (QuadRope.vreduce (+) a)) 0 0)
 
-let ``map + reduce equals mapreduce`` (a : int QuadRope) (f : int -> int) (g : int -> int -> int) =
-    QuadRope.hmapreduce f g a = QuadRope.hreduce g (QuadRope.map f a) &&
-        QuadRope.vmapreduce f g a = QuadRope.vreduce g (QuadRope.map f a)
+let ``map + reduce equals mapreduce`` (a : int QuadRope) =
+    (not (QuadRope.isEmpty a)) ==>
+     lazy (QuadRope.mapreduce (fun x -> x * x) (+) a = QuadRope.reduce (+) (QuadRope.map (fun x -> x * x) a))
 
 let ``hfilter removes elements correctly`` (a : int QuadRope) (Fun p) =
     QuadRope.rows a = 1 ==> lazy QuadRope.forall p (QuadRope.hfilter p a)

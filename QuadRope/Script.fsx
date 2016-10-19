@@ -2,6 +2,7 @@
 #load "Utils.fs"
 #load "Array2D.fs"
 #load "Array2D.Parallel.fs"
+#load "ArraySlice.fs"
 #load "QuadRope.fs"
 #load "QuadRope.Parallel.fs"
 #load "Examples.fs"

@@ -198,52 +198,6 @@ let zip f lqr rqr =
     let arr = Array2D.zeroCreate (rows lqr) (cols lqr)
     fastZip f 0 0 lqr rqr arr
 
-/// Apply f to all scalars in parallel and reduce the results
-/// row-wise using g.
-let rec hmapreduce f g = function
-    | Node (_, _, _, ne, nw, Empty, Empty) ->
-        let ne0, nw0 = par2 (fun () -> hmapreduce f g ne) (fun () -> hmapreduce f g nw)
-        zip g nw0 ne0
-    | Node (_, _, _, Empty, nw, sw, Empty) ->
-        let nw0, sw0 = par2 (fun () -> hmapreduce f g nw) (fun () -> hmapreduce f g sw)
-        QuadRope.thinNode nw0 sw0
-    | Node (_, _, _, ne, nw, sw, se) ->
-        let ne0, nw0, sw0, se0 = par4 (fun () -> hmapreduce f g ne)
-                                      (fun () -> hmapreduce f g nw)
-                                      (fun () -> hmapreduce f g sw)
-                                      (fun () -> hmapreduce f g se)
-        let w = QuadRope.thinNode nw0 sw0
-        let e = QuadRope.thinNode ne0 se0
-        zip g w e
-    | Slice _ as qr -> hmapreduce f g (QuadRope.Slicing.reallocate qr)
-    | qr -> QuadRope.hmapreduce f g qr
-
-/// Apply f to all scalars in parallel and reduce the results
-/// column-wise using g.
-let rec vmapreduce f g = function
-    | Node (_, _, _, ne, nw, Empty, Empty) ->
-        let ne0, nw0 = par2 (fun () -> vmapreduce f g ne) (fun () -> vmapreduce f g nw)
-        QuadRope.flatNode nw0 ne0
-    | Node (_, _, _, Empty, nw, sw, Empty) ->
-        let nw0, sw0 = par2 (fun () -> vmapreduce f g nw) (fun () -> vmapreduce f g sw)
-        zip g nw0 sw0
-    | Node (_, _, _, ne, nw, sw, se) ->
-        let ne0, nw0, sw0, se0 = par4 (fun () -> vmapreduce f g ne)
-                                      (fun () -> vmapreduce f g nw)
-                                      (fun () -> vmapreduce f g sw)
-                                      (fun () -> vmapreduce f g se)
-        let n = QuadRope.flatNode nw0 ne0
-        let s = QuadRope.flatNode sw0 se0
-        zip g n s
-    | Slice _ as qr -> vmapreduce f g (QuadRope.Slicing.reallocate qr)
-    | qr -> QuadRope.vmapreduce f g qr
-
-/// Reduce all rows of rope by f.
-let hreduce f qr = hmapreduce id f qr
-
-/// Reduce all columns of rope by f.
-let vreduce f qr = vmapreduce id f qr
-
 /// Apply f to all values of the rope and reduce the resulting
 /// values to a single scalar using g in parallel.
 let rec mapreduce f g = function
@@ -263,7 +217,18 @@ let rec mapreduce f g = function
     | qr -> QuadRope.mapreduce f g qr
 
 /// Reduce all values of the rope to a single scalar in parallel.
-let reduce f qr = mapreduce id f qr
+let inline reduce f qr = mapreduce id f qr
+
+/// Horizontal mapreduce can be composed from init, mapreduce and slice.
+let hmapreduce f g qr =
+    init (rows qr) 1 (fun i _ -> mapreduce f g (QuadRope.slice i 0 1 (cols qr) qr))
+
+/// Vertical mapreduce can be composed from init, mapreduce and slice.
+let vmapreduce f g qr =
+    init 1 (cols qr) (fun _ j -> mapreduce f g (QuadRope.slice 0 j (rows qr) 1 qr))
+
+let inline hreduce f qr = hmapreduce id f qr
+let inline vreduce f qr = vmapreduce id f qr
 
 /// Remove all elements from rope for which p does not hold in
 /// parallel. Input rope must be of height 1.

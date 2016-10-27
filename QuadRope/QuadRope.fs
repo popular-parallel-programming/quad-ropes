@@ -694,38 +694,6 @@ let zip f lqr rqr =
     let arr = Array2D.zeroCreate (rows lqr) (cols lqr)
     fastZip f 0 0 lqr rqr arr
 
-/// Map f to every element of the rope and reduce rows with g.
-let rec hmapreduce f g = function
-    | Empty -> Empty
-    | Leaf vs -> leaf (ArraySlice.mapReduce2 f g vs)
-    | Node (_, _, _, ne, nw, sw, se) ->
-        (* Both, w and e, are of width 1. *)
-        let w = thinNode (hmapreduce f g nw) (hmapreduce f g sw)
-        let e = thinNode (hmapreduce f g ne) (hmapreduce f g se)
-        match e with
-            | Empty -> w
-            | _ -> zip g w e
-    | Slice _ as qr -> hmapreduce f g (Slicing.reallocate qr)
-
-/// Map f to every element of the rope and reduce columns with g.
-let rec vmapreduce f g = function
-    | Empty -> Empty
-    | Leaf vs -> leaf (ArraySlice.mapReduce1 f g vs)
-    | Node (_, _, _, ne, nw, sw, se) ->
-        (* Both, n and s, are of height 1. *)
-        let n = flatNode (vmapreduce f g nw) (vmapreduce f g ne)
-        let s = flatNode (vmapreduce f g sw) (vmapreduce f g se)
-        match s with
-            | Empty -> n
-            | _ -> zip g n s
-    | Slice _ as qr -> vmapreduce f g (Slicing.reallocate qr)
-
-/// Reduce all rows of rope with f.
-let inline hreduce f qr = hmapreduce id f qr
-
-/// Reduce all columns of rope with f.
-let inline vreduce f qr = vmapreduce id f qr
-
 /// Apply f to all values of the rope and reduce the resulting
 /// values to a single scalar using g.
 let rec mapreduce f g = function
@@ -741,6 +709,17 @@ let rec mapreduce f g = function
 
 /// Reduce all values of the rope to a single scalar.
 let reduce f qr = mapreduce id f qr
+
+/// Horizontal mapreduce can be composed from init, mapreduce and slice.
+let hmapreduce f g qr =
+    init (rows qr) 1 (fun i _ -> mapreduce f g (slice i 0 1 (cols qr) qr))
+
+/// Vertical mapreduce can be composed from init, mapreduce and slice.
+let vmapreduce f g qr =
+    init 1 (cols qr) (fun _ j -> mapreduce f g (slice 0 j (rows qr) 1 qr))
+
+let inline hreduce f qr = hmapreduce id f qr
+let inline vreduce f qr = vmapreduce id f qr
 
 let inline private offset f x =
     ((+) x) >> f

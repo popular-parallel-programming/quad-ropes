@@ -266,6 +266,8 @@ let slice i j h w root =
         let i0 = max 0 i
         let j0 = max 0 j
         match root with
+            | Leaf vals ->
+                leaf (ArraySlice.slice vals i j h w)
             | Slice (x, y, h0, w0, qr) ->
                 Slice (x + i0, y + j0, min (h0 - i0) h, min (w0 - j0) w, qr)
             | _ ->

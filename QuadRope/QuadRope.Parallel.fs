@@ -34,6 +34,32 @@ let private leaf = QuadRope.leaf
 let private flatNode = QuadRope.flatNode
 let private thinNode = QuadRope.thinNode
 
+/// Generate a new quad rope in parallel.
+let inline init h w (f : int -> int -> _) =
+    let rec init h0 w0 h1 w1 (arr : _ [,]) =
+        let h = h1 - h0
+        let w = w1 - w0
+        if h <= QuadRope.s_max && w <= QuadRope.s_max then
+            for i in h0 .. h1 - 1 do
+                for j in w0 .. w1 - 1 do
+                    arr.[i, j] <- f i j
+        else if w <= QuadRope.s_max then
+            let hpv = h0 + (h >>> 1)
+            par2 (fun () -> init h0 w0 hpv w1 arr) (fun () -> init hpv w0 h1 w1 arr) |> ignore
+        else if h <= QuadRope.s_max then
+            let wpv = w0 + (w >>> 1)
+            par2 (fun () -> init h0 w0 h1 wpv arr) (fun () -> init h0 wpv h1 w1 arr) |> ignore
+        else
+            let hpv = h0 + (h >>> 1)
+            let wpv = w0 + (w >>> 1)
+            par4 (fun () -> init h0 wpv hpv w1 arr)
+                 (fun () -> init h0 w0 hpv wpv arr)
+                 (fun () -> init hpv w0 h1 wpv arr)
+                 (fun () -> init hpv wpv h1 w1 arr) |> ignore
+    let vals = Array2D.zeroCreate h w
+    init 0 0 h w vals
+    QuadRope.fromArray2D vals
+
 /// Apply a function f to all scalars in parallel.
 let map f root =
     let arr = Array2D.zeroCreate (rows root) (cols root)
@@ -357,34 +383,6 @@ let fromArray2D arr =
                                       (fun () -> init hpv wpv h1 w1 arr)
             QuadRope.node ne nw sw se
     init 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
-
-/// Generate a new quad rope in parallel.
-let inline init h w (f : int -> int -> _) =
-    let rec init h0 w0 h1 w1 (arr : _ [,]) =
-        let h = h1 - h0
-        let w = w1 - w0
-        if h <= QuadRope.s_max && w <= QuadRope.s_max then
-            for i in h0 .. h1 - 1 do
-                for j in w0 .. w1 - 1 do
-                    arr.[i, j] <- f i j
-            QuadRope.leaf (ArraySlice.makeSlice h0 w0 h w arr)
-        else if w <= QuadRope.s_max then
-            let hpv = h0 + (h >>> 1)
-            let n, s = par2 (fun () -> init h0 w0 hpv w1 arr) (fun () -> init hpv w0 h1 w1 arr)
-            QuadRope.thinNode n s
-        else if h <= QuadRope.s_max then
-            let wpv = w0 + (w >>> 1)
-            let w, e = par2 (fun () -> init h0 w0 h1 wpv arr) (fun () -> init h0 wpv h1 w1 arr)
-            QuadRope.flatNode w e
-        else
-            let hpv = h0 + (h >>> 1)
-            let wpv = w0 + (w >>> 1)
-            let ne, nw, sw, se = par4 (fun () -> init h0 wpv hpv w1 arr)
-                                      (fun () -> init h0 w0 hpv wpv arr)
-                                      (fun () -> init hpv w0 h1 wpv arr)
-                                      (fun () -> init hpv wpv h1 w1 arr)
-            QuadRope.node ne nw sw se
-    init 0 0 h w (Array2D.zeroCreate h w)
 
 /// Reallocate a rope form the ground up. Sometimes, this is the
 /// only way to improve performance of a badly composed quad rope.

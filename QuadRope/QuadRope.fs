@@ -292,23 +292,23 @@ let inline hsplit2 qr j =
 module internal Slicing =
 
     /// Auxiliary function to recursively slice a tree structure.
-    let rec private reallocate0 qr i j h w =
+    let rec private reallocate0 i j h w qr =
         match qr with
             | _ when i <= 0 && j <= 0 && rows qr <= h && cols qr <= w -> qr
             | _ when rows qr <= i || cols qr <= j || h <= 0 || w <= 0 -> Empty
             | Empty -> Empty
             | Leaf vs -> leaf (ArraySlice.slice i j h w vs)
             | Node (_, _, _, ne, nw, sw, se) ->
-                let nw0 = reallocate0 nw i j h w
-                let ne0 = reallocate0 ne i (j - cols nw) h (w - cols nw0)
-                let sw0 = reallocate0 sw (i - rows nw) j (h - rows nw0) w
-                let se0 = reallocate0 se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
+                let nw0 = reallocate0 i j h w nw
+                let ne0 = reallocate0 i (j - cols nw) h (w - cols nw0) ne
+                let sw0 = reallocate0 (i - rows nw) j (h - rows nw0) w sw
+                let se0 = reallocate0 (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0) se
                 node ne0 nw0 sw0 se0
-            | Slice (x, y, h, w, qr) -> reallocate0 qr (x + i) (y + j) h w
+            | Slice (x, y, r, c, qr) -> reallocate0 (x + i) (y + j) (min h r) (min w c) qr
 
     /// Actually compute a slice.
     let reallocate = function
-        | Slice (i, j, h, w, qr) -> reallocate0 qr i j h w
+        | Slice (i, j, h, w, qr) -> reallocate0 i j h w qr
         | qr -> qr
 
     /// Check whether i j h w forms a rectangle that is inside the
@@ -321,30 +321,30 @@ module internal Slicing =
     /// slice. This is similar to slicing but does not perform new
     /// node allocations.
     let minimize qr =
-        let rec minimize qr i j h w =
+        let rec minimize i j h w qr =
             match qr with
                 | _ when i = 0 && j = 0 && h = rows qr && w = cols qr -> qr
                 | Empty -> Empty
                 | Leaf vs -> leaf (ArraySlice.slice i j h w vs) // Just return a view on arrays.
                 | Node (_, _, _, ne, nw, sw, se) ->
                     if dom nw i j h w then
-                        minimize nw i j h w
+                        minimize i j h w nw
                     else if dom ne i (j - cols nw) h w then
-                        minimize ne i (j - cols nw) h w
+                        minimize i (j - cols nw) h w ne
                     else if dom sw (i - rows nw) j h w then
-                        minimize sw (i - rows nw) j h w
+                        minimize (i - rows nw) j h w sw
                     else if dom se (i - rows ne) (j - cols sw) h w then
-                        minimize se (i - rows ne) (j - cols sw) h w
+                        minimize (i - rows ne) (j - cols sw) h w sw
                     else // If the slice spans across sub-ropes, stop and make a new slice.
                         slice i j h w qr
-                    | Slice (i, j, h, w, qr) -> minimize qr i j h w
+                | Slice (x, y, r, c, qr) -> minimize (x + i) (y + j) (min h r) (min w c) qr
         match qr with
-            | Slice (i, j, h, w, qr) -> minimize qr i j h w
+            | Slice (i, j, h, w, qr) -> minimize i j h w qr
             | qr -> qr
 
     /// Compute a slice and map in the same traversal.
     let map f qr (arr : _ [,]) =
-        let rec map qr i j h w =
+        let rec map i j h w qr =
             match qr with
                 | _ when rows qr <= i || cols qr <= j || h <= 0 || w <= 0 -> Empty
                 | Empty -> Empty
@@ -352,13 +352,13 @@ module internal Slicing =
                     ArraySlice.iteri (fun x y e -> arr.[x + i, y + j] <- f e) (ArraySlice.slice i j h w vs)
                     leaf (ArraySlice.makeSlice i j h w arr)
                 | Node (_, _, _, ne, nw, sw, se) ->
-                    let nw0 = map nw i j h w
-                    let ne0 = map ne i (j - cols nw) h (w - cols nw0)
-                    let sw0 = map sw (i - rows nw) j (h - rows nw0) w
-                    let se0 = map se (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0)
+                    let nw0 = map i j h w nw
+                    let ne0 = map i (j - cols nw) h (w - cols nw0) ne
+                    let sw0 = map (i - rows nw) j (h - rows nw0) w sw
+                    let se0 = map (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0) se
                     node ne0 nw0 sw0 se0
-                | Slice (x, y, h, w, qr) -> map qr (x + i) (y + j) h w
-        map qr 0 0 (rows qr) (cols qr)
+                | Slice (x, y, r, c, qr) -> map (x + i) (y + j) (min h r) (min w c) qr
+        map 0 0 (rows qr) (cols qr) qr
 
 /// Concatenate two trees vertically.
 let vcat upper lower =

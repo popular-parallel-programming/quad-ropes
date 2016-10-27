@@ -267,7 +267,7 @@ let slice i j h w root =
         let j0 = max 0 j
         match root with
             | Leaf vals ->
-                leaf (ArraySlice.slice vals i j h w)
+                leaf (ArraySlice.slice i j h w vals)
             | Slice (x, y, h0, w0, qr) ->
                 Slice (x + i0, y + j0, min (h0 - i0) h, min (w0 - j0) w, qr)
             | _ ->
@@ -297,7 +297,7 @@ module internal Slicing =
             | _ when i <= 0 && j <= 0 && rows qr <= h && cols qr <= w -> qr
             | _ when rows qr <= i || cols qr <= j || h <= 0 || w <= 0 -> Empty
             | Empty -> Empty
-            | Leaf vs -> leaf (ArraySlice.slice vs i j h w)
+            | Leaf vs -> leaf (ArraySlice.slice i j h w vs)
             | Node (_, _, _, ne, nw, sw, se) ->
                 let nw0 = reallocate0 nw i j h w
                 let ne0 = reallocate0 ne i (j - cols nw) h (w - cols nw0)
@@ -325,7 +325,7 @@ module internal Slicing =
             match qr with
                 | _ when i = 0 && j = 0 && h = rows qr && w = cols qr -> qr
                 | Empty -> Empty
-                | Leaf vs -> leaf (ArraySlice.slice vs i j h w) // Just return a view on arrays.
+                | Leaf vs -> leaf (ArraySlice.slice i j h w vs) // Just return a view on arrays.
                 | Node (_, _, _, ne, nw, sw, se) ->
                     if dom nw i j h w then
                         minimize nw i j h w
@@ -349,7 +349,7 @@ module internal Slicing =
                 | _ when rows qr <= i || cols qr <= j || h <= 0 || w <= 0 -> Empty
                 | Empty -> Empty
                 | Leaf vs ->
-                    ArraySlice.iteri (fun x y e -> arr.[x + i, y + j] <- f e) (ArraySlice.slice vs i j h w)
+                    ArraySlice.iteri (fun x y e -> arr.[x + i, y + j] <- f e) (ArraySlice.slice i j h w vs)
                     leaf (ArraySlice.makeSlice i j h w arr)
                 | Node (_, _, _, ne, nw, sw, se) ->
                     let nw0 = map nw i j h w

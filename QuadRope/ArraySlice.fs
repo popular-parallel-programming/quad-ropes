@@ -64,7 +64,7 @@ let set (ArraySlice (i0, j0, h0, w0, arr)) i j v =
 
 /// Slice up an array slice. This is a constant time operation and no
 /// arrays are re-allocated.
-let slice (ArraySlice (i0, j0, h0, w0, arr) as slice) i j h w =
+let slice i j h w (ArraySlice (i0, j0, h0, w0, arr) as slice) =
     if i <= 0 && j <= 0 && h0 <= h && w0 <= w then
         slice
     else

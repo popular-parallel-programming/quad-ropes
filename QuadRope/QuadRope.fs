@@ -652,7 +652,7 @@ let rec internal genZip f i j lqr rqr (arr : _ [,]) =
     match lqr with
         | Empty -> Empty
         | Leaf vs ->
-            let rqr = Slicing.minimize rqr
+            let rqr = Slicing.reallocate rqr
             ArraySlice.iteri (fun x y e1 -> arr.[x + i, y + j] <- f e1 (get rqr x y)) vs
             leaf (ArraySlice.makeSlice i j (rows lqr) (cols lqr) arr)
         | Node (d, h, w, ne, nw, sw, se) ->

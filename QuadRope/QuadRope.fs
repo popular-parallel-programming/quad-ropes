@@ -93,9 +93,9 @@ let inline private withinRange root i j =
 
 let inline private checkBounds qr i j =
     if rows qr <= i then
-        invalidArg "i" "First index must be within bounds of quad rope."
-    else if cols qr <= j then
-        invalidArg "j" "Second index must be within bounds of quad rope."
+        invalidArg "i" (sprintf "First index must be within bounds of quad rope: %d" i)
+    if cols qr <= j then
+        invalidArg "j" (sprintf "Second index must be within bounds of quad rope: %d" j)
 
 /// Get the value of a location in the tree. This function does not
 /// check whether i, j are within bounds.
@@ -588,7 +588,7 @@ let iteri f qr =
 
 /// Conversion into 1D array.
 let toArray qr =
-    let arr = Array.zeroCreate ((rows qr) * (cols qr))
+    let arr = Array.zeroCreate (rows qr * cols qr)
     // This avoids repeated calls to get; it is enough to traverse
     // the rope once.
     iteri (fun i j v -> arr.[i * cols qr + j] <- v) qr
@@ -613,7 +613,7 @@ let toArray2D qr =
 let inline reallocate qr =
     fromArray2D (toArray2D qr)
 
-/// Apply a function to every element in the tree and preserves the
+/// Apply a function to every element in the tree and preserve the
 /// tree structure.
 let map f root =
     let arr = Array2D.zeroCreate (rows root) (cols root)
@@ -728,7 +728,7 @@ let zip f lqr rqr =
 /// Apply f to all values of the rope and reduce the resulting
 /// values to a single scalar using g.
 let rec mapreduce f g = function
-    | Empty -> failwith "impossible to reduce an empty rope"
+    | Empty -> failwith "Impossible to reduce an empty rope"
     | Leaf vs -> ArraySlice.mapReduce f g vs
     | Node (_, _, _, ne, nw, Empty, Empty) ->
         g (mapreduce f g nw) (mapreduce f g ne)

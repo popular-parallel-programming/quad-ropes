@@ -289,6 +289,15 @@ let inline vsplit2 qr i =
 let inline hsplit2 qr j =
     hsplit 0 j qr, hsplit j (cols qr) qr
 
+let row qr i = slice i 0 1 (cols qr) qr
+let col qr j = slice 0 j (rows qr) 1 qr
+
+let toRows qr =
+    Seq.init (rows qr) (row qr)
+
+let toCols qr =
+    Seq.init (cols qr) (col qr)
+
 module internal Slicing =
 
     /// Auxiliary function to recursively slice a tree structure.
@@ -567,6 +576,12 @@ let toArray qr =
     iteri (fun i j v -> arr.[i * cols qr + j] <- v) qr
     arr
 
+let toRowsArray qr =
+    toRows qr |> Seq.map toArray |> Seq.toArray
+
+let toColsArray qr =
+    toCols qr |> Seq.map toArray |> Seq.toArray
+
 /// Conversion into 2D array.
 let toArray2D qr =
     let arr = Array2D.zeroCreate (rows qr) (cols qr)
@@ -598,22 +613,6 @@ let map f root =
                       map (i + rows ne) (j + cols sw) se)
             | Slice _ as qr -> Slicing.map f qr arr
     map 0 0 root
-
-let toCols = function
-    | Empty -> Seq.empty
-    | qr ->
-        seq { for j in 0 .. cols qr - 1 ->
-              seq { for i in 0 .. rows qr - 1 -> get qr i j }}
-
-let toColsArray qr = (toCols >> Seq.concat >> Array.ofSeq) qr
-
-let toRows = function
-    | Empty -> Seq.empty
-    | qr ->
-        seq { for i in 0 .. rows qr - 1 ->
-              seq { for j in 0 .. cols qr - 1 -> get qr i j }}
-
-let toRowsArray qr = (toRows >> Seq.concat >> Array.ofSeq) qr
 
 /// Fold each row of rope with f, starting with the according
 /// state in states.
@@ -724,13 +723,24 @@ let rec mapreduce f g = function
 /// Reduce all values of the rope to a single scalar.
 let reduce f qr = mapreduce id f qr
 
+/// Reduce row n.
+let rowmapreduce f g qr n = mapreduce f g (slice n 0 1 (cols qr) qr)
+
+/// Reduce column n.
+let colmapreduce f g qr n = mapreduce f g (slice 0 n (rows qr) 1 qr)
+
+let inline rowreduce f qr n = rowmapreduce id f qr n
+let inline colreduce f qr n = colmapreduce id f qr n
+
 /// Horizontal mapreduce can be composed from init, mapreduce and slice.
 let hmapreduce f g qr =
-    init (rows qr) 1 (fun i _ -> mapreduce f g (slice i 0 1 (cols qr) qr))
+    let red = rowmapreduce f g qr
+    init (rows qr) 1 (fun i _ -> red i)
 
 /// Vertical mapreduce can be composed from init, mapreduce and slice.
 let vmapreduce f g qr =
-    init 1 (cols qr) (fun _ j -> mapreduce f g (slice 0 j (rows qr) 1 qr))
+    let red = colmapreduce f g qr
+    init 1 (cols qr) (fun _ j -> red j)
 
 let inline hreduce f qr = hmapreduce id f qr
 let inline vreduce f qr = vmapreduce id f qr

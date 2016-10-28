@@ -228,17 +228,6 @@ let ``balanceV maintains or improves depth`` (a : int QuadRope) =
     lazy (let b = QuadRope.vbalance a
           QuadRope.depth b <= QuadRope.depth a)
 
-let ``toRows yields correct number of scalars`` (a : int QuadRope) =
-    QuadRope.rows a * QuadRope.cols a = Seq.length (Seq.concat (QuadRope.toRows a))
-
-let ``toRows yields scalars in correct order`` (a : int QuadRope) =
-    let indices = makeIndices (QuadRope.rows a) (QuadRope.cols a)
-    let scalars = Seq.map (fun (i, j) -> QuadRope.get a i j) indices
-    Seq.forall2 (=) scalars (Seq.concat (QuadRope.toRows a))
-
-let ``toCols yields correct number of scalars`` (a : int QuadRope) =
-    QuadRope.rows a * QuadRope.cols a = Seq.length (Seq.concat (QuadRope.toCols a))
-
 let ``map modifies all values`` (a : int QuadRope) (f : int -> int) =
     let h = QuadRope.rows a
     let w = QuadRope.cols a
@@ -271,42 +260,38 @@ let snoc xs x = x :: xs
 let ``hfold maintains order`` (a : int QuadRope) =
     let empties = QuadRope.create (QuadRope.rows a) 1 []
     let b = QuadRope.hfold snoc empties a
-    (Seq.map (Seq.toList >> List.rev) (QuadRope.toRows a) |> List.ofSeq)
-        = (Seq.concat (QuadRope.toRows b) |> List.ofSeq)
+    b |> QuadRope.map (List.length) |> QuadRope.forallRows (<)
 
 let ``vfold maintains order`` (a : int QuadRope) =
     let empties = QuadRope.create 1 (QuadRope.cols a) []
     let b = QuadRope.vfold snoc empties a
-    (Seq.map (Seq.toList >> List.rev) (QuadRope.toCols a) |> List.ofSeq)
-        = (Seq.concat (QuadRope.toCols b) |> List.ofSeq)
+    b |> QuadRope.map (List.length) |> QuadRope.forallCols (<)
 
 let ``last of hscan equals hfold`` (a : int QuadRope) =
     let b = QuadRope.map List.singleton a
     let states = QuadRope.create (QuadRope.rows b) 1 []
     let c = QuadRope.hscan (@) (fun _ -> []) b
     let d = QuadRope.hfold (@) states b
-    let x = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toCols c)))
-    let y = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toCols d)))
-    x = y
+    (QuadRope.col c (QuadRope.cols c - 1) |> QuadRope.toArray)
+        = (QuadRope.col d (QuadRope.cols d - 1) |> QuadRope.toArray)
 
 let ``last of vscan equals vfold`` (a : int QuadRope) =
     let b = QuadRope.map List.singleton a
     let states = QuadRope.create 1 (QuadRope.cols b) []
     let c = QuadRope.vscan (@) (fun _ -> []) b
     let d = QuadRope.vfold (@) states b
-    let x = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toRows c)))
-    let y = List.tryLast (Seq.toList (Seq.map Seq.toList (QuadRope.toRows d)))
-    x = y
+    (QuadRope.row c (QuadRope.rows c - 1) |> QuadRope.toArray)
+        = (QuadRope.row d (QuadRope.rows d - 1) |> QuadRope.toArray)
 
 let ``hscan's elements are strictly ordered`` (a : int QuadRope) =
     let b = QuadRope.map List.singleton a
     let c = QuadRope.hscan (@) (fun _ -> []) b
-    QuadRope.forallRows (fun x y -> List.length x < List.length y) c
+    c |> QuadRope.map (List.length) |> QuadRope.forallRows (<)
 
 let ``vscan's elements are strictly ordered`` (a : int QuadRope) =
     let b = QuadRope.map List.singleton a
     let c = QuadRope.vscan (@) (fun _ -> []) b
-    QuadRope.forallCols (fun x y -> List.length x < List.length y) c
+    c |> QuadRope.map (List.length) |> QuadRope.forallCols (<)
 
 let ``transpose of transpose is identity`` (a : int QuadRope) =
     QuadRope.transpose (QuadRope.transpose a) = a

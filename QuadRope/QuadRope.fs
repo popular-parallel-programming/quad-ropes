@@ -74,6 +74,8 @@ let rec node ne nw sw se =
         | Empty, Empty, Empty, _     -> se
         | Empty, Empty, _,     _     -> node se sw Empty Empty
         | _,     Empty, Empty, _     -> node Empty ne se Empty
+        | _,     Empty, _,     Empty -> node ne sw Empty Empty
+        | Empty, _    , Empty, _     -> node se nw Empty Empty
         | _ ->
             let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se)) + 1
             let h = rows nw + rows sw

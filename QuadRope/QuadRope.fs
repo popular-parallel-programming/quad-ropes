@@ -312,17 +312,22 @@ module internal Slicing =
     /// Auxiliary function to recursively slice a tree structure.
     let rec private reallocate0 i j h w qr =
         match qr with
-            | _ when i <= 0 && j <= 0 && rows qr <= h && cols qr <= w -> qr
-            | _ when rows qr <= i || cols qr <= j || h <= 0 || w <= 0 -> Empty
-            | Empty -> Empty
-            | Leaf vs -> leaf (ArraySlice.slice i j h w vs)
+            | _ when i <= 0 && j <= 0 && rows qr <= h && cols qr <= w ->
+                qr
+            | _ when rows qr <= i || cols qr <= j || h <= 0 || w <= 0 ->
+                Empty
+            | Empty ->
+                Empty
+            | Leaf vs ->
+                leaf (ArraySlice.slice i j h w vs)
             | Node (_, _, _, ne, nw, sw, se) ->
                 let nw0 = reallocate0 i j h w nw
                 let ne0 = reallocate0 i (j - cols nw) h (w - cols nw0) ne
                 let sw0 = reallocate0 (i - rows nw) j (h - rows nw0) w sw
                 let se0 = reallocate0 (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0) se
                 node ne0 nw0 sw0 se0
-            | Slice (x, y, r, c, qr) -> reallocate0 (x + i) (y + j) (min h r) (min w c) qr
+            | Slice (x, y, r, c, qr) ->
+                reallocate0 (i + x) (j + y) (min r h) (min c w) qr
 
     /// Actually compute a slice.
     let reallocate = function
@@ -341,9 +346,12 @@ module internal Slicing =
     let minimize qr =
         let rec minimize i j h w qr =
             match qr with
-                | _ when i = 0 && j = 0 && h = rows qr && w = cols qr -> qr
-                | Empty -> Empty
-                | Leaf vs -> leaf (ArraySlice.slice i j h w vs) // Just return a view on arrays.
+                | _ when i <= 0 && j <= 0 && h <= rows qr && w <= cols qr ->
+                    qr
+                | Empty ->
+                    Empty
+                | Leaf vs ->
+                    leaf (ArraySlice.slice i j h w vs) // Just return a view on arrays.
                 | Node (_, _, _, ne, nw, sw, se) ->
                     if dom nw i j h w then
                         minimize i j h w nw
@@ -355,7 +363,8 @@ module internal Slicing =
                         minimize (i - rows ne) (j - cols sw) h w sw
                     else // If the slice spans across sub-ropes, stop and make a new slice.
                         slice i j h w qr
-                | Slice (x, y, r, c, qr) -> minimize (x + i) (y + j) (min h r) (min w c) qr
+                | Slice (x, y, r, c, qr) ->
+                    minimize (i + x) (j + y) (min r h) (min c w) qr
         match qr with
             | Slice (i, j, h, w, qr) -> minimize i j h w qr
             | qr -> qr

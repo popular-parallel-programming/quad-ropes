@@ -123,24 +123,37 @@ let vfold f states qr =
 let rec private genZip f i j lqr rqr arr =
     match lqr with
         | Node (d, h, w, ne, nw, Empty, Empty) ->
-            let rne, rnw, _, _ = QuadRope.sliceToMatch lqr rqr
             let ne0, nw0 =
-                par2 (fun () -> genZip f i (j + cols nw) ne rne arr)
-                     (fun () -> genZip f i  j            nw rnw arr)
+                par2 (fun () ->
+                      let rne = QuadRope.slice 0 (cols nw) (rows ne) (cols ne) rqr
+                      genZip f i (j + cols nw) ne rne arr)
+                     (fun () ->
+                      let rnw = QuadRope.slice 0 0 (rows nw) (cols nw) rqr
+                      genZip f i j nw rnw arr)
             Node (d, h, w, ne0, nw0, Empty, Empty)
         | Node (d, h, w, Empty, nw, sw, Empty) ->
-            let _, rnw, rsw, _ = QuadRope.sliceToMatch lqr rqr
             let nw0, sw0 =
-                par2 (fun () -> genZip f  i            j nw rnw arr)
-                     (fun () -> genZip f (i + rows nw) j sw rsw arr)
+                par2 (fun () ->
+                      let rnw = QuadRope.slice 0 0 (rows nw) (cols nw) rqr
+                      genZip f i j nw rnw arr)
+                     (fun () ->
+                      let rsw = QuadRope.slice (rows nw)  0 (rows sw) (cols sw) rqr
+                      genZip f (i + rows nw) j sw rsw arr)
             Node (d, h, w, Empty, nw0, sw0, Empty)
         | Node (d, h, w, ne, nw, sw, se) ->
-            let rne, rnw, rsw, rse = QuadRope.sliceToMatch lqr rqr
             let ne0, nw0, sw0, se0 =
-                par4 (fun () -> genZip f  i            (j + cols nw) ne rne arr)
-                     (fun () -> genZip f  i             j            nw rnw arr)
-                     (fun () -> genZip f (i + rows nw)  j            sw rsw arr)
-                     (fun () -> genZip f (i + rows ne) (j + cols sw) se rse arr)
+                par4 (fun () ->
+                      let rne = QuadRope.slice 0         (cols nw) (rows ne) (cols ne) rqr
+                      genZip f  i            (j + cols nw) ne rne arr)
+                     (fun () ->
+                      let rnw = QuadRope.slice 0          0        (rows nw) (cols nw) rqr
+                      genZip f  i             j            nw rnw arr)
+                     (fun () ->
+                      let rsw = QuadRope.slice (rows nw)  0        (rows sw) (cols sw) rqr
+                      genZip f (i + rows nw)  j            sw rsw arr)
+                     (fun () ->
+                      let rse = QuadRope.slice (rows ne) (cols sw) (rows se) (cols se) rqr
+                      genZip f (i + rows ne) (j + cols sw) se rse arr)
             Node (d, h, w, ne0, nw0, sw0, se0)
         | Slice _ -> genZip f i j (QuadRope.Slicing.reallocate lqr) rqr arr
         | _ -> QuadRope.genZip f i j lqr rqr arr

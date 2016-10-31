@@ -23,6 +23,7 @@ module RadTrees.Examples
 
 open RadTrees
 open RadTrees.Types
+open RadTrees.Utils.Tasks
 
 module private Functions =
     let inline pow x y = System.Math.Pow ((float x), (float y))
@@ -82,6 +83,14 @@ module Array2D =
               let rr = slice j 0 1 (cols trm) trm
               reduce (+) (zip (*) lr rr))
 
+    let mmultImp (lm : double [,]) rm =
+        let res = Array2D.zeroCreate (rows lm) (cols rm)
+        for i = 0 to Array2D.length1 lm - 1 do
+            for j = 0 to Array2D.length2 rm - 1 do
+                for k = 0 to Array2D.length2 lm - 1 do
+                    res.[i, j] <- res.[i, j] + lm.[i, k] * rm.[k, j]
+        res
+
     module Parallel =
         let (@) = Parallel.Array2D.cat2
         let map = Parallel.Array2D.map
@@ -119,6 +128,14 @@ module Array2D =
                   let lr = slice i 0 1 (cols lm) lm
                   let rr = slice j 0 1 (cols trm) trm
                   reduce (+) (zip (*) lr rr))
+
+        let mmultImp (lm : double [,]) (rm : double [,]) =
+            let tm = Array2D.zeroCreate (rows lm) (cols rm)
+            parfor 0 (Array2D.length1 lm) (fun i ->
+                for j = 0 to Array2D.length2 rm - 1 do
+                    for k = 0 to Array2D.length2 lm - 1 do
+                        tm.[i, j] <- tm.[i, j] + lm.[i, k] * rm.[k, j])
+            tm
 
 module QuadRope =
     let (@) = QuadRope.hcat

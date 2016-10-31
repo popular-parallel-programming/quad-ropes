@@ -294,10 +294,12 @@ namespace RadTrees.Benchmark
             var arr = Array2DModule.Initialize(opts.Size, opts.Size, timesInt);
             var rope = QuadRopeModule.init(opts.Size, opts.Size, timesInt);
             MarkThreads("Array2D.mmult",      1, () => Examples.Array2D.mmult(arr, arr));
+            MarkThreads("Array2D.mmultImp",   1, () => Examples.Array2D.mmultImp(arr, arr));
             MarkThreads("QuadRope.mmult",     1, () => Examples.QuadRope.mmult(rope, rope));
             for (int t = 2; t <= opts.Threads; ++t) {
-                MarkThreads("Array2D.mmult",  t, () => Examples.Array2D.Parallel.mmult(arr, arr));
-                MarkThreads("QuadRope.mmult", t, () => Examples.QuadRope.Parallel.mmult(rope, rope));
+                MarkThreads("Array2D.mmult",    t, () => Examples.Array2D.Parallel.mmult(arr, arr));
+                MarkThreads("Array2D.mmultImp", t, () => Examples.Array2D.Parallel.mmultImp(arr, arr));
+                MarkThreads("QuadRope.mmult",   t, () => Examples.QuadRope.Parallel.mmult(rope, rope));
             }
         }
 

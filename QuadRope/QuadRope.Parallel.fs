@@ -123,37 +123,24 @@ let vfold f states qr =
 let rec private genZip f i j lqr rqr arr =
     match lqr with
         | Node (d, h, w, ne, nw, Empty, Empty) ->
+            let rne, rnw, _, _ = QuadRope.sliceToMatch lqr rqr
             let ne0, nw0 =
-                par2 (fun () ->
-                      let rhs = QuadRope.slice 0 (cols nw) (rows ne) (cols ne) rqr
-                      genZip f i (j + cols nw) ne rhs arr)
-                     (fun () ->
-                      let rhs = QuadRope.slice 0 0 (rows nw) (cols nw) rqr
-                      genZip f i j nw rhs arr)
+                par2 (fun () -> genZip f i (j + cols nw) ne rne arr)
+                     (fun () -> genZip f i  j            nw rnw arr)
             Node (d, h, w, ne0, nw0, Empty, Empty)
         | Node (d, h, w, Empty, nw, sw, Empty) ->
+            let _, rnw, rsw, _ = QuadRope.sliceToMatch lqr rqr
             let nw0, sw0 =
-                par2 (fun () ->
-                      let rhs = QuadRope.slice 0 0 (rows nw) (cols nw) rqr
-                      genZip f i j nw rhs arr)
-                     (fun () ->
-                      let rhs = QuadRope.slice (rows nw) 0 (rows sw) (cols sw) rqr
-                      genZip f (i + rows nw) j sw rhs arr)
+                par2 (fun () -> genZip f  i            j nw rnw arr)
+                     (fun () -> genZip f (i + rows nw) j sw rsw arr)
             Node (d, h, w, Empty, nw0, sw0, Empty)
         | Node (d, h, w, ne, nw, sw, se) ->
+            let rne, rnw, rsw, rse = QuadRope.sliceToMatch lqr rqr
             let ne0, nw0, sw0, se0 =
-                par4 (fun () ->
-                      let rhs = QuadRope.slice 0 (cols nw) (rows ne) (cols ne) rqr
-                      genZip f i (j + cols nw) ne rhs arr)
-                     (fun () ->
-                      let rhs = QuadRope.slice 0 0 (rows nw) (cols nw) rqr
-                      genZip f i j nw rhs arr)
-                     (fun () ->
-                      let rhs = QuadRope.slice (rows nw) 0 (rows sw) (cols sw) rqr
-                      genZip f (i + rows nw) j sw rhs arr)
-                     (fun () ->
-                      let rhs = QuadRope.slice (rows ne) (cols sw) (rows se) (rows se) rqr
-                      genZip f (i + rows ne) (j + cols sw) se rhs arr)
+                par4 (fun () -> genZip f  i            (j + cols nw) ne rne arr)
+                     (fun () -> genZip f  i             j            nw rnw arr)
+                     (fun () -> genZip f (i + rows nw)  j            sw rsw arr)
+                     (fun () -> genZip f (i + rows ne) (j + cols sw) se rse arr)
             Node (d, h, w, ne0, nw0, sw0, se0)
         | Slice _ -> genZip f i j (QuadRope.Slicing.reallocate lqr) rqr arr
         | _ -> QuadRope.genZip f i j lqr rqr arr
@@ -193,7 +180,7 @@ let rec private fastZip f i j lqr rqr arr =
 
 /// Apply f to each (i, j) of lqr and rqr.
 let zip f lqr rqr =
-    if QuadRope.cols lqr <> QuadRope.cols rqr || QuadRope.rows lqr <> QuadRope.rows rqr then
+    if not (QuadRope.shapesMatch lqr rqr) then
         invalidArg "rope" "Must have the same shape as first argument."
     let arr = Array2D.zeroCreate (rows lqr) (cols lqr)
     fastZip f 0 0 lqr rqr arr

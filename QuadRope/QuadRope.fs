@@ -654,6 +654,19 @@ let vfold f states qr =
         flatNode (fold1 wstates w) (fold1 estates e)
     fold1 states qr
 
+/// Slice b as to match the sub-shapes of a. If a is empty, the
+/// resulting slices will all be empty. If a is not a Node, all slices
+/// except for the NW slice will be empty.
+let internal sliceToMatch a b =
+    match a with
+        | Empty -> Empty, Empty, Empty, Empty
+        | Node (_, _, _, ne, nw, sw, se) ->
+            slice 0         (cols nw) (rows ne) (cols ne) b,
+            slice 0          0        (rows nw) (cols nw) b,
+            slice (rows nw)  0        (rows sw) (cols sw) b,
+            slice (rows ne) (cols sw) (rows se) (cols se) b
+        | _ -> Empty, slice 0 0 (rows a) (cols b) b, Empty, Empty
+
 /// Zip implementation for the general case where we do not assume
 /// that both ropes have the same internal structure.
 let rec internal genZip f i j lqr rqr (arr : _ [,]) =
@@ -664,10 +677,11 @@ let rec internal genZip f i j lqr rqr (arr : _ [,]) =
             ArraySlice.iteri (fun x y e1 -> arr.[x + i, y + j] <- f e1 (get rqr x y)) vs
             leaf (ArraySlice.makeSlice i j (rows lqr) (cols lqr) arr)
         | Node (d, h, w, ne, nw, sw, se) ->
-            let nw0 = genZip f i              j            nw (slice 0 0 (rows nw) (cols nw) rqr) arr
-            let ne0 = genZip f i             (j + cols nw) ne (slice 0 (cols nw) (rows ne) (cols ne) rqr) arr
-            let sw0 = genZip f (i + rows nw)  j            sw (slice (rows nw) 0 (rows sw) (cols sw) rqr) arr
-            let se0 = genZip f (i + rows ne) (j + cols sw) se (slice (rows ne) (cols sw) (rows se) (cols se) rqr) arr
+            let rne, rnw, rsw, rse = sliceToMatch lqr rqr
+            let nw0 = genZip f i              j            nw rnw arr
+            let ne0 = genZip f i             (j + cols nw) ne rne arr
+            let sw0 = genZip f (i + rows nw)  j            sw rsw arr
+            let se0 = genZip f (i + rows ne) (j + cols sw) se rse arr
             Node (d, h, w, ne0, nw0, sw0, se0)
         | Slice _ -> genZip f i j (Slicing.reallocate lqr) rqr arr
 
@@ -712,7 +726,7 @@ let rec internal fastZip f i j lqr rqr (arr : _ [,]) =
 
 /// Apply f to each (i, j) of lqr and rope.
 let zip f lqr rqr =
-    if cols lqr <> cols rqr || rows lqr <> rows rqr then
+    if not (shapesMatch lqr rqr) then
         failwith "ropes must have the same shape"
     let arr = Array2D.zeroCreate (rows lqr) (cols lqr)
     fastZip f 0 0 lqr rqr arr

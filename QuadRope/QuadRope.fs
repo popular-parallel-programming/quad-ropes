@@ -260,27 +260,31 @@ module Boehm =
 /// Compute the "subrope" starting from indexes i, j taking h and w
 /// elements in vertical and horizontal direction.
 let slice i j h w qr =
+    // Negative indices are not allowed, otherwise clients could
+    // extend the slice arbitrarily.
     let i0 = max 0 i
     let j0 = max 0 j
+    let h0 = min (rows qr - i0) (max 0 h)
+    let w0 = min (cols qr - j0) (max 0 w)
     match qr with
         // Slicing on Empty has no effect.
         | Empty -> Empty
         // Index domain of quad rope is not inside bounds.
-        | _ when rows qr <= i0 || cols qr <= j0 || h <= 0 || w <= 0 ->
+        | _ when rows qr = i0 || cols qr = j0 || h0 <= 0 || w0 <= 0 ->
             Empty
         // Index domain of quad rope is entirely inside bounds.
-        | _ when i0 = 0 && rows qr <= h && j0 = 0 && cols qr <= w ->
+        | _ when i0 = 0 && rows qr <= h0 && j0 = 0 && cols qr <= w0 ->
             qr
         // Leaves are sliced on ArraySlice level, saves one level of
         // indirection.
         | Leaf vals ->
-            leaf (ArraySlice.slice i0 j0 (min (rows qr - i0) h) (min (cols qr - j0) w) vals)
+            leaf (ArraySlice.slice i0 j0 h0 w0 vals)
         // Avoid directly nested slices, unpack the original slice.
-        | Slice (x, y, h0, w0, qr) ->
-            Slice (x + i0, y + j0, min (h0 - i0) h, min (w0 - j0) w, qr)
+        | Slice (i1, j1, _, _, qr) ->
+            Slice (i0 + i1, j0 + j1, h0, w0, qr)
         // Just initialize a new slice.
         | _ ->
-            Slice (i0, j0, min (rows qr - i0) h, min (cols qr - j0) w, qr)
+            Slice (i0, j0, h0, w0, qr)
 
 /// Split rope vertically from row i, taking h rows.
 let inline vsplit i h qr =

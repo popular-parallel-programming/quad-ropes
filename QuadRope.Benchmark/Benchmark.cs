@@ -203,11 +203,13 @@ namespace RadTrees.Benchmark
             int j = rnd.Next(opts.Size);
 
             var arr = Array2DModule.Initialize(opts.Size, opts.Size, timesInt);
-            Mark("Array2D.get", () => Array2DModule.Get(arr, i, j));
-            Mark("Array2D.set", () => Array2D.set(arr, i, j, 0.0));
-
             var rope = QuadRopeModule.init(opts.Size, opts.Size, timesInt);
+
+            Mark("Array2D.get", () => Array2DModule.Get(arr, i, j));
             Mark("QuadRope.get", () => QuadRopeModule.get(rope, i, j));
+
+            Mark("Immutable.set", () => Array2D.set(arr, i, j, 0.0));
+            Mark("Mutable.set", () => Array2DModule.Set<double>(arr, i, j, 0.0));
             Mark("QuadRope.set", () => QuadRopeModule.set(rope, i, j, 0.0));
         }
 

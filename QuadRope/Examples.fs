@@ -174,9 +174,9 @@ module QuadRope =
                 prefix @ singleton (fa + fb)
 
     let transpose = QuadRope.transpose
-    let rows = QuadRope.rows
+    let rows = Types.rows
     let init = QuadRope.init
-    let cols = QuadRope.cols
+    let cols = Types.cols
     let slice = QuadRope.slice
     let zip = QuadRope.zip
     let reduce = QuadRope.reduce

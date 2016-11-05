@@ -51,3 +51,28 @@ type 'a QuadRope when 'a : equality =
     | Leaf of 'a ArraySlice
     | Node of int * int * int * 'a QuadRope * 'a QuadRope * 'a QuadRope * 'a QuadRope
     | Slice of int * int * int * int * 'a QuadRope
+
+/// Number of rows in a rectangular tree.
+let rows = function
+    | Empty -> 0
+    | Leaf (ArraySlice (_, _, h, _, _)) -> h
+    | Node (_, h, _, _, _, _, _) -> h
+    | Slice (_, _, h, _, _) -> h
+
+/// Number of columns in a rectangular tree.
+let cols = function
+    | Empty -> 0
+    | Leaf (ArraySlice (_, _, _, w, _)) -> w
+    | Node (_, _, w, _, _, _, _) -> w
+    | Slice (_, _, _, w, _) -> w
+
+/// Depth of a rectangular tree.
+let rec depth = function
+    | Empty -> 0
+    | Leaf _ -> 0
+    | Node (d, _, _, _, _, _, _) -> d
+    | Slice (_, _, _, _, qr) -> depth qr
+
+let isEmpty = function
+    | Empty -> true
+    | _ -> false

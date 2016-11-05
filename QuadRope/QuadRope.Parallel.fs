@@ -27,8 +27,6 @@ open RadTrees
 open Types
 open Utils.Tasks
 
-let private rows = QuadRope.rows
-let private cols = QuadRope.cols
 let private node = QuadRope.node
 let private leaf = QuadRope.leaf
 let private flatNode = QuadRope.flatNode
@@ -89,7 +87,7 @@ let map f root =
 /// Fold each row of rope with f in parallel, starting with the
 /// according state in states.
 let hfold f states qr =
-    if QuadRope.rows states <> QuadRope.rows qr then
+    if rows states <> rows qr then
         invalidArg "states" "Must have the same height as qr."
     let rec fold1 states = function
         | Empty -> states
@@ -97,7 +95,7 @@ let hfold f states qr =
         | Slice _ as qr -> fold1 states (QuadRope.Slicing.reallocate qr)
         | qr -> QuadRope.hfold f states qr
     and fold2 states n s =
-        let nstates, sstates = QuadRope.vsplit2 states (QuadRope.rows n)
+        let nstates, sstates = QuadRope.vsplit2 states (rows n)
         let nstates0, sstates0 = par2 (fun () -> fold1 nstates n) (fun () -> fold1 sstates s)
         QuadRope.thinNode nstates0 sstates0
     fold1 states qr
@@ -105,7 +103,7 @@ let hfold f states qr =
 /// Fold each column of rope with f in parallel, starting with the
 /// according state in states.
 let vfold f states qr =
-    if QuadRope.cols states <> QuadRope.cols qr then
+    if cols states <> cols qr then
         invalidArg "states" "Must have the same width as qr."
     let rec fold1 states = function
         | Empty -> states
@@ -113,7 +111,7 @@ let vfold f states qr =
         | Slice _ as qr -> fold1 states (QuadRope.Slicing.reallocate qr)
         | qr -> QuadRope.vfold f states qr
     and fold2 states w e =
-        let wstates, estates = QuadRope.hsplit2 states (QuadRope.cols w)
+        let wstates, estates = QuadRope.hsplit2 states (cols w)
         let wstates0, estates0 = par2 (fun () -> fold1 wstates w) (fun () -> fold1 estates e)
         QuadRope.flatNode wstates0 estates0
     fold1 states qr
@@ -309,16 +307,16 @@ let iteri f qr =
         | Leaf vs -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
         | Node (_, _, _, ne, nw, sw, se) ->
             par4 (fun () -> iteri f i j nw)
-                 (fun () -> iteri f i (j + QuadRope.cols nw) ne)
-                 (fun () -> iteri f (i + QuadRope.rows nw) j sw)
-                 (fun () -> iteri f (i + QuadRope.rows ne) (j + QuadRope.cols sw) se)
+                 (fun () -> iteri f i (j + cols nw) ne)
+                 (fun () -> iteri f (i + rows nw) j sw)
+                 (fun () -> iteri f (i + rows ne) (j + cols sw) se)
             |> ignore
         | Slice _ as qr -> iteri f i j (QuadRope.Slicing.reallocate qr)
     iteri f 0 0 qr
 
 /// Conversion into 2D array.
 let toArray2D qr =
-    let arr = Array2D.zeroCreate (QuadRope.rows qr) (QuadRope.cols qr)
+    let arr = Array2D.zeroCreate (rows qr) (cols qr)
     // This avoids repeated calls to get; it is enough to traverse
     // the rope once.
     iteri (fun i j v -> arr.[i, j] <- v) qr

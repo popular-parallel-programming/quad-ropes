@@ -33,30 +33,7 @@ let s_max = 4
 let s_max = 32
 #endif
 
-/// Number of rows in a rectangular tree.
-let rows = function
-    | Empty -> 0
-    | Leaf vs -> ArraySlice.length1 vs
-    | Node (_, h, _, _, _, _, _) -> h
-    | Slice (_, _, h, _, _) -> h
 
-/// Number of columns in a rectangular tree.
-let cols = function
-    | Empty -> 0
-    | Leaf vs -> ArraySlice.length2 vs
-    | Node (_, _, w, _, _, _, _) -> w
-    | Slice (_, _, _, w, _) -> w
-
-/// Depth of a rectangular tree.
-let rec depth = function
-    | Empty -> 0
-    | Leaf _ -> 0
-    | Node (d, _, _, _, _, _, _) -> d
-    | Slice (_, _, _, _, qr) -> depth qr
-
-let isEmpty = function
-    | Empty -> true
-    | _ -> false
 
 let leaf vs =
     if ArraySlice.length1 vs = 0 || ArraySlice.length2 vs = 0 then
@@ -609,24 +586,23 @@ let toArray2D qr =
 let inline reallocate qr =
     fromArray2D (toArray2D qr)
 
-/// Apply a function to every element in the tree and preserve the
-/// tree structure.
-let map f root =
-    let arr = Array2D.zeroCreate (rows root) (cols root)
-    let rec map i j qr =
+/// Apply a function to every element in the tree.
+let map f qr =
+    let rec map qr tgt =
         match qr with
-            | Empty -> Empty
-            | Leaf vs ->
-                ArraySlice.iteri (fun x y e -> arr.[x + i, y + j] <- f e) vs
-                leaf (ArraySlice.makeSlice i j (rows qr) (cols qr) arr)
+            | Empty ->
+                Empty
+            | Leaf vals ->
+                Leaf (Target.map f vals tgt)
             | Node (d, h, w, ne, nw, sw, se) ->
                 Node (d, h, w,
-                      map i (j + cols nw) ne,
-                      map i j nw,
-                      map (i + rows nw) j sw,
-                      map (i + rows ne) (j + cols sw) se)
-            | Slice _ as qr -> Slicing.map f qr arr
-    map 0 0 root
+                      map ne (Target.ne tgt qr),
+                      map nw tgt, // No need to adjust target.
+                      map sw (Target.sw tgt qr),
+                      map se (Target.se tgt qr))
+            | Slice _ ->
+                map (Slicing.reallocate qr) tgt
+    map qr (Target.make (rows qr) (cols qr))
 
 /// Fold each row of rope with f, starting with the according
 /// state in states.

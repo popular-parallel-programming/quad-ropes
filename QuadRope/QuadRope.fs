@@ -315,41 +315,6 @@ module internal Slicing =
         | Slice (i, j, h, w, qr) -> reallocate0 i j h w qr
         | qr -> qr
 
-    /// Check whether i j h w forms a rectangle that is inside the
-    /// domain of qr.
-    let inline private dom qr i j h w =
-        0 <= i && i <= rows qr && i + h <= rows qr &&
-        0 <= j && j <= cols qr && j + w <= cols qr
-
-    /// Find the smallest sub-rope that includes the indices of a
-    /// slice. This is similar to slicing but does not perform new
-    /// node allocations.
-    let minimize qr =
-        let rec minimize i j h w qr =
-            match qr with
-                | _ when i <= 0 && j <= 0 && h <= rows qr && w <= cols qr ->
-                    qr
-                | Empty ->
-                    Empty
-                | Leaf vs ->
-                    leaf (ArraySlice.slice i j h w vs) // Just return a view on arrays.
-                | Node (_, _, _, ne, nw, sw, se) ->
-                    if dom nw i j h w then
-                        minimize i j h w nw
-                    else if dom ne i (j - cols nw) h w then
-                        minimize i (j - cols nw) h w ne
-                    else if dom sw (i - rows nw) j h w then
-                        minimize (i - rows nw) j h w sw
-                    else if dom se (i - rows ne) (j - cols sw) h w then
-                        minimize (i - rows ne) (j - cols sw) h w sw
-                    else // If the slice spans across sub-ropes, stop and make a new slice.
-                        slice i j h w qr
-                | Slice (x, y, r, c, qr) ->
-                    minimize (i + x) (j + y) (min r h) (min c w) qr
-        match qr with
-            | Slice (i, j, h, w, qr) -> minimize i j h w qr
-            | qr -> qr
-
     /// Compute a slice and map in the same traversal.
     let map f qr (arr : _ [,]) =
         let rec map i j h w qr =

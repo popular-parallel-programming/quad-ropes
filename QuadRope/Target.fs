@@ -66,11 +66,19 @@ let se tgt = function
 let writemap (tgt : _ Target) f r c v =
     tgt.vals.[tgt.i + r, tgt.j + c] <- f v
 
+let writemap2 (tgt : _ Target) f r c v1 v2 =
+    tgt.vals.[tgt.i + r, tgt.j + c] <- f v1 v2
+
 /// Generalized write to target with index pairs.
 let writemapi (tgt : _ Target) f r c v =
     let i = tgt.i + r
     let j = tgt.j + c
     tgt.vals.[i, j] <- f i j v
+
+let writemapi2 (tgt : _ Target) f r c v1 v2 =
+    let i = tgt.i + r
+    let j = tgt.j + c
+    tgt.vals.[i, j] <- f i j v1 v2
 
 /// Simplified write to target.
 let write (tgt : _ Target) r c v =
@@ -85,6 +93,12 @@ let toSlice (tgt : _ Target) h w =
 let map f vals (tgt : _ Target) =
     ArraySlice.iteri (writemap tgt f) vals
     toSlice tgt (ArraySlice.length1 vals) (ArraySlice.length2 vals)
+
+/// Map a function to the values of two leafs and return a new leaf
+/// instance. This writes to the underlying target array.
+let map2 f vals1 vals2 (tgt : _ Target) =
+    ArraySlice.iteri2 (writemap2 tgt f) vals1 vals2
+    toSlice tgt (ArraySlice.length1 vals1) (ArraySlice.length2 vals1)
 
 /// Map a function to the values and index pairs of a leaf and
 /// return a new leaf instance. This writes to the underlying

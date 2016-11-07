@@ -226,10 +226,10 @@ let ``hreduce produces thin ropes`` (a : int QuadRope) (f : int -> int -> int) =
 let ``vreduce produces flat ropes`` (a : int QuadRope) (f : int -> int -> int) =
     (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.rows (QuadRope.vreduce f a) = 1)
 
-let ``hreduce >> vreduce equals vreduce >> hreduce`` (a : int QuadRope) (f : int -> int -> int) =
+let ``hreduce >> vreduce equals vreduce >> hreduce`` (a : int QuadRope) =
     (not (QuadRope.isEmpty a)) ==>
-    lazy (pointWiseEqual (QuadRope.hreduce f (QuadRope.vreduce f a))
-                         (QuadRope.vreduce f (QuadRope.hreduce f a)))
+    lazy (pointWiseEqual (QuadRope.hreduce (+) (QuadRope.vreduce (+) a))
+                         (QuadRope.vreduce (+) (QuadRope.hreduce (+) a)))
 
 let ``reduce equals hreduce + vreduce`` (a : int QuadRope) =
     (not (QuadRope.isEmpty a)) ==>

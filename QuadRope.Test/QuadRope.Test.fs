@@ -55,6 +55,14 @@ module private Utils =
         with
             | _ -> false
 
+    let equalf a b f g = fun (i, j) -> f (QuadRope.get a i j) = g (QuadRope.get b i j)
+    let equal  a b = equalf a b id id
+
+    let pointWiseEqualF a b f g =
+        Seq.forall (equalf a b f g) (makeIndices (QuadRope.rows a) (QuadRope.cols a))
+
+    let pointWiseEqual  a b = pointWiseEqualF a b id id
+
 open Utils
 
 type Handle = class end
@@ -114,10 +122,10 @@ let ``vrev maintains uper-left invariant`` (a: int QuadRope) =
     maintainsTight (QuadRope.vrev a)
 
 let ``hrev of hrev is identity`` (a : int QuadRope) =
-    a = QuadRope.hrev (QuadRope.hrev a)
+    pointWiseEqual a (QuadRope.hrev (QuadRope.hrev a))
 
 let ``vrev of vrev is identity`` (a : int QuadRope) =
-    a = QuadRope.vrev (QuadRope.vrev a)
+    pointWiseEqual a (QuadRope.vrev (QuadRope.vrev a))
 
 (* hrev puts values in the correct position and get can access them. *)
 let ``get accesses hrev correctly`` (a: int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
@@ -153,26 +161,6 @@ let ``get accesses slice correctly`` (a : int QuadRope) (NonNegativeInt i)
             (fun (i0, j0) -> QuadRope.get b i0 j0 = QuadRope.get a (i + i0) (j + j0))
             (makeIndicesFrom b))
 
-let ``slices never nest`` (a: int QuadRope) =
-   (* Using generated limits for slices results in very few run tests, this is more reliable. *)
-   let b, _ = QuadRope.vsplit2 a (QuadRope.rows a / 2)
-   let c, _ = QuadRope.vsplit2 b (QuadRope.rows b / 2)
-   match c with
-       | Slice (_, _, _, _, Slice _) -> false
-       | _ -> true
-
-let ``slice computes correct indices`` (a : int QuadRope)
-                                       (NonNegativeInt i)
-                                       (NonNegativeInt j)
-                                       (NonNegativeInt h)
-                                       (NonNegativeInt w) =
-    let b = QuadRope.slice i j h w a
-    if QuadRope.rows a <= i || h = 0 || QuadRope.cols a <= j || w = 0 then
-        QuadRope.isEmpty b
-    else
-        QuadRope.rows b = min (QuadRope.rows a - i) h &&
-        QuadRope.cols b = min (QuadRope.cols a - j) w
-
 let ``recursive slice computes correct indices`` (a : int QuadRope) (d : NonNegativeInt) =
     let i = 1
     let j = 1
@@ -190,8 +178,7 @@ let ``recursive slice computes correct indices`` (a : int QuadRope) (d : NonNega
 
 let ``hslice produces ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
     w <= QuadRope.cols a ==>
-    lazy (let b = QuadRope.slice 0 0 (QuadRope.rows a) w a
-          QuadRope.cols b = w)
+    lazy (w = QuadRope.cols (QuadRope.slice 0 0 (QuadRope.rows a) w a))
 
 let ``hsplit2 produces two ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
     w <= QuadRope.cols a ==>
@@ -200,18 +187,22 @@ let ``hsplit2 produces two ropes of correct width`` (a : int QuadRope) (NonNegat
 
 let ``vslice produces ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =
     h <= QuadRope.rows a ==>
-    lazy (let b = QuadRope.slice 0 0 h (QuadRope.cols a) a
-          QuadRope.rows b = h)
+    lazy (h = QuadRope.rows (QuadRope.slice 0 0 h (QuadRope.cols a) a))
 
 let ``vsplit2 produces two ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =
     h <= QuadRope.rows a ==>
     lazy (let b, c = QuadRope.vsplit2 a h
           (QuadRope.rows b = h) && (QuadRope.rows c = QuadRope.rows a - h))
 
+let ``reallocate results in correctly shaped quad rope`` (a : int QuadRope) =
+    let r = QuadRope.map id a
+    QuadRope.rows r = QuadRope.rows a && QuadRope.cols r = QuadRope.cols a
+
+let ``reallocate results in logically equal rope`` (a : int QuadRope) =
+    pointWiseEqual a (QuadRope.map id a)
+
 let ``balanceH maintains layout`` (a : int QuadRope) =
-    not (QuadRope.isBalancedH a) ==>
-    lazy (let b = QuadRope.hbalance a
-          Seq.forall (fun (i, j) -> QuadRope.get a i j = QuadRope.get b i j) (makeIndicesFrom a))
+    not (QuadRope.isBalancedH a) ==> lazy (pointWiseEqual a (QuadRope.hbalance a))
 
 let ``balanceH maintains or improves depth`` (a : int QuadRope) =
     not (QuadRope.isBalancedH a) ==>
@@ -219,9 +210,7 @@ let ``balanceH maintains or improves depth`` (a : int QuadRope) =
           QuadRope.depth b <= QuadRope.depth a)
 
 let ``balanceV maintains layout`` (a : int QuadRope) =
-    not (QuadRope.isBalancedV a) ==>
-    lazy (let b = QuadRope.vbalance a
-          Seq.forall (fun (i, j) -> QuadRope.get a i j = QuadRope.get b i j) (makeIndicesFrom a))
+    not (QuadRope.isBalancedV a) ==> lazy (pointWiseEqual a (QuadRope.vbalance a))
 
 let ``balanceV maintains or improves depth`` (a : int QuadRope) =
     not (QuadRope.isBalancedV a) ==>
@@ -229,17 +218,18 @@ let ``balanceV maintains or improves depth`` (a : int QuadRope) =
           QuadRope.depth b <= QuadRope.depth a)
 
 let ``map modifies all values`` (a : int QuadRope) (f : int -> int) =
-    let h = QuadRope.rows a
-    let w = QuadRope.cols a
-    let b = QuadRope.map f a
-    let check (i, j) = f (QuadRope.get a i j) = QuadRope.get b i j
-    Seq.forall check (makeIndices h w)
+    pointWiseEqualF a (QuadRope.map f a) f id
 
 let ``hreduce produces thin ropes`` (a : int QuadRope) (f : int -> int -> int) =
     (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.cols (QuadRope.hreduce f a) = 1)
 
 let ``vreduce produces flat ropes`` (a : int QuadRope) (f : int -> int -> int) =
     (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.rows (QuadRope.vreduce f a) = 1)
+
+let ``hreduce >> vreduce equals vreduce >> hreduce`` (a : int QuadRope) (f : int -> int -> int) =
+    (not (QuadRope.isEmpty a)) ==>
+    lazy (pointWiseEqual (QuadRope.hreduce f (QuadRope.vreduce f a))
+                         (QuadRope.vreduce f (QuadRope.hreduce f a)))
 
 let ``reduce equals hreduce + vreduce`` (a : int QuadRope) =
     (not (QuadRope.isEmpty a)) ==>
@@ -303,9 +293,7 @@ let ``zip ignores internal shape`` (a : int QuadRope) (b : int QuadRope) (f : in
           Seq.forall (fun (i, j) -> QuadRope.get c i j = f (QuadRope.get a i j) (QuadRope.get b i j)) indices)
 
 let ``toArray -> fromArray produces equal rope`` (a : int QuadRope) =
-    not (QuadRope.isEmpty a) ==>
-    lazy (QuadRope.forall id (QuadRope.zip (=) a (QuadRope.fromArray (QuadRope.toArray a) (QuadRope.cols a))))
+    pointWiseEqual a (QuadRope.fromArray (QuadRope.toArray a) (QuadRope.cols a))
 
 let ``toArray2D -> fromArray2D produces equal rope`` (a : int QuadRope) =
-    not (QuadRope.isEmpty a) ==>
-    lazy (QuadRope.forall id (QuadRope.zip (=) a (QuadRope.fromArray2D (QuadRope.toArray2D a))))
+    pointWiseEqual a (QuadRope.fromArray2D (QuadRope.toArray2D a))

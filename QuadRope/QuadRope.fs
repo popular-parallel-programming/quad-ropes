@@ -70,8 +70,8 @@ let inline flatNode w e =
 let inline thinNode n s =
     node Empty n s Empty
 
-let inline private withinRange root i j =
-    0 <= i && i < rows root && 0 <= j && j < cols root
+let inline private withinRange qr i j =
+    0 <= i && i < rows qr && 0 <= j && j < cols qr
 
 let inline private checkBounds qr i j =
     if rows qr <= i then
@@ -393,8 +393,7 @@ let vcat upper lower =
 /// Concatenate two trees horizontally.
 let hcat left right =
     let canMerge ls rs =
-        ArraySlice.length1 ls = ArraySlice.length1 rs &&
-        ArraySlice.length2 ls + ArraySlice.length2 rs <= s_max
+        ArraySlice.rows ls = ArraySlice.rows rs && ArraySlice.cols ls + ArraySlice.cols rs <= s_max
     let rec hcat left right =
         match left, right with
             // Concatenation with Empty yields argument.
@@ -693,7 +692,7 @@ let zip f lqr rqr =
 /// values to a single scalar using g.
 let rec mapreduce f g = function
     | Empty -> failwith "Impossible to reduce an empty rope"
-    | Leaf vs -> ArraySlice.mapReduce f g vs
+    | Leaf vs -> ArraySlice.mapreduce f g vs
     | Node (_, _, _, ne, nw, Empty, Empty) ->
         g (mapreduce f g nw) (mapreduce f g ne)
     | Node (_, _, _, Empty, nw, sw, Empty) ->

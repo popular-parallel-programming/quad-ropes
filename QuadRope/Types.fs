@@ -22,14 +22,15 @@
 module RadTrees.Types
 
 [<CustomEquality;NoComparison>]
-type 'a ArraySlice when 'a : equality = ArraySlice of int * int * int * int * 'a [,] with
+type 'a ArraySlice when 'a : equality = { r : int; c : int; h : int ; w : int; vals : 'a [,] }
 
-    static member private equals (ArraySlice (i0, j0, h0, w0, arr0)) (ArraySlice (i1, j1, h1, w1, arr1)) =
-        if h0 = h1 && w0 = w1 then
+type 'a ArraySlice with
+    static member private equals a b =
+        if a.h = b.h && a.w = b.w then
             let mutable eq = true
-            for i in 0 .. h0 - 1 do
-                for j in 0 .. w0 - 1 do
-                    eq <- eq && arr0.[i + i0, j + j0] = arr1.[i + i1, j + j1]
+            for i in 0 .. a.h - 1 do
+                for j in 0 .. a.w - 1 do
+                    eq <- eq && a.vals.[i + a.r, j + a.c] = b.vals.[i + b.r, j + b.c]
             eq
         else
             false
@@ -40,10 +41,7 @@ type 'a ArraySlice when 'a : equality = ArraySlice of int * int * int * int * 'a
             | _ -> false
 
     override this.GetHashCode() =
-        match this with
-            | ArraySlice (i, j, h, w, arr) ->
-                let hc = 17 + i + j
-                hc * h * w * hash arr
+        (17 + this.r + this.c) * this.h * this.w * hash this.vals
 
 [<CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
 type 'a QuadRope when 'a : equality =
@@ -55,14 +53,14 @@ type 'a QuadRope when 'a : equality =
 /// Number of rows in a rectangular tree.
 let rows = function
     | Empty -> 0
-    | Leaf (ArraySlice (_, _, h, _, _)) -> h
+    | Leaf slc -> slc.h
     | Node (_, h, _, _, _, _, _) -> h
     | Slice (_, _, h, _, _) -> h
 
 /// Number of columns in a rectangular tree.
 let cols = function
     | Empty -> 0
-    | Leaf (ArraySlice (_, _, _, w, _)) -> w
+    | Leaf slc -> slc.w
     | Node (_, _, w, _, _, _, _) -> w
     | Slice (_, _, _, w, _) -> w
 

@@ -33,13 +33,18 @@ let s_max = 4
 let s_max = 32
 #endif
 
+// Aliases for more concise code.
+let inline rows qr = Types.rows qr
+let inline cols qr = Types.cols qr
+let inline depth qr = Types.depth qr
+let inline isEmpty qr = Types.isEmpty qr
 
-
-let leaf vs =
-    if ArraySlice.length1 vs = 0 || ArraySlice.length2 vs = 0 then
+/// Construct a Leaf if slc is non-empty. Otherwise, return Empty.
+let leaf slc =
+    if ArraySlice.length1 slc = 0 || ArraySlice.length2 slc = 0 then
         Empty
     else
-        Leaf vs
+        Leaf slc
 
 /// Pseudo-constructor for generating a new rope out of some
 /// existing nodes.

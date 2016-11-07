@@ -63,50 +63,50 @@ let se tgt = function
     | _ -> tgt
 
 /// Generalized write to target.
-let writemap (tgt : _ Target) f r c v =
+let inline writemap (tgt : _ Target) f r c v =
     tgt.vals.[tgt.i + r, tgt.j + c] <- f v
 
-let writemap2 (tgt : _ Target) f r c v1 v2 =
+let inline writemap2 (tgt : _ Target) f r c v1 v2 =
     tgt.vals.[tgt.i + r, tgt.j + c] <- f v1 v2
 
 /// Generalized write to target with index pairs.
-let writemapi (tgt : _ Target) f r c v =
+let inline writemapi (tgt : _ Target) f r c v =
     let i = tgt.i + r
     let j = tgt.j + c
     tgt.vals.[i, j] <- f i j v
 
-let writemapi2 (tgt : _ Target) f r c v1 v2 =
+let inline writemapi2 (tgt : _ Target) f r c v1 v2 =
     let i = tgt.i + r
     let j = tgt.j + c
     tgt.vals.[i, j] <- f i j v1 v2
 
 /// Simplified write to target.
-let write (tgt : _ Target) r c v =
+let inline write (tgt : _ Target) r c v =
     writemap tgt id r c v
 
 /// Build a leaf node from a target for a given height and width.
-let toSlice (tgt : _ Target) h w =
+let inline toSlice (tgt : _ Target) h w =
     ArraySlice.makeSlice tgt.i tgt.j h w tgt.vals
 
 /// Map a function to the values of a leaf and return a new leaf
 /// instance. This writes to the underlying target array.
-let map f vals (tgt : _ Target) =
+let inline map f vals (tgt : _ Target) =
     ArraySlice.iteri (writemap tgt f) vals
     toSlice tgt (ArraySlice.length1 vals) (ArraySlice.length2 vals)
 
 /// Map a function to the values of two leafs and return a new leaf
 /// instance. This writes to the underlying target array.
-let map2 f vals1 vals2 (tgt : _ Target) =
+let inline map2 f vals1 vals2 (tgt : _ Target) =
     ArraySlice.iteri2 (writemap2 tgt f) vals1 vals2
     toSlice tgt (ArraySlice.length1 vals1) (ArraySlice.length2 vals1)
 
 /// Map a function to the values and index pairs of a leaf and
 /// return a new leaf instance. This writes to the underlying
 /// target array.
-let mapi f vals (tgt : _ Target) =
+let inline mapi f vals (tgt : _ Target) =
     ArraySlice.iteri (writemapi tgt f) vals
     toSlice tgt (ArraySlice.length1 vals) (ArraySlice.length2 vals)
 
 /// Use the offset stored in tgt to iterate over some array slice.
-let iteri f vals (tgt : _ Target) =
+let inline iteri f vals (tgt : _ Target) =
     ArraySlice.iteri (fun i j v -> f (tgt.i + i) (tgt.j + j) v) vals

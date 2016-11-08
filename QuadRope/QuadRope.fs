@@ -462,27 +462,21 @@ let rec vrev = function
 
 /// Initialize a rope from a native 2D-array.
 let fromArray2D arr =
-    let rec init h0 w0 h1 w1 arr =
-        let h = h1 - h0
-        let w = w1 - w0
-        if h <= 0 || w <= 0 then
+    let rec init slc =
+        if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
-        else if h <= s_max && w <= s_max then
-            leaf (ArraySlice.makeSlice h0 w0 h w arr)
-        else if w <= s_max then
-            let hpv = h0 + (h >>> 1)
-            thinNode (init h0 w0 hpv w1 arr) (init hpv w0 h1 w1 arr)
-        else if h <= s_max then
-            let wpv = w0 + (w >>> 1)
-            flatNode (init h0 w0 h1 wpv arr) (init h0 wpv h1 w1 arr)
+        else if ArraySlice.rows slc <= s_max && ArraySlice.cols slc <= s_max then
+            leaf slc
+        else if ArraySlice.cols slc <= s_max then
+            let n, s = ArraySlice.vsplit2 slc
+            thinNode (init n) (init s)
+        else if ArraySlice.rows slc <= s_max then
+            let w, e = ArraySlice.hsplit2 slc
+            flatNode (init w) (init e)
         else
-            let hpv = h0 + (h >>> 1)
-            let wpv = w0 + (w >>> 1)
-            node (init h0 wpv hpv w1 arr)
-                 (init h0 w0 hpv wpv arr)
-                 (init hpv w0 h1 wpv arr)
-                 (init hpv wpv h1 w1 arr)
-    init 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
+            let ne, nw, sw, se = ArraySlice.split4 slc
+            node (init ne) (init nw) (init sw) (init se)
+    init (ArraySlice.make arr)
 
 /// Generate a new tree without any intermediate values.
 let inline init h w f =

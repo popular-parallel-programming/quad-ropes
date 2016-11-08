@@ -95,6 +95,30 @@ let slice i j h w slc =
         let w = max 0 (min (cols slc - j) w)
         { slc with r = minr slc + i; c = minc slc + j; h = h; w = w }
 
+/// Split into four slices, each differing in size by at most one row
+/// or column. Returned order is NE, NW, SW and SE.
+let split4 slc =
+    let h = rows slc >>> 1
+    let w = cols slc >>> 1
+    slice 0 w  h      (w + 1) slc,
+    slice 0 0  h       w      slc,
+    slice h 0 (h + 1)  w      slc,
+    slice h w (h + 1) (w + 1) slc
+
+/// Split into two slices, each differing in size by at most one
+/// column. Returned order is W, E.
+let hsplit2 slc =
+    let h = rows slc
+    let w = cols slc >>> 1
+    slice 0 0 h w slc, slice 0 w h (w + 1) slc
+
+/// Split into two slices, each differing in size by at most one
+/// row. Returned order is N, S.
+let vsplit2 slc =
+    let h = rows slc >>> 1
+    let w = cols slc
+    slice 0 0 h w slc, slice h 0 (h + 1) w slc
+
 /// Produce a singleton array slice.
 let singleton v =
     make (Array2D.singleton v)

@@ -284,14 +284,13 @@ let inline vsplit2 qr i =
 let inline hsplit2 qr j =
     hsplit 0 j qr, hsplit j (cols qr) qr
 
+// Get a single row or column
 let row qr i = slice i 0 1 (cols qr) qr
 let col qr j = slice 0 j (rows qr) 1 qr
 
-let toRows qr =
-    Seq.init (rows qr) (row qr)
-
-let toCols qr =
-    Seq.init (cols qr) (col qr)
+// Get a sequence of rows or columns
+let toRows qr = Seq.init (rows qr) (row qr)
+let toCols qr = Seq.init (cols qr) (col qr)
 
 module internal Slicing =
 

@@ -36,31 +36,34 @@ let private leaf = QuadRope.leaf
 let private flatNode = QuadRope.flatNode
 let private thinNode = QuadRope.thinNode
 
+let private s_max = QuadRope.s_max
+
+// These come in handy for making the code more concise; not
+// necessarily more readable though.
+let tthinNode (nw, sw) = thinNode nw sw
+let tflatNode (nw, ne) = flatNode nw ne
+let tnode (ne, nw, sw, se) = node ne nw sw se
+
 /// Generate a new quad rope in parallel.
-let inline init h w (f : int -> int -> _) =
-    let rec init h0 w0 h1 w1 (arr : _ [,]) =
-        let h = h1 - h0
-        let w = w1 - w0
-        if h <= QuadRope.s_max && w <= QuadRope.s_max then
-            for i in h0 .. h1 - 1 do
-                for j in w0 .. w1 - 1 do
-                    arr.[i, j] <- f i j
-        else if w <= QuadRope.s_max then
-            let hpv = h0 + (h >>> 1)
-            par2 (fun () -> init h0 w0 hpv w1 arr) (fun () -> init hpv w0 h1 w1 arr) |> ignore
-        else if h <= QuadRope.s_max then
-            let wpv = w0 + (w >>> 1)
-            par2 (fun () -> init h0 w0 h1 wpv arr) (fun () -> init h0 wpv h1 w1 arr) |> ignore
+let init h w (f : int -> int -> _) =
+    let rec init slc =
+        if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
+            Empty
+        else if ArraySlice.rows slc <= s_max && ArraySlice.cols slc <= s_max then
+            ArraySlice.init slc f // Write into shared array.
+            leaf slc
+        else if ArraySlice.cols slc <= s_max then
+            tthinNode (par2 (fun () -> init (ArraySlice.upperHalf slc))
+                            (fun () -> init (ArraySlice.lowerHalf slc)))
+        else if ArraySlice.rows slc <= s_max then
+            tflatNode (par2 (fun () -> init (ArraySlice.leftHalf slc))
+                            (fun () -> init (ArraySlice.rightHalf slc)))
         else
-            let hpv = h0 + (h >>> 1)
-            let wpv = w0 + (w >>> 1)
-            par4 (fun () -> init h0 wpv hpv w1 arr)
-                 (fun () -> init h0 w0 hpv wpv arr)
-                 (fun () -> init hpv w0 h1 wpv arr)
-                 (fun () -> init hpv wpv h1 w1 arr) |> ignore
-    let vals = Array2D.zeroCreate h w
-    init 0 0 h w vals
-    QuadRope.fromArray2D vals
+            tnode (par4 (fun () -> init (ArraySlice.ne slc))
+                        (fun () -> init (ArraySlice.nw slc))
+                        (fun () -> init (ArraySlice.sw slc))
+                        (fun () -> init (ArraySlice.se slc)))
+    init (ArraySlice.zeroCreate h w)
 
 /// Apply a function f to all scalars in parallel.
 let map f qr =

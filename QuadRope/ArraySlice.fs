@@ -119,6 +119,33 @@ let vsplit2 slc =
     let w = cols slc
     slice 0 0 h w slc, slice h 0 (h + 1) w slc
 
+// Convenience function that allow for splitting slices into equal
+// sized parts in parallel.
+
+let inline leftHalf slc =
+    slice 0 0 (rows slc) (cols slc >>> 1) slc
+
+let inline rightHalf slc =
+    slice 0 (cols slc >>> 1) (rows slc) (cols slc) slc
+
+let inline upperHalf slc =
+    slice 0 0 (rows slc >>> 1) (cols slc) slc
+
+let inline lowerHalf slc =
+    slice (rows slc >>> 1) 0 (rows slc) (cols slc) slc
+
+let inline nw slc =
+    slice 0 0 (rows slc >>> 1) (cols slc >>> 1) slc
+
+let inline ne slc =
+    slice 0 (cols slc >>> 1) (rows slc >>> 1) (cols slc) slc
+
+let inline sw slc =
+    slice (rows slc >>> 1) 0 (rows slc) (cols slc >>> 1) slc
+
+let inline se slc =
+    slice (rows slc >>> 1) (cols slc >>> 1) (rows slc) (cols slc) slc
+
 /// Produce a singleton array slice.
 let singleton v =
     make (Array2D.singleton v)
@@ -236,3 +263,14 @@ let iteri2 f left right =
     for i in 0 .. rows left - 1 do
         for j in 0 .. cols left - 1 do
             f i j (fastGet left i j) (fastGet right i j)
+
+/// Initialize a hopefully empty ArraySlice.
+let internal init slc f =
+    for i in minr slc .. maxr slc - 1 do
+        for j in minc slc .. maxc slc - 1 do
+            slc.vals.[i, j] <- f i j
+
+/// Convenience function to create a new empty ArraySlice that can be
+/// initialized using init.
+let internal zeroCreate h w =
+    make (Array2D.zeroCreate h w)

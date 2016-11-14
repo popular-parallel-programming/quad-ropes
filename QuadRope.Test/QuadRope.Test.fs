@@ -286,7 +286,7 @@ let ``vscan's elements are strictly ordered`` (a : int QuadRope) =
 let ``transpose of transpose is identity`` (a : int QuadRope) =
     QuadRope.transpose (QuadRope.transpose a) = a
 
-let ``zip ignores internal shape`` (a : int QuadRope) (b : int QuadRope) (f : int -> int -> int) =
+let ``zip ignores internal structure`` (a : int QuadRope) (b : int QuadRope) (f : int -> int -> int) =
     (QuadRope.rows a = QuadRope.rows b && QuadRope.cols a = QuadRope.cols b) ==>
     lazy (let c = QuadRope.zip f a b
           let indices = makeIndices (QuadRope.rows c) (QuadRope.cols c)

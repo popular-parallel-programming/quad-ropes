@@ -32,14 +32,14 @@ type 'a Target =
         val i : int
         val j : int
         val vals : 'a [,]
-        new(i : int, j : int, vals : 'a[,]) = { i = i; j = j; vals = vals }
+        new (i : int, j : int, vals : 'a[,]) = { i = i; j = j; vals = vals }
     end
 
 /// Create a new target descriptor of size h * w.
-let inline make h w = Target(0, 0, Array2D.zeroCreate h w)
+let inline make h w = Target (0, 0, Array2D.zeroCreate h w)
 
 let inline increment (tgt : _ Target) i j =
-    Target(tgt.i + i, tgt.j + j, tgt.vals)
+    Target (tgt.i + i, tgt.j + j, tgt.vals)
 
 let inline incrementRow tgt i = increment tgt i 0
 let inline incrementCol tgt j = increment tgt 0 j
@@ -71,14 +71,10 @@ let inline writemap2 (tgt : _ Target) f r c v1 v2 =
 
 /// Generalized write to target with index pairs.
 let inline writemapi (tgt : _ Target) f r c v =
-    let i = tgt.i + r
-    let j = tgt.j + c
-    tgt.vals.[i, j] <- f i j v
+    tgt.vals.[tgt.i + r, tgt.j + c] <- f r c v
 
 let inline writemapi2 (tgt : _ Target) f r c v1 v2 =
-    let i = tgt.i + r
-    let j = tgt.j + c
-    tgt.vals.[i, j] <- f i j v1 v2
+    tgt.vals.[tgt.i + r, tgt.j + c] <- f r c v1 v2
 
 /// Simplified write to target.
 let inline write (tgt : _ Target) r c v =

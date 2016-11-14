@@ -639,7 +639,7 @@ let internal shapesMatch a b =
     rows a = rows b && cols a = cols b
 
 /// True if a and b are nodes and the shapes of all their sub-ropes in
-/// the same positions match.
+/// the same positions match. Not recursive, hence O(1) complexity.
 let internal subShapesMatch a b =
     match a, b with
         | Node (_, _, _, ane, anw, asw, ase),

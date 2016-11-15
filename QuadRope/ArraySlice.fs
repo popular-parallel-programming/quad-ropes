@@ -247,11 +247,14 @@ let filter1 p slice =
 let filter2 p slice =
     apply (Array2D.filter2 p) slice
 
+/// Iterate over all elements in row-first order.
 let iter f slc =
     for i in 0 .. rows slc - 1 do
         for j in 0 .. cols slc - 1 do
             f (fastGet slc i j)
 
+/// Iterate over all elements in row-first order and pass indices to
+/// iteration function.
 let iteri f slc =
     for i in 0 .. rows slc - 1 do
         for j in 0 .. cols slc - 1 do

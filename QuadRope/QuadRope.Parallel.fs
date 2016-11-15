@@ -250,39 +250,50 @@ let rec vfilter p = function
     | qr -> QuadRope.vfilter p qr
 
 /// Reverse the quad rope horizontally in parallel.
-let rec hrev = function
-    | Node (d, h, w, ne, nw, Empty, Empty) ->
-        let ne0, nw0 = par2 (fun () -> hrev ne) (fun () -> hrev nw)
-        Node (d, h, w, nw0, ne0, Empty, Empty)
-    | Node (d, h, w, Empty, nw, sw, Empty) ->
-        let nw0, sw0 = par2 (fun () -> hrev nw) (fun () -> hrev sw)
-        Node (d, h, w, Empty, nw0, sw0, Empty)
-    | Node (d, h, w, ne, nw, sw, se) ->
-        let ne0, nw0, sw0, se0 = par4 (fun() -> hrev ne)
-                                      (fun() -> hrev nw)
-                                      (fun() -> hrev sw)
-                                      (fun() -> hrev se)
-        Node (d, h, w, nw0, ne0, se0, sw0)
-    | Slice _ as qr -> hrev (QuadRope.Slicing.reallocate qr)
-    | qr -> QuadRope.hrev qr
+let hrev qr =
+    let rec hrev qr tgt =
+        match qr with
+            | Empty -> Empty
+            | Leaf slc ->
+                leaf (Target.hrev slc tgt)
+            | Node (d, h, w, ne, nw, Empty, Empty) ->
+                let ne, nw = par2 (fun () -> hrev nw tgt) (fun () -> hrev ne (Target.ne tgt qr))
+                Node (d, h, w, ne, nw, Empty, Empty)
+            | Node (d, h, w, Empty, nw, sw, Empty) ->
+                let nw, sw = par2 (fun () -> hrev nw tgt) (fun () -> hrev sw (Target.sw tgt qr))
+                Node (d, h, w, Empty, nw, sw, Empty)
+            | Node (d, h, w, ne, nw, sw, se) ->
+                let ne, nw, sw, se = par4 (fun () -> hrev nw tgt)
+                                          (fun () -> hrev ne (Target.ne tgt qr))
+                                          (fun () -> hrev se (Target.se tgt qr))
+                                          (fun () -> hrev sw (Target.sw tgt qr))
+                Node (d, h, w, ne, nw, sw, se)
+            | Slice _ ->
+                hrev (QuadRope.Slicing.reallocate qr) tgt
+    hrev qr (Target.make (rows qr) (cols qr))
 
 /// Reverse the quad rope vertically in parallel.
-let rec vrev = function
-    | Node (d, h, w, ne, nw, Empty, Empty) ->
-        let ne0, nw0 = par2 (fun () -> vrev ne) (fun () -> vrev nw)
-        Node (d, h, w, ne0, nw0, Empty, Empty)
-    | Node (d, h, w, Empty, nw, sw, Empty) ->
-        let nw0, sw0 = par2 (fun () -> vrev nw) (fun () -> vrev sw)
-        Node (d, h, w, Empty, sw0, nw0, Empty)
-    | Node (d, h, w, ne, nw, sw, se) ->
-        let ne0, nw0, sw0, se0 = par4 (fun() -> vrev ne)
-                                      (fun() -> vrev nw)
-                                      (fun() -> vrev sw)
-                                      (fun() -> vrev se)
-        Node (d, h, w, se0, sw0, nw0, ne0)
-    | Slice _ as qr -> vrev (QuadRope.Slicing.reallocate qr)
-    | qr -> QuadRope.vrev qr
-
+let vrev qr =
+    let rec vrev qr tgt =
+        match qr with
+            | Empty -> Empty
+            | Leaf slc ->
+                leaf (Target.vrev slc tgt)
+            | Node (d, h, w, ne, nw, Empty, Empty) ->
+                let ne, nw = par2 (fun () -> vrev ne (Target.ne tgt qr)) (fun () -> vrev nw tgt)
+                Node (d, h, w, ne, nw, Empty, Empty)
+            | Node (d, h, w, Empty, nw, sw, Empty) ->
+                let nw, sw = par2 (fun () -> vrev sw (Target.sw tgt qr)) (fun () -> vrev nw tgt)
+                Node (d, h, w, Empty, nw, sw, Empty)
+            | Node (d, h, w, ne, nw, sw, se) ->
+                let ne, nw, sw, se = par4 (fun () -> vrev se (Target.se tgt qr))
+                                          (fun () -> vrev sw (Target.sw tgt qr))
+                                          (fun () -> vrev nw tgt)
+                                          (fun () -> vrev ne (Target.ne tgt qr))
+                Node (d, h, w, ne, nw, sw, se)
+            | Slice _ ->
+                vrev (QuadRope.Slicing.reallocate qr) tgt
+    vrev qr (Target.make (rows qr) (cols qr))
 
 /// Transpose the quad rope in parallel. This is equal to swapping
 /// indices, such that get rope i j = get rope j i.

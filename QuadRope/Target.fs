@@ -106,3 +106,15 @@ let inline mapi f vals (tgt : _ Target) =
 /// Use the offset stored in tgt to iterate over some array slice.
 let inline iteri f vals (tgt : _ Target) =
     ArraySlice.iteri (fun i j v -> f (tgt.i + i) (tgt.j + j) v) vals
+
+/// Write the elements of vals in reverse horizontal order into
+/// target.
+let inline hrev vals (tgt : _ Target) =
+    ArraySlice.iteri (fun i j v -> write tgt i (ArraySlice.length2 vals - 1 - j) v) vals
+    toSlice tgt (ArraySlice.length1 vals) (ArraySlice.length2 vals)
+
+/// Write the elements of vals in reverse vertical order into
+/// target.
+let inline vrev vals (tgt : _ Target) =
+    ArraySlice.iteri (fun i j v -> write tgt (ArraySlice.length1 vals - 1 - i) j v) vals
+    toSlice tgt (ArraySlice.length1 vals) (ArraySlice.length2 vals)

@@ -441,24 +441,50 @@ let hcat left right =
         hbalance (hcat left right)
 
 /// Reverse rope horizontally.
-let rec hrev = function
-    | Empty -> Empty
-    | Leaf vs -> Leaf (ArraySlice.rev2 vs)
-    | Node (d, h, w, Empty, nw, sw, Empty) ->
-        Node (d, h, w, Empty, hrev nw, hrev sw, Empty)
-    | Node (d, h, w, ne, nw, sw, se) ->
-        Node (d, h, w, hrev nw, hrev ne, hrev se, hrev sw)
-    | Slice (i, j, h, w, qr) -> Slice (i, j, h, w, hrev qr)
+let hrev qr =
+    let rec hrev qr tgt =
+        match qr with
+            | Empty -> Empty
+            | Leaf slc ->
+                leaf (Target.hrev slc tgt)
+            | Node (d, h, w, Empty, nw, sw, Empty) ->
+                Node (d, h, w,
+                      Empty,
+                      hrev nw tgt,
+                      hrev sw (Target.sw tgt qr),
+                      Empty)
+            | Node (d, h, w, ne, nw, sw, se) ->
+                Node (d, h, w,
+                      hrev nw tgt,
+                      hrev ne (Target.ne tgt qr),
+                      hrev se (Target.se tgt qr),
+                      hrev sw (Target.sw tgt qr))
+            | Slice _ ->
+                hrev (Slicing.reallocate qr) tgt
+    hrev qr (Target.make (rows qr) (cols qr))
 
 /// Reverse rope vertically.
-let rec vrev = function
-    | Empty -> Empty
-    | Leaf vs -> Leaf (ArraySlice.rev1 vs)
-    | Node (d, h, w, ne, nw, Empty, Empty) ->
-        Node (d, h, w, vrev ne, vrev nw, Empty, Empty)
-    | Node (d, h, w, ne, nw, sw, se) ->
-        Node (d, h, w, vrev se, vrev sw, vrev nw, vrev ne)
-    | Slice (i, j, h, w, qr) -> Slice (i, j, h, w, vrev qr)
+let vrev qr =
+    let rec vrev qr tgt =
+        match qr with
+            | Empty -> Empty
+            | Leaf slc ->
+                leaf (Target.vrev slc tgt)
+            | Node (d, h, w, ne, nw, Empty, Empty) ->
+                Node (d, h, w,
+                      vrev ne (Target.ne tgt qr),
+                      vrev nw tgt,
+                      Empty,
+                      Empty)
+            | Node (d, h, w, ne, nw, sw, se) ->
+                Node (d, h, w,
+                      vrev se (Target.se tgt qr),
+                      vrev sw (Target.sw tgt qr),
+                      vrev nw tgt,
+                      vrev ne (Target.ne tgt qr))
+            | Slice _ ->
+                vrev (Slicing.reallocate qr) tgt
+    vrev qr (Target.make (rows qr) (cols qr))
 
 /// Initialize a rope from a native 2D-array.
 let fromArray2D arr =

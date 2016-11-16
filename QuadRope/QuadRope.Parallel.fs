@@ -297,21 +297,27 @@ let vrev qr =
 
 /// Transpose the quad rope in parallel. This is equal to swapping
 /// indices, such that get rope i j = get rope j i.
-let rec transpose = function
-    | Node (_, _, _, ne, nw, Empty, Empty) ->
-        let nw0, ne0 = par2 (fun () -> transpose nw) (fun () -> transpose ne)
-        QuadRope.thinNode nw0 ne0
-    | Node (_, _, _, Empty, nw, sw, Empty) ->
-        let nw0, sw0 = par2 (fun () -> transpose nw) (fun () -> transpose sw)
-        QuadRope.flatNode nw0 sw0
-    | Node (_, _, _, ne, nw, sw, se) ->
-        let ne0, nw0, sw0, se0 = par4 (fun () -> transpose ne)
-                                      (fun () -> transpose nw)
-                                      (fun () -> transpose sw)
-                                      (fun () -> transpose se)
-        QuadRope.node sw0 nw0 ne0 se0
-    | Slice _ as qr -> transpose (QuadRope.Slicing.reallocate qr)
-    | qr -> QuadRope.transpose qr
+let transpose qr =
+    let rec transpose qr tgt =
+        match qr with
+            | Empty -> Empty
+            | Leaf slc ->
+                leaf (Target.transpose slc tgt)
+            | Node (_, _, _, ne, nw, Empty, Empty) ->
+                par2 (fun () -> transpose nw tgt) (fun () -> transpose ne (Target.ne tgt qr))
+                |> tthinNode
+            | Node (_, _, _, Empty, nw, sw, Empty) ->
+                par2 (fun () -> transpose nw tgt) (fun () -> transpose sw (Target.sw tgt qr))
+                |> tflatNode
+            | Node (_, _, _, ne, nw, sw, se) ->
+                par4 (fun () -> transpose sw (Target.sw tgt qr))
+                     (fun () -> transpose nw tgt)
+                     (fun () -> transpose ne (Target.ne tgt qr))
+                     (fun () -> transpose se (Target.se tgt qr))
+                |> tnode
+            | Slice _ ->
+                transpose (QuadRope.Slicing.reallocate qr) tgt
+    transpose qr (Target.make (cols qr) (rows qr))
 
 /// Apply a function with side effects to all elements and their
 /// corresponding index pair in parallel.

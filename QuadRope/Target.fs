@@ -118,3 +118,9 @@ let inline hrev vals (tgt : _ Target) =
 let inline vrev vals (tgt : _ Target) =
     ArraySlice.iteri (fun i j v -> write tgt (ArraySlice.length1 vals - 1 - i) j v) vals
     toSlice tgt (ArraySlice.length1 vals) (ArraySlice.length2 vals)
+
+/// Write the elements of vals in transposed order into target.
+let inline transpose vals (tgt : _ Target) =
+    let tgt' = Target (tgt.j, tgt.i, tgt.vals) // Target must be transposed, too.
+    ArraySlice.iteri (fun i j v -> write tgt' j i v) vals
+    toSlice tgt' (ArraySlice.length2 vals) (ArraySlice.length1 vals)

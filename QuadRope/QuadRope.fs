@@ -825,13 +825,21 @@ let rec vfilter p = function
     | _ -> failwith "Quad rope width must be exactly one."
 
 /// Transpose the quad rope. This is equal to swapping indices,
-/// such that get rope i j = get (reverse rope) j i.
-let rec transpose = function
-    | Empty -> Empty
-    | Leaf vs -> leaf (ArraySlice.transpose vs)
-    | Node (_, _, _, ne, nw, sw, se) ->
-        node (transpose sw) (transpose nw) (transpose ne) (transpose se)
-    | Slice _ as qr -> transpose (Slicing.reallocate qr)
+/// such that get qr i j = get (transpose qr) j i.
+let transpose qr =
+    let rec transpose qr tgt =
+        match qr with
+            | Empty -> Empty
+            | Leaf slc ->
+                leaf (Target.transpose slc tgt)
+            | Node (_, _, _, ne, nw, sw, se) ->
+                node (transpose sw (Target.sw tgt qr))
+                     (transpose nw tgt)
+                     (transpose ne (Target.ne tgt qr))
+                     (transpose se (Target.se tgt qr))
+            | Slice _ ->
+                transpose (Slicing.reallocate qr) tgt
+    transpose qr (Target.make (cols qr) (rows qr))
 
 /// Produce a string with the tikz code for printing the rope as a
 /// box diagram. This is useful for illustrating algorithms on

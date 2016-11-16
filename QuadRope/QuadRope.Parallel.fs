@@ -196,7 +196,7 @@ let rec private fastZip f lqr rqr tgt =
 /// Apply f to each (i, j) of lqr and rqr.
 let zip f lqr rqr =
     if not (QuadRope.shapesMatch lqr rqr) then
-        invalidArg "rope" "Must have the same shape as first argument."
+        invalidArg "rqr" "Must have the same shape as first argument."
     fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
 /// Apply f to all values of the rope and reduce the resulting

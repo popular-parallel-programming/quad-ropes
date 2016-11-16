@@ -83,7 +83,7 @@ let inline private checkBounds qr i j =
 /// check whether i, j are within bounds.
 let rec internal fastGet qr i j =
     match qr with
-        | Empty -> invalidArg "qr" "Empty tree cannot contain values."
+        | Empty -> invalidArg "qr" "Empty quad rope contains no values."
         | Leaf vs -> ArraySlice.get vs i j
         | Node (_, _, _, ne, nw, sw, se) ->
             if withinRange nw i j then
@@ -105,7 +105,7 @@ let get root i j =
 let set root i j v =
     let rec set qr i j v =
         match qr with
-            | Empty -> invalidArg "qr" "Empty tree cannot contain values."
+            | Empty -> invalidArg "qr" "Empty quad rope cannot be set."
             | Leaf vs -> Leaf (ArraySlice.set vs i j v)
             | Node (d, h, w, ne, nw, sw, se) ->
                 if withinRange nw i j then
@@ -124,7 +124,7 @@ let set root i j v =
 let write root i j v =
     let rec write qr i j v =
         match qr with
-            | Empty -> invalidArg "qr" "Empty tree cannot contain values."
+            | Empty -> invalidArg "qr" "Empty quad rope cannot be written."
             | Leaf vs -> Leaf (ArraySlice.set vs i j v)
             | Node (_, _, _, ne, nw, sw, se) ->
                 if withinRange nw i j then
@@ -436,7 +436,7 @@ let hcat left right =
             | _ -> flatNode left right
 
     if (not ((isEmpty left) || (isEmpty right))) && rows left <> rows right then
-        invalidArg "right" "Right quad rope must be of same width as left quad rope."
+        invalidArg "right" "Right quad rope must be of same height as left quad rope."
     else
         hbalance (hcat left right)
 
@@ -700,13 +700,13 @@ let rec internal fastZip f lqr rqr tgt =
 /// Apply f to each (i, j) of lqr and rope.
 let zip f lqr rqr =
     if not (shapesMatch lqr rqr) then
-        failwith "ropes must have the same shape"
+        failwith "Quad ropes must have the same shape."
     fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
 /// Apply f to all values of the rope and reduce the resulting
 /// values to a single scalar using g.
 let rec mapreduce f g = function
-    | Empty -> failwith "Impossible to reduce an empty rope"
+    | Empty -> failwith "Impossible to reduce an empty quad rope."
     | Leaf vs -> ArraySlice.mapreduce f g vs
     | Node (_, _, _, ne, nw, Empty, Empty) ->
         g (mapreduce f g nw) (mapreduce f g ne)
@@ -813,7 +813,7 @@ let rec hfilter p = function
     | Leaf vs -> leaf (ArraySlice.filter2 p vs)
     | Node (_, 1, _, ne, nw, Empty, Empty) ->
         flatNode (hfilter p nw) (hfilter p ne)
-    | _ -> failwith "hight must be exactly 1"
+    | _ -> failwith "Quad rope height must be exactly one."
 
 /// Remove all elements from rope for which p does not hold. Input
 /// rope must be of width 1.
@@ -822,7 +822,7 @@ let rec vfilter p = function
     | Leaf vs -> leaf (ArraySlice.filter1 p vs)
     | Node (_, _, 1, Empty, nw, sw, Empty) ->
         thinNode (vfilter p nw) (vfilter p sw)
-    | _ -> failwith "width must be exactly 1"
+    | _ -> failwith "Quad rope width must be exactly one."
 
 /// Transpose the quad rope. This is equal to swapping indices,
 /// such that get rope i j = get (reverse rope) j i.

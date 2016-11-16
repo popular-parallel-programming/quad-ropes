@@ -27,19 +27,13 @@ open Types
 
 /// A convenience wrapper for writing into a target array with
 /// some offset.
-type 'a Target =
-    struct
-        val i : int
-        val j : int
-        val vals : 'a [,]
-        new (i : int, j : int, vals : 'a[,]) = { i = i; j = j; vals = vals }
-    end
+type 'a Target = { i : int; j : int; vals : 'a [,] }
 
 /// Create a new target descriptor of size h * w.
-let inline make h w = Target (0, 0, Array2D.zeroCreate h w)
+let inline make h w = { i = 0; j = 0; vals = Array2D.zeroCreate h w }
 
 let inline increment (tgt : _ Target) i j =
-    Target (tgt.i + i, tgt.j + j, tgt.vals)
+    { tgt with i = tgt.i + i; j = tgt.j + j }
 
 let inline incrementRow tgt i = increment tgt i 0
 let inline incrementCol tgt j = increment tgt 0 j
@@ -121,6 +115,6 @@ let inline vrev vals (tgt : _ Target) =
 
 /// Write the elements of vals in transposed order into target.
 let inline transpose vals (tgt : _ Target) =
-    let tgt' = Target (tgt.j, tgt.i, tgt.vals) // Target must be transposed, too.
+    let tgt' = { tgt with i = tgt.j; j = tgt.i}
     ArraySlice.iteri (fun i j v -> write tgt' j i v) vals
     toSlice tgt' (ArraySlice.length2 vals) (ArraySlice.length1 vals)

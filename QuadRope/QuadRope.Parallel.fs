@@ -380,3 +380,79 @@ let initAll h w e =
 
 /// Initialize a rope in parallel with all zeros.
 let initZeros h w = initAll h w 0
+
+/// Compute the generalized summed area table for functions plus and
+/// minus in parallel, if possible; all rows and columns are
+/// initialized with init.
+let scan plus minus init qr =
+    // Prefix is implicitly passed on through side effects when
+    // writing into tgt. Therefore, we need to take several cases of
+    // dependencies into account:
+    //
+    // flat or thin node: no parallelism.
+    // rows ne <= rows nw && cols sw <= cols nw: scan ne and sw in parallel.
+    // cols nw < cols sw: scan ne before sw.
+    // rows nw < rows ne: scan sw before ne.
+    let rec scan pre qr tgt =
+        match qr with
+            | Empty -> Empty
+            | Leaf slc ->
+                Target.scan plus minus pre slc tgt
+                Leaf (Target.toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc))
+
+            // Flat node, no obvious parallelism.
+            | Node (d, h, w, ne, nw, Empty, Empty) ->
+                let nw' = scan pre nw tgt
+                let tgt_ne = Target.ne tgt qr
+                let ne' = scan (Target.get tgt_ne) ne tgt_ne
+                Node (d, h, w, ne', nw', Empty, Empty)
+
+            // Thin nodes, no obvious parallelism.
+            | Node (d, h, w, Empty, nw, sw, Empty) ->
+                let nw' = scan pre nw tgt
+                let tgt_sw = Target.sw tgt qr
+                let sw' = scan (Target.get tgt_sw) sw tgt_sw
+                Node (d, h, w, Empty, nw', sw', Empty)
+
+            // Parallel case; NE and SW depend only on NW, SE
+            // depends on all other children. Scan NE and SW in
+            // parallel.
+            | Node (d, h, w, ne, nw, sw, se) when rows ne <= rows nw && cols sw <= cols nw ->
+
+                let nw' = scan pre nw tgt
+                let ne', sw' = par2 (fun () ->
+                                     let tgt_ne = Target.ne tgt qr
+                                     scan (Target.get tgt_ne) ne tgt_ne)
+                                    (fun () ->
+                                     let tgt_sw = Target.sw tgt qr
+                                     scan (Target.get tgt_sw) sw tgt_sw)
+                let tgt_se = Target.se tgt qr
+                let se' = scan (Target.get tgt_se) se tgt_se
+                Node (d, h, w, ne', nw', sw', se')
+
+            // Sequential case; SW depends on NE.
+            | Node (d, h, w, ne, nw, sw, se) when cols nw < cols sw ->
+                let nw' = scan pre nw tgt
+                let tgt_ne = Target.ne tgt qr
+                let ne' = scan (Target.get tgt_ne) ne tgt_ne
+                let tgt_sw = Target.sw tgt qr
+                let sw' = scan (Target.get tgt_sw) sw tgt_sw
+                let tgt_se = Target.se tgt qr
+                let se' = scan (Target.get tgt_se) se tgt_se
+                Node (d, h, w, ne', nw', sw', se')
+
+            // Sequential case; NE depends on SW.
+            | Node (d, h, w, ne, nw, sw, se) -> // when rows nw < rows ne
+                let nw' = scan pre nw tgt
+                let tgt_sw = Target.sw tgt qr
+                let sw' = scan (Target.get tgt_sw) sw tgt_sw
+                let tgt_ne = Target.ne tgt qr
+                let ne' = scan (Target.get tgt_ne) ne tgt_ne
+                let tgt_se = Target.se tgt qr
+                let se' = scan (Target.get tgt_se) se tgt_se
+                Node (d, h, w, ne', nw', sw', se')
+            | Slice _ -> scan pre (QuadRope.Slicing.reallocate qr) tgt
+
+    // Initial target and start of recursion.
+    let tgt = Target.makeWithFringe (rows qr) (cols qr) init
+    scan (Target.get tgt) qr tgt

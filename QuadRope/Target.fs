@@ -118,3 +118,28 @@ let inline transpose slc (tgt : _ Target) =
     let tgt' = { tgt with i = tgt.j; j = tgt.i } // Target must be transposed, too.
     ArraySlice.iteri (fun i j v -> write tgt' j i v) slc
     toSlice tgt' (ArraySlice.length2 slc) (ArraySlice.length1 slc)
+
+/// Read from target with its offset.
+let get (tgt : _ Target) i j =
+    tgt.vals.[tgt.i + i, tgt.j + j]
+
+/// Generalized two-dimensional scan using a plus and a minus function
+/// and a function slc to access "state" based on (i, j) position.
+let scan plus minus pres slc tgt =
+    // This is the same for every element.
+    let prefix pres i j =
+        minus (plus (ArraySlice.get slc i j) (plus (pres (i - 1) j) (pres i (j - 1))))
+              (pres (i - 1) (j - 1))
+    // Compute prefix for top left element.
+    write tgt 0 0 (prefix pres 0 0)
+    // Compute prefix for top row.
+    for i in 1 .. ArraySlice.rows slc - 1 do
+        write tgt i 0 (prefix pres i 0)
+    // Compute prefix for leftmost column.
+    for j in 1 .. ArraySlice.cols slc - 1 do
+        write tgt 0 j (prefix pres 0 j)
+    // Compute prefix for remaining elements, taking prefix sums from
+    // tgt itself.
+    for i in 1 .. ArraySlice.rows slc - 1 do
+        for j in 1 .. ArraySlice.cols slc - 1 do
+            write tgt i j (prefix (get tgt) i j)

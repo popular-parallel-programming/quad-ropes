@@ -125,11 +125,10 @@ let get (tgt : _ Target) i j =
 
 /// Generalized two-dimensional scan using a plus and a minus function
 /// and a function slc to access "state" based on (i, j) position.
-let scan plus minus pres slc tgt =
+let scan (++) (--) pres slc tgt =
     // This is the same for every element.
     let prefix pres i j =
-        minus (plus (ArraySlice.get slc i j) (plus (pres (i - 1) j) (pres i (j - 1))))
-              (pres (i - 1) (j - 1))
+        (ArraySlice.get slc i j) ++ (pres (i - 1) j) ++ (pres i (j - 1)) -- (pres (i - 1) (j - 1))
     // Compute prefix for top left element.
     write tgt 0 0 (prefix pres 0 0)
     // Compute prefix for top row.

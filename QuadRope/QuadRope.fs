@@ -337,7 +337,9 @@ module internal Slicing =
                 | Slice (x, y, r, c, qr) -> map (x + i) (y + j) (min h r) (min w c) qr
         map 0 0 (rows qr) (cols qr) qr
 
-/// Concatenate two trees vertically.
+/// Concatenate two trees vertically. For the sake of leave size, this
+/// may result in actually keeping parts of a large area in memory
+/// twice. TODO: Consider other options.
 let vcat upper lower =
     let canMerge us ls =
         ArraySlice.length2 us = ArraySlice.length2 ls &&
@@ -389,7 +391,9 @@ let vcat upper lower =
     else
         vbalance (vcat upper lower)
 
-/// Concatenate two trees horizontally.
+/// Concatenate two trees horizontally. For the sake of leave size,
+/// this may result in actually keeping parts of a large area in
+/// memory twice. TODO: Consider other options.
 let hcat left right =
     let canMerge ls rs =
         ArraySlice.rows ls = ArraySlice.rows rs && ArraySlice.cols ls + ArraySlice.cols rs <= s_max

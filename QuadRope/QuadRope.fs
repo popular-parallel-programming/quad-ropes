@@ -783,16 +783,6 @@ let rec vscan f states = function
 /// Compute the generalized summed area table for functions plus and
 /// minus; all rows and columns are initialized with init.
 let scan plus minus init qr =
-    // To avoid having to think about fringes by using conditionals,
-    // we simply extend the target array by one row and one column,
-    // into which we load the initial value.
-    let initFringe h w value =
-        let tgt = Target.make (h + 1) (w + 1)
-        for i in 0 .. rows qr do
-            Target.write tgt i 0 init
-        for j in 0 .. cols qr do
-            Target.write tgt 0 j init
-        Target.increment tgt 1 1
     // Prefix is implicitly passed on through side effects when
     // writing into tgt.
     let rec scan pre qr tgt =
@@ -811,7 +801,7 @@ let scan plus minus init qr =
                 let se' = scan (Target.get tgt') se tgt'
                 Node (d, h, w, ne', nw', sw', se')
             | Slice _ -> scan pre (Slicing.reallocate qr) tgt
-    let tgt = initFringe (rows qr) (cols qr) init
+    let tgt = Target.makeWithFringe (rows qr) (cols qr) init
     scan (Target.get tgt) qr tgt
 
 /// Checks that some relation p holds between each two adjacent

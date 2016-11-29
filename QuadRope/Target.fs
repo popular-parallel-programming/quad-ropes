@@ -35,6 +35,17 @@ let inline make h w = { i = 0; j = 0; vals = Array2D.zeroCreate h w }
 let inline increment (tgt : _ Target) i j =
     { tgt with i = tgt.i + i; j = tgt.j + j }
 
+/// To avoid having to think about fringes by using conditionals,
+/// we simply extend the target array by one row and one column,
+/// into which we load the initial value.
+let inline makeWithFringe h w value =
+    let tgt = make (h + 1) (w + 1)
+    for i in 0 .. h do
+        tgt.vals.[i, 0] <- value
+    for j in 0 .. w do
+        tgt.vals.[0, j] <- value
+    increment tgt 1 1
+
 let inline incrementRow tgt i = increment tgt i 0
 let inline incrementCol tgt j = increment tgt 0 j
 

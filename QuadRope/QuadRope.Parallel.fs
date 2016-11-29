@@ -53,16 +53,17 @@ let init h w (f : int -> int -> _) =
             ArraySlice.init slc f // Write into shared array.
             leaf slc
         else if ArraySlice.cols slc <= s_max then
-            tthinNode (par2 (fun () -> init (ArraySlice.upperHalf slc))
-                            (fun () -> init (ArraySlice.lowerHalf slc)))
+            par2 (fun () -> init (ArraySlice.upperHalf slc)) (fun () -> init (ArraySlice.lowerHalf slc))
+            |> tthinNode
         else if ArraySlice.rows slc <= s_max then
-            tflatNode (par2 (fun () -> init (ArraySlice.leftHalf slc))
-                            (fun () -> init (ArraySlice.rightHalf slc)))
+            par2 (fun () -> init (ArraySlice.leftHalf slc)) (fun () -> init (ArraySlice.rightHalf slc))
+            |> tflatNode
         else
-            tnode (par4 (fun () -> init (ArraySlice.ne slc))
-                        (fun () -> init (ArraySlice.nw slc))
-                        (fun () -> init (ArraySlice.sw slc))
-                        (fun () -> init (ArraySlice.se slc)))
+            par4 (fun () -> init (ArraySlice.ne slc))
+                 (fun () -> init (ArraySlice.nw slc))
+                 (fun () -> init (ArraySlice.sw slc))
+                 (fun () -> init (ArraySlice.se slc))
+            |> tnode
     init (ArraySlice.zeroCreate h w)
 
 /// Apply a function f to all scalars in parallel.

@@ -392,10 +392,10 @@ let scan plus minus init qr =
     // writing into tgt. Therefore, we need to take several cases of
     // dependencies into account:
     //
-    // flat or thin node: no parallelism.
-    // rows ne <= rows nw && cols sw <= cols nw: scan ne and sw in parallel.
-    // cols nw < cols sw: scan ne before sw.
-    // rows nw < rows ne: scan sw before ne.
+    // - flat or thin node: no parallelism.
+    // - rows ne <= rows nw && cols sw <= cols nw: scan ne and sw in parallel.
+    // - cols nw < cols sw: scan ne before sw.
+    // - rows nw < rows ne: scan sw before ne.
     let rec scan pre qr tgt =
         match qr with
             | Empty -> Empty

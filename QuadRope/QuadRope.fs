@@ -331,10 +331,6 @@ let vcat upper lower =
             | Empty, _ -> lower
             | _, Empty -> upper
 
-            // Slices must be reallocated. TODO: Reconsider.
-            | Slice _, _ -> vcat (materialize upper) lower
-            | _, Slice _ -> vcat upper (materialize lower)
-
             // Merge single leaves.
             | Leaf us, Leaf ls when canMerge us ls ->
                 leaf (ArraySlice.cat1 us ls)
@@ -383,10 +379,6 @@ let hcat left right =
             // Concatenation with Empty yields argument.
             | Empty, _ -> right
             | _, Empty -> left
-
-            // Slices must be reallocated. TODO: Reconsider.
-            | Slice _, _ -> hcat (materialize left) right
-            | _, Slice _ -> hcat left (materialize right)
 
             // Merge single leaves.
             | Leaf ls, Leaf rs when canMerge ls rs ->

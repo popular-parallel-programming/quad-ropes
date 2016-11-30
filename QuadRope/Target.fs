@@ -32,6 +32,14 @@ type 'a Target = { i : int; j : int; vals : 'a [,] }
 /// Create a new target descriptor of size h * w.
 let inline make h w = { i = 0; j = 0; vals = Array2D.zeroCreate h w }
 
+/// The "empty target", a target that is not initialized.
+let empty = { i = 0; j = 0; vals = null }
+
+/// True if the target is the empty target.
+let inline isEmpty tgt =
+    tgt.vals = null
+
+/// Advance the target by i and j in both dimensions.
 let inline increment (tgt : _ Target) i j =
     { tgt with i = tgt.i + i; j = tgt.j + j }
 
@@ -51,19 +59,19 @@ let inline incrementCol tgt j = increment tgt 0 j
 
 /// Adjust target descriptor to match north-eastern child.
 let ne tgt = function
-    | Node (_, _, _, _, nw, _, _) ->
+    | Node (_, _, _, _, _, nw, _, _) ->
         incrementCol tgt (cols nw)
     | _ -> tgt
 
 /// Adjust target descriptor to match south-western child.
 let sw tgt = function
-    | Node (_, _, _, _, nw, _, _) ->
+    | Node (_, _, _, _, _, nw, _, _) ->
         incrementRow tgt (rows nw)
     | _ -> tgt
 
 /// Adjust target descriptor to match south-eastern child.
 let se tgt = function
-    | Node (_, _, _, ne, _, sw, _) ->
+    | Node (_, _, _, _, ne, _, sw, _) ->
         increment tgt (rows ne) (cols sw)
     | _ -> tgt
 

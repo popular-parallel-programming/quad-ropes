@@ -38,13 +38,13 @@ module private Utils =
     let rec maintainsTight = function
         | Empty
         | Leaf _ -> true
-        | Node (_, _, _, ne, nw, Empty, Empty) ->
+        | Node (_, _, _, _, ne, nw, Empty, Empty) ->
             maintainsTight ne && maintainsTight nw
-        | Node (_, _, _, Empty, nw, sw, Empty) ->
+        | Node (_, _, _, _, Empty, nw, sw, Empty) ->
             maintainsTight nw && maintainsTight sw
-        | Node (_, _, _, _, Empty, _, _)
-        | Node (_, _, _, _, _, Empty, _) -> false
-        | Node (_, _, _, ne, nw, sw, se) ->
+        | Node (_, _, _, _, _, Empty, _, _)
+        | Node (_, _, _, _, _, _, Empty, _) -> false
+        | Node (_, _, _, _, ne, nw, sw, se) ->
             maintainsTight ne && maintainsTight nw && maintainsTight sw && maintainsTight se
         | Slice _ as qr -> maintainsTight qr
 

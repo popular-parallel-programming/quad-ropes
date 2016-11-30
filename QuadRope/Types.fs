@@ -55,29 +55,31 @@ type 'a ArraySlice when 'a : equality =
 type 'a QuadRope when 'a : equality =
     | Empty
     | Leaf of 'a ArraySlice
-    | Node of int * int * int * 'a QuadRope * 'a QuadRope * 'a QuadRope * 'a QuadRope
+    | Node of bool * int * int * int * 'a QuadRope * 'a QuadRope * 'a QuadRope * 'a QuadRope
     | Slice of int * int * int * int * 'a QuadRope
+    | Sparse of int * int * 'a
 
 /// Number of rows in a rectangular tree.
 let rows = function
     | Empty -> 0
     | Leaf slc -> slc.h
-    | Node (_, h, _, _, _, _, _) -> h
+    | Node (_, _, h, _, _, _, _, _) -> h
     | Slice (_, _, h, _, _) -> h
+    | Sparse (h, _, _) -> h
 
 /// Number of columns in a rectangular tree.
 let cols = function
     | Empty -> 0
     | Leaf slc -> slc.w
-    | Node (_, _, w, _, _, _, _) -> w
+    | Node (_, _, _, w, _, _, _, _) -> w
     | Slice (_, _, _, w, _) -> w
+    | Sparse (_, w, _) -> w
 
 /// Depth of a rectangular tree.
 let rec depth = function
-    | Empty -> 0
-    | Leaf _ -> 0
-    | Node (d, _, _, _, _, _, _) -> d
+    | Node (_, d, _, _, _, _, _, _) -> d
     | Slice (_, _, _, _, qr) -> depth qr
+    | _ -> 0
 
 let isEmpty = function
     | Empty -> true

@@ -39,6 +39,13 @@ let inline cols qr = Types.cols qr
 let inline depth qr = Types.depth qr
 let inline isEmpty qr = Types.isEmpty qr
 
+/// True if the quad rope contains a sparse sub-tree.
+let rec isSparse = function
+    | Sparse _ -> true
+    | Node (true, _, _, _, _, _, _, _) -> true
+    | Slice ( _, _, _, _, qr) -> isSparse qr
+    | _ -> false
+
 /// Construct a Leaf if slc is non-empty. Otherwise, return Empty.
 let leaf slc =
     if ArraySlice.length1 slc = 0 || ArraySlice.length2 slc = 0 then
@@ -62,7 +69,7 @@ let rec node ne nw sw se =
             let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se)) + 1
             let h = rows nw + rows sw
             let w = cols nw + cols ne
-            Node (d, h, w, ne, nw, sw, se)
+            Node (isSparse ne || isSparse nw || isSparse sw || isSparse se, d, h, w, ne, nw, sw, se)
 
 let inline flatNode w e =
     node e w Empty Empty (* NB: Arguments switched. *)
@@ -85,7 +92,7 @@ let rec internal fastGet qr i j =
     match qr with
         | Empty -> invalidArg "qr" "Empty quad rope contains no values."
         | Leaf vs -> ArraySlice.get vs i j
-        | Node (_, _, _, ne, nw, sw, se) ->
+        | Node (s, _, _, _, ne, nw, sw, se) ->
             if withinRange nw i j then
                 fastGet nw i j
             else if withinRange ne i (j - cols nw) then
@@ -95,6 +102,7 @@ let rec internal fastGet qr i j =
             else
                 fastGet se (i - rows ne) (j - cols sw)
         | Slice (x, y, _, _, qr) -> fastGet qr (i + x) (j + y)
+        | Sparse (_, _, v) -> v
 
 /// Get the value of a location in the tree.
 let get root i j =
@@ -105,51 +113,41 @@ let get root i j =
 let set root i j v =
     let rec set qr i j v =
         match qr with
-            | Empty -> invalidArg "qr" "Empty quad rope cannot be set."
-            | Leaf vs -> Leaf (ArraySlice.set vs i j v)
-            | Node (d, h, w, ne, nw, sw, se) ->
+            | Empty ->
+                invalidArg "qr" "Empty quad rope cannot be set."
+            | Leaf vs ->
+                Leaf (ArraySlice.set vs i j v)
+            | Node (s, d, h, w, ne, nw, sw, se) ->
                 if withinRange nw i j then
-                    Node (d, h, w, ne, set nw i j v, sw, se)
+                    Node (s, d, h, w, ne, set nw i j v, sw, se)
                 else if withinRange ne i (j - cols nw) then
-                    Node (d, h, w, set ne i (j - cols nw) v, nw, sw, se)
+                    Node (s, d, h, w, set ne i (j - cols nw) v, nw, sw, se)
                 else if withinRange sw (i - rows nw) j then
-                    Node (d, h, w, ne, nw, set sw (i - rows nw) j v, se)
+                    Node (s, d, h, w, ne, nw, set sw (i - rows nw) j v, se)
                 else
-                    Node (d, h, w, ne, nw, sw, set se (i - rows ne) (j - cols sw) v)
-            | Slice (x, y, h, w, qr) -> Slice (x, y, h, w, set qr (i + x) (j + y) v)
+                    Node (s, d, h, w, ne, nw, sw, set se (i - rows ne) (j - cols sw) v)
+            // Set the underlying quad rope with offset.
+            | Slice (x, y, h, w, qr) ->
+                Slice (x, y, h, w, set qr (i + x) (j + y) v)
+            // Initialize
+            | Sparse (h, w, v') ->
+                let vals = Array2D.create h w v'
+                vals.[i, j] <- v
+                leaf (ArraySlice.make vals)
     checkBounds root i j
     set root i j v
-
-/// Write to a tree location destructively.
-let write root i j v =
-    let rec write qr i j v =
-        match qr with
-            | Empty -> invalidArg "qr" "Empty quad rope cannot be written."
-            | Leaf vs -> Leaf (ArraySlice.set vs i j v)
-            | Node (_, _, _, ne, nw, sw, se) ->
-                if withinRange nw i j then
-                    write nw i j v
-                else if withinRange ne i (j - cols nw) then
-                    write ne i (j - cols nw) v
-                else if withinRange sw (i - rows nw) j then
-                    write sw (i - rows nw) j v
-                else
-                    write se (i - rows ne) (j - cols sw) v
-            | Slice (x, y, _, _, qr) -> write qr (x + i) (y + j) v
-    checkBounds root i j
-    write root i j v
 
 let private isBalanced d s =
     d < 45 && Fibonacci.fib (d + 2) <= s
 
 /// True if rope is balanced horizontally. False otherwise.
 let isBalancedH = function
-    | Node (d, _, w, _, _, _, _) -> isBalanced d w
+    | Node (s, d, _, w, _, _, _, _) -> isBalanced d w
     | _ -> true
 
 /// True if rope is balanced vertically. False otherwise.
 let isBalancedV = function
-    | Node (d, h, _, _, _, _, _) -> isBalanced d h
+    | Node (s, d, h, _, _, _, _, _) -> isBalanced d h
     | _ -> true
 
 /// Calls <code>f</code> recursively on a list of quad ropes until the
@@ -178,8 +176,8 @@ let hbalance qr =
     and collect qr rs  =
         match qr with
             | Empty -> rs
-            | Node (_, _, _, ne, nw, Empty, Empty) -> collect nw (collect ne rs)
-            | Node (_, _, _, ne, nw, sw, se) ->
+            | Node (_, _, _, _, ne, nw, Empty, Empty) -> collect nw (collect ne rs)
+            | Node (_, _, _, _, ne, nw, sw, se) ->
                 node (hbalance ne) (hbalance nw) (hbalance sw) (hbalance se) :: rs
             | _ -> qr :: rs
     hbalance qr
@@ -195,8 +193,8 @@ let vbalance qr =
     and collect qr rs  =
         match qr with
             | Empty -> rs
-            | Node (_, _, _, Empty, nw, sw, Empty) -> collect nw (collect sw rs)
-            | Node (_, _, _, ne, nw, sw, se) ->
+            | Node (_, _, _, _, Empty, nw, sw, Empty) -> collect nw (collect sw rs)
+            | Node (_, _, _, _, ne, nw, sw, se) ->
                 node (vbalance ne) (vbalance nw) (vbalance sw) (vbalance se) :: rs
             | _ -> qr :: rs
     vbalance qr
@@ -213,7 +211,7 @@ module Boehm =
         let rec hbalance qr qrs =
             match qr with
                 | Empty -> qrs
-                | Node (_, _, _, ne, nw, Empty, Empty) when not (isBalancedH qr) ->
+                | Node (_, _, _, _, ne, nw, Empty, Empty) when not (isBalancedH qr) ->
                     hbalance ne (hbalance nw qrs)
                 | _ ->
                     insert qr (Fibonacci.nth (cols qr)) qrs
@@ -230,7 +228,7 @@ module Boehm =
         let rec vbalance qr qrs =
             match qr with
                 | Empty -> qrs
-                | Node (_, _, _, Empty, nw, sw, Empty) when not (isBalancedH qr) ->
+                | Node (_, _, _, _, Empty, nw, sw, Empty) when not (isBalancedH qr) ->
                     vbalance sw (vbalance nw qrs)
                 | _ ->
                     insert qr (Fibonacci.nth (rows qr)) qrs
@@ -264,6 +262,9 @@ let slice i j h w qr =
         // Avoid directly nested slices, unpack the original slice.
         | Slice (i1, j1, _, _, qr) ->
             Slice (i0 + i1, j0 + j1, h0, w0, qr)
+        // Just re-size the sparse quad rope.
+        | Sparse (_, _, v) ->
+            Sparse (h0, w0, v)
         // Just initialize a new slice.
         | _ ->
             Slice (i0, j0, h0, w0, qr)
@@ -306,7 +307,7 @@ let materialize qr =
                 Empty
             | Leaf vs ->
                 leaf (ArraySlice.slice i j h w vs)
-            | Node (_, _, _, ne, nw, sw, se) ->
+            | Node (_, _, _, _, ne, nw, sw, se) ->
                 let nw0 = materialize i j h w nw
                 let ne0 = materialize i (j - cols nw) h (w - cols nw0) ne
                 let sw0 = materialize (i - rows nw) j (h - rows nw0) w sw
@@ -314,6 +315,8 @@ let materialize qr =
                 node ne0 nw0 sw0 se0
             | Slice (x, y, r, c, qr) ->
                 materialize (i + x) (j + y) (min r h) (min c w) qr
+            | Sparse (h', w', v) ->
+                Sparse (min h h', min w w', v)
     match qr with
         | Slice (i, j, h, w, qr) -> materialize i j h w qr
         | qr -> qr
@@ -336,29 +339,33 @@ let vcat upper lower =
                 leaf (ArraySlice.cat1 us ls)
 
             // Merge sub-leaves.
-            | Node (_, _, _, Empty, nwu, Leaf swus, Empty), Leaf ls when canMerge swus ls->
+            | Node (s, _, _, _, Empty, nwu, Leaf swus, Empty), Leaf ls when canMerge swus ls->
                 thinNode nwu (leaf (ArraySlice.cat1 swus ls))
-            | Leaf us, Node (_, _, _, Empty, Leaf nwls, swl, Empty) when canMerge us nwls ->
+            | Leaf us, Node (_, _, _, _, Empty, Leaf nwls, swl, Empty) when canMerge us nwls ->
                 thinNode (leaf (ArraySlice.cat1 us nwls)) swl
 
             // Merge upper southern and lower northern children.
-            | (Node (_, _, _, neu, nwu, Leaf swus, Leaf seus),
-               Node (_, _, _, Leaf nels, Leaf nwls, Empty, Empty))
+            | (Node (_, _, _, _, neu, nwu, Leaf swus, Leaf seus),
+               Node (_, _, _, _, Leaf nels, Leaf nwls, Empty, Empty))
                 when canMerge swus nwls && canMerge seus nels ->
                     let sw = leaf (ArraySlice.cat1 swus nwls)
                     let se = leaf (ArraySlice.cat1 seus nels)
                     node neu nwu sw se
-            | (Node (_, _, _, Leaf neus, Leaf nwus, Empty, Empty),
-               Node (_, _, _, Leaf nels, Leaf nwls, swl, sel))
+            | (Node (_, _, _, _, Leaf neus, Leaf nwus, Empty, Empty),
+               Node (_, _, _, _, Leaf nels, Leaf nwls, swl, sel))
                 when canMerge nwus nwls && canMerge neus nels ->
                     let nw = leaf (ArraySlice.cat1 nwus nwls)
                     let ne = leaf (ArraySlice.cat1 neus nels)
                     node ne nw swl sel
 
             // Merge flat nodes.
-            | (Node (_, _, _, neu, nwu, Empty, Empty),
-               Node (_, _, _, nel, nwl, Empty, Empty)) ->
+            | (Node (_, _, _, _, neu, nwu, Empty, Empty),
+               Node (_, _, _, _, nel, nwl, Empty, Empty)) ->
                 node neu nwu nwl nel
+
+            // Merge sparse nodes of same element.
+            | Sparse (h1, w, v1), Sparse (h2, _, v2) when v1 = v2 ->
+                Sparse (h1 + h2, w, v1)
 
             // Create a new node pointing to arguments.
             | _ -> thinNode upper lower
@@ -385,29 +392,33 @@ let hcat left right =
                 leaf (ArraySlice.cat2 ls rs)
 
             // Merge sub-leaves.
-            | Node (_, _, _, Leaf lnes, lnw, Empty, Empty), Leaf rs when canMerge lnes rs->
+            | Node (s, _, _, _, Leaf lnes, lnw, Empty, Empty), Leaf rs when canMerge lnes rs->
                 flatNode lnw (leaf (ArraySlice.cat2 lnes rs))
-            | Leaf ls, Node (_, _, _, rne, Leaf rnws, Empty, Empty) when canMerge ls rnws ->
+            | Leaf ls, Node (_, _, _, _, rne, Leaf rnws, Empty, Empty) when canMerge ls rnws ->
                 flatNode (leaf (ArraySlice.cat2 ls rnws)) rne
 
             // Merge left western and right eastern children.
-            | (Node (_, _, _, Leaf lnes, lnw, lsw, Leaf lses),
-               Node (_, _, _, Empty, Leaf rnws, Leaf rsws, Empty))
+            | (Node (_, _, _, _, Leaf lnes, lnw, lsw, Leaf lses),
+               Node (_, _, _, _, Empty, Leaf rnws, Leaf rsws, Empty))
                 when canMerge lnes rnws && canMerge lses rsws ->
                     let ne = leaf (ArraySlice.cat2 lnes rnws)
                     let se = leaf (ArraySlice.cat2 lses rsws)
                     node ne lnw lsw se
-            | (Node (_, _, _, Empty, Leaf lnws, Leaf lsws, Empty),
-               Node (_, _, _, rne, Leaf rnws, Leaf rsws, rse))
+            | (Node (_, _, _, _, Empty, Leaf lnws, Leaf lsws, Empty),
+               Node (_, _, _, _, rne, Leaf rnws, Leaf rsws, rse))
                 when canMerge lnws rnws && canMerge lsws rsws ->
                     let nw = leaf (ArraySlice.cat2 lnws rnws)
                     let sw = leaf (ArraySlice.cat2 lsws rsws)
                     node rne nw sw rse
 
             // Merge thin nodes.
-            | (Node (_, _, _, Empty, lnw, lsw, Empty),
-               Node (_, _, _, Empty, rnw, rsw, Empty)) ->
+            | (Node (_, _, _, _, Empty, lnw, lsw, Empty),
+               Node (_, _, _, _, Empty, rnw, rsw, Empty)) ->
                 node rnw lnw lsw rsw
+
+            // Merge sparse nodes of same element.
+            | Sparse (h, w1, v1), Sparse (_, w2, v2) when v1 = v2 ->
+                Sparse (h, w1 + w2, v1)
 
             // Create a new node pointing to arguments.
             | _ -> flatNode left right
@@ -421,46 +432,46 @@ let hcat left right =
 let hrev qr =
     let rec hrev qr tgt =
         match qr with
-            | Empty -> Empty
             | Leaf slc ->
                 leaf (Target.hrev slc tgt)
-            | Node (d, h, w, Empty, nw, sw, Empty) ->
-                Node (d, h, w,
+            | Node (s, d, h, w, Empty, nw, sw, Empty) ->
+                Node (s, d, h, w,
                       Empty,
                       hrev nw tgt,
                       hrev sw (Target.sw tgt qr),
                       Empty)
-            | Node (d, h, w, ne, nw, sw, se) ->
-                Node (d, h, w,
+            | Node (s, d, h, w, ne, nw, sw, se) ->
+                Node (s, d, h, w,
                       hrev nw tgt,
                       hrev ne (Target.ne tgt qr),
                       hrev se (Target.se tgt qr),
                       hrev sw (Target.sw tgt qr))
             | Slice _ ->
                 hrev (materialize qr) tgt
+            | _ -> qr
     hrev qr (Target.make (rows qr) (cols qr))
 
 /// Reverse rope vertically.
 let vrev qr =
     let rec vrev qr tgt =
         match qr with
-            | Empty -> Empty
             | Leaf slc ->
                 leaf (Target.vrev slc tgt)
-            | Node (d, h, w, ne, nw, Empty, Empty) ->
-                Node (d, h, w,
+            | Node (s, d, h, w, ne, nw, Empty, Empty) ->
+                Node (s, d, h, w,
                       vrev ne (Target.ne tgt qr),
                       vrev nw tgt,
                       Empty,
                       Empty)
-            | Node (d, h, w, ne, nw, sw, se) ->
-                Node (d, h, w,
+            | Node (s, d, h, w, ne, nw, sw, se) ->
+                Node (s, d, h, w,
                       vrev se (Target.se tgt qr),
                       vrev sw (Target.sw tgt qr),
                       vrev nw tgt,
                       vrev ne (Target.ne tgt qr))
             | Slice _ ->
                 vrev (materialize qr) tgt
+            | _ -> qr
     vrev qr (Target.make (rows qr) (cols qr))
 
 /// Initialize a rope from a native 2D-array.
@@ -486,8 +497,8 @@ let inline init h w f =
     fromArray2D (Array2D.init h w f)
 
 /// Initialize a rope where all elements are <code>e</code>.
-let inline create h w e =
-    init h w (fun _ _ -> e)
+let inline create h w v =
+    Sparse (h, w, v)
 
 /// Generate a singleton quad rope.
 let inline singleton v =
@@ -511,12 +522,15 @@ let fromArray vs w =
 let rec iter f = function
     | Empty -> ()
     | Leaf vs -> ArraySlice.iter f vs
-    | Node (_, _, _, ne, nw, sw, se) ->
+    | Node (s, _, _, _, ne, nw, sw, se) ->
         iter f ne
         iter f nw
         iter f sw
         iter f se
     | Slice _ as qr -> iter f (materialize qr)
+    | Sparse (h, w, v) ->
+        for i in 1 .. h * w - 1 do
+            f v
 
 /// Apply a function with side effects to all elements and their
 /// corresponding index pair.
@@ -524,12 +538,16 @@ let iteri f qr =
     let rec iteri f i j = function
         | Empty -> ()
         | Leaf vs -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
-        | Node (_, _, _, ne, nw, sw, se) ->
+        | Node (s, _, _, _, ne, nw, sw, se) ->
             iteri f i j nw
             iteri f i (j + cols nw) ne
             iteri f (i + rows nw) j sw
             iteri f (i + rows ne) (j + cols sw) se
         | Slice _ as qr -> iteri f i j (materialize qr)
+        | Sparse (h, w, v) ->
+            for r in i .. i + h - 1 do
+                for c in j .. j + w - 1 do
+                    f r c v
     iteri f 0 0 qr
 
 /// Conversion into 1D array.
@@ -565,17 +583,26 @@ let map f qr =
         match qr with
             | Empty ->
                 Empty
-            | Leaf vals ->
+            // Initialize target as soon as quad rope is dense.
+            | _ when not (isSparse qr) && Target.isEmpty tgt ->
+                map qr (Target.make (rows qr) (cols qr))
+            // Write into target and construct new leaf.
+            | Leaf slc ->
                 Leaf (Target.map f vals tgt)
-            | Node (d, h, w, ne, nw, sw, se) ->
-                Node (d, h, w,
+            // Node recursive case, adjust target descriptor.
+            | Node (s, d, h, w, ne, nw, sw, se) ->
+                Node (s, d, h, w,
                       map ne (Target.ne tgt qr),
                       map nw tgt, // No need to adjust target.
                       map sw (Target.sw tgt qr),
                       map se (Target.se tgt qr))
+            // Materialize quad rope and then map.
             | Slice _ ->
                 map (materialize qr) tgt
-    map qr (Target.make (rows qr) (cols qr))
+            // The target is empty, don't write.
+            | Sparse (h, w, v) ->
+                Sparse (h, w, f v)
+    map qr Target.empty
 
 /// Map a function f to each row of the quad rope.
 let hmap f qr =
@@ -593,7 +620,7 @@ let hfold f states qr =
     let rec fold1 states = function
         | Empty -> states
         | Leaf vs -> leaf (ArraySlice.fold2 f (fun i -> fastGet states i 0) vs)
-        | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
+        | Node (s, _, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
         | Slice _ as qr -> fold1 states (materialize qr)
     and fold2 states n s =
         let nstates, sstates = vsplit2 states (rows n)
@@ -608,7 +635,7 @@ let vfold f states qr =
     let rec fold1 states = function
         | Empty -> states
         | Leaf vs -> leaf (ArraySlice.fold1 f (fastGet states 0) vs)
-        | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
+        | Node (s, _, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
         | Slice _ as qr -> fold1 states (materialize qr)
     and fold2 states w e =
         let wstates, estates = hsplit2 states (cols w)
@@ -621,7 +648,7 @@ let vfold f states qr =
 let internal sliceToMatch a b =
     match a with
         | Empty -> Empty, Empty, Empty, Empty
-        | Node (_, _, _, ne, nw, sw, se) ->
+        | Node (s, _, _, _, ne, nw, sw, se) ->
             slice 0         (cols nw) (rows ne) (cols ne) b,
             slice 0          0        (rows nw) (cols nw) b,
             slice (rows nw)  0        (rows sw) (cols sw) b,
@@ -636,13 +663,13 @@ let rec internal genZip f lqr rqr tgt =
         | Leaf slc ->
             let rqr = materialize rqr
             leaf (Target.mapi (fun i j v -> f v (fastGet rqr i j)) slc tgt)
-        | Node (d, h, w, ne, nw, sw, se) ->
+        | Node (s, d, h, w, ne, nw, sw, se) ->
             let rne, rnw, rsw, rse = sliceToMatch lqr rqr
             let nw0 = genZip f nw rnw tgt
             let ne0 = genZip f ne rne (Target.ne tgt lqr)
             let sw0 = genZip f sw rsw (Target.sw tgt lqr)
             let se0 = genZip f se rse (Target.se tgt lqr)
-            Node (d, h, w, ne0, nw0, sw0, se0)
+            Node (s, d, h, w, ne0, nw0, sw0, se0)
         | Slice _ -> genZip f (materialize lqr) rqr tgt
 
 /// True if the shape of two ropes match.
@@ -653,8 +680,8 @@ let internal shapesMatch a b =
 /// the same positions match. Not recursive, hence O(1) complexity.
 let internal subShapesMatch a b =
     match a, b with
-        | Node (_, _, _, ane, anw, asw, ase),
-          Node (_, _, _, bne, bnw, bsw, bse) ->
+        | Node (_, _, _, _, ane, anw, asw, ase),
+          Node (_, _, _, _, bne, bnw, bsw, bse) ->
             shapesMatch ane bne
             && shapesMatch anw bnw
             && shapesMatch asw bsw
@@ -668,7 +695,7 @@ let rec internal fastZip f lqr rqr tgt =
         | Empty, Empty -> Empty
         | Leaf ls, Leaf rs when shapesMatch lqr rqr ->
             leaf (Target.map2 f ls rs tgt)
-        | Node (_, _, _, lne, lnw, lsw, lse), Node (_, _, _, rne, rnw, rsw, rse)
+        | Node (_, _, _, _, lne, lnw, lsw, lse), Node (_, _, _, _, rne, rnw, rsw, rse)
             when subShapesMatch lqr rqr ->
                 node (fastZip f lne rne (Target.ne tgt lqr))
                      (fastZip f lnw rnw tgt)
@@ -691,15 +718,25 @@ let zip f lqr rqr =
 /// Apply f to all values of the rope and reduce the resulting
 /// values to a single scalar using g.
 let rec mapreduce f g = function
-    | Empty -> failwith "Impossible to reduce an empty quad rope."
-    | Leaf vs -> ArraySlice.mapreduce f g vs
-    | Node (_, _, _, ne, nw, Empty, Empty) ->
+    | Empty ->
+        failwith "Impossible to reduce an empty quad rope."
+    | Leaf slc ->
+        ArraySlice.mapreduce f g slc
+    | Node (s, _, _, _, ne, nw, Empty, Empty) ->
         g (mapreduce f g nw) (mapreduce f g ne)
-    | Node (_, _, _, Empty, nw, sw, Empty) ->
+    | Node (s, _, _, _, Empty, nw, sw, Empty) ->
         g (mapreduce f g nw) (mapreduce f g sw)
-    | Node (_, _, _, ne, nw, sw, se) ->
-        g (g (mapreduce f g nw) (mapreduce f g ne)) (g (mapreduce f g sw) (mapreduce f g se))
-    | Slice _ as qr -> mapreduce f g (materialize qr)
+    | Node (s, _, _, _, ne, nw, sw, se) ->
+        g (g (mapreduce f g nw) (mapreduce f g ne))
+          (g (mapreduce f g sw) (mapreduce f g se))
+    | Slice _ as qr ->
+        mapreduce f g (materialize qr)
+    | Sparse (h, w, v) ->
+        let fv = f v
+        let mutable acc = f v
+        for i in 2 .. h * w do
+            acc <- g acc fv
+        acc
 
 /// Reduce all values of the rope to a single scalar.
 let reduce f qr = mapreduce id f qr
@@ -718,7 +755,7 @@ let inline private offset f x =
 let rec hscan f states = function
     | Empty -> Empty
     | Leaf vs -> Leaf (ArraySlice.scan2 f states vs)
-    | Node (_, _, _, ne, nw, sw, se) ->
+    | Node (s, _, _, _, ne, nw, sw, se) ->
         let nw' = hscan f states nw
         let sw' = hscan f (offset states (rows nw')) sw
         (* NW and SW might differ in height and width, we cannot join them to a thin node. *)
@@ -734,7 +771,7 @@ let rec hscan f states = function
 let rec vscan f states = function
     | Empty -> Empty
     | Leaf vs -> Leaf (ArraySlice.scan1 f states vs)
-    | Node (_, _, _, ne, nw, sw, se) ->
+    | Node (s, _, _, _, ne, nw, sw, se) ->
         let nw' = vscan f states nw
         let ne' = vscan f (offset states (cols nw')) ne
         (* NW and NE might differ in height and width, we cannot join them to a flat node. *)
@@ -758,21 +795,21 @@ let scan plus minus init qr =
                 Leaf (Target.toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc))
 
             // Flat node.
-            | Node (d, h, w, ne, nw, Empty, Empty) ->
+            | Node (s, d, h, w, ne, nw, Empty, Empty) ->
                 let nw' = scan pre nw tgt
                 let tgt_ne = Target.ne tgt qr
                 let ne' = scan (Target.get tgt_ne) ne tgt_ne
-                Node (d, h, w, ne', nw', Empty, Empty)
+                Node (s, d, h, w, ne', nw', Empty, Empty)
 
             // Thin nodes.
-            | Node (d, h, w, Empty, nw, sw, Empty) ->
+            | Node (s, d, h, w, Empty, nw, sw, Empty) ->
                 let nw' = scan pre nw tgt
                 let tgt_sw = Target.sw tgt qr
                 let sw' = scan (Target.get tgt_sw) sw tgt_sw
-                Node (d, h, w, Empty, nw', sw', Empty)
+                Node (s, d, h, w, Empty, nw', sw', Empty)
 
             // SW depends on NE.
-            | Node (d, h, w, ne, nw, sw, se) when cols nw < cols sw ->
+            | Node (s, d, h, w, ne, nw, sw, se) when cols nw < cols sw ->
                 let nw' = scan pre nw tgt
                 let tgt_ne = Target.ne tgt qr
                 let ne' = scan (Target.get tgt_ne) ne tgt_ne
@@ -780,10 +817,10 @@ let scan plus minus init qr =
                 let sw' = scan (Target.get tgt_sw) sw tgt_sw
                 let tgt_se = Target.se tgt qr
                 let se' = scan (Target.get tgt_se) se tgt_se
-                Node (d, h, w, ne', nw', sw', se')
+                Node (s, d, h, w, ne', nw', sw', se')
 
             // NE depends on SW.
-            | Node (d, h, w, ne, nw, sw, se) -> // when rows nw < rows ne
+            | Node (s, d, h, w, ne, nw, sw, se) -> // when rows nw < rows ne
                 let nw' = scan pre nw tgt
                 let tgt_sw = Target.sw tgt qr
                 let sw' = scan (Target.get tgt_sw) sw tgt_sw
@@ -791,7 +828,7 @@ let scan plus minus init qr =
                 let ne' = scan (Target.get tgt_ne) ne tgt_ne
                 let tgt_se = Target.se tgt qr
                 let se' = scan (Target.get tgt_se) se tgt_se
-                Node (d, h, w, ne', nw', sw', se')
+                Node (s, d, h, w, ne', nw', sw', se')
 
             | Slice _ -> scan pre (materialize qr) tgt
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
@@ -832,7 +869,7 @@ let exists p = function
 let rec hfilter p = function
     | Empty -> Empty
     | Leaf vs -> leaf (ArraySlice.filter2 p vs)
-    | Node (_, 1, _, ne, nw, Empty, Empty) ->
+    | Node (s, _, 1, _, ne, nw, Empty, Empty) ->
         flatNode (hfilter p nw) (hfilter p ne)
     | _ -> failwith "Quad rope height must be exactly one."
 
@@ -841,7 +878,7 @@ let rec hfilter p = function
 let rec vfilter p = function
     | Empty -> Empty
     | Leaf vs -> leaf (ArraySlice.filter1 p vs)
-    | Node (_, _, 1, Empty, nw, sw, Empty) ->
+    | Node (s, _, _, 1, Empty, nw, sw, Empty) ->
         thinNode (vfilter p nw) (vfilter p sw)
     | _ -> failwith "Quad rope width must be exactly one."
 
@@ -853,7 +890,7 @@ let transpose qr =
             | Empty -> Empty
             | Leaf slc ->
                 leaf (Target.transpose slc tgt)
-            | Node (_, _, _, ne, nw, sw, se) ->
+            | Node (s, _, _, _, ne, nw, sw, se) ->
                 node (transpose sw (Target.sw tgt qr))
                      (transpose nw tgt)
                      (transpose ne (Target.ne tgt qr))
@@ -877,7 +914,7 @@ let tikzify h w qr =
     let rec tikz i j h w = function
         | Empty -> seq { yield box i j h w; yield thinLine i j (h + i) (w + j) }
         | Leaf _ -> Seq.empty
-        | Node (_, _, _, ne, nw, sw, se) ->
+        | Node (s, _, _, _, ne, nw, sw, se) ->
             let h0 = h / 2.0
             let w0 = w / 2.0
             seq { yield! tikz i j h0 w0 sw

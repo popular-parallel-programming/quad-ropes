@@ -83,16 +83,6 @@ namespace RadTrees.QuadRope.Object
         public abstract IQuadRope<T> Set(int row, int col, T v);
 
         /// <summary>
-        ///   Overwrite the value at index row, col with v. This will
-        ///   change this instance and all instances that share
-        ///   data. Use judiciously!
-        /// </summary>
-        public void Write(int row, int col, T v)
-        {
-            QuadRopeModule.write<T>(rope, row, col, v);
-        }
-
-        /// <summary>
         ///   True if the rope is horizontally balanced, false otherwise.
         /// </summary>
         public bool IsBalancedHorizontally

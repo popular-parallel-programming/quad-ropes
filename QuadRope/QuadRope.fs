@@ -585,6 +585,14 @@ let map f qr =
                 map (materialize qr) tgt
     map qr (Target.make (rows qr) (cols qr))
 
+/// Map a function f to each row of the quad rope.
+let hmap f qr =
+    init (rows qr) 1 (fun i _ -> slice i 0 1 (cols qr) qr |> f)
+
+/// Map a function f to each column of the quad rope.
+let vmap f qr =
+    init 1 (cols qr) (fun _ j -> slice 0 j (rows qr) 1 qr |> f)
+
 /// Fold each row of rope with f, starting with the according
 /// state in states.
 let hfold f states qr =
@@ -704,27 +712,11 @@ let rec mapreduce f g = function
 /// Reduce all values of the rope to a single scalar.
 let reduce f qr = mapreduce id f qr
 
-/// Reduce row n.
-let rowmapreduce f g qr n = mapreduce f g (slice n 0 1 (cols qr) qr)
+let hmapreduce f g qr = hmap (mapreduce f g) qr
+let vmapreduce f g qr = vmap (mapreduce f g) qr
 
-/// Reduce column n.
-let colmapreduce f g qr n = mapreduce f g (slice 0 n (rows qr) 1 qr)
-
-let inline rowreduce f qr n = rowmapreduce id f qr n
-let inline colreduce f qr n = colmapreduce id f qr n
-
-/// Horizontal mapreduce can be composed from init, mapreduce and slice.
-let hmapreduce f g qr =
-    let red = rowmapreduce f g qr
-    init (rows qr) 1 (fun i _ -> red i)
-
-/// Vertical mapreduce can be composed from init, mapreduce and slice.
-let vmapreduce f g qr =
-    let red = colmapreduce f g qr
-    init 1 (cols qr) (fun _ j -> red j)
-
-let inline hreduce f qr = hmapreduce id f qr
-let inline vreduce f qr = vmapreduce id f qr
+let hreduce f qr = hmapreduce id f qr
+let vreduce f qr = vmapreduce id f qr
 
 let inline private offset f x =
     ((+) x) >> f

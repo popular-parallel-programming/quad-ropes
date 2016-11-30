@@ -90,6 +90,14 @@ let map f qr =
             | Slice _ as qr -> map (QuadRope.materialize qr) tgt
     map qr (Target.make (rows qr) (cols qr))
 
+/// Map a function f to each row of the quad rope.
+let hmap f qr =
+    init (rows qr) 1 (fun i _ -> QuadRope.slice i 0 1 (cols qr) qr |> f)
+
+/// Map a function f to each column of the quad rope.
+let vmap f qr =
+    init 1 (cols qr) (fun _ j -> QuadRope.slice 0 j (rows qr) 1 qr |> f)
+
 /// Fold each row of rope with f in parallel, starting with the
 /// according state in states.
 let hfold f states qr =
@@ -219,18 +227,13 @@ let rec mapreduce f g = function
     | qr -> QuadRope.mapreduce f g qr
 
 /// Reduce all values of the rope to a single scalar in parallel.
-let inline reduce f qr = mapreduce id f qr
+let reduce f qr = mapreduce id f qr
 
-/// Horizontal mapreduce can be composed from init, mapreduce and slice.
-let hmapreduce f g qr =
-    init (rows qr) 1 (fun i _ -> mapreduce f g (QuadRope.slice i 0 1 (cols qr) qr))
+let hmapreduce f g qr = hmap (mapreduce f g) qr
+let vmapreduce f g qr = vmap (mapreduce f g) qr
 
-/// Vertical mapreduce can be composed from init, mapreduce and slice.
-let vmapreduce f g qr =
-    init 1 (cols qr) (fun _ j -> mapreduce f g (QuadRope.slice 0 j (rows qr) 1 qr))
-
-let inline hreduce f qr = hmapreduce id f qr
-let inline vreduce f qr = vmapreduce id f qr
+let hreduce f qr = hmapreduce id f qr
+let vreduce f qr = vmapreduce id f qr
 
 /// Remove all elements from rope for which p does not hold in
 /// parallel. Input rope must be of height 1.

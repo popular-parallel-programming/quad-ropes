@@ -44,6 +44,16 @@ module Gen =
                          yield Gen.map (QuadRope.hrev >> QuadRope.vrev) genRope;
                          yield Gen.map (QuadRope.vrev >> QuadRope.hrev) genRope })
 
+    let genSliceRope =
+        Gen.oneof (seq { yield genRevRope;
+                         yield gen { let! i = size
+                                     let! j = size
+                                     let! h = size
+                                     let! w = size
+                                     let! qr = genRevRope
+                                     return QuadRope.slice i j h w qr }
+                         })
+
     let genCatRope =
         let eq f (a, b) = f a = f b
         let hs = Gen.oneof (seq { yield Gen.where (eq QuadRope.rows) (Gen.two genRevRope) })

@@ -33,31 +33,11 @@ let s_max = 4
 let s_max = 32
 #endif
 
-/// Number of rows in a rectangular tree.
-let rows = function
-    | Empty -> 0
-    | Leaf slc -> slc.h
-    | Node (_, h, _, _, _, _, _) -> h
-    | Slice (_, _, h, _, _) -> h
-
-/// Number of columns in a rectangular tree.
-let cols = function
-    | Empty -> 0
-    | Leaf slc -> slc.w
-    | Node (_, _, w, _, _, _, _) -> w
-    | Slice (_, _, _, w, _) -> w
-
-/// Depth of a rectangular tree.
-let rec depth = function
-    | Empty -> 0
-    | Leaf _ -> 0
-    | Node (d, _, _, _, _, _, _) -> d
-    | Slice (_, _, _, _, qr) -> depth qr
-
-/// True if the quad rope is empty, false otherwise.
-let isEmpty = function
-    | Empty -> true
-    | _ -> false
+// Aliases for more concise code.
+let inline rows qr = Types.rows qr
+let inline cols qr = Types.cols qr
+let inline depth qr = Types.depth qr
+let inline isEmpty qr = Types.isEmpty qr
 
 /// Construct a Leaf if slc is non-empty. Otherwise, return Empty.
 let leaf slc =

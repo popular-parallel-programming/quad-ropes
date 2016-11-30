@@ -41,7 +41,7 @@ type 'a ArraySlice when 'a : equality =
     /// (element-wise) equal.
     override this.Equals(o) =
         match o with
-            | :? ('a ArraySlice) as other -> ArraySlice.equals this other
+            | :? ('a ArraySlice) as other -> ArraySlice<'a>.equals this other
             | _ -> false
 
     override this.GetHashCode() =

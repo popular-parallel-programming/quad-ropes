@@ -764,15 +764,43 @@ let scan plus minus init qr =
             | Leaf slc ->
                 Target.scan plus minus pre slc tgt
                 Leaf (Target.toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc))
-            | Node (d, h, w, ne, nw, sw, se) ->
+
+            // Flat node.
+            | Node (d, h, w, ne, nw, Empty, Empty) ->
                 let nw' = scan pre nw tgt
-                let tgt' = Target.ne tgt qr
-                let ne' = scan (Target.get tgt') ne tgt'
-                let tgt' = Target.sw tgt qr
-                let sw' = scan (Target.get tgt') sw tgt'
-                let tgt' = Target.se tgt qr
-                let se' = scan (Target.get tgt') se tgt'
+                let tgt_ne = Target.ne tgt qr
+                let ne' = scan (Target.get tgt_ne) ne tgt_ne
+                Node (d, h, w, ne', nw', Empty, Empty)
+
+            // Thin nodes.
+            | Node (d, h, w, Empty, nw, sw, Empty) ->
+                let nw' = scan pre nw tgt
+                let tgt_sw = Target.sw tgt qr
+                let sw' = scan (Target.get tgt_sw) sw tgt_sw
+                Node (d, h, w, Empty, nw', sw', Empty)
+
+            // SW depends on NE.
+            | Node (d, h, w, ne, nw, sw, se) when cols nw < cols sw ->
+                let nw' = scan pre nw tgt
+                let tgt_ne = Target.ne tgt qr
+                let ne' = scan (Target.get tgt_ne) ne tgt_ne
+                let tgt_sw = Target.sw tgt qr
+                let sw' = scan (Target.get tgt_sw) sw tgt_sw
+                let tgt_se = Target.se tgt qr
+                let se' = scan (Target.get tgt_se) se tgt_se
                 Node (d, h, w, ne', nw', sw', se')
+
+            // NE depends on SW.
+            | Node (d, h, w, ne, nw, sw, se) -> // when rows nw < rows ne
+                let nw' = scan pre nw tgt
+                let tgt_sw = Target.sw tgt qr
+                let sw' = scan (Target.get tgt_sw) sw tgt_sw
+                let tgt_ne = Target.ne tgt qr
+                let ne' = scan (Target.get tgt_ne) ne tgt_ne
+                let tgt_se = Target.se tgt qr
+                let se' = scan (Target.get tgt_se) se tgt_se
+                Node (d, h, w, ne', nw', sw', se')
+
             | Slice _ -> scan pre (materialize qr) tgt
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
     scan (Target.get tgt) qr tgt

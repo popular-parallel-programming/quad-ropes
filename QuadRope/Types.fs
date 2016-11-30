@@ -22,9 +22,11 @@
 module RadTrees.Types
 
 [<CustomEquality;NoComparison>]
-type 'a ArraySlice when 'a : equality = { r : int; c : int; h : int ; w : int; vals : 'a [,] }
+type 'a ArraySlice when 'a : equality =
+    { r : int; c : int; h : int ; w : int; vals : 'a [,] }
 
-type 'a ArraySlice with
+    /// Compare two ArraySlice instances element-wise. Their offsets
+    /// are not taken into account, this is logical equivalence.
     static member private equals a b =
         if a.h = b.h && a.w = b.w then
             let mutable eq = true
@@ -35,6 +37,8 @@ type 'a ArraySlice with
         else
             false
 
+    /// True if this ArraySlice and the argument object are logically
+    /// (element-wise) equal.
     override this.Equals(o) =
         match o with
             | :? ('a ArraySlice) as other -> ArraySlice.equals this other
@@ -43,34 +47,13 @@ type 'a ArraySlice with
     override this.GetHashCode() =
         (17 + this.r + this.c) * this.h * this.w * hash this.vals
 
+/// The quad rope type. A quad rope is either empty, a leaf containing
+/// a (small) array or a node that joins either two or four quad
+/// ropes. To reduce the number of constructors, the node invariants
+/// are maintained in the implementation.
 [<CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
 type 'a QuadRope when 'a : equality =
     | Empty
     | Leaf of 'a ArraySlice
     | Node of int * int * int * 'a QuadRope * 'a QuadRope * 'a QuadRope * 'a QuadRope
     | Slice of int * int * int * int * 'a QuadRope
-
-/// Number of rows in a rectangular tree.
-let rows = function
-    | Empty -> 0
-    | Leaf slc -> slc.h
-    | Node (_, h, _, _, _, _, _) -> h
-    | Slice (_, _, h, _, _) -> h
-
-/// Number of columns in a rectangular tree.
-let cols = function
-    | Empty -> 0
-    | Leaf slc -> slc.w
-    | Node (_, _, w, _, _, _, _) -> w
-    | Slice (_, _, _, w, _) -> w
-
-/// Depth of a rectangular tree.
-let rec depth = function
-    | Empty -> 0
-    | Leaf _ -> 0
-    | Node (d, _, _, _, _, _, _) -> d
-    | Slice (_, _, _, _, qr) -> depth qr
-
-let isEmpty = function
-    | Empty -> true
-    | _ -> false

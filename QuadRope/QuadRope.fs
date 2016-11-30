@@ -292,10 +292,11 @@ let col qr j = slice 0 j (rows qr) 1 qr
 let toRows qr = Seq.init (rows qr) (row qr)
 let toCols qr = Seq.init (cols qr) (col qr)
 
-module internal Slicing =
-
-    /// Auxiliary function to recursively slice a tree structure.
-    let rec private reallocate0 i j h w qr =
+/// Materialize a quad rope slice, i.e. traverse the slice and
+/// allocate new quad rope nodes and new slices on arrays. Does not
+/// allocate new arrays.
+let materialize qr =
+    let rec materialize i j h w qr =
         match qr with
             | _ when i <= 0 && j <= 0 && rows qr <= h && cols qr <= w ->
                 qr
@@ -306,36 +307,16 @@ module internal Slicing =
             | Leaf vs ->
                 leaf (ArraySlice.slice i j h w vs)
             | Node (_, _, _, ne, nw, sw, se) ->
-                let nw0 = reallocate0 i j h w nw
-                let ne0 = reallocate0 i (j - cols nw) h (w - cols nw0) ne
-                let sw0 = reallocate0 (i - rows nw) j (h - rows nw0) w sw
-                let se0 = reallocate0 (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0) se
+                let nw0 = materialize i j h w nw
+                let ne0 = materialize i (j - cols nw) h (w - cols nw0) ne
+                let sw0 = materialize (i - rows nw) j (h - rows nw0) w sw
+                let se0 = materialize (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0) se
                 node ne0 nw0 sw0 se0
             | Slice (x, y, r, c, qr) ->
-                reallocate0 (i + x) (j + y) (min r h) (min c w) qr
-
-    /// Actually compute a slice.
-    let reallocate = function
-        | Slice (i, j, h, w, qr) -> reallocate0 i j h w qr
+                materialize (i + x) (j + y) (min r h) (min c w) qr
+    match qr with
+        | Slice (i, j, h, w, qr) -> materialize i j h w qr
         | qr -> qr
-
-    /// Compute a slice and map in the same traversal.
-    let map f qr (arr : _ [,]) =
-        let rec map i j h w qr =
-            match qr with
-                | _ when rows qr <= i || cols qr <= j || h <= 0 || w <= 0 -> Empty
-                | Empty -> Empty
-                | Leaf vs ->
-                    ArraySlice.iteri (fun x y e -> arr.[x + i, y + j] <- f e) (ArraySlice.slice i j h w vs)
-                    leaf (ArraySlice.makeSlice i j h w arr)
-                | Node (_, _, _, ne, nw, sw, se) ->
-                    let nw0 = map i j h w nw
-                    let ne0 = map i (j - cols nw) h (w - cols nw0) ne
-                    let sw0 = map (i - rows nw) j (h - rows nw0) w sw
-                    let se0 = map (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0) se
-                    node ne0 nw0 sw0 se0
-                | Slice (x, y, r, c, qr) -> map (x + i) (y + j) (min h r) (min w c) qr
-        map 0 0 (rows qr) (cols qr) qr
 
 /// Concatenate two trees vertically. For the sake of leave size, this
 /// may result in actually keeping parts of a large area in memory
@@ -351,8 +332,8 @@ let vcat upper lower =
             | _, Empty -> upper
 
             // Slices must be reallocated. TODO: Reconsider.
-            | Slice _, _ -> vcat (Slicing.reallocate upper) lower
-            | _, Slice _ -> vcat upper (Slicing.reallocate lower)
+            | Slice _, _ -> vcat (materialize upper) lower
+            | _, Slice _ -> vcat upper (materialize lower)
 
             // Merge single leaves.
             | Leaf us, Leaf ls when canMerge us ls ->
@@ -404,8 +385,8 @@ let hcat left right =
             | _, Empty -> left
 
             // Slices must be reallocated. TODO: Reconsider.
-            | Slice _, _ -> hcat (Slicing.reallocate left) right
-            | _, Slice _ -> hcat left (Slicing.reallocate right)
+            | Slice _, _ -> hcat (materialize left) right
+            | _, Slice _ -> hcat left (materialize right)
 
             // Merge single leaves.
             | Leaf ls, Leaf rs when canMerge ls rs ->
@@ -464,7 +445,7 @@ let hrev qr =
                       hrev se (Target.se tgt qr),
                       hrev sw (Target.sw tgt qr))
             | Slice _ ->
-                hrev (Slicing.reallocate qr) tgt
+                hrev (materialize qr) tgt
     hrev qr (Target.make (rows qr) (cols qr))
 
 /// Reverse rope vertically.
@@ -487,7 +468,7 @@ let vrev qr =
                       vrev nw tgt,
                       vrev ne (Target.ne tgt qr))
             | Slice _ ->
-                vrev (Slicing.reallocate qr) tgt
+                vrev (materialize qr) tgt
     vrev qr (Target.make (rows qr) (cols qr))
 
 /// Initialize a rope from a native 2D-array.
@@ -543,7 +524,7 @@ let rec iter f = function
         iter f nw
         iter f sw
         iter f se
-    | Slice _ as qr -> iter f (Slicing.reallocate qr)
+    | Slice _ as qr -> iter f (materialize qr)
 
 /// Apply a function with side effects to all elements and their
 /// corresponding index pair.
@@ -556,7 +537,7 @@ let iteri f qr =
             iteri f i (j + cols nw) ne
             iteri f (i + rows nw) j sw
             iteri f (i + rows ne) (j + cols sw) se
-        | Slice _ as qr -> iteri f i j (Slicing.reallocate qr)
+        | Slice _ as qr -> iteri f i j (materialize qr)
     iteri f 0 0 qr
 
 /// Conversion into 1D array.
@@ -601,7 +582,7 @@ let map f qr =
                       map sw (Target.sw tgt qr),
                       map se (Target.se tgt qr))
             | Slice _ ->
-                map (Slicing.reallocate qr) tgt
+                map (materialize qr) tgt
     map qr (Target.make (rows qr) (cols qr))
 
 /// Fold each row of rope with f, starting with the according
@@ -613,7 +594,7 @@ let hfold f states qr =
         | Empty -> states
         | Leaf vs -> leaf (ArraySlice.fold2 f (fun i -> fastGet states i 0) vs)
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
-        | Slice _ as qr -> fold1 states (Slicing.reallocate qr)
+        | Slice _ as qr -> fold1 states (materialize qr)
     and fold2 states n s =
         let nstates, sstates = vsplit2 states (rows n)
         thinNode (fold1 nstates n) (fold1 sstates s)
@@ -628,7 +609,7 @@ let vfold f states qr =
         | Empty -> states
         | Leaf vs -> leaf (ArraySlice.fold1 f (fastGet states 0) vs)
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
-        | Slice _ as qr -> fold1 states (Slicing.reallocate qr)
+        | Slice _ as qr -> fold1 states (materialize qr)
     and fold2 states w e =
         let wstates, estates = hsplit2 states (cols w)
         flatNode (fold1 wstates w) (fold1 estates e)
@@ -653,7 +634,7 @@ let rec internal genZip f lqr rqr tgt =
     match lqr with
         | Empty -> Empty
         | Leaf slc ->
-            let rqr = Slicing.reallocate rqr
+            let rqr = materialize rqr
             leaf (Target.mapi (fun i j v -> f v (fastGet rqr i j)) slc tgt)
         | Node (d, h, w, ne, nw, sw, se) ->
             let rne, rnw, rsw, rse = sliceToMatch lqr rqr
@@ -662,7 +643,7 @@ let rec internal genZip f lqr rqr tgt =
             let sw0 = genZip f sw rsw (Target.sw tgt lqr)
             let se0 = genZip f se rse (Target.se tgt lqr)
             Node (d, h, w, ne0, nw0, sw0, se0)
-        | Slice _ -> genZip f (Slicing.reallocate lqr) rqr tgt
+        | Slice _ -> genZip f (materialize lqr) rqr tgt
 
 /// True if the shape of two ropes match.
 let internal shapesMatch a b =
@@ -696,9 +677,9 @@ let rec internal fastZip f lqr rqr tgt =
         // It may pay off to reallocate first if both reallocated quad
         // ropes have the same internal shape. This might be
         // over-fitted to matrix multiplication.
-        | Slice _, Slice _ -> fastZip f (Slicing.reallocate lqr) (Slicing.reallocate rqr) tgt
-        | Slice _, _ ->       fastZip f (Slicing.reallocate lqr) rqr tgt
-        | Slice _, Slice _ -> fastZip f lqr (Slicing.reallocate rqr) tgt
+        | Slice _, Slice _ -> fastZip f (materialize lqr) (materialize rqr) tgt
+        | Slice _, _ ->       fastZip f (materialize lqr) rqr tgt
+        | Slice _, Slice _ -> fastZip f lqr (materialize rqr) tgt
         | _ -> genZip f lqr rqr tgt
 
 /// Apply f to each (i, j) of lqr and rope.
@@ -718,7 +699,7 @@ let rec mapreduce f g = function
         g (mapreduce f g nw) (mapreduce f g sw)
     | Node (_, _, _, ne, nw, sw, se) ->
         g (g (mapreduce f g nw) (mapreduce f g ne)) (g (mapreduce f g sw) (mapreduce f g se))
-    | Slice _ as qr -> mapreduce f g (Slicing.reallocate qr)
+    | Slice _ as qr -> mapreduce f g (materialize qr)
 
 /// Reduce all values of the rope to a single scalar.
 let reduce f qr = mapreduce id f qr
@@ -762,7 +743,7 @@ let rec hscan f states = function
         let ne' = hscan f estate ne
         let se' = hscan f (offset estate (rows ne')) se
         node ne' nw' sw' se'
-    | Slice _ as qr -> hscan f states (Slicing.reallocate qr)
+    | Slice _ as qr -> hscan f states (materialize qr)
 
 /// Compute the column-wise prefix sum of the rope for f starting
 /// with states.
@@ -778,7 +759,7 @@ let rec vscan f states = function
         let sw' = vscan f sstate sw
         let se' = vscan f (offset sstate (cols sw')) se
         node ne' nw' sw' se'
-    | Slice _ as qr -> vscan f states (Slicing.reallocate qr)
+    | Slice _ as qr -> vscan f states (materialize qr)
 
 /// Compute the generalized summed area table for functions plus and
 /// minus; all rows and columns are initialized with init.
@@ -800,7 +781,7 @@ let scan plus minus init qr =
                 let tgt' = Target.se tgt qr
                 let se' = scan (Target.get tgt') se tgt'
                 Node (d, h, w, ne', nw', sw', se')
-            | Slice _ -> scan pre (Slicing.reallocate qr) tgt
+            | Slice _ -> scan pre (materialize qr) tgt
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
     scan (Target.get tgt) qr tgt
 
@@ -866,7 +847,7 @@ let transpose qr =
                      (transpose ne (Target.ne tgt qr))
                      (transpose se (Target.se tgt qr))
             | Slice _ ->
-                transpose (Slicing.reallocate qr) tgt
+                transpose (materialize qr) tgt
     transpose qr (Target.make (cols qr) (rows qr))
 
 /// Produce a string with the tikz code for printing the rope as a
@@ -893,6 +874,6 @@ let tikzify h w qr =
                   yield! tikz (i + h0) (j + w0) h0 w0 ne
                   yield line i (j + w0) (i + h) (j + w0)
                   yield line (i + h0) j (i + h0) (j + w) }
-        | Slice _ as qr -> tikz i j h w (Slicing.reallocate qr)
+        | Slice _ as qr -> tikz i j h w (materialize qr)
     let cmds = List.ofSeq (seq { yield! tikz 0.0 0.0 h w qr; yield rect 0.0 0.0 h w });
     printfn "%s" (String.concat "\n" cmds)

@@ -87,7 +87,7 @@ let map f qr =
                                               (fun () -> map sw (Target.sw tgt qr))
                                               (fun () -> map se (Target.se tgt qr))
                 node ne0 nw0 sw0 se0
-            | Slice _ as qr -> map (QuadRope.Slicing.reallocate qr) tgt
+            | Slice _ as qr -> map (QuadRope.materialize qr) tgt
     map qr (Target.make (rows qr) (cols qr))
 
 /// Fold each row of rope with f in parallel, starting with the
@@ -98,7 +98,7 @@ let hfold f states qr =
     let rec fold1 states = function
         | Empty -> states
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
-        | Slice _ as qr -> fold1 states (QuadRope.Slicing.reallocate qr)
+        | Slice _ as qr -> fold1 states (QuadRope.materialize qr)
         | qr -> QuadRope.hfold f states qr
     and fold2 states n s =
         let nstates, sstates = QuadRope.vsplit2 states (rows n)
@@ -114,7 +114,7 @@ let vfold f states qr =
     let rec fold1 states = function
         | Empty -> states
         | Node (_, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
-        | Slice _ as qr -> fold1 states (QuadRope.Slicing.reallocate qr)
+        | Slice _ as qr -> fold1 states (QuadRope.materialize qr)
         | qr -> QuadRope.vfold f states qr
     and fold2 states w e =
         let wstates, estates = QuadRope.hsplit2 states (cols w)
@@ -159,7 +159,7 @@ let rec private genZip f lqr rqr tgt =
                       let rse = QuadRope.slice (rows ne) (cols sw) (rows se) (cols se) rqr
                       genZip f se rse (Target.se tgt lqr))
             Node (d, h, w, ne0, nw0, sw0, se0)
-        | Slice _ -> genZip f (QuadRope.Slicing.reallocate lqr) rqr tgt
+        | Slice _ -> genZip f (QuadRope.materialize lqr) rqr tgt
         | _ -> QuadRope.genZip f lqr rqr tgt
 
 /// Zip function that assumes that the internal structure of two ropes
@@ -189,9 +189,9 @@ let rec private fastZip f lqr rqr tgt =
         // It may pay off to reallocate first if both reallocated quad
         // ropes have the same internal shape. This might be
         // over-fitted to matrix multiplication.
-        | Slice _, Slice _ -> fastZip f (QuadRope.Slicing.reallocate lqr) (QuadRope.Slicing.reallocate rqr) tgt
-        | Slice _, _ ->       fastZip f (QuadRope.Slicing.reallocate lqr) rqr tgt
-        | Slice _, Slice _ -> fastZip f lqr (QuadRope.Slicing.reallocate rqr) tgt
+        | Slice _, Slice _ -> fastZip f (QuadRope.materialize lqr) (QuadRope.materialize rqr) tgt
+        | Slice _, _ ->       fastZip f (QuadRope.materialize lqr) rqr tgt
+        | Slice _, Slice _ -> fastZip f lqr (QuadRope.materialize rqr) tgt
         | _ -> genZip f lqr rqr tgt
 
 /// Apply f to each (i, j) of lqr and rqr.
@@ -215,7 +215,7 @@ let rec mapreduce f g = function
                                       (fun () -> mapreduce f g sw)
                                       (fun () -> mapreduce f g se)
         g (g nw' ne') (g sw' se')
-    | Slice _ as qr -> mapreduce f g (QuadRope.Slicing.reallocate qr)
+    | Slice _ as qr -> mapreduce f g (QuadRope.materialize qr)
     | qr -> QuadRope.mapreduce f g qr
 
 /// Reduce all values of the rope to a single scalar in parallel.
@@ -238,7 +238,7 @@ let rec hfilter p = function
     | Node (_, 1, _, ne, nw, Empty, Empty) ->
         let ne0, nw0 = par2 (fun () -> hfilter p ne) (fun () -> hfilter p nw)
         QuadRope.flatNode nw0 ne0
-    | Slice _ as qr -> hfilter p (QuadRope.Slicing.reallocate qr)
+    | Slice _ as qr -> hfilter p (QuadRope.materialize qr)
     | qr -> QuadRope.hfilter p qr
 
 /// Remove all elements from rope for which p does not hold in
@@ -247,7 +247,7 @@ let rec vfilter p = function
     | Node (_, _, 1, Empty, nw, sw, Empty) ->
         let nw0, sw0 = par2 (fun () -> vfilter p nw) (fun () -> vfilter p sw)
         QuadRope.thinNode nw0 sw0
-    | Slice _ as qr -> vfilter p (QuadRope.Slicing.reallocate qr)
+    | Slice _ as qr -> vfilter p (QuadRope.materialize qr)
     | qr -> QuadRope.vfilter p qr
 
 /// Reverse the quad rope horizontally in parallel.
@@ -270,7 +270,7 @@ let hrev qr =
                                           (fun () -> hrev sw (Target.sw tgt qr))
                 Node (d, h, w, ne, nw, sw, se)
             | Slice _ ->
-                hrev (QuadRope.Slicing.reallocate qr) tgt
+                hrev (QuadRope.materialize qr) tgt
     hrev qr (Target.make (rows qr) (cols qr))
 
 /// Reverse the quad rope vertically in parallel.
@@ -293,7 +293,7 @@ let vrev qr =
                                           (fun () -> vrev ne (Target.ne tgt qr))
                 Node (d, h, w, ne, nw, sw, se)
             | Slice _ ->
-                vrev (QuadRope.Slicing.reallocate qr) tgt
+                vrev (QuadRope.materialize qr) tgt
     vrev qr (Target.make (rows qr) (cols qr))
 
 /// Transpose the quad rope in parallel. This is equal to swapping
@@ -317,7 +317,7 @@ let transpose qr =
                      (fun () -> transpose se (Target.se tgt qr))
                 |> tnode
             | Slice _ ->
-                transpose (QuadRope.Slicing.reallocate qr) tgt
+                transpose (QuadRope.materialize qr) tgt
     transpose qr (Target.make (cols qr) (rows qr))
 
 /// Apply a function with side effects to all elements and their
@@ -332,7 +332,7 @@ let iteri f qr =
                  (fun () -> iteri f (i + rows nw) j sw)
                  (fun () -> iteri f (i + rows ne) (j + cols sw) se)
             |> ignore
-        | Slice _ as qr -> iteri f i j (QuadRope.Slicing.reallocate qr)
+        | Slice _ as qr -> iteri f i j (QuadRope.materialize qr)
     iteri f 0 0 qr
 
 /// Conversion into 2D array.
@@ -451,7 +451,7 @@ let scan plus minus init qr =
                 let tgt_se = Target.se tgt qr
                 let se' = scan (Target.get tgt_se) se tgt_se
                 Node (d, h, w, ne', nw', sw', se')
-            | Slice _ -> scan pre (QuadRope.Slicing.reallocate qr) tgt
+            | Slice _ -> scan pre (QuadRope.materialize qr) tgt
 
     // Initial target and start of recursion.
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init

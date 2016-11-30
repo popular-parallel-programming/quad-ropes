@@ -170,3 +170,20 @@ let filter1 p arr =
 let filter2 p arr =
     let vs = Seq.filter p (Seq.init (Array2D.length2 arr) (Array2D.get arr 0)) |> Array.ofSeq
     Array2D.init 1 (Array.length vs) (fun _ j -> Array.get vs j)
+
+/// Generalization of summed area table, i.e. two-dimensional scan.
+let scan (++) (--) pre vals =
+    let sums = Array2D.zeroCreate (Array2D.length1 vals) (Array2D.length2 vals)
+    // Initial value must be copied
+    sums.[0, 0] <- vals.[0, 0] ++ pre
+    // Init (i, 0)
+    for i in 1 .. Array2D.length1 sums - 1 do
+        sums.[i, 0] <- vals.[i, 0] ++ sums.[i - 1, 0]
+    // Init (0, j).
+    for j in 1 .. Array2D.length2 sums - 1 do
+        sums.[0, j] <- vals.[0, j] ++ sums.[0, j - 1]
+    // Init remaining.
+    for i in 1 .. Array2D.length1 sums - 1 do
+        for j in 1 .. Array2D.length2 sums - 1 do
+            sums.[i, j] <- vals.[i, j] ++ sums.[i - 1, j] ++ sums.[i, j - 1] -- sums.[i - 1, j - 1]
+    sums

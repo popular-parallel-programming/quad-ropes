@@ -146,6 +146,9 @@ let vfold f states qr =
 /// that both ropes have the same internal structure.
 let rec private genZip f lqr rqr tgt =
     match lqr with
+        // Initialize target if any of the two quad ropes is dense.
+        | _ when Target.isEmpty tgt && not (isSparse lqr) ->
+            genZip f lqr rqr (Target.make (rows lqr) (cols lqr))
         | Node (s, d, h, w, ne, nw, Empty, Empty) ->
             let ne0, nw0 =
                 par2 (fun () ->
@@ -187,6 +190,9 @@ let rec private genZip f lqr rqr tgt =
 let rec private fastZip f lqr rqr tgt =
     match lqr, rqr with
         | Empty, Empty -> Empty
+        // Initialize target if any of the two quad ropes is dense.
+        | _ when Target.isEmpty tgt && (not (isSparse lqr) || not (isSparse rqr)) ->
+            fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
         | Leaf _, Leaf _ when QuadRope.shapesMatch lqr rqr ->
                 QuadRope.fastZip f lqr rqr tgt
         | Node (s, d, h, w, lne, lnw, Empty, Empty), Node (_, _, _, _, rne, rnw, Empty, Empty)
@@ -212,6 +218,12 @@ let rec private fastZip f lqr rqr tgt =
         | Slice _, Slice _ -> fastZip f (QuadRope.materialize lqr) (QuadRope.materialize rqr) tgt
         | Slice _, _ ->       fastZip f (QuadRope.materialize lqr) rqr tgt
         | Slice _, Slice _ -> fastZip f lqr (QuadRope.materialize rqr) tgt
+        // Sparse branches can be reduced to either a single call to f
+        // in case both arguments are sparse, or to a mapping f.
+        | Sparse (h, w, v1), Sparse (_, _, v2) -> Sparse (h, w, f v1 v2)
+        | Sparse (_, _, v), _ -> map (f v) rqr
+        | _, Sparse (_, _, v) -> map (fun x -> f x v) lqr
+        // Fall back to general case.
         | _ -> genZip f lqr rqr tgt
 
 /// Apply f to each (i, j) of lqr and rqr.

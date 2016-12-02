@@ -588,7 +588,7 @@ let map f qr =
                 map qr (Target.make (rows qr) (cols qr))
             // Write into target and construct new leaf.
             | Leaf slc ->
-                Leaf (Target.map f vals tgt)
+                Leaf (Target.map f slc tgt)
             // Node recursive case, adjust target descriptor.
             | Node (s, d, h, w, ne, nw, sw, se) ->
                 Node (s, d, h, w,
@@ -660,6 +660,9 @@ let internal sliceToMatch a b =
 let rec internal genZip f lqr rqr tgt =
     match lqr with
         | Empty -> Empty
+        // Initialize target if any of the two quad ropes is dense.
+        | _ when Target.isEmpty tgt && not (isSparse lqr) ->
+            genZip f lqr rqr (Target.make (rows lqr) (cols lqr))
         | Leaf slc ->
             let rqr = materialize rqr
             leaf (Target.mapi (fun i j v -> f v (fastGet rqr i j)) slc tgt)
@@ -671,6 +674,7 @@ let rec internal genZip f lqr rqr tgt =
             let se0 = genZip f se rse (Target.se tgt lqr)
             Node (s, d, h, w, ne0, nw0, sw0, se0)
         | Slice _ -> genZip f (materialize lqr) rqr tgt
+        | Sparse (_, _, v) -> map (f v) rqr
 
 /// True if the shape of two ropes match.
 let internal shapesMatch a b =
@@ -693,6 +697,9 @@ let internal subShapesMatch a b =
 let rec internal fastZip f lqr rqr tgt =
     match lqr, rqr with
         | Empty, Empty -> Empty
+        // Initialize target if any of the two quad ropes is dense.
+        | _ when Target.isEmpty tgt && (not (isSparse lqr) || not (isSparse rqr)) ->
+            fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
         | Leaf ls, Leaf rs when shapesMatch lqr rqr ->
             leaf (Target.map2 f ls rs tgt)
         | Node (_, _, _, _, lne, lnw, lsw, lse), Node (_, _, _, _, rne, rnw, rsw, rse)
@@ -707,6 +714,12 @@ let rec internal fastZip f lqr rqr tgt =
         | Slice _, Slice _ -> fastZip f (materialize lqr) (materialize rqr) tgt
         | Slice _, _ ->       fastZip f (materialize lqr) rqr tgt
         | Slice _, Slice _ -> fastZip f lqr (materialize rqr) tgt
+        // Sparse branches can be reduced to either a single call to f
+        // in case both arguments are sparse, or to a mapping f.
+        | Sparse (h, w, v1), Sparse (_, _, v2) -> Sparse (h, w, f v1 v2)
+        | Sparse (_, _, v), _ -> map (f v) rqr
+        | _, Sparse (_, _, v) -> map (fun x -> f x v) lqr
+        // Fall back to general case.
         | _ -> genZip f lqr rqr tgt
 
 /// Apply f to each (i, j) of lqr and rope.

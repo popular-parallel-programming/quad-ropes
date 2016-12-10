@@ -474,23 +474,25 @@ let vrev qr =
             | _ -> qr
     vrev qr (Target.make (rows qr) (cols qr))
 
+/// Create a quad rope from an array slice instance.
+let rec internal fromArraySlice slc =
+    if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
+        Empty
+    else if ArraySlice.rows slc <= s_max && ArraySlice.cols slc <= s_max then
+        leaf slc
+    else if ArraySlice.cols slc <= s_max then
+        let n, s = ArraySlice.vsplit2 slc
+        thinNode (fromArraySlice n) (fromArraySlice s)
+    else if ArraySlice.rows slc <= s_max then
+        let w, e = ArraySlice.hsplit2 slc
+        flatNode (fromArraySlice w) (fromArraySlice e)
+    else
+        let ne, nw, sw, se = ArraySlice.split4 slc
+        node (fromArraySlice ne) (fromArraySlice nw) (fromArraySlice sw) (fromArraySlice se)
+
 /// Initialize a rope from a native 2D-array.
 let fromArray2D arr =
-    let rec init slc =
-        if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
-            Empty
-        else if ArraySlice.rows slc <= s_max && ArraySlice.cols slc <= s_max then
-            leaf slc
-        else if ArraySlice.cols slc <= s_max then
-            let n, s = ArraySlice.vsplit2 slc
-            thinNode (init n) (init s)
-        else if ArraySlice.rows slc <= s_max then
-            let w, e = ArraySlice.hsplit2 slc
-            flatNode (init w) (init e)
-        else
-            let ne, nw, sw, se = ArraySlice.split4 slc
-            node (init ne) (init nw) (init sw) (init se)
-    init (ArraySlice.make arr)
+    fromArraySlice (ArraySlice.make arr)
 
 /// Generate a new tree without any intermediate values.
 let inline init h w f =
@@ -844,6 +846,17 @@ let scan plus minus init qr =
                 Node (s, d, h, w, ne', nw', sw', se')
 
             | Slice _ -> scan pre (materialize qr) tgt
+
+            | Sparse (h, w, v) ->
+                // Fill the target imperatively.
+                Target.fill tgt h w v
+                // Get a slice over the target.
+                let slc = Target.toSlice tgt h w
+                // Compute prefix imperatively.
+                Target.scan plus minus pre slc tgt
+                // Make a new quad rope from array slice.
+                fromArraySlice slc
+
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
     scan (Target.get tgt) qr tgt
 

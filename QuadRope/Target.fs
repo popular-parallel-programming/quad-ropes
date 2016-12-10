@@ -29,15 +29,19 @@ open Types
 /// some offset.
 type 'a Target = { i : int; j : int; vals : 'a [,] }
 
+let inline rows tgt = Array2D.length1 tgt.vals - tgt.i
+let inline cols tgt = Array2D.length2 tgt.vals - tgt.j
+
 /// Create a new target descriptor of size h * w.
 let inline make h w = { i = 0; j = 0; vals = Array2D.zeroCreate h w }
+let inline makeWith h w v = { i = 0; j = 0; vals = Array2D.create h w v }
 
 /// The "empty target", a target that is not initialized.
 let empty = { i = 0; j = 0; vals = null }
 
 /// True if the target is the empty target.
 let inline isEmpty tgt =
-    tgt.vals = null
+    isNull tgt.vals
 
 /// Advance the target by i and j in both dimensions.
 let inline increment (tgt : _ Target) i j =
@@ -60,19 +64,19 @@ let inline incrementCol tgt j = increment tgt 0 j
 /// Adjust target descriptor to match north-eastern child.
 let ne tgt = function
     | Node (_, _, _, _, _, nw, _, _) ->
-        incrementCol tgt (cols nw)
+        incrementCol tgt (Types.cols nw)
     | _ -> tgt
 
 /// Adjust target descriptor to match south-western child.
 let sw tgt = function
     | Node (_, _, _, _, _, nw, _, _) ->
-        incrementRow tgt (rows nw)
+        incrementRow tgt (Types.rows nw)
     | _ -> tgt
 
 /// Adjust target descriptor to match south-eastern child.
 let se tgt = function
     | Node (_, _, _, _, ne, _, sw, _) ->
-        increment tgt (rows ne) (cols sw)
+        increment tgt (Types.rows ne) (Types.cols sw)
     | _ -> tgt
 
 /// Generalized write to target.
@@ -92,6 +96,12 @@ let inline writemapi2 (tgt : _ Target) f r c v1 v2 =
 /// Simplified write to target.
 let inline write (tgt : _ Target) r c v =
     writemap tgt id r c v
+
+/// Fill the target descriptor with values.
+let inline fill (tgt : _ Target) h w v =
+    for r in tgt.i .. tgt.i + h - 1 do
+        for c in tgt.j .. tgt.j + w - 1 do
+            tgt.vals.[r, c] <- v
 
 /// Build a leaf node from a target for a given height and width.
 let inline toSlice (tgt : _ Target) h w =

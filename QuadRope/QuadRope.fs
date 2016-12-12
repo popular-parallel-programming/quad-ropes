@@ -929,8 +929,7 @@ let tikzify h w qr =
         sprintf "\\fill[gray!20!white] (%f, %f) rectangle (%f, %f);" j i (j + w) (i + h)
     let rec tikz i j h w = function
         | Empty -> seq { yield box i j h w; yield thinLine i j (h + i) (w + j) }
-        | Leaf _ -> Seq.empty
-        | Node (s, _, _, _, ne, nw, sw, se) ->
+        | Node (_, _, _, _, ne, nw, sw, se) ->
             let h0 = h / 2.0
             let w0 = w / 2.0
             seq { yield! tikz i j h0 w0 sw
@@ -940,5 +939,6 @@ let tikzify h w qr =
                   yield line i (j + w0) (i + h) (j + w0)
                   yield line (i + h0) j (i + h0) (j + w) }
         | Slice _ as qr -> tikz i j h w (materialize qr)
+        |  _ -> Seq.empty
     let cmds = List.ofSeq (seq { yield! tikz 0.0 0.0 h w qr; yield rect 0.0 0.0 h w });
     printfn "%s" (String.concat "\n" cmds)

@@ -622,7 +622,7 @@ let hfold f states qr =
     let rec fold1 states = function
         | Empty -> states
         | Leaf vs -> leaf (ArraySlice.fold2 f (fun i -> fastGet states i 0) vs)
-        | Node (s, _, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
+        | Node (_, _, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
         | Slice _ as qr -> fold1 states (materialize qr)
     and fold2 states n s =
         let nstates, sstates = vsplit2 states (rows n)
@@ -637,7 +637,7 @@ let vfold f states qr =
     let rec fold1 states = function
         | Empty -> states
         | Leaf vs -> leaf (ArraySlice.fold1 f (fastGet states 0) vs)
-        | Node (s, _, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
+        | Node (_, _, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
         | Slice _ as qr -> fold1 states (materialize qr)
     and fold2 states w e =
         let wstates, estates = hsplit2 states (cols w)
@@ -650,7 +650,7 @@ let vfold f states qr =
 let internal sliceToMatch a b =
     match a with
         | Empty -> Empty, Empty, Empty, Empty
-        | Node (s, _, _, _, ne, nw, sw, se) ->
+        | Node (_, _, _, _, ne, nw, sw, se) ->
             slice 0         (cols nw) (rows ne) (cols ne) b,
             slice 0          0        (rows nw) (cols nw) b,
             slice (rows nw)  0        (rows sw) (cols sw) b,
@@ -773,7 +773,7 @@ let inline private offset f x =
 let rec hscan f states = function
     | Empty -> Empty
     | Leaf vs -> Leaf (ArraySlice.scan2 f states vs)
-    | Node (s, _, _, _, ne, nw, sw, se) ->
+    | Node (_, _, _, _, ne, nw, sw, se) ->
         let nw' = hscan f states nw
         let sw' = hscan f (offset states (rows nw')) sw
         (* NW and SW might differ in height and width, we cannot join them to a thin node. *)
@@ -789,7 +789,7 @@ let rec hscan f states = function
 let rec vscan f states = function
     | Empty -> Empty
     | Leaf vs -> Leaf (ArraySlice.scan1 f states vs)
-    | Node (s, _, _, _, ne, nw, sw, se) ->
+    | Node (_, _, _, _, ne, nw, sw, se) ->
         let nw' = vscan f states nw
         let ne' = vscan f (offset states (cols nw')) ne
         (* NW and NE might differ in height and width, we cannot join them to a flat node. *)
@@ -894,7 +894,7 @@ let exists p qr = mapreduce p (||) false qr
 let rec hfilter p = function
     | Empty -> Empty
     | Leaf vs -> leaf (ArraySlice.filter2 p vs)
-    | Node (s, _, 1, _, ne, nw, Empty, Empty) ->
+    | Node (_, _, 1, _, ne, nw, Empty, Empty) ->
         flatNode (hfilter p nw) (hfilter p ne)
     | _ -> failwith "Quad rope height must be exactly one."
 
@@ -903,7 +903,7 @@ let rec hfilter p = function
 let rec vfilter p = function
     | Empty -> Empty
     | Leaf vs -> leaf (ArraySlice.filter1 p vs)
-    | Node (s, _, _, 1, Empty, nw, sw, Empty) ->
+    | Node (_, _, _, 1, Empty, nw, sw, Empty) ->
         thinNode (vfilter p nw) (vfilter p sw)
     | _ -> failwith "Quad rope width must be exactly one."
 
@@ -915,7 +915,7 @@ let transpose qr =
             | Empty -> Empty
             | Leaf slc ->
                 leaf (Target.transpose slc tgt)
-            | Node (s, _, _, _, ne, nw, sw, se) ->
+            | Node (_, _, _, _, ne, nw, sw, se) ->
                 node (transpose sw (Target.sw tgt qr))
                      (transpose nw tgt)
                      (transpose ne (Target.ne tgt qr))

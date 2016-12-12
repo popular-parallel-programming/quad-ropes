@@ -260,7 +260,6 @@ let rec vfilter p = function
 let hrev qr =
     let rec hrev qr tgt =
         match qr with
-            | Empty -> Empty
             | Leaf slc ->
                 leaf (Target.hrev slc tgt)
             | Node (s, d, h, w, ne, nw, Empty, Empty) ->
@@ -277,13 +276,13 @@ let hrev qr =
                 Node (s, d, h, w, ne, nw, sw, se)
             | Slice _ ->
                 hrev (QuadRope.materialize qr) tgt
+            | _ -> qr
     hrev qr (Target.make (rows qr) (cols qr))
 
 /// Reverse the quad rope vertically in parallel.
 let vrev qr =
     let rec vrev qr tgt =
         match qr with
-            | Empty -> Empty
             | Leaf slc ->
                 leaf (Target.vrev slc tgt)
             | Node (s, d, h, w, ne, nw, Empty, Empty) ->
@@ -300,6 +299,7 @@ let vrev qr =
                 Node (s, d, h, w, ne, nw, sw, se)
             | Slice _ ->
                 vrev (QuadRope.materialize qr) tgt
+            | _ -> qr
     vrev qr (Target.make (rows qr) (cols qr))
 
 /// Transpose the quad rope in parallel. This is equal to swapping
@@ -324,6 +324,7 @@ let transpose qr =
                 |> tnode
             | Slice _ ->
                 transpose (QuadRope.materialize qr) tgt
+            | Sparse (h, w, v) -> Sparse (w, h, v)
     transpose qr (Target.make (cols qr) (rows qr))
 
 /// Apply a function with side effects to all elements and their

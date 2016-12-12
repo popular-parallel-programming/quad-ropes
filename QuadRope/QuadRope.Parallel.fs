@@ -333,13 +333,48 @@ let iteri f qr =
     let rec iteri f i j = function
         | Empty -> ()
         | Leaf vs -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
+
+        | Node (_, _, _, _, ne, nw, Empty, Empty) ->
+            par2 (fun () -> iteri f i j nw) (fun () -> iteri f i (j + cols nw) ne)
+            |> ignore
+
+        | Node (_, _, _, _, Empty, nw, sw, Empty) ->
+            par2 (fun () -> iteri f i j nw) (fun () -> iteri f (i + rows nw) j sw)
+            |> ignore
+
         | Node (_, _, _, _, ne, nw, sw, se) ->
             par4 (fun () -> iteri f i j nw)
                  (fun () -> iteri f i (j + cols nw) ne)
                  (fun () -> iteri f (i + rows nw) j sw)
                  (fun () -> iteri f (i + rows ne) (j + cols sw) se)
             |> ignore
+
         | Slice _ as qr -> iteri f i j (QuadRope.materialize qr)
+
+        // Small sparse quad rope, process sequentially.
+        | Sparse (h, w, v) when h <= s_max && w <= s_max ->
+            for r in i .. i + h - 1 do
+                for c in j .. j + w - 1 do
+                    f r c v
+
+        // Wide sparse quad rope, split horizontally.
+        | Sparse (h, w, _) as qr when h <= s_max ->
+            let nw, ne = QuadRope.hsplit2 qr (w / 2)
+            par2 (fun () -> iteri f i j nw) (fun () -> iteri f i (j + w / 2) ne) |> ignore
+
+        // Tall sparse quad rope, split vertically.
+        | Sparse (h, w, _) as qr when w <= s_max ->
+            let nw, sw = QuadRope.vsplit2 qr (h / 2)
+            par2 (fun () -> iteri f i j nw) (fun () -> iteri f (i + h / 2) j sw) |> ignore
+
+        | Sparse _ as qr ->
+            let ne, nw, sw, se = QuadRope.split4 qr
+            par4 (fun () -> iteri f i (j + cols nw) ne)
+                 (fun () -> iteri f i j nw)
+                 (fun () -> iteri f (i + rows nw) j sw)
+                 (fun () -> iteri f (i + rows ne) (j + cols sw) se)
+            |> ignore
+
     iteri f 0 0 qr
 
 /// Conversion into 2D array.

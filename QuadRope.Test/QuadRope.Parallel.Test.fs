@@ -61,3 +61,6 @@ let ``parallel zip equal to sequential`` (a : int QuadRope) (b : int QuadRope) =
 
 let ``parallel scan equal to sequential`` (a : int QuadRope) =
     QuadRope.equals (QuadRope.scan (+) (-) 0 a) (Parallel.QuadRope.scan (+) (-) 0 a)
+
+let ``parallel toArray2D equal to sequential`` (a : int QuadRope) =
+    QuadRope.toArray2D a = Parallel.QuadRope.toArray2D a

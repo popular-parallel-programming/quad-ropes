@@ -285,6 +285,15 @@ let inline vsplit2 qr i =
 let inline hsplit2 qr j =
     hsplit 0 j qr, hsplit j (cols qr) qr
 
+/// Split a quad rope in four quadrants that differ by at most one row
+/// and column in size. Return order is ne, nw, sw, se, same order as
+/// in the Node constructor.
+let inline split4 qr =
+    slice 0               (cols qr >>> 1) (rows qr >>> 1) (cols qr)       qr,
+    slice 0               0               (rows qr >>> 1) (cols qr >>> 1) qr,
+    slice (rows qr >>> 1) 0               (rows qr)       (cols qr >>> 1) qr,
+    slice (rows qr >>> 1) (cols qr >>> 1) (rows qr)       (cols qr)       qr
+
 // Get a single row or column
 let row qr i = slice i 0 1 (cols qr) qr
 let col qr j = slice 0 j (rows qr) 1 qr
@@ -900,6 +909,11 @@ let transpose qr =
                 transpose (materialize qr) tgt
             | Sparse (h, w, v) -> Sparse (w, h, v)
     transpose qr (Target.make (cols qr) (rows qr))
+
+/// Compare two quad ropes element wise and return true if they are
+/// equal. False otherwise.
+let equals qr0 qr1 =
+    reduce (&&) true (zip (=) qr0 qr1)
 
 /// Produce a string with the tikz code for printing the rope as a
 /// box diagram. This is useful for illustrating algorithms on

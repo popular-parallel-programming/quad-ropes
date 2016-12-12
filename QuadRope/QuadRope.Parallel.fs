@@ -458,8 +458,40 @@ let scan plus minus init qr =
                 let tgt_se = Target.se tgt qr
                 let se' = scan (Target.get tgt_se) se tgt_se
                 Node (s, d, h, w, ne', nw', sw', se')
+
             | Slice _ -> scan pre (QuadRope.materialize qr) tgt
+
+            // Materialize a sparse leaf and scan it.
+            | Sparse (h, w, v) when h <= s_max || w <= s_max ->
+                // Fill the target imperatively.
+                Target.fill tgt h w v
+                // Get a slice over the target.
+                let slc = Target.toSlice tgt h w
+                // Compute prefix imperatively.
+                Target.scan plus minus pre slc tgt
+                // Make a new quad rope from array slice.
+                leaf slc
+
+            // If both dimensions are larger than s_max, we can
+            // actually do some work in parallel.
+            | Sparse _ -> // when s_max < h && s_max < w
+                let ne, nw, sw, se = QuadRope.split4 qr
+                let nw' = scan pre nw tgt
+                let ne', sw' = par2 (fun () ->
+                                     let tgt_ne = Target.incrementCol tgt (cols nw')
+                                     scan (Target.get tgt_ne) ne tgt_ne)
+                                    (fun () ->
+                                     let tgt_sw = Target.incrementRow tgt (rows nw')
+                                     scan (Target.get tgt_sw) sw tgt_sw)
+                let tgt_se = Target.increment tgt (rows nw') (cols sw')
+                let se' = scan (Target.get tgt_se) se tgt_se
+                node ne' nw' sw' se'
 
     // Initial target and start of recursion.
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
     scan (Target.get tgt) qr tgt
+
+/// Compare two quad ropes element wise and return true if they are
+/// equal. False otherwise.
+let equals qr0 qr1 =
+    reduce (&&) true (zip (=) qr0 qr1)

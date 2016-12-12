@@ -60,4 +60,4 @@ let ``parallel zip equal to sequential`` (a : int QuadRope) (b : int QuadRope) =
     ==> lazy (QuadRope.zip (+) a b = Parallel.QuadRope.zip (+) a b)
 
 let ``parallel scan equal to sequential`` (a : int QuadRope) =
-    QuadRope.scan (+) (-) 0 a = Parallel.QuadRope.scan (+) (-) 0 a
+    QuadRope.equals (QuadRope.scan (+) (-) 0 a) (Parallel.QuadRope.scan (+) (-) 0 a)

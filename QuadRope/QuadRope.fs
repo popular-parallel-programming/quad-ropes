@@ -762,6 +762,8 @@ let rec hscan f states = function
         let se' = hscan f (offset estate (rows ne')) se
         node ne' nw' sw' se'
     | Slice _ as qr -> hscan f states (materialize qr)
+    | Sparse (h, w, v) ->
+         hscan f states (init h w (fun _ _ -> v))
 
 /// Compute the column-wise prefix sum of the rope for f starting
 /// with states.
@@ -778,6 +780,8 @@ let rec vscan f states = function
         let se' = vscan f (offset sstate (cols sw')) se
         node ne' nw' sw' se'
     | Slice _ as qr -> vscan f states (materialize qr)
+    | Sparse (h, w, v) ->
+         vscan f states (init h w (fun _ _ -> v))
 
 /// Compute the generalized summed area table for functions plus and
 /// minus; all rows and columns are initialized with init.

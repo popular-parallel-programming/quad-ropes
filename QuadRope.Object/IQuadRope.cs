@@ -186,6 +186,13 @@ namespace RadTrees.QuadRope.Object
         public abstract IQuadRope<T> ReduceVertically(Func<T, T, T> f, T epsilon);
 
         /// <summary>
+        ///   Compute the 2D prefix-sum for the associative operator
+        ///   <code>plus</code>. The function <code>minus</code> is
+        ///   assumed to be the inverse of <code>plus</code>.
+        /// </summary>
+        public abstract IQuadRope<T> Scan(Func<T, T, T> plus, Func<T, T, T> minus, T initial);
+
+        /// <summary>
         ///   Compute the row-wise prefix-sum for the associative
         ///   function f. States is a function that produces an
         ///   initial value for each row. The resulting rope is

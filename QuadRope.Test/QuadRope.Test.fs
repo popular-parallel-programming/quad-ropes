@@ -36,8 +36,6 @@ module private Utils =
         makeIndices (QuadRope.rows qr) (QuadRope.cols qr)
 
     let rec maintainsTight = function
-        | Empty
-        | Leaf _ -> true
         | Node (_, _, _, _, ne, nw, Empty, Empty) ->
             maintainsTight ne && maintainsTight nw
         | Node (_, _, _, _, Empty, nw, sw, Empty) ->
@@ -47,6 +45,7 @@ module private Utils =
         | Node (_, _, _, _, ne, nw, sw, se) ->
             maintainsTight ne && maintainsTight nw && maintainsTight sw && maintainsTight se
         | Slice _ as qr -> maintainsTight qr
+        | _ -> true
 
     let access rope (i, j) =
         try

@@ -922,6 +922,7 @@ let transpose qr =
                      (transpose se (Target.se tgt qr))
             | Slice _ ->
                 transpose (materialize qr) tgt
+            | Sparse (h, w, v) -> Sparse (w, h, v)
     transpose qr (Target.make (cols qr) (rows qr))
 
 /// Produce a string with the tikz code for printing the rope as a

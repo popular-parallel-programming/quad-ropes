@@ -241,7 +241,7 @@ let exists p qr = mapreduce p (||) false qr
 /// Remove all elements from rope for which p does not hold in
 /// parallel. Input rope must be of height 1.
 let rec hfilter p = function
-    | Node (s, _, 1, _, ne, nw, Empty, Empty) ->
+    | Node (_, _, 1, _, ne, nw, Empty, Empty) ->
         let ne0, nw0 = par2 (fun () -> hfilter p ne) (fun () -> hfilter p nw)
         QuadRope.flatNode nw0 ne0
     | Slice _ as qr -> hfilter p (QuadRope.materialize qr)
@@ -250,7 +250,7 @@ let rec hfilter p = function
 /// Remove all elements from rope for which p does not hold in
 /// parallel. Input rope must be of width 1.
 let rec vfilter p = function
-    | Node (s, _, _, 1, Empty, nw, sw, Empty) ->
+    | Node (_, _, _, 1, Empty, nw, sw, Empty) ->
         let nw0, sw0 = par2 (fun () -> vfilter p nw) (fun () -> vfilter p sw)
         QuadRope.thinNode nw0 sw0
     | Slice _ as qr -> vfilter p (QuadRope.materialize qr)
@@ -310,13 +310,13 @@ let transpose qr =
             | Empty -> Empty
             | Leaf slc ->
                 leaf (Target.transpose slc tgt)
-            | Node (s, _, _, _, ne, nw, Empty, Empty) ->
+            | Node (_, _, _, _, ne, nw, Empty, Empty) ->
                 par2 (fun () -> transpose nw tgt) (fun () -> transpose ne (Target.ne tgt qr))
                 |> tthinNode
-            | Node (s, _, _, _, Empty, nw, sw, Empty) ->
+            | Node (_, _, _, _, Empty, nw, sw, Empty) ->
                 par2 (fun () -> transpose nw tgt) (fun () -> transpose sw (Target.sw tgt qr))
                 |> tflatNode
-            | Node (s, _, _, _, ne, nw, sw, se) ->
+            | Node (_, _, _, _, ne, nw, sw, se) ->
                 par4 (fun () -> transpose sw (Target.sw tgt qr))
                      (fun () -> transpose nw tgt)
                      (fun () -> transpose ne (Target.ne tgt qr))
@@ -333,7 +333,7 @@ let iteri f qr =
     let rec iteri f i j = function
         | Empty -> ()
         | Leaf vs -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
-        | Node (s, _, _, _, ne, nw, sw, se) ->
+        | Node (_, _, _, _, ne, nw, sw, se) ->
             par4 (fun () -> iteri f i j nw)
                  (fun () -> iteri f i (j + cols nw) ne)
                  (fun () -> iteri f (i + rows nw) j sw)

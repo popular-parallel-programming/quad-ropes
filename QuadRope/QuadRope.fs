@@ -92,7 +92,7 @@ let rec internal fastGet qr i j =
     match qr with
         | Empty -> invalidArg "qr" "Empty quad rope contains no values."
         | Leaf vs -> ArraySlice.get vs i j
-        | Node (s, _, _, _, ne, nw, sw, se) ->
+        | Node (_, _, _, _, ne, nw, sw, se) ->
             if withinRange nw i j then
                 fastGet nw i j
             else if withinRange ne i (j - cols nw) then
@@ -142,12 +142,12 @@ let private isBalanced d s =
 
 /// True if rope is balanced horizontally. False otherwise.
 let isBalancedH = function
-    | Node (s, d, _, w, _, _, _, _) -> isBalanced d w
+    | Node (_, d, _, w, _, _, _, _) -> isBalanced d w
     | _ -> true
 
 /// True if rope is balanced vertically. False otherwise.
 let isBalancedV = function
-    | Node (s, d, h, _, _, _, _, _) -> isBalanced d h
+    | Node (_, d, h, _, _, _, _, _) -> isBalanced d h
     | _ -> true
 
 /// Calls <code>f</code> recursively on a list of quad ropes until the
@@ -348,7 +348,7 @@ let vcat upper lower =
                 leaf (ArraySlice.cat1 us ls)
 
             // Merge sub-leaves.
-            | Node (s, _, _, _, Empty, nwu, Leaf swus, Empty), Leaf ls when canMerge swus ls->
+            | Node (_, _, _, _, Empty, nwu, Leaf swus, Empty), Leaf ls when canMerge swus ls->
                 thinNode nwu (leaf (ArraySlice.cat1 swus ls))
             | Leaf us, Node (_, _, _, _, Empty, Leaf nwls, swl, Empty) when canMerge us nwls ->
                 thinNode (leaf (ArraySlice.cat1 us nwls)) swl
@@ -401,7 +401,7 @@ let hcat left right =
                 leaf (ArraySlice.cat2 ls rs)
 
             // Merge sub-leaves.
-            | Node (s, _, _, _, Leaf lnes, lnw, Empty, Empty), Leaf rs when canMerge lnes rs->
+            | Node (_, _, _, _, Leaf lnes, lnw, Empty, Empty), Leaf rs when canMerge lnes rs->
                 flatNode lnw (leaf (ArraySlice.cat2 lnes rs))
             | Leaf ls, Node (_, _, _, _, rne, Leaf rnws, Empty, Empty) when canMerge ls rnws ->
                 flatNode (leaf (ArraySlice.cat2 ls rnws)) rne
@@ -549,7 +549,7 @@ let iteri f qr =
     let rec iteri f i j = function
         | Empty -> ()
         | Leaf vs -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
-        | Node (s, _, _, _, ne, nw, sw, se) ->
+        | Node (_, _, _, _, ne, nw, sw, se) ->
             iteri f i j nw
             iteri f i (j + cols nw) ne
             iteri f (i + rows nw) j sw

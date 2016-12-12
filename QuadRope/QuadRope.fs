@@ -533,14 +533,14 @@ let fromArray vs w =
 let rec iter f = function
     | Empty -> ()
     | Leaf vs -> ArraySlice.iter f vs
-    | Node (s, _, _, _, ne, nw, sw, se) ->
+    | Node (_, _, _, _, ne, nw, sw, se) ->
         iter f ne
         iter f nw
         iter f sw
         iter f se
     | Slice _ as qr -> iter f (materialize qr)
     | Sparse (h, w, v) ->
-        for i in 1 .. h * w - 1 do
+        for i in 1 .. h * w do
             f v
 
 /// Apply a function with side effects to all elements and their

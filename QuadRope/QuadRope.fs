@@ -868,6 +868,8 @@ let rec hfilter p = function
     | Leaf vs -> leaf (ArraySlice.filter2 p vs)
     | Node (_, _, 1, _, ne, nw, Empty, Empty) ->
         flatNode (hfilter p nw) (hfilter p ne)
+    | Sparse (1, _, v) as qr when p v -> qr
+    | Sparse (1, _, _) -> Empty
     | _ -> failwith "Quad rope height must be exactly one."
 
 /// Remove all elements from rope for which p does not hold. Input
@@ -877,6 +879,8 @@ let rec vfilter p = function
     | Leaf vs -> leaf (ArraySlice.filter1 p vs)
     | Node (_, _, _, 1, Empty, nw, sw, Empty) ->
         thinNode (vfilter p nw) (vfilter p sw)
+    | Sparse (_, 1, v) as qr when p v -> qr
+    | Sparse (_, 1, _) -> Empty
     | _ -> failwith "Quad rope width must be exactly one."
 
 /// Transpose the quad rope. This is equal to swapping indices,

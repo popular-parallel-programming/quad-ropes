@@ -730,37 +730,40 @@ let zip f lqr rqr =
         failwith "Quad ropes must have the same shape."
     fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
-/// Apply f to all values of the rope and reduce the resulting
-/// values to a single scalar using g.
-let rec mapreduce f g = function
-    | Empty ->
-        failwith "Impossible to reduce an empty quad rope."
+/// Apply f to all values of the rope and reduce the resulting values
+/// to a single scalar using g. Variable epsilon is the neutral
+/// element for g. We assume that g epsilon x = g x epsilon = x.
+let rec mapreduce f g epsilon = function
+    | Empty -> epsilon
     | Leaf slc ->
         ArraySlice.mapreduce f g slc
-    | Node (s, _, _, _, ne, nw, Empty, Empty) ->
-        g (mapreduce f g nw) (mapreduce f g ne)
-    | Node (s, _, _, _, Empty, nw, sw, Empty) ->
-        g (mapreduce f g nw) (mapreduce f g sw)
-    | Node (s, _, _, _, ne, nw, sw, se) ->
-        g (g (mapreduce f g nw) (mapreduce f g ne))
-          (g (mapreduce f g sw) (mapreduce f g se))
+    | Node (_, _, _, _, ne, nw, Empty, Empty) ->
+        g (mapreduce f g epsilon nw) (mapreduce f g epsilon ne)
+    | Node (_, _, _, _, Empty, nw, sw, Empty) ->
+        g (mapreduce f g epsilon nw) (mapreduce f g epsilon sw)
+    | Node (_, _, _, _, ne, nw, sw, se) ->
+        g (g (mapreduce f g epsilon nw) (mapreduce f g epsilon ne))
+          (g (mapreduce f g epsilon sw) (mapreduce f g epsilon se))
     | Slice _ as qr ->
-        mapreduce f g (materialize qr)
+        mapreduce f g epsilon (materialize qr)
     | Sparse (h, w, v) ->
         let fv = f v
-        let mutable acc = f v
-        for i in 2 .. h * w do
-            acc <- g acc fv
-        acc
+        if fv = epsilon then
+            epsilon
+        else
+            let mutable acc = f v
+            for i in 2 .. h * w do
+                acc <- g acc fv
+            acc
 
 /// Reduce all values of the rope to a single scalar.
-let reduce f qr = mapreduce id f qr
+let reduce f epsilon qr = mapreduce id f epsilon qr
 
-let hmapreduce f g qr = hmap (mapreduce f g) qr
-let vmapreduce f g qr = vmap (mapreduce f g) qr
+let hmapreduce f g epsilon qr = hmap (mapreduce f g epsilon) qr
+let vmapreduce f g epsilon qr = vmap (mapreduce f g epsilon) qr
 
-let hreduce f qr = hmapreduce id f qr
-let vreduce f qr = vmapreduce id f qr
+let hreduce f epsilon qr = hmapreduce id f epsilon qr
+let vreduce f epsilon qr = vmapreduce id f epsilon qr
 
 let inline private offset f x =
     ((+) x) >> f
@@ -867,7 +870,7 @@ let forallRows p = function
     | Empty -> true
     | qr ->
         let xs = hfold (fun xs x -> x :: xs) (create (rows qr) 1 []) qr
-        get (vmapreduce (List.rev >> List.pairwise >> List.forall (fun (x, y) -> p x y)) (&&) xs) 0 0
+        get (vmapreduce (List.rev >> List.pairwise >> List.forall (fun (x, y) -> p x y)) (&&) true xs) 0 0
 
 /// Checks that some relation p holds between each two adjacent
 /// elements in each column. This is slow and should not really be
@@ -876,19 +879,15 @@ let forallCols p = function
     | Empty -> true
     | qr ->
         let xs = vfold (fun xs x -> x :: xs) (create 1 (cols qr) []) qr
-        get (hmapreduce (List.rev >> List.pairwise >> List.forall (fun (x, y) -> p x y)) (&&) xs) 0 0
+        get (hmapreduce (List.rev >> List.pairwise >> List.forall (fun (x, y) -> p x y)) (&&) true xs) 0 0
 
-/// Apply predicate p to all elements of rope and reduce the
+/// Apply predicate p to all elements of qr and reduce the
 /// elements in both dimension using logical and.
-let forall p = function
-    | Empty -> true
-    | qr -> mapreduce p (&&) qr
+let forall p qr = mapreduce p (&&) true qr
 
-/// Apply predicate p to all elements of rope and reduce the
+/// Apply predicate p to all elements of qr and reduce the
 /// elements in both dimensions using logical or.
-let exists p = function
-    | Empty -> false
-    | qr -> mapreduce p (||) qr
+let exists p qr = mapreduce p (||) false qr
 
 /// Remove all elements from rope for which p does not hold. Input
 /// rope must be of height 1.

@@ -30,93 +30,99 @@ namespace RadTrees.QuadRope.Object
 {
     public class ParallelQuadRope<T> : IQuadRope<T>
     {
-	private ParallelQuadRope(QuadRope<T> rope)
-	    : base(rope)
+	private ParallelQuadRope(QuadRope<T> qr)
+	    : base(qr)
 	{ }
 
         public override IQuadRope<T> BalanceHorizontally()
         {
             // NB: Not parallel!
-            return new ParallelQuadRope<T>(QuadRopeModule.hbalance(rope));
+            return new ParallelQuadRope<T>(QuadRopeModule.hbalance(qr));
         }
 
         public override IQuadRope<T> BalanceVertically()
         {
             // NB: Not parallel!
-            return new ParallelQuadRope<T>(QuadRopeModule.vbalance(rope));
+            return new ParallelQuadRope<T>(QuadRopeModule.vbalance(qr));
         }
 
         public override IQuadRope<T> ConcatHorizontally(IQuadRope<T> other)
         {
             // NB: Not parallel!
-            return new ParallelQuadRope<T>(QuadRopeModule.hcat(rope, other.rope));
+            return new ParallelQuadRope<T>(QuadRopeModule.hcat(qr, other.qr));
         }
 
         public override IQuadRope<T> ConcatVertically(IQuadRope<T> other)
         {
             // NB: Not parallel!
-            return new ParallelQuadRope<T>(QuadRopeModule.vcat(rope, other.rope));
+            return new ParallelQuadRope<T>(QuadRopeModule.vcat(qr, other.qr));
         }
 
         public override IQuadRope<S> FoldHorizontally<S>(Func<S, T, S> f, IQuadRope<S> states)
         {
             // NB: Not parallel!
-            return new ParallelQuadRope<S>(QuadRopeModule.hfold(Functions.toFunc2(f), states.rope, rope));
+            return new ParallelQuadRope<S>(QuadRopeModule.hfold(Functions.toFunc2(f), states.qr, qr));
         }
 
         public override IQuadRope<S> FoldVertically<S>(Func<S, T, S> f, IQuadRope<S> states)
         {
             // NB: Not parallel!
-            return new ParallelQuadRope<S>(QuadRopeModule.vfold(Functions.toFunc2(f), states.rope, rope));
+            return new ParallelQuadRope<S>(QuadRopeModule.vfold(Functions.toFunc2(f), states.qr, qr));
         }
 
         public override IQuadRope<S> Map<S>(Func<T, S> f)
         {
-            return new ParallelQuadRope<S>(Parallel.QuadRopeModule.map(Functions.toFunc1(f), rope));
+            return new ParallelQuadRope<S>(Parallel.QuadRopeModule.map(Functions.toFunc1(f), qr));
         }
 
-        public override S MapReduce<S>(Func<T, S> f, Func<S, S, S> g)
+        public override S MapReduce<S>(Func<T, S> f, Func<S, S, S> g, S epsilon)
         {
-            return Parallel.QuadRopeModule.mapreduce(Functions.toFunc1(f), Functions.toFunc2(g), rope);
+            return Parallel.QuadRopeModule.mapreduce(Functions.toFunc1(f), Functions.toFunc2(g), epsilon, qr);
         }
 
-        public override IQuadRope<S> MapReduceHorizontally<S>(Func<T, S> f, Func<S, S, S> g)
+        public override IQuadRope<S> MapReduceHorizontally<S>(Func<T, S> f, Func<S, S, S> g, S epsilon)
         {
             return new ParallelQuadRope<S>(Parallel.QuadRopeModule.hmapreduce(Functions.toFunc1(f),
                                                                               Functions.toFunc2(g),
-                                                                              rope));
+                                                                              epsilon,
+                                                                              qr));
         }
 
-        public override IQuadRope<S> MapReduceVertically<S>(Func<T, S> f, Func<S, S, S> g)
+        public override IQuadRope<S> MapReduceVertically<S>(Func<T, S> f, Func<S, S, S> g, S epsilon)
         {
             return new ParallelQuadRope<S>(Parallel.QuadRopeModule.vmapreduce(Functions.toFunc1(f),
                                                                               Functions.toFunc2(g),
-                                                                              rope));
+                                                                              epsilon,
+                                                                              qr));
         }
 
-        public override T Reduce(Func<T, T, T> f)
+        public override T Reduce(Func<T, T, T> f, T epsilon)
         {
-            return Parallel.QuadRopeModule.reduce(Functions.toFunc2(f), rope);
+            return Parallel.QuadRopeModule.reduce(Functions.toFunc2(f), epsilon, qr);
         }
 
-        public override IQuadRope<T> ReduceHorizontally(Func<T, T, T> f)
+        public override IQuadRope<T> ReduceHorizontally(Func<T, T, T> f, T epsilon)
         {
-            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.hreduce(Functions.toFunc2(f), rope));
+            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.hreduce(Functions.toFunc2(f),
+                                                                           epsilon,
+                                                                           qr));
         }
 
-        public override IQuadRope<T> ReduceVertically(Func<T, T, T> f)
+        public override IQuadRope<T> ReduceVertically(Func<T, T, T> f, T epsilon)
         {
-            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.vreduce(Functions.toFunc2(f), rope));
+            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.vreduce(Functions.toFunc2(f),
+                                                                           epsilon,
+                                                                           qr));
         }
 
         public override IQuadRope<T> ReverseHorizontally()
         {
-            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.hrev(rope));
+            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.hrev(qr));
         }
 
         public override IQuadRope<T> ReverseVertically()
         {
-            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.vrev(rope));
+            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.vrev(qr));
         }
 
         public override IQuadRope<T> ScanHorizontally(Func<T, T, T> f, Func<int, T> states)
@@ -124,7 +130,7 @@ namespace RadTrees.QuadRope.Object
             // NB: Not parallel!
             return new ParallelQuadRope<T>(QuadRopeModule.hscan(Functions.toFunc2(f),
                                                                 Functions.toFunc1(states),
-                                                                rope));
+                                                                qr));
         }
 
         public override IQuadRope<T> ScanVertically(Func<T, T, T> f, Func<int, T> states)
@@ -132,25 +138,34 @@ namespace RadTrees.QuadRope.Object
             // NB: Not parallel!
             return new ParallelQuadRope<T>(QuadRopeModule.vscan(Functions.toFunc2(f),
                                                                 Functions.toFunc1(states),
-                                                                rope));
+                                                                qr));
         }
 
         public override IQuadRope<T> Set(int row, int col, T v)
         {
             // NB: Not parallel!
-            return new ParallelQuadRope<T>(QuadRopeModule.set(rope, row, col, v));
+            return new ParallelQuadRope<T>(QuadRopeModule.set(qr, row, col, v));
         }
 
         public override IQuadRope<T> Slice(int row, int col, int rows, int cols)
         {
             // NB: Not parallel!
-            return new ParallelQuadRope<T>(QuadRopeModule.slice(row, col, rows, cols, rope));
+            return new ParallelQuadRope<T>(QuadRopeModule.slice(row, col, rows, cols, qr));
         }
 
         public override IQuadRope<T> Transpose()
         {
-            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.transpose(rope));
+            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.transpose(qr));
         }
 
+        public override bool ForAll(Func<T, bool> p)
+        {
+            return Parallel.QuadRopeModule.forall(Functions.toFunc1(p), qr);
+        }
+
+        public override bool Exists(Func<T, bool> p)
+        {
+            return Parallel.QuadRopeModule.exists(Functions.toFunc1(p), qr);
+        }
     }
 }

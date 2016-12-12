@@ -27,14 +27,14 @@ namespace RadTrees.QuadRope.Object
 {
     public abstract class IQuadRope<T>
     {
-        protected internal Types.QuadRope<T> rope;
+        protected internal Types.QuadRope<T> qr;
 
         /// <summary>
         ///   Construct a new wrapper instance for the rope parameter.
         /// </summary>
-        protected IQuadRope(Types.QuadRope<T> rope)
+        protected IQuadRope(Types.QuadRope<T> qr)
         {
-            this.rope = rope;
+            this.qr = qr;
         }
 
         /// <summary>
@@ -42,7 +42,7 @@ namespace RadTrees.QuadRope.Object
         /// </summary>
         public int Rows
         {
-            get { return QuadRopeModule.rows(rope); }
+            get { return QuadRopeModule.rows(qr); }
         }
 
         /// <summary>
@@ -50,7 +50,7 @@ namespace RadTrees.QuadRope.Object
         /// </summary>
         public int Cols
         {
-            get { return QuadRopeModule.cols(rope); }
+            get { return QuadRopeModule.cols(qr); }
         }
 
         /// <summary>
@@ -59,7 +59,7 @@ namespace RadTrees.QuadRope.Object
         /// </summary>
         public bool IsEmpty
         {
-            get { return QuadRopeModule.isEmpty(rope); }
+            get { return QuadRopeModule.isEmpty(qr); }
         }
 
         /// <summary>
@@ -67,7 +67,7 @@ namespace RadTrees.QuadRope.Object
         /// </summary>
         public T Get(int row, int col)
         {
-            return QuadRopeModule.get<T>(rope, row, col);
+            return QuadRopeModule.get<T>(qr, row, col);
         }
 
         public T this [int row, int col]
@@ -87,7 +87,7 @@ namespace RadTrees.QuadRope.Object
         /// </summary>
         public bool IsBalancedHorizontally
         {
-            get { return QuadRopeModule.isBalancedH(rope); }
+            get { return QuadRopeModule.isBalancedH(qr); }
         }
 
         /// <summary>
@@ -95,7 +95,7 @@ namespace RadTrees.QuadRope.Object
         /// </summary>
         public bool IsBalancedVertically
         {
-            get { return QuadRopeModule.isBalancedV(rope); }
+            get { return QuadRopeModule.isBalancedV(qr); }
         }
 
         /// <summary>
@@ -154,36 +154,36 @@ namespace RadTrees.QuadRope.Object
         ///   Apply f to all elements of the rope and reduce all
         ///   elements to a single scalar by applying g.
         /// </summary>
-        public abstract S MapReduce<S>(Func<T, S> f, Func<S, S, S> g);
+        public abstract S MapReduce<S>(Func<T, S> f, Func<S, S, S> g, S epsilon);
 
         /// <summary>
         ///   Produce a new thin rope of a single column with f
         ///   applied to every value and the single rows reduced by g.
         /// </summary>
-        public abstract IQuadRope<S> MapReduceHorizontally<S>(Func<T, S> f, Func<S, S, S> g);
+        public abstract IQuadRope<S> MapReduceHorizontally<S>(Func<T, S> f, Func<S, S, S> g, S epsilon);
 
         /// <summary>
         ///   Produce a new flat rope of a single row with f applied
         ///   to every value and the single columns reduced by g.
         /// </summary>
-        public abstract IQuadRope<S> MapReduceVertically<S>(Func<T, S> f, Func<S, S, S> g);
+        public abstract IQuadRope<S> MapReduceVertically<S>(Func<T, S> f, Func<S, S, S> g, S epsilon);
 
         /// <summary>
         ///   Reduce the rope to a single scalar value by applying f.
         /// </summary>
-        public abstract T Reduce(Func<T, T, T> f);
+        public abstract T Reduce(Func<T, T, T> f, T epsilon);
 
         /// <summary>
         ///   Produce a new thin rope of a single column with the
         ///   single rows reduced by f.
         /// </summary>
-        public abstract IQuadRope<T> ReduceHorizontally(Func<T, T, T> f);
+        public abstract IQuadRope<T> ReduceHorizontally(Func<T, T, T> f, T epsilon);
 
         /// <summary>
         ///   Produce a new flat rope of a single row with the
         ///   single columns reduced by f.
         /// </summary>
-        public abstract IQuadRope<T> ReduceVertically(Func<T, T, T> f);
+        public abstract IQuadRope<T> ReduceVertically(Func<T, T, T> f, T epsilon);
 
         /// <summary>
         ///   Fold the rope row-wise using f and starting from
@@ -215,26 +215,16 @@ namespace RadTrees.QuadRope.Object
         /// </summary>
         public abstract IQuadRope<T> ScanVertically(Func<T, T, T> f, Func<int, T> states);
 
-        private static Func<bool, bool, bool> lambdaAnd = (b0, b1) => b0 && b1;
-
         /// <summary>
         ///   True if all values in this rope satisfy predicate
         ///   p. False otherwise.
         /// </summary>
-        public bool ForAll(Func<T, bool> p)
-        {
-            return IsEmpty || MapReduceHorizontally(p, lambdaAnd).ReduceVertically(lambdaAnd)[0, 0];
-        }
-
-        private static Func<bool, bool, bool> lambdaOr = (b0, b1) => b0 || b1;
+        public abstract bool ForAll(Func<T, bool> p);
 
         /// <summary>
         ///   True if there exists an element in this rope what
         ///   satisfies predicate p. False otherwise.
         /// </summary>
-        public bool Exists(Func<T, bool> p)
-        {
-            return !IsEmpty && MapReduceHorizontally(p, lambdaAnd).ReduceVertically(lambdaOr)[0, 0];
-        }
+        public abstract bool Exists(Func<T, bool> p);
     }
 }

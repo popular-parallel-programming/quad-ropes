@@ -188,7 +188,7 @@ module QuadRope =
              (fun i j ->
               let lr = slice i 0 1 (cols lm) lm
               let rr = slice j 0 1 (cols trm) trm
-              reduce (+) (zip (*) lr rr))
+              reduce (+) 0.0 (zip (*) lr rr))
 
     module Parallel =
         let map = Parallel.QuadRope.map
@@ -224,4 +224,4 @@ module QuadRope =
                  (fun i j ->
                   let lr = slice i 0 1 (cols lm) lm
                   let rr = slice j 0 1 (cols trm) trm
-                  reduce (+) (zip (*) lr rr))
+                  reduce (+) 0.0 (zip (*) lr rr))

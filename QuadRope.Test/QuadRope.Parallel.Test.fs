@@ -30,7 +30,7 @@ type Handle = class end
 let ``parallel init equal to sequential`` (NonNegativeInt h) (NonNegativeInt w) =
     (0 < h && 0 < w) ==> lazy (
         QuadRope.zip (=) (QuadRope.init h w (*)) (Parallel.QuadRope.init h w (*))
-        |> QuadRope.reduce (&&))
+        |> QuadRope.reduce (&&) true)
 
 let ``parallel hfold equal to sequential`` (a : int QuadRope) =
     let states = QuadRope.create (QuadRope.rows a) 1 1
@@ -43,13 +43,13 @@ let ``parallel vfold equal to sequential`` (a : int QuadRope) =
 let sqr x = x * x
 
 let ``parallel hmapreduce equal to sequential`` (a : int QuadRope) =
-    QuadRope.hmapreduce sqr (*) a = Parallel.QuadRope.hmapreduce sqr (*) a
+    QuadRope.hmapreduce sqr (*) 1 a = Parallel.QuadRope.hmapreduce sqr (*) 1 a
 
 let ``parallel vmapreduce equal to sequential`` (a : int QuadRope) =
-    QuadRope.vmapreduce sqr (*) a = Parallel.QuadRope.vmapreduce sqr (*) a
+    QuadRope.vmapreduce sqr (*) 1 a = Parallel.QuadRope.vmapreduce sqr (*) 1 a
 
 let ``parallel mapreduce equal to sequential``  (a : int QuadRope) =
-    QuadRope.mapreduce sqr (*) a = Parallel.QuadRope.mapreduce sqr (*) a
+    QuadRope.mapreduce sqr (*) 1 a = Parallel.QuadRope.mapreduce sqr (*) 1 a
 
 let ``parallel map equal to sequential`` (a : int QuadRope) =
     QuadRope.map sqr a = Parallel.QuadRope.map sqr a

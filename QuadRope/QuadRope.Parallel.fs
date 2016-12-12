@@ -232,32 +232,43 @@ let zip f lqr rqr =
         invalidArg "rqr" "Must have the same shape as first argument."
     fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
-/// Apply f to all values of the rope and reduce the resulting
-/// values to a single scalar using g in parallel.
-let rec mapreduce f g = function
-    | Node (s, _, _, _, ne, nw, Empty, Empty) ->
-        let ne', nw' = par2 (fun () -> mapreduce f g ne) (fun () -> mapreduce f g nw)
+/// Apply f to all values of the rope and reduce the resulting values
+/// to a single scalar using g in parallel. Variable epsilon is the
+/// neutral element for g. We assume that g epsilon x = g x epsilon =
+/// x.
+let rec mapreduce f g epsilon = function
+    | Node (_, _, _, _, ne, nw, Empty, Empty) ->
+        let ne', nw' = par2 (fun () -> mapreduce f g epsilon ne) (fun () -> mapreduce f g epsilon nw)
         g nw' ne'
-    | Node (s, _, _, _, Empty, nw, sw, Empty) ->
-        let nw', sw' = par2 (fun () -> mapreduce f g nw) (fun () -> mapreduce f g sw)
+    | Node (_, _, _, _, Empty, nw, sw, Empty) ->
+        let nw', sw' = par2 (fun () -> mapreduce f g epsilon nw) (fun () -> mapreduce f g epsilon sw)
         g nw' sw'
-    | Node (s, _, _, _, ne, nw, sw, se) ->
-        let ne', nw', sw', se' = par4 (fun () -> mapreduce f g ne)
-                                      (fun () -> mapreduce f g nw)
-                                      (fun () -> mapreduce f g sw)
-                                      (fun () -> mapreduce f g se)
+    | Node (_, _, _, _, ne, nw, sw, se) ->
+        let ne', nw', sw', se' = par4 (fun () -> mapreduce f g epsilon ne)
+                                      (fun () -> mapreduce f g epsilon nw)
+                                      (fun () -> mapreduce f g epsilon sw)
+                                      (fun () -> mapreduce f g epsilon se)
         g (g nw' ne') (g sw' se')
-    | Slice _ as qr -> mapreduce f g (QuadRope.materialize qr)
-    | qr -> QuadRope.mapreduce f g qr
+    | Slice _ as qr -> mapreduce f g epsilon (QuadRope.materialize qr)
+    | qr -> QuadRope.mapreduce f g epsilon qr
 
 /// Reduce all values of the rope to a single scalar in parallel.
-let reduce f qr = mapreduce id f qr
+let reduce f epsilon qr = mapreduce id f epsilon qr
 
-let hmapreduce f g qr = hmap (mapreduce f g) qr
-let vmapreduce f g qr = vmap (mapreduce f g) qr
+let hmapreduce f g epsilon qr = hmap (mapreduce f g epsilon) qr
+let vmapreduce f g epsilon qr = vmap (mapreduce f g epsilon) qr
 
-let hreduce f qr = hmapreduce id f qr
-let vreduce f qr = vmapreduce id f qr
+let hreduce f epsilon qr = hmapreduce id f epsilon qr
+let vreduce f epsilon qr = vmapreduce id f epsilon qr
+
+/// Apply predicate p to all elements of qr in parallel and reduce the
+/// elements in both dimension using logical and.
+let forall p qr = mapreduce p (&&) true qr
+
+/// Apply predicate p to all elements of qr in parallel and reduce the
+/// elements in both dimensions using logical or.
+let exists p qr = mapreduce p (||) false qr
+
 
 /// Remove all elements from rope for which p does not hold in
 /// parallel. Input rope must be of height 1.

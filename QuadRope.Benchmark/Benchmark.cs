@@ -121,12 +121,12 @@ namespace RadTrees.Benchmark
             var vzeros = QuadRopeModule.init(1, size, getZeros2);
             MarkThreads("QuadRope.init",    1, () => QuadRopeModule.init(size, size, timesInt));
             MarkThreads("QuadRope.map",     1, () => QuadRopeModule.map(square, rope));
-            MarkThreads("QuadRope.reduce",  1, () => QuadRopeModule.reduce<double>(plus, rope));
+            MarkThreads("QuadRope.reduce",  1, () => QuadRopeModule.reduce<double>(plus, 0.0, rope));
             MarkThreads("QuadRope.zip",     1, () => QuadRopeModule.zip(plus, rope, rope));
             MarkThreads("QuadRope.hfold",   1, () => QuadRopeModule.hfold(times, hzeros, rope));
 	    MarkThreads("QuadRope.vfold",   1, () => QuadRopeModule.vfold(times, vzeros, rope));
-            MarkThreads("QuadRope.hreduce", 1, () => QuadRopeModule.hreduce(times, rope));
-	    MarkThreads("QuadRope.vreduce", 1, () => QuadRopeModule.vreduce(times, rope));
+            MarkThreads("QuadRope.hreduce", 1, () => QuadRopeModule.hreduce(times, 1.0, rope));
+	    MarkThreads("QuadRope.vreduce", 1, () => QuadRopeModule.vreduce(times, 1.0, rope));
 //	    MarkThreads("QuadRope.hscan",   1, () => QuadRopeModule.hscan(times, getZeros, rope));
 //	    MarkThreads("QuadRope.vscan",   1, () => QuadRopeModule.vscan(times, getZeros, rope));
 	}
@@ -138,12 +138,12 @@ namespace RadTrees.Benchmark
             var vzeros = QuadRopeModule.init(1, size, getZeros2);
             MarkThreads("QuadRope.init",   threads, () => Parallel.QuadRopeModule.init(size, size, timesInt));
             MarkThreads("QuadRope.map",    threads, () => Parallel.QuadRopeModule.map(square, rope));
-            MarkThreads("QuadRope.reduce", threads, () => Parallel.QuadRopeModule.reduce<double>(plus, rope));
+            MarkThreads("QuadRope.reduce", threads, () => Parallel.QuadRopeModule.reduce<double>(plus, 0.0, rope));
             MarkThreads("QuadRope.zip",    threads, () => Parallel.QuadRopeModule.zip(plus, rope, rope));
             MarkThreads("QuadRope.hfold",  threads, () => Parallel.QuadRopeModule.hfold(times, hzeros, rope));
 	    MarkThreads("QuadRope.vfold",  threads, () => Parallel.QuadRopeModule.vfold(times, vzeros, rope));
-            MarkThreads("QuadRope.hreduce",threads, () => Parallel.QuadRopeModule.hreduce(times, rope));
-	    MarkThreads("QuadRope.vreduce",threads, () => Parallel.QuadRopeModule.vreduce(times, rope));
+            MarkThreads("QuadRope.hreduce",threads, () => Parallel.QuadRopeModule.hreduce(times, 1.0, rope));
+	    MarkThreads("QuadRope.vreduce",threads, () => Parallel.QuadRopeModule.vreduce(times, 1.0, rope));
 //	    MarkThreads("QuadRope.hscan",  threads,
 //                      () => Parallel.QuadRopeModule.hscan(times, getZeros, rope));
 //	    MarkThreads("QuadRope.vscan", threads

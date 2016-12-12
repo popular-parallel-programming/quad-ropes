@@ -220,24 +220,24 @@ let ``balanceV maintains or improves depth`` (a : int QuadRope) =
 let ``map modifies all values`` (a : int QuadRope) (f : int -> int) =
     pointWiseEqualF a (QuadRope.map f a) f id
 
-let ``hreduce produces thin ropes`` (a : int QuadRope) (f : int -> int -> int) =
-    (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.cols (QuadRope.hreduce f a) = 1)
+let ``hreduce produces thin ropes`` (a : int QuadRope) =
+    (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.cols (QuadRope.hreduce (+) 0 a) = 1)
 
-let ``vreduce produces flat ropes`` (a : int QuadRope) (f : int -> int -> int) =
-    (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.rows (QuadRope.vreduce f a) = 1)
+let ``vreduce produces flat ropes`` (a : int QuadRope) =
+    (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.rows (QuadRope.vreduce (+) 0 a) = 1)
 
 let ``hreduce >> vreduce equals vreduce >> hreduce`` (a : int QuadRope) =
     (not (QuadRope.isEmpty a)) ==>
-    lazy (pointWiseEqual (QuadRope.hreduce (+) (QuadRope.vreduce (+) a))
-                         (QuadRope.vreduce (+) (QuadRope.hreduce (+) a)))
+    lazy (pointWiseEqual (QuadRope.hreduce (+) 0 (QuadRope.vreduce (+) 0 a))
+                         (QuadRope.vreduce (+) 0 (QuadRope.hreduce (+) 0 a)))
 
 let ``reduce equals hreduce + vreduce`` (a : int QuadRope) =
     (not (QuadRope.isEmpty a)) ==>
-      lazy (QuadRope.reduce (+) a = QuadRope.get (QuadRope.hreduce (+) (QuadRope.vreduce (+) a)) 0 0)
+      lazy (QuadRope.reduce (+) 0 a = QuadRope.get (QuadRope.hreduce (+) 0 (QuadRope.vreduce (+) 0 a)) 0 0)
 
 let ``map + reduce equals mapreduce`` (a : int QuadRope) =
     (not (QuadRope.isEmpty a)) ==>
-     lazy (QuadRope.mapreduce (fun x -> x * x) (+) a = QuadRope.reduce (+) (QuadRope.map (fun x -> x * x) a))
+     lazy (QuadRope.mapreduce (fun x -> x * x) (+) 0 a = QuadRope.reduce (+) 0 (QuadRope.map (fun x -> x * x) a))
 
 let ``hfilter removes elements correctly`` (a : int QuadRope) (Fun p) =
     QuadRope.rows a = 1 ==> lazy QuadRope.forall p (QuadRope.hfilter p a)

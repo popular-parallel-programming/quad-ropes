@@ -123,8 +123,6 @@ namespace RadTrees.Benchmark
             MarkThreads("QuadRope.map",     1, () => QuadRopeModule.map(square, rope));
             MarkThreads("QuadRope.reduce",  1, () => QuadRopeModule.reduce<double>(plus, 0.0, rope));
             MarkThreads("QuadRope.zip",     1, () => QuadRopeModule.zip(plus, rope, rope));
-            MarkThreads("QuadRope.hfold",   1, () => QuadRopeModule.hfold(times, hzeros, rope));
-	    MarkThreads("QuadRope.vfold",   1, () => QuadRopeModule.vfold(times, vzeros, rope));
             MarkThreads("QuadRope.hreduce", 1, () => QuadRopeModule.hreduce(times, 1.0, rope));
 	    MarkThreads("QuadRope.vreduce", 1, () => QuadRopeModule.vreduce(times, 1.0, rope));
 //	    MarkThreads("QuadRope.hscan",   1, () => QuadRopeModule.hscan(times, getZeros, rope));
@@ -140,8 +138,6 @@ namespace RadTrees.Benchmark
             MarkThreads("QuadRope.map",    threads, () => Parallel.QuadRopeModule.map(square, rope));
             MarkThreads("QuadRope.reduce", threads, () => Parallel.QuadRopeModule.reduce<double>(plus, 0.0, rope));
             MarkThreads("QuadRope.zip",    threads, () => Parallel.QuadRopeModule.zip(plus, rope, rope));
-            MarkThreads("QuadRope.hfold",  threads, () => Parallel.QuadRopeModule.hfold(times, hzeros, rope));
-	    MarkThreads("QuadRope.vfold",  threads, () => Parallel.QuadRopeModule.vfold(times, vzeros, rope));
             MarkThreads("QuadRope.hreduce",threads, () => Parallel.QuadRopeModule.hreduce(times, 1.0, rope));
 	    MarkThreads("QuadRope.vreduce",threads, () => Parallel.QuadRopeModule.vreduce(times, 1.0, rope));
 //	    MarkThreads("QuadRope.hscan",  threads,
@@ -157,8 +153,6 @@ namespace RadTrees.Benchmark
             MarkThreads("Array2D.map",     1, () => Array2DModule.Map(square, arr));
             MarkThreads("Array2D.reduce",  1, () => Array2D.reduce<double>(plus, arr));
             MarkThreads("Array2D.zip",     1, () => Array2D.map2(plus, arr, arr));
-            MarkThreads("Array2D.hfold",   1, () => Array2D.fold2(times, getZeros, arr));
-	    MarkThreads("Array2D.vfold",   1, () => Array2D.fold1(times, getZeros, arr));
             MarkThreads("Array2D.hreduce", 1, () => Array2D.reduce2(times, arr));
 	    MarkThreads("Array2D.vreduce", 1, () => Array2D.reduce1(times, arr));
 //	    MarkThreads("Array2D.hscan",   1, () => Array2D.scan2(times, getZeros, arr));
@@ -172,8 +166,6 @@ namespace RadTrees.Benchmark
             MarkThreads("Array2D.map",     threads, () => Parallel.Array2D.map(square, arr));
             MarkThreads("Array2D.reduce",  threads, () => Parallel.Array2D.reduce<double>(plus, arr));
             MarkThreads("Array2D.zip",     threads, () => Parallel.Array2D.map2(plus, arr, arr));
-            MarkThreads("Array2D.hfold",   threads, () => Parallel.Array2D.fold2(times, getZeros, arr));
-	    MarkThreads("Array2D.vfold",   threads, () => Parallel.Array2D.fold1(times, getZeros, arr));
             MarkThreads("Array2D.hreduce", threads, () => Parallel.Array2D.reduce2(times, arr));
 	    MarkThreads("Array2D.vreduce", threads, () => Parallel.Array2D.reduce1(times, arr));
 //	    MarkThreads("Array2D.hscan",   threads, () => Parallel.Array2D.scan2(times, getZeros, arr));

@@ -75,14 +75,14 @@ let ``init produces correct height`` (NonNegativeInt h) (NonNegativeInt w) =
     (0 < h && 0 < w) ==>
     lazy (let qr = QuadRope.init h w (*)
           QuadRope.rows qr = h &&
-          QuadRope.get (QuadRope.vfold (fun s _ -> s + 1) (QuadRope.createZeros 1 w) qr) 0 0 = h)
+          QuadRope.get (QuadRope.vmapreduce (fun _ -> 1) (+) 0 qr) 0 0 = h)
 
 (* Width of generated rope is equal to width parameter. *)
 let ``init produces correct width`` (NonNegativeInt h) (NonNegativeInt w) =
     (0 < h && 0 < w) ==>
     lazy (let qr = QuadRope.init h w (*)
           QuadRope.cols qr = w &&
-          QuadRope.get (QuadRope.hfold (fun s _ -> s + 1) (QuadRope.createZeros h 1) qr) 0 0 = w)
+          QuadRope.get (QuadRope.hmapreduce (fun _ -> 1) (+) 0 qr) 0 0 = w)
 
 (* Wavefront initialization with multiplication produces correct values at positions. *)
 let ``init produces correct values`` (NonNegativeInt h) (NonNegativeInt w) =
@@ -245,31 +245,17 @@ let ``hfilter removes elements correctly`` (a : int QuadRope) (Fun p) =
 let ``vfilter removes elements correctly`` (a : int QuadRope) (Fun p) =
     QuadRope.cols a = 1 ==> lazy QuadRope.forall p (QuadRope.vfilter p a)
 
-let snoc xs x = x :: xs
-
-let ``hfold maintains order`` (a : int QuadRope) =
-    let empties = QuadRope.create (QuadRope.rows a) 1 []
-    let b = QuadRope.hfold snoc empties a
-    b |> QuadRope.map (List.length) |> QuadRope.forallRows (<)
-
-let ``vfold maintains order`` (a : int QuadRope) =
-    let empties = QuadRope.create 1 (QuadRope.cols a) []
-    let b = QuadRope.vfold snoc empties a
-    b |> QuadRope.map (List.length) |> QuadRope.forallCols (<)
-
-let ``last of hscan equals hfold`` (a : int QuadRope) =
+let ``last of hscan equals hreduce`` (a : int QuadRope) =
     let b = QuadRope.map List.singleton a
-    let states = QuadRope.create (QuadRope.rows b) 1 []
     let c = QuadRope.hscan (@) (fun _ -> []) b
-    let d = QuadRope.hfold (@) states b
+    let d = QuadRope.hreduce (@) [] b
     (QuadRope.col c (QuadRope.cols c - 1) |> QuadRope.toArray)
         = (QuadRope.col d (QuadRope.cols d - 1) |> QuadRope.toArray)
 
-let ``last of vscan equals vfold`` (a : int QuadRope) =
+let ``last of vscan equals vreduce`` (a : int QuadRope) =
     let b = QuadRope.map List.singleton a
-    let states = QuadRope.create 1 (QuadRope.cols b) []
     let c = QuadRope.vscan (@) (fun _ -> []) b
-    let d = QuadRope.vfold (@) states b
+    let d = QuadRope.vreduce (@) [] b
     (QuadRope.row c (QuadRope.rows c - 1) |> QuadRope.toArray)
         = (QuadRope.row d (QuadRope.rows d - 1) |> QuadRope.toArray)
 

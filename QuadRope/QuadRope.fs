@@ -614,36 +614,6 @@ let hmap f qr =
 let vmap f qr =
     init 1 (cols qr) (fun _ j -> slice 0 j (rows qr) 1 qr |> f)
 
-/// Fold each row of rope with f, starting with the according
-/// state in states.
-let hfold f states qr =
-    if rows states <> rows qr then
-        invalidArg "states" "Must have the same height as qr."
-    let rec fold1 states = function
-        | Empty -> states
-        | Leaf vs -> leaf (ArraySlice.fold2 f (fun i -> fastGet states i 0) vs)
-        | Node (_, _, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
-        | Slice _ as qr -> fold1 states (materialize qr)
-    and fold2 states n s =
-        let nstates, sstates = vsplit2 states (rows n)
-        thinNode (fold1 nstates n) (fold1 sstates s)
-    fold1 states qr
-
-/// Fold each column of rope with f, starting with the according
-/// state in states.
-let vfold f states qr =
-    if cols states <> cols qr then
-        invalidArg "states" "Must have the same width as qr."
-    let rec fold1 states = function
-        | Empty -> states
-        | Leaf vs -> leaf (ArraySlice.fold1 f (fastGet states 0) vs)
-        | Node (_, _, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
-        | Slice _ as qr -> fold1 states (materialize qr)
-    and fold2 states w e =
-        let wstates, estates = hsplit2 states (cols w)
-        flatNode (fold1 wstates w) (fold1 estates e)
-    fold1 states qr
-
 /// Slice b as to match the sub-shapes of a. If a is empty, the
 /// resulting slices will all be empty. If a is not a Node, all slices
 /// except for the NW slice will be empty.
@@ -869,8 +839,9 @@ let scan plus minus init qr =
 let forallRows p = function
     | Empty -> true
     | qr ->
-        let xs = hfold (fun xs x -> x :: xs) (create (rows qr) 1 []) qr
-        get (vmapreduce (List.rev >> List.pairwise >> List.forall (fun (x, y) -> p x y)) (&&) true xs) 0 0
+        hmapreduce List.singleton List.append [] qr
+        |> map List.pairwise
+        |> mapreduce (List.forall (fun (a, b) -> p a b)) (&&) true
 
 /// Checks that some relation p holds between each two adjacent
 /// elements in each column. This is slow and should not really be
@@ -878,8 +849,9 @@ let forallRows p = function
 let forallCols p = function
     | Empty -> true
     | qr ->
-        let xs = vfold (fun xs x -> x :: xs) (create 1 (cols qr) []) qr
-        get (hmapreduce (List.rev >> List.pairwise >> List.forall (fun (x, y) -> p x y)) (&&) true xs) 0 0
+        vmapreduce List.singleton List.append [] qr
+        |> map List.pairwise
+        |> mapreduce (List.forall (fun (a, b) -> p a b)) (&&) true
 
 /// Apply predicate p to all elements of qr and reduce the
 /// elements in both dimension using logical and.

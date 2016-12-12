@@ -32,14 +32,6 @@ let ``parallel init equal to sequential`` (NonNegativeInt h) (NonNegativeInt w) 
         QuadRope.zip (=) (QuadRope.init h w (*)) (Parallel.QuadRope.init h w (*))
         |> QuadRope.reduce (&&) true)
 
-let ``parallel hfold equal to sequential`` (a : int QuadRope) =
-    let states = QuadRope.create (QuadRope.rows a) 1 1
-    QuadRope.hfold (-) states a = Parallel.QuadRope.hfold (-) states a
-
-let ``parallel vfold equal to sequential`` (a : int QuadRope) =
-    let states = QuadRope.create 1 (QuadRope.cols a) 1
-    QuadRope.vfold (-) states a = Parallel.QuadRope.vfold (-) states a
-
 let sqr x = x * x
 
 let ``parallel hmapreduce equal to sequential`` (a : int QuadRope) =

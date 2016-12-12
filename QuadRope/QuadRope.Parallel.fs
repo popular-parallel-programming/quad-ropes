@@ -110,38 +110,6 @@ let hmap f qr =
 let vmap f qr =
     init 1 (cols qr) (fun _ j -> QuadRope.slice 0 j (rows qr) 1 qr |> f)
 
-/// Fold each row of rope with f in parallel, starting with the
-/// according state in states.
-let hfold f states qr =
-    if rows states <> rows qr then
-        invalidArg "states" "Must have the same height as qr."
-    let rec fold1 states = function
-        | Empty -> states
-        | Node (s, _, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw sw) ne se
-        | Slice _ as qr -> fold1 states (QuadRope.materialize qr)
-        | qr -> QuadRope.hfold f states qr
-    and fold2 states n s =
-        let nstates, sstates = QuadRope.vsplit2 states (rows n)
-        let nstates0, sstates0 = par2 (fun () -> fold1 nstates n) (fun () -> fold1 sstates s)
-        QuadRope.thinNode nstates0 sstates0
-    fold1 states qr
-
-/// Fold each column of rope with f in parallel, starting with the
-/// according state in states.
-let vfold f states qr =
-    if cols states <> cols qr then
-        invalidArg "states" "Must have the same width as qr."
-    let rec fold1 states = function
-        | Empty -> states
-        | Node (s, _, _, _, ne, nw, sw, se) -> fold2 (fold2 states nw ne) sw se
-        | Slice _ as qr -> fold1 states (QuadRope.materialize qr)
-        | qr -> QuadRope.vfold f states qr
-    and fold2 states w e =
-        let wstates, estates = QuadRope.hsplit2 states (cols w)
-        let wstates0, estates0 = par2 (fun () -> fold1 wstates w) (fun () -> fold1 estates e)
-        QuadRope.flatNode wstates0 estates0
-    fold1 states qr
-
 /// Zip implementation for the general case where we do not assume
 /// that both ropes have the same internal structure.
 let rec private genZip f lqr rqr tgt =

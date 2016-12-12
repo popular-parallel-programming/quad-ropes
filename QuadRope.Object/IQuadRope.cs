@@ -186,20 +186,6 @@ namespace RadTrees.QuadRope.Object
         public abstract IQuadRope<T> ReduceVertically(Func<T, T, T> f, T epsilon);
 
         /// <summary>
-        ///   Fold the rope row-wise using f and starting from
-        ///   states. States must be a single-column rope with the
-        ///   same number of rows as this.
-        /// </summary>
-        public abstract IQuadRope<S> FoldHorizontally<S>(Func<S, T, S> f, IQuadRope<S> states);
-
-        /// <summary>
-        ///   Fold the rope column-wise using f and starting from
-        ///   states. States must be a single-row rope with the same
-        ///   number of columns as this.
-        /// </summary>
-        public abstract IQuadRope<S> FoldVertically<S>(Func<S, T, S> f, IQuadRope<S> states);
-
-        /// <summary>
         ///   Compute the row-wise prefix-sum for the associative
         ///   function f. States is a function that produces an
         ///   initial value for each row. The resulting rope is

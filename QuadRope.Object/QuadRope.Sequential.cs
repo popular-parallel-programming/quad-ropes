@@ -54,16 +54,6 @@ namespace RadTrees.QuadRope.Object
             return new SequentialQuadRope<T>(QuadRopeModule.vcat(qr, other.qr));
         }
 
-        public override IQuadRope<S> FoldHorizontally<S>(Func<S, T, S> f, IQuadRope<S> states)
-        {
-            return new SequentialQuadRope<S>(QuadRopeModule.hfold(Functions.toFunc2(f), states.qr, qr));
-        }
-
-        public override IQuadRope<S> FoldVertically<S>(Func<S, T, S> f, IQuadRope<S> states)
-        {
-            return new SequentialQuadRope<S>(QuadRopeModule.vfold(Functions.toFunc2(f), states.qr, qr));
-        }
-
         public override IQuadRope<S> Map<S>(Func<T, S> f)
         {
             return new SequentialQuadRope<S>(QuadRopeModule.map(Functions.toFunc1(f), qr));

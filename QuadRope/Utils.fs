@@ -42,25 +42,71 @@ module Tasks =
     let inline private await4 (t0 : _ Task) t1 t2 t3 =
         Task.WaitAll(t0, t1, t2, t3)
 
-    /// Execute two functions f and g in parallel. This function
-    /// blocks the current thread until f and g are computed and
-    /// returns their (unwrapped) results.
-    let par2 f g =
+    /// Eagerly execute two functions f and g in parallel. This
+    /// function blocks the current thread until f and g are computed
+    /// and returns their (unwrapped) results.
+    let epar2 f g =
         let ft = task f
         let gres = g()
         await ft
         result ft, gres
 
-    /// Execute four functions in parallel. This function blocks the
-    /// current thread until all functions are computed and returns
-    /// their (unwrapped) results.
-    let par4 f g h k =
+    /// Eagerly execute four functions in parallel. This function
+    /// blocks the current thread until all functions are computed and
+    /// returns their (unwrapped) results.
+    let epar4 f g h k =
         let ft = task f
         let gt = task g
         let ht = task h
         let kres = k()
         await3 ft gt ht
         result ft, result gt, result ht, kres
+
+    // Globally shared state for determining whether threadpool
+    // threads are idle.
+    let mutable private idleCount = 0UL
+    let mutable private lastIdle = idleCount
+
+    /// Push a task to the work queue to determine whether there is an
+    /// idle thread. The idea is that this only gets executed if there
+    /// is no other work to do on the queue. It is unlikely that this
+    /// is the last item on the queue, but the heuristics may work
+    /// well enough for practical purposes.
+    let private pushIdleTask() =
+        if lastIdle = idleCount then
+            task (fun () -> idleCount <- idleCount + 1UL) |> ignore
+        else
+            ()
+
+    /// True if a workpool thread is heuristically idle, false
+    /// otherwise. This is non-deterministic.
+    let private isIdle() =
+        if lastIdle < idleCount then
+            lastIdle <- idleCount
+            true
+        else
+            false
+
+    /// Maybe execute two lambda expressions in parallel and return
+    /// their (unwrapped) results.
+    let lazypar2 f g =
+        if isIdle() then
+            pushIdleTask()
+            epar2 f g
+        else
+            f(), g()
+
+    /// Maybe execute four lambda expressions in parallel and return
+    /// their (unwrapped) results.
+    let lazypar4 f g h k =
+        let f', g' = epar2 f g
+        let h', k' = epar2 h k
+        f', g', h', k'
+
+    // References to functions make it easy to switch between
+    // implementations.
+    let par2 = lazypar2
+    let par4 = lazypar4
 
     /// Get the number of maximum threads set0.
     let numthreads() =

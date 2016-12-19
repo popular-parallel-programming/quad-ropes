@@ -21,31 +21,8 @@
 
 module RadTrees.Types
 
-[<CustomEquality;NoComparison>]
 type 'a ArraySlice when 'a : equality =
     { r : int; c : int; h : int ; w : int; vals : 'a [,] }
-
-    /// Compare two ArraySlice instances element-wise. Their offsets
-    /// are not taken into account, this is logical equivalence.
-    static member private equals a b =
-        if a.h = b.h && a.w = b.w then
-            let mutable eq = true
-            for i in 0 .. a.h - 1 do
-                for j in 0 .. a.w - 1 do
-                    eq <- eq && a.vals.[i + a.r, j + a.c] = b.vals.[i + b.r, j + b.c]
-            eq
-        else
-            false
-
-    /// True if this ArraySlice and the argument object are logically
-    /// (element-wise) equal.
-    override this.Equals(o) =
-        match o with
-            | :? ('a ArraySlice) as other -> ArraySlice<'a>.equals this other
-            | _ -> false
-
-    override this.GetHashCode() =
-        (17 + this.r + this.c) * this.h * this.w * hash this.vals
 
 /// The quad rope type. A quad rope is either empty, a leaf containing
 /// a (small) array or a node that joins either two or four quad

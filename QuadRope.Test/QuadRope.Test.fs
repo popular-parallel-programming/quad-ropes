@@ -54,13 +54,13 @@ module private Utils =
         with
             | _ -> false
 
-    let equalf a b f g = fun (i, j) -> f (QuadRope.get a i j) = g (QuadRope.get b i j)
-    let equal  a b = equalf a b id id
+    let equalMap a b f g = fun (i, j) -> f (QuadRope.get a i j) = g (QuadRope.get b i j)
+    let equal a b = equalMap a b id id
 
-    let pointWiseEqualF a b f g =
-        Seq.forall (equalf a b f g) (makeIndices (QuadRope.rows a) (QuadRope.cols a))
+    let pointWiseEqualMap a b f g =
+        Seq.forall (equalMap a b f g) (makeIndices (QuadRope.rows a) (QuadRope.cols a))
 
-    let pointWiseEqual  a b = pointWiseEqualF a b id id
+    let pointWiseEqual a b = pointWiseEqualMap a b id id
 
 open Utils
 
@@ -217,7 +217,7 @@ let ``balanceV maintains or improves depth`` (a : int QuadRope) =
           QuadRope.depth b <= QuadRope.depth a)
 
 let ``map modifies all values`` (a : int QuadRope) (f : int -> int) =
-    pointWiseEqualF a (QuadRope.map f a) f id
+    pointWiseEqualMap a (QuadRope.map f a) f id
 
 let ``hreduce produces thin ropes`` (a : int QuadRope) =
     (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.cols (QuadRope.hreduce (+) 0 a) = 1)
@@ -269,13 +269,15 @@ let ``vscan's elements are strictly ordered`` (a : int QuadRope) =
     c |> QuadRope.map (List.length) |> QuadRope.forallCols (<)
 
 let ``transpose of transpose is identity`` (a : int QuadRope) =
-    QuadRope.transpose (QuadRope.transpose a) = a
+    QuadRope.equals (QuadRope.transpose (QuadRope.transpose a)) a
 
-let ``zip ignores internal structure`` (a : int QuadRope) (b : int QuadRope) (f : int -> int -> int) =
+let ``zip ignores internal structure`` (a : int QuadRope) (b : int QuadRope) =
     (QuadRope.rows a = QuadRope.rows b && QuadRope.cols a = QuadRope.cols b) ==>
-    lazy (let c = QuadRope.zip f a b
+    lazy (let c = QuadRope.zip (+) a b
           let indices = makeIndices (QuadRope.rows c) (QuadRope.cols c)
-          Seq.forall (fun (i, j) -> QuadRope.get c i j = f (QuadRope.get a i j) (QuadRope.get b i j)) indices)
+          let mutable eq = true
+          QuadRope.iteri (fun i j v -> eq <- eq && (v = QuadRope.get a i j + QuadRope.get b i j)) c
+          eq)
 
 let ``toArray -> fromArray produces equal rope`` (a : int QuadRope) =
     pointWiseEqual a (QuadRope.fromArray (QuadRope.toArray a) (QuadRope.cols a))

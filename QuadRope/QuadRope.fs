@@ -53,6 +53,9 @@ let leaf slc =
     else
         Leaf slc
 
+let internal nodemapreduce2 f g ne nw sw se =
+    g (g (f ne) (f nw)) (g (f sw) (f se))
+
 /// Pseudo-constructor for generating a new rope out of some
 /// existing nodes. This function maintains node construction invariants.
 let rec node ne nw sw se =
@@ -66,10 +69,10 @@ let rec node ne nw sw se =
         | _,     Empty, _,     Empty -> node ne sw Empty Empty
         | Empty, _    , Empty, _     -> node se nw Empty Empty
         | _ ->
-            let d = max (max (depth ne) (depth nw)) (max (depth sw) (depth se)) + 1
+            let d = nodemapreduce2 depth max ne nw sw se
             let h = rows nw + rows sw
             let w = cols nw + cols ne
-            Node (isSparse ne || isSparse nw || isSparse sw || isSparse se, d, h, w, ne, nw, sw, se)
+            Node (nodemapreduce2 isSparse (||) ne nw sw se, d, h, w, ne, nw, sw, se)
 
 let inline flatNode w e =
     node e w Empty Empty (* NB: Arguments switched. *)

@@ -45,7 +45,7 @@ module Tasks =
     /// Eagerly execute two functions f and g in parallel. This
     /// function blocks the current thread until f and g are computed
     /// and returns their (unwrapped) results.
-    let epar2 f g =
+    let par2 f g =
         let ft = task f
         let gres = g()
         await ft
@@ -54,7 +54,7 @@ module Tasks =
     /// Eagerly execute four functions in parallel. This function
     /// blocks the current thread until all functions are computed and
     /// returns their (unwrapped) results.
-    let epar4 f g h k =
+    let par4 f g h k =
         let ft = task f
         let gt = task g
         let ht = task h
@@ -78,35 +78,17 @@ module Tasks =
         else
             ()
 
+    // Initially check whether some threadpool thread is idle.
+    pushIdleTask()
+
     /// True if a workpool thread is heuristically idle, false
     /// otherwise. This is non-deterministic.
-    let private isIdle() =
+    let isIdle() =
         if lastIdle < idleCount then
             lastIdle <- idleCount
             true
         else
             false
-
-    /// Maybe execute two lambda expressions in parallel and return
-    /// their (unwrapped) results.
-    let lazypar2 f g =
-        if isIdle() then
-            pushIdleTask()
-            epar2 f g
-        else
-            f(), g()
-
-    /// Maybe execute four lambda expressions in parallel and return
-    /// their (unwrapped) results.
-    let lazypar4 f g h k =
-        let f', g' = epar2 f g
-        let h', k' = epar2 h k
-        f', g', h', k'
-
-    // References to functions make it easy to switch between
-    // implementations.
-    let par2 = lazypar2
-    let par4 = lazypar4
 
     /// Get the number of maximum threads set0.
     let numthreads() =

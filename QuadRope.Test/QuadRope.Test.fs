@@ -160,6 +160,17 @@ let ``get accesses slice correctly`` (a : int QuadRope) (NonNegativeInt i)
             (fun (i0, j0) -> QuadRope.get b i0 j0 = QuadRope.get a (i + i0) (j + j0))
             (makeIndicesFrom b))
 
+let ``slice is equal to materialized slice`` (a : int QuadRope) (NonNegativeInt i)
+                                                                (NonNegativeInt j)
+                                                                (NonNegativeInt h)
+                                                                (NonNegativeInt w) =
+    (i < QuadRope.rows a && i < h && j < QuadRope.cols a && j < w) ==>
+    lazy (let b = QuadRope.slice i j h w a
+          let c = QuadRope.materialize b
+          Seq.forall
+            (fun (i0, j0) -> QuadRope.get b i0 j0 = QuadRope.get c i0 j0)
+            (makeIndicesFrom b))
+
 let ``recursive slice computes correct indices`` (a : int QuadRope) (d : NonNegativeInt) =
     let i = 1
     let j = 1

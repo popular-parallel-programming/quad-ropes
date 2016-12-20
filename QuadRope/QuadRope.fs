@@ -320,11 +320,11 @@ let materialize qr =
             | Leaf vs ->
                 leaf (ArraySlice.slice i j h w vs)
             | Node (_, _, _, _, ne, nw, sw, se) ->
-                let nw0 = materialize i j h w nw
-                let ne0 = materialize i (j - cols nw) h (w - cols nw0) ne
-                let sw0 = materialize (i - rows nw) j (h - rows nw0) w sw
-                let se0 = materialize (i - rows ne) (j - cols sw) (h - rows ne0) (w - cols sw0) se
-                node ne0 nw0 sw0 se0
+                let nw' = materialize i j h w nw
+                let ne' = materialize i (j - cols nw) h (w - cols nw') ne
+                let sw' = materialize (i - rows nw) j (h - rows nw') w sw
+                let se' = materialize (i - rows ne) (j - cols sw) (h - rows ne') (w - cols sw') se
+                node ne' nw' sw' se'
             | Slice (x, y, r, c, qr) ->
                 materialize (i + x) (j + y) (min r h) (min c w) qr
             | Sparse (h', w', v) ->
@@ -651,12 +651,12 @@ let rec internal genZip f lqr rqr tgt =
             let rqr = materialize rqr
             leaf (Target.mapi (fun i j v -> f v (fastGet rqr i j)) slc tgt)
         | Node (s, d, h, w, ne, nw, sw, se) ->
-            let rne, rnw, rsw, rse = sliceToMatch lqr rqr
-            let nw0 = genZip f nw rnw tgt
-            let ne0 = genZip f ne rne (Target.ne tgt lqr)
-            let sw0 = genZip f sw rsw (Target.sw tgt lqr)
-            let se0 = genZip f se rse (Target.se tgt lqr)
-            Node (s, d, h, w, ne0, nw0, sw0, se0)
+            let ne', nw', sw', se' = sliceToMatch lqr rqr
+            let nw'' = genZip f nw nw' tgt
+            let ne'' = genZip f ne ne' (Target.ne tgt lqr)
+            let sw'' = genZip f sw sw' (Target.sw tgt lqr)
+            let se'' = genZip f se se' (Target.se tgt lqr)
+            Node (s, d, h, w, ne'', nw'', sw'', se'')
         | Slice _ -> genZip f (materialize lqr) rqr tgt
         | Sparse (_, _, v) -> map (f v) rqr
 

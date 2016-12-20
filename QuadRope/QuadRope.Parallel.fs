@@ -118,25 +118,25 @@ let rec private genZip f lqr rqr tgt =
         | _ when Target.isEmpty tgt && not (isSparse lqr) ->
             genZip f lqr rqr (Target.make (rows lqr) (cols lqr))
         | Node (s, d, h, w, ne, nw, Empty, Empty) ->
-            let ne0, nw0 =
+            let ne', nw' =
                 par2 (fun () ->
                       let rne = QuadRope.slice 0 (cols nw) (rows ne) (cols ne) rqr
                       genZip f ne rne (Target.ne tgt lqr))
                      (fun () ->
                       let rnw = QuadRope.slice 0 0 (rows nw) (cols nw) rqr
                       genZip f nw rnw tgt)
-            Node (s, d, h, w, ne0, nw0, Empty, Empty)
+            Node (s, d, h, w, ne', nw', Empty, Empty)
         | Node (s, d, h, w, Empty, nw, sw, Empty) ->
-            let nw0, sw0 =
+            let nw', sw' =
                 par2 (fun () ->
                       let rnw = QuadRope.slice 0 0 (rows nw) (cols nw) rqr
                       genZip f nw rnw tgt)
                      (fun () ->
                       let rsw = QuadRope.slice (rows nw)  0 (rows sw) (cols sw) rqr
                       genZip f sw rsw (Target.sw tgt lqr))
-            Node (s, d, h, w, Empty, nw0, sw0, Empty)
+            Node (s, d, h, w, Empty, nw', sw', Empty)
         | Node (s, d, h, w, ne, nw, sw, se) ->
-            let ne0, nw0, sw0, se0 =
+            let ne', nw', sw', se' =
                 par4 (fun () ->
                       let rne = QuadRope.slice 0 (cols nw) (rows ne) (cols ne) rqr
                       genZip f ne rne (Target.ne tgt lqr))
@@ -149,7 +149,7 @@ let rec private genZip f lqr rqr tgt =
                      (fun () ->
                       let rse = QuadRope.slice (rows ne) (cols sw) (rows se) (cols se) rqr
                       genZip f se rse (Target.se tgt lqr))
-            Node (s, d, h, w, ne0, nw0, sw0, se0)
+            Node (s, d, h, w, ne', nw', sw', se')
         | Slice _ -> genZip f (QuadRope.materialize lqr) rqr tgt
         | _ -> QuadRope.genZip f lqr rqr tgt
 

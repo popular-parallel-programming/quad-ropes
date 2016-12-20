@@ -273,11 +273,8 @@ let ``transpose of transpose is identity`` (a : int QuadRope) =
 
 let ``zip ignores internal structure`` (a : int QuadRope) (b : int QuadRope) =
     (QuadRope.rows a = QuadRope.rows b && QuadRope.cols a = QuadRope.cols b) ==>
-    lazy (let c = QuadRope.zip (+) a b
-          let indices = makeIndices (QuadRope.rows c) (QuadRope.cols c)
-          let mutable eq = true
-          QuadRope.iteri (fun i j v -> eq <- eq && (v = QuadRope.get a i j + QuadRope.get b i j)) c
-          eq)
+    lazy (QuadRope.equals (QuadRope.zip (+) a b)
+                          (QuadRope.init (rows a) (cols b) (fun r c -> QuadRope.get a r c + QuadRope.get b r c)))
 
 let ``toArray -> fromArray produces equal rope`` (a : int QuadRope) =
     pointWiseEqual a (QuadRope.fromArray (QuadRope.toArray a) (QuadRope.cols a))

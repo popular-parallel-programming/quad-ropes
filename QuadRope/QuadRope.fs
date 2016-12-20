@@ -305,6 +305,13 @@ let col qr j = slice 0 j (rows qr) 1 qr
 let toRows qr = Seq.init (rows qr) (row qr)
 let toCols qr = Seq.init (cols qr) (col qr)
 
+/// Initialize a rope where all elements are <code>v</code>.
+let inline create h w v =
+    if h <= 0 || w <= 0 then
+        Empty
+    else
+        Sparse (h, w, v)
+
 /// Materialize a quad rope slice, i.e. traverse the slice and
 /// allocate new quad rope nodes and new slices on arrays. Does not
 /// allocate new arrays.
@@ -328,7 +335,7 @@ let materialize qr =
             | Slice (x, y, r, c, qr) ->
                 materialize (i + x) (j + y) (min r h) (min c w) qr
             | Sparse (h', w', v) ->
-                Sparse (min h (h' - i), min w (w' - j), v)
+                create (min h (h' - i)) (min w (w' - j)) v
     match qr with
         | Slice (i, j, h, w, qr) -> materialize i j h w qr
         | qr -> qr
@@ -509,10 +516,6 @@ let fromArray2D arr =
 /// Generate a new tree without any intermediate values.
 let inline init h w f =
     fromArray2D (Array2D.init h w f)
-
-/// Initialize a rope where all elements are <code>e</code>.
-let inline create h w v =
-    Sparse (h, w, v)
 
 /// Generate a singleton quad rope.
 let inline singleton v =

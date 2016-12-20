@@ -58,7 +58,7 @@ let internal nodemapreduce2 f g ne nw sw se =
 
 /// Pseudo-constructor for generating a new rope out of some
 /// existing nodes. This function maintains node construction invariants.
-let rec node ne nw sw se =
+let rec internal node ne nw sw se =
     match ne, nw, sw, se with
         | _,     Empty, Empty, Empty -> ne
         | Empty, _,     Empty, Empty -> nw
@@ -74,10 +74,10 @@ let rec node ne nw sw se =
             let w = cols nw + cols ne
             Node (nodemapreduce2 isSparse (||) ne nw sw se, d, h, w, ne, nw, sw, se)
 
-let inline flatNode w e =
+let inline internal flatNode w e =
     node e w Empty Empty (* NB: Arguments switched. *)
 
-let inline thinNode n s =
+let inline internal thinNode n s =
     node Empty n s Empty
 
 let inline private withinRange qr i j =

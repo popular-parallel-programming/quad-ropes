@@ -328,7 +328,7 @@ let materialize qr =
             | Slice (x, y, r, c, qr) ->
                 materialize (i + x) (j + y) (min r h) (min c w) qr
             | Sparse (h', w', v) ->
-                Sparse (min h h', min w w', v)
+                Sparse (min h (h' - i), min w (w' - j), v)
     match qr with
         | Slice (i, j, h, w, qr) -> materialize i j h w qr
         | qr -> qr

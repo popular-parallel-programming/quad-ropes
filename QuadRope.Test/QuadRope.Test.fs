@@ -256,18 +256,14 @@ let ``vfilter removes elements correctly`` (a : int QuadRope) (Fun p) =
     QuadRope.cols a = 1 ==> lazy QuadRope.forall p (QuadRope.vfilter p a)
 
 let ``last of hscan equals hreduce`` (a : int QuadRope) =
-    let b = QuadRope.map List.singleton a
-    let c = QuadRope.hscan (@) (fun _ -> []) b
-    let d = QuadRope.hreduce (@) [] b
-    (QuadRope.col c (QuadRope.cols c - 1) |> QuadRope.toArray)
-        = (QuadRope.col d (QuadRope.cols d - 1) |> QuadRope.toArray)
+    let b = QuadRope.hscan (+) (fun _ -> 0) a
+    let c = QuadRope.hreduce (+) 0 a
+    QuadRope.equals (QuadRope.col b (QuadRope.cols b - 1)) c
 
 let ``last of vscan equals vreduce`` (a : int QuadRope) =
-    let b = QuadRope.map List.singleton a
-    let c = QuadRope.vscan (@) (fun _ -> []) b
-    let d = QuadRope.vreduce (@) [] b
-    (QuadRope.row c (QuadRope.rows c - 1) |> QuadRope.toArray)
-        = (QuadRope.row d (QuadRope.rows d - 1) |> QuadRope.toArray)
+    let b = QuadRope.vscan (+) (fun _ -> 0) a
+    let c = QuadRope.vreduce (+) 0 a
+    QuadRope.equals (QuadRope.row b (QuadRope.rows b - 1)) c
 
 let ``hscan's elements are strictly ordered`` (a : int QuadRope) =
     let b = QuadRope.map List.singleton a

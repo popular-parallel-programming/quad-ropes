@@ -952,3 +952,36 @@ let tikzify h w qr =
         |  _ -> Seq.empty
     let cmds = List.ofSeq (seq { yield! tikz 0.0 0.0 h w qr; yield rect 0.0 0.0 h w });
     printfn "%s" (String.concat "\n" cmds)
+
+module SparseDouble =
+    let sum = reduce (+) 0.0
+
+    /// Skips remaining operations if s = 0; otherwise, forces next
+    /// and multiplies results.
+    let private bind (next : float Lazy) s =
+        if s = 0.0 then
+            0.0
+        else
+            s * next.Force ()
+
+    /// Infix variant of bind.
+    let private (>>=) s next = bind next s
+
+    /// Compute the product of all values in a quad rope. This
+    /// function short-circuits the computation if a branch evaluates
+    /// to 0.
+    let rec prod = function
+        | Empty -> 0.0
+        | Leaf slc -> ArraySlice.reduce (*) slc
+        | Node (_, _, _, _, ne, nw, sw, se) ->
+            prod nw
+            >>= lazy (prod ne)
+            >>= lazy (prod sw)
+            >>= lazy (prod se)
+        | Slice _ as qr -> prod (materialize qr)
+        | Sparse (_, _, 0.0) -> 0.0
+        | Sparse (_, _, 1.0) -> 1.0
+        | Sparse (h, w, v) -> System.Math.Pow (v, (float h) * (float w))
+
+module SparseString =
+    let cat = reduce (+) ""

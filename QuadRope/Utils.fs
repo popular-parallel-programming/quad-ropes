@@ -62,33 +62,44 @@ module Tasks =
         await3 ft gt ht
         result ft, result gt, result ht, kres
 
-    // Globally shared state for determining whether threadpool
-    // threads are idle.
-    let mutable private idleCount = 0UL
-    let mutable private lastIdle = idleCount
+    type private State =
+        | Done
+        | Stop
 
-    /// Push a task to the work queue to determine whether there is an
-    /// idle thread. The idea is that this only gets executed if there
-    /// is no other work to do on the queue. It is unlikely that this
-    /// is the last item on the queue, but the heuristics may work
-    /// well enough for practical purposes.
-    let private pushIdleTask() =
-        if lastIdle = idleCount then
-            task (fun () -> idleCount <- idleCount + 1UL) |> ignore
+    let private getDone tasks =
+        Array.filter (fun (t : 'a Task) -> t.IsCompleted) tasks
+
+    let private getRunning tasks =
+        Array.filter (fun (t : 'a Task) -> not t.IsCompleted) tasks
+
+    let rec private awaitAllUnless p (tasks : 'a Task []) =
+        // We wrap tasks in continuation tasks in order to use
+        // Task.WaitAny, which does not accept Tasks with return values.
+        Task.WaitAny (Array.map (fun (t : 'a Task) -> t.ContinueWith (fun (t : 'a Task) -> ())) tasks)
+        |> ignore
+        let results = (getDone >> Array.map result) tasks
+        if Array.length tasks = Array.length results then
+            Done
+        else if Array.exists p results then
+            Stop
         else
-            ()
+            awaitAllUnless p (getRunning tasks)
 
-    // Initially check whether some threadpool thread is idle.
-    pushIdleTask()
+    let par2unless e f g =
+        let ft = task f
+        let gt = task g
+        match awaitAllUnless ((=) e) [| ft; gt |] with
+            | Done -> result ft, result gt
+            | Stop -> e, e
 
-    /// True if a workpool thread is heuristically idle, false
-    /// otherwise. This is non-deterministic.
-    let isIdle() =
-        if lastIdle < idleCount then
-            lastIdle <- idleCount
-            true
-        else
-            false
+    let par4unless e f g h k =
+        let ft = task f
+        let gt = task g
+        let ht = task h
+        let kt = task k
+        match awaitAllUnless ((=) e) [| ft; gt; ht; kt |] with
+            | Done -> result ft, result gt, result ht, result kt
+            | Stop -> e, e, e, e
 
     /// Get the number of maximum threads set0.
     let numthreads() =

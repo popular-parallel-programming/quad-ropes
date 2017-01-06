@@ -958,14 +958,14 @@ module SparseDouble =
 
     /// Skips remaining operations if s = 0; otherwise, forces next
     /// and multiplies results.
-    let private bind (next : float Lazy) s =
+    let internal bind (next : float Lazy) s =
         if s = 0.0 then
             0.0
         else
             s * next.Force ()
 
     /// Infix variant of bind.
-    let private (>>=) s next = bind next s
+    let internal (>>=) s next = bind next s
 
     /// Compute the product of all values in a quad rope. This
     /// function short-circuits the computation if a branch evaluates

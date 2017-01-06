@@ -36,3 +36,12 @@ let ``sparse product equals reduce (*)`` (a : int QuadRope) =
     if not (d < 0.0001) then
         printfn "sparse = %A, dense = %A, d = %A" sparse dense d
     System.Double.IsNaN d || d < 0.0001
+
+let ``parallel sparse product equals reduce (*)`` (a : int QuadRope) =
+    let a = QuadRope.map float a
+    let sparse = Parallel.QuadRope.SparseDouble.prod a
+    let dense = QuadRope.reduce (*) 1.0 a
+    let d = abs (sparse - dense)
+    if not (d < 0.0001) then
+        printfn "sparse = %A, dense = %A, d = %A" sparse dense d
+    System.Double.IsNaN d || d < 0.0001

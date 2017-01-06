@@ -19,22 +19,20 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-namespace RadTrees.Test
+/// Interesting properties about quad ropes.
+module RadTrees.Test.Interesting.QuadRope
 
-module TestRunner =
-    open FsCheck
+open FsCheck
+open RadTrees
+open Types
 
-    let test () =
-        RadTrees.Test.Gen.register() |> ignore
-        Check.QuickAll (typeof<Utils.Handle>.DeclaringType)
-        Check.QuickAll (typeof<QuadRope.Handle>.DeclaringType)
-        Check.QuickAll (typeof<Parallel.QuadRope.Handle>.DeclaringType)
-        Check.QuickAll (typeof<Interesting.QuadRope.Handle>.DeclaringType)
+type Handle = class end
 
-    [<EntryPoint>]
-    let main _ =
-        try
-            test()
-            0
-        with
-            | e -> printfn "%A" e; 1
+let ``sparse product equals reduce (*)`` (a : int QuadRope) =
+    let a = QuadRope.map float a
+    let sparse = QuadRope.SparseDouble.prod a
+    let dense = QuadRope.reduce (*) 1.0 a
+    let d = abs (sparse - dense)
+    if not (d < 0.0001) then
+        printfn "sparse = %A, dense = %A, d = %A" sparse dense d
+    System.Double.IsNaN d || d < 0.0001

@@ -58,6 +58,7 @@
     <Compile Include="QuadRope.Gen.fs" />
     <Compile Include="QuadRope.Test.fs" />
     <Compile Include="QuadRope.Parallel.Test.fs" />
+    <Compile Include="QuadRope.Interesting.fs" />
     <Compile Include="Test.fs" />
   </ItemGroup>
   <ItemGroup>

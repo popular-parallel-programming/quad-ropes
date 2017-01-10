@@ -27,7 +27,7 @@ open Types
 /// Instantiate a new array slice that allows accessing the entire
 /// array.
 let inline make arr =
-    { r = 0; c = 0; h = Array2D.length1 arr; w = Array2D.length2 arr; trans = false; vals = arr }
+    { r = 0; c = 0; h = Array2D.length1 arr; w = Array2D.length2 arr; vals = arr }
 
 /// Instantiate a new array slice that allows accessing the array only
 /// in the specified area.
@@ -36,7 +36,6 @@ let inline makeSlice i j h w arr =
       c = max 0 j
       h = max 0 (min h (Array2D.length1 arr))
       w = max 0 (min w (Array2D.length2 arr))
-      trans = false
       vals = arr }
 
 /// Compute a new array from a slice.
@@ -48,12 +47,12 @@ let inline private sliceArray slc =
 let inline private apply f slc = make (f (sliceArray slc))
 
 /// The height of an array slice.
-let inline length1 slc = if slc.trans then slc.w else slc.h
-let rows = length1
+let inline length1 slc = slc.h
+let inline rows slc = slc.h
 
 /// The width of an array slice.
-let inline length2 slc = if slc.trans then slc.h else slc.w
-let cols = length2
+let inline length2 slc = slc.w
+let inline cols slc = slc.w
 
 // Handy for iterating.
 let inline minr slc = slc.r
@@ -61,11 +60,7 @@ let inline maxr slc = slc.r + slc.h
 let inline minc slc = slc.c
 let inline maxc slc = slc.c + slc.w
 
-let inline fastGet slc i j =
-    if slc.trans then
-        slc.vals.[slc.r + j, slc.c + i]
-    else
-        slc.vals.[slc.r + i, slc.c + j]
+let inline fastGet slc i j = slc.vals.[slc.r + i, slc.c + j]
 
 /// Return the value are i, j.
 let get slc i j =
@@ -84,7 +79,7 @@ let set slc i j v =
 
 /// This is the empty slice. It does not refer to any array and you
 /// cannot retrieve any values from it.
-let emptySlice = { r = 0; c = 0; h = 0; w = 0; trans = false; vals = null }
+let emptySlice = { r = 0; c = 0; h = 0; w = 0; vals = null }
 
 /// Slice up an array slice. This is a constant time operation and no
 /// arrays are re-allocated.
@@ -244,7 +239,7 @@ let initZeros h w =
     make (Array2D.initZeros h w)
 
 let transpose slc =
-    { slc with trans = not slc.trans }
+    make (Array2D.init slc.w slc.h (fun i j -> fastGet slc j i))
 
 let filter1 p slice =
     apply (Array2D.filter1 p) slice

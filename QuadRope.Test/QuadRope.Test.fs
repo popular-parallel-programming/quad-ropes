@@ -282,10 +282,6 @@ let ``zip ignores internal structure`` (a : int QuadRope) (b : int QuadRope) =
     (QuadRope.rows a = QuadRope.rows b && QuadRope.cols a = QuadRope.cols b) ==>
     lazy (QuadRope.equals (QuadRope.zip (+) a b)
                           (QuadRope.init (rows a) (cols b) (fun r c -> QuadRope.get a r c + QuadRope.get b r c)))
-let ``transpose equals switching indices`` (a : int QuadRope) =
-    let b = QuadRope.init (QuadRope.cols a) (QuadRope.rows a) (fun i j -> QuadRope.get a j i)
-    QuadRope.equals (QuadRope.transpose a) b
-
 
 let ``toArray -> fromArray produces equal rope`` (a : int QuadRope) =
     pointWiseEqual a (QuadRope.fromArray (QuadRope.toArray a) (QuadRope.cols a))

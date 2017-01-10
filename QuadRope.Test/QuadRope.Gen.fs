@@ -30,7 +30,7 @@ module Gen =
     let size = Gen.choose (1, maxSize)
 
     let genRopeOf h w =
-        Gen.oneof (seq { yield gen { return QuadRope.init h w (*)};
+        Gen.oneof (seq { yield gen { return QuadRope.init h w (*)}
                          yield gen { let! v = Gen.choose (0, h * w)
                                      return QuadRope.create h w v}})
 
@@ -40,11 +40,12 @@ module Gen =
               return! genRopeOf h w }
 
     let genRevRope =
-        Gen.oneof (seq { yield genRope;
-                         yield Gen.map QuadRope.hrev genRope;
-                         yield Gen.map QuadRope.vrev genRope;
-                         yield Gen.map (QuadRope.hrev >> QuadRope.vrev) genRope;
-                         yield Gen.map (QuadRope.vrev >> QuadRope.hrev) genRope })
+        Gen.oneof (seq { yield genRope
+                         yield Gen.map QuadRope.hrev genRope
+                         yield Gen.map QuadRope.vrev genRope
+                         yield Gen.map (QuadRope.hrev >> QuadRope.vrev) genRope
+                         yield Gen.map (QuadRope.vrev >> QuadRope.hrev) genRope
+                         yield Gen.map QuadRope.transpose genRope })
 
     let genSliceRope =
         Gen.oneof (seq { yield genRevRope;

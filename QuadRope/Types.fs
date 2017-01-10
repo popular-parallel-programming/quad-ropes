@@ -22,7 +22,7 @@
 module RadTrees.Types
 
 type 'a ArraySlice when 'a : equality =
-    { r : int; c : int; h : int ; w : int; vals : 'a [,] }
+    { r : int; c : int; h : int ; w : int; trans : bool; vals : 'a [,] }
 
 /// The quad rope type. A quad rope is either empty, a leaf containing
 /// a (small) array or a node that joins either two or four quad

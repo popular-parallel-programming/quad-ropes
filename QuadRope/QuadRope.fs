@@ -971,9 +971,9 @@ module SparseDouble =
         | Empty -> 1.0
         | Leaf slc -> ArraySlice.reduce (*) slc
         | Node (_, _, _, _, ne, nw, sw, se) ->
-            prod nw
-            >>= lazy (prod ne)
+            prod ne
             >>= lazy (prod sw)
+            >>= lazy (prod nw)
             >>= lazy (prod se)
         | Slice _ as qr -> prod (materialize qr)
         | Sparse (_, _, 0.0) -> 0.0

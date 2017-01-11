@@ -551,12 +551,12 @@ module SparseDouble =
                                           (fun () -> prod sw)
             nw' * sw'
         | Node (_, _, _, _, ne, nw, sw, se) ->
-            let ne', nw' = par2unless 0.0 (fun () -> prod ne)
-                                          (fun () -> prod nw)
-            if ne' = 0.0 || nw' = 0.0 then
+            let ne', sw' = par2unless 0.0 (fun () -> prod ne)
+                                          (fun () -> prod sw)
+            if ne' * sw' = 0.0 then
                 0.0
             else
-                let sw', se' = par2unless 0.0 (fun () -> prod sw)
+                let nw', se' = par2unless 0.0 (fun () -> prod nw)
                                               (fun () -> prod se)
                 ne' * nw' * sw' * se'
         | Slice _ as qr -> prod (QuadRope.materialize qr)

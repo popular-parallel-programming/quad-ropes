@@ -11,3 +11,4 @@
 #nowarn "62"
 
 open RadTrees
+open RadTrees.Types

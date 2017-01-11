@@ -304,6 +304,26 @@ namespace RadTrees.Benchmark
             Mark("par-reallocate", () => Parallel.QuadRopeModule.reallocate(rope));
         }
 
+	public static FSharpFunc<int, FSharpFunc<int, double>> upperDiag =
+	    Utils.Functions.toFunc2<int, int, double>((x, y) => x < y ? 1.0 : 0.0);
+
+        public static void SparseProduct(Options opts)
+        {
+            var dense  = QuadRopeModule.init(opts.Size, opts.Size, upperDiag);
+            var sparse = QuadRopeModule.SparseDouble.upperDiagonal(opts.Size, 1.0);
+            if (opts.Threads == 1) {
+                Mark("Dense product",  () => QuadRopeModule.SparseDouble.prod(dense));
+                Mark("Sparse product", () => QuadRopeModule.SparseDouble.prod(sparse));
+            } else {
+                MarkThreads("Dense product",
+                            opts.Threads,
+                            () => Parallel.QuadRopeModule.SparseDouble.prod(dense));
+                MarkThreads("Sparse product",
+                            opts.Threads,
+                            () => Parallel.QuadRopeModule.SparseDouble.prod(sparse));
+            }
+        }
+
         static Dictionary<string, Action<Options>> tests = new Dictionary<string, Action<Options>>()
         {
             {"all", Run},
@@ -314,7 +334,8 @@ namespace RadTrees.Benchmark
             {"vdc", vanDerCorput},
             {"primes", Factorization},
             {"fibseq", Fibonacci},
-            {"mmult", MatrixMultiplication}
+            {"mmult", MatrixMultiplication},
+            {"prod", SparseProduct}
         };
 
         public static void PrintModes()

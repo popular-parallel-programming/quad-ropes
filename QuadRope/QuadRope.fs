@@ -521,9 +521,6 @@ let inline init h w f =
 let inline singleton v =
     create 1 1 v
 
-/// Initialize a rope with all zeros.
-let inline createZeros h w = create h w 0
-
 /// True if rope is a singleton, false otherwise.
 let isSingleton qr =
     rows qr = 1 && cols qr = 1
@@ -987,6 +984,50 @@ module SparseDouble =
             for i in 2 .. h * w do
                 p <- p * v
             p
+
+    /// Initialize an identity matrix of h height and w width.
+    let rec identity n =
+        if n <= s_max then
+            init n n (fun i j -> if i = j then 1.0 else 0.0)
+        else
+            let m = n >>> 1
+            // Branching instead of bit-operations allows us to re-use
+            // already allocated elements in the optimal case.
+            if n &&& 1 = 1 then
+                node (create (m + 1) m 0.0)
+                     (identity (m + 1))
+                     (create m (m + 1) 0.0)
+                     (identity m)
+            else
+                let sparse = Sparse (m, m, 0.0)
+                let vals = identity m
+                node sparse vals sparse vals
+
+    /// Initialize an upper diagonal matrix with all non-zero values
+    /// set to v.
+    let rec upperDiagonal n v =
+        if n <= s_max then
+            init n n (fun i j -> if i < j then v else 0.0)
+        else
+            let m = n >>> 1
+            let m' = if n &&& 1 = 1 then m + 1 else m
+            node (create m' m v)
+                 (upperDiagonal m' v)
+                 (create m m' 0.0)
+                 (upperDiagonal m v)
+
+    /// Initialize a lower diagonal matrix with all non-zero values
+    /// set to v.
+    let rec lowerDiagonal n v =
+        if n <= s_max then
+            init n n (fun i j -> if i < j then 0.0 else v)
+        else
+            let m = n >>> 1
+            let m' = if n &&& 1 = 1 then m + 1 else m
+            node (create m' m 0.0)
+                 (lowerDiagonal m' v)
+                 (create m m' v)
+                 (lowerDiagonal m v)
 
 module SparseString =
     let cat = reduce (+) ""

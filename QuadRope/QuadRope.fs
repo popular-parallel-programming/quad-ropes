@@ -987,9 +987,6 @@ module SparseDouble =
             for i in 2 .. h * w do
                 p <- p * v
             p
-            // System.Math.Pow (v, (float h) * (float w))
-
-
 
 module SparseString =
     let cat = reduce (+) ""

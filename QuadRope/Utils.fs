@@ -62,45 +62,6 @@ module Tasks =
         await3 ft gt ht
         result ft, result gt, result ht, kres
 
-    type private State =
-        | Done
-        | Stop
-
-    let private getDone tasks =
-        Array.filter (fun (t : 'a Task) -> t.IsCompleted) tasks
-
-    let private getRunning tasks =
-        Array.filter (fun (t : 'a Task) -> not t.IsCompleted) tasks
-
-    let rec private awaitAllUnless p (tasks : 'a Task []) =
-        // We wrap tasks in continuation tasks in order to use
-        // Task.WaitAny, which does not accept Tasks with return values.
-        Task.WaitAny (Array.map (fun (t : 'a Task) -> t.ContinueWith (fun (t : 'a Task) -> ())) tasks)
-        |> ignore
-        let results = (getDone >> Array.map result) tasks
-        if Array.length tasks = Array.length results then
-            Done
-        else if Array.exists p results then
-            Stop
-        else
-            awaitAllUnless p (getRunning tasks)
-
-    let par2unless e f g =
-        let ft = task f
-        let gt = task g
-        match awaitAllUnless ((=) e) [| ft; gt |] with
-            | Done -> result ft, result gt
-            | Stop -> e, e
-
-    let par4unless e f g h k =
-        let ft = task f
-        let gt = task g
-        let ht = task h
-        let kt = task k
-        match awaitAllUnless ((=) e) [| ft; gt; ht; kt |] with
-            | Done -> result ft, result gt, result ht, result kt
-            | Stop -> e, e, e, e
-
     /// Get the number of maximum threads set0.
     let numthreads() =
         let mutable workers = 0

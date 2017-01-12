@@ -534,38 +534,28 @@ let equals qr0 qr1 =
 module SparseDouble =
     let sum = reduce (+) 0.0
 
-    open QuadRope.SparseDouble
-
     /// Compute the product of all values in a quad rope in
     /// parallel. This function short-circuits the computation if a
     /// branch evaluates to 0.
     let rec prod = function
-        | Empty -> 1.0
-        | Leaf slc -> ArraySlice.reduce (*) slc
-        | Node (_, _, _, _, ne, nw, Empty, Empty) ->
-            let ne', nw' = par2unless 0.0 (fun () -> prod ne)
-                                          (fun () -> prod nw)
+        | Node (true, _, _, _, ne, nw, Empty, Empty) ->
+            let ne', nw' = par2 (fun () -> prod ne)
+                                (fun () -> prod nw)
             ne' * nw'
-        | Node (_, _, _, _, Empty, nw, sw, Empty) ->
-            let nw', sw' = par2unless 0.0 (fun () -> prod nw)
-                                          (fun () -> prod sw)
+        | Node (true, _, _, _, Empty, nw, sw, Empty) ->
+            let nw', sw' = par2 (fun () -> prod nw)
+                                (fun () -> prod sw)
             nw' * sw'
-        | Node (_, _, _, _, ne, nw, sw, se) ->
-            let ne', sw' = par2unless 0.0 (fun () -> prod ne)
-                                          (fun () -> prod sw)
+        | Node (true, _, _, _, ne, nw, sw, se) ->
+            let ne', sw' = par2 (fun () -> prod ne)
+                                (fun () -> prod sw)
             if ne' * sw' = 0.0 then
                 0.0
             else
-                let nw', se' = par2unless 0.0 (fun () -> prod nw)
-                                              (fun () -> prod se)
+                let nw', se' = par2 (fun () -> prod nw)
+                                    (fun () -> prod se)
                 ne' * nw' * sw' * se'
         | Slice _ as qr -> prod (QuadRope.materialize qr)
         | Sparse (_, _, 0.0) -> 0.0
         | Sparse (_, _, 1.0) -> 1.0
-        | Sparse (h, w, v) ->
-            // This seems to work -- why can we not compute the power instead?
-            let mutable p = v
-            for i in 2 .. h * w do
-                p <- p * v
-            p
-            // System.Math.Pow (v, (float h) * (float w))
+        | qr -> reduce (*) 1.0 qr

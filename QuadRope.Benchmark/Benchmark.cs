@@ -314,6 +314,8 @@ namespace RadTrees.Benchmark
             if (opts.Threads == 1) {
                 MarkThreads("Dense product",  1, () => QuadRopeModule.SparseDouble.prod(dense));
                 MarkThreads("Sparse product", 1, () => QuadRopeModule.SparseDouble.prod(sparse));
+                MarkThreads("Dense reduce",   1, () => QuadRopeModule.reduce(times, 0.0, dense));
+                MarkThreads("Sparse reduce",  1, () => QuadRopeModule.reduce(times, 0.0, sparse));
             } else {
                 MarkThreads("Dense product",
                             opts.Threads,
@@ -321,6 +323,12 @@ namespace RadTrees.Benchmark
                 MarkThreads("Sparse product",
                             opts.Threads,
                             () => Parallel.QuadRopeModule.SparseDouble.prod(sparse));
+                MarkThreads("Dense reduce",
+                            opts.Threads,
+                            () => Parallel.QuadRopeModule.reduce(times, 0.0, dense));
+                MarkThreads("Sparse reduce",
+                            opts.Threads,
+                            () => Parallel.QuadRopeModule.reduce(times, 0.0, sparse));
             }
         }
 

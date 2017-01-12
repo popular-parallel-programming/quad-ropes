@@ -532,12 +532,20 @@ let equals qr0 qr1 =
     reduce (&&) true (zip (=) qr0 qr1)
 
 module SparseDouble =
+    /// We cannot optimize any further than parallelizing; reduce is
+    /// already optimized for sparse quad ropes.
     let sum = reduce (+) 0.0
 
     /// Compute the product of all values in a quad rope in
-    /// parallel. This function short-circuits the computation if a
-    /// branch evaluates to 0.
+    /// parallel. This function short-circuits the computation where
+    /// possible, but it does not stop already running computations.
     let rec prod = function
+        | Node (_, _, _, _, Sparse (_, _, 0.0), _, _, _)
+        | Node (_, _, _, _, _, Sparse (_, _, 0.0), _, _)
+        | Node (_, _, _, _, _, _, Sparse (_, _, 0.0), _)
+        | Node (_, _, _, _, _, _, _, Sparse (_, _, 0.0))
+        | Sparse (_, _, 0.0) -> 0.0
+        | Sparse (_, _, 1.0) -> 1.0
         | Node (true, _, _, _, ne, nw, Empty, Empty) ->
             let ne', nw' = par2 (fun () -> prod ne)
                                 (fun () -> prod nw)
@@ -547,15 +555,13 @@ module SparseDouble =
                                 (fun () -> prod sw)
             nw' * sw'
         | Node (true, _, _, _, ne, nw, sw, se) ->
-            let ne', sw' = par2 (fun () -> prod ne)
-                                (fun () -> prod sw)
-            if ne' * sw' = 0.0 then
+            let ne', nw' = par2 (fun () -> prod ne)
+                                (fun () -> prod nw)
+            if ne' * nw' = 0.0 then
                 0.0
             else
-                let nw', se' = par2 (fun () -> prod nw)
+                let sw', se' = par2 (fun () -> prod sw)
                                     (fun () -> prod se)
                 ne' * nw' * sw' * se'
         | Slice _ as qr -> prod (QuadRope.materialize qr)
-        | Sparse (_, _, 0.0) -> 0.0
-        | Sparse (_, _, 1.0) -> 1.0
         | qr -> reduce (*) 1.0 qr

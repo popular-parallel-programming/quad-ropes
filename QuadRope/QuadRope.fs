@@ -968,22 +968,19 @@ module SparseDouble =
     /// function short-circuits the computation if a branch evaluates
     /// to 0.
     let rec prod = function
-        | Empty -> 1.0
-        | Leaf slc -> ArraySlice.reduce (*) slc
+        | Node (_, _, _, _, Sparse (_, _, 0.0), _, _, _)
+        | Node (_, _, _, _, _, Sparse (_, _, 0.0), _, _)
+        | Node (_, _, _, _, _, _, Sparse (_, _, 0.0), _)
+        | Node (_, _, _, _, _, _, _, Sparse (_, _, 0.0))
+        | Sparse (_, _, 0.0) -> 0.0
+        | Sparse (_, _, 1.0) -> 1.0
         | Node (_, _, _, _, ne, nw, sw, se) ->
             prod ne
             >>= lazy (prod sw)
             >>= lazy (prod nw)
             >>= lazy (prod se)
         | Slice _ as qr -> prod (materialize qr)
-        | Sparse (_, _, 0.0) -> 0.0
-        | Sparse (_, _, 1.0) -> 1.0
-        | Sparse (h, w, v) ->
-            // This seems to work -- why can we not compute the power instead?
-            let mutable p = v
-            for i in 2 .. h * w do
-                p <- p * v
-            p
+        | qr -> reduce (*) 1.0 qr
 
     /// Initialize an identity matrix of h height and w width.
     let rec identity n =

@@ -312,8 +312,8 @@ namespace RadTrees.Benchmark
             var dense  = QuadRopeModule.init(opts.Size, opts.Size, upperDiag);
             var sparse = QuadRopeModule.SparseDouble.upperDiagonal(opts.Size, 1.0);
             if (opts.Threads == 1) {
-                Mark("Dense product",  () => QuadRopeModule.SparseDouble.prod(dense));
-                Mark("Sparse product", () => QuadRopeModule.SparseDouble.prod(sparse));
+                MarkThreads("Dense product",  1, () => QuadRopeModule.SparseDouble.prod(dense));
+                MarkThreads("Sparse product", 1, () => QuadRopeModule.SparseDouble.prod(sparse));
             } else {
                 MarkThreads("Dense product",
                             opts.Threads,

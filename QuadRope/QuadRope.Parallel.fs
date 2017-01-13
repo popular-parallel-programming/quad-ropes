@@ -565,3 +565,88 @@ module SparseDouble =
                 ne' * nw' * sw' * se'
         | Slice _ as qr -> prod (QuadRope.materialize qr)
         | qr -> reduce (*) 1.0 qr
+
+    /// Multiply two quad ropes of doubles point-wise.
+    let pointwise lqr rqr =
+        /// General case for quad ropes of different structure.
+        let rec gen lqr rqr =
+            match rqr with
+                // Sparse quad ropes of zero result in zero.
+                | Sparse (_, _, 0.0) -> rqr
+                | Sparse (_, _, 1.0) -> lqr
+                | _ ->
+                    match lqr with
+                        // Flat node.
+                        | Node (true, _, _, _, ne, nw, Empty, Empty) ->
+                                let ne', nw' = par2 (fun () -> gen ne (QuadRope.sliceToMatchNE lqr rqr))
+                                                    (fun () -> gen nw (QuadRope.sliceToMatchNW lqr rqr))
+                                flatNode nw' ne'
+
+                        // Thin node.
+                        | Node (true, _, _, _, Empty, nw, sw, Empty) ->
+                            let nw', sw' = par2 (fun () -> gen nw (QuadRope.sliceToMatchNW lqr rqr))
+                                                (fun () -> gen sw (QuadRope.sliceToMatchSW lqr rqr))
+                            thinNode nw' sw'
+
+                        // Full node.
+                        | Node (true, _, _, _, ne, nw, sw, se) ->
+                            let ne', nw', sw', se' =
+                                par4 (fun () -> gen ne (QuadRope.sliceToMatchNE lqr rqr))
+                                     (fun () -> gen nw (QuadRope.sliceToMatchNW lqr rqr))
+                                     (fun () -> gen sw (QuadRope.sliceToMatchSW lqr rqr))
+                                     (fun () -> gen se (QuadRope.sliceToMatchSE lqr rqr))
+                            node ne' nw' sw' se'
+
+                        | Sparse (_, _, 0.0) -> lqr
+                        | Sparse (_, _, 1.0) -> rqr
+
+                        | _ -> zip (*) lqr rqr
+
+        /// Fast case for quad ropes of equal structure.
+        let rec fast lqr rqr =
+            match lqr, rqr with
+                // Recurse on nodes if at least one of them is sparse.
+
+                // Flat node.
+                | Node (true, _, _, _, lne, lnw, Empty, Empty), Node (_, _, _, _, rne, rnw, Empty, Empty)
+                | Node (_, _, _, _, lne, lnw, Empty, Empty), Node (true, _, _, _, rne, rnw, Empty, Empty)
+                    when QuadRope.subShapesMatch lqr rqr ->
+                        let ne, nw = par2 (fun () -> fast lne rne)
+                                          (fun () -> fast lnw rnw)
+                        flatNode nw ne
+
+                // Thin node.
+                | Node (true, _, _, _, Empty, lnw, lsw, Empty), Node (_, _, _, _, Empty, rnw, rsw, Empty)
+                | Node (_, _, _, _, Empty, lnw, lsw, Empty), Node (true, _, _, _, Empty, rnw, rsw, Empty)
+                    when QuadRope.subShapesMatch lqr rqr ->
+                        let nw, sw = par2 (fun () -> fast lnw rnw)
+                                          (fun () -> fast lsw rsw)
+                        thinNode nw sw
+
+                // Full node.
+                | Node (_, _, _, _, lne, lnw, lsw, lse), Node (true, _, _, _, rne, rnw, rsw, rse)
+                | Node (true, _, _, _, lne, lnw, lsw, lse), Node (_, _, _, _, rne, rnw, rsw, rse)
+                    when QuadRope.subShapesMatch lqr rqr ->
+                        let ne, nw, sw, se = par4 (fun () -> fast lne rne)
+                                                  (fun () -> fast lnw rnw)
+                                                  (fun () -> fast lsw rsw)
+                                                  (fun () -> fast lse rse)
+                        node ne nw sw se
+
+                // It may pay off to materialize if slices are sparse.
+                | Slice _, _ when isSparse lqr -> fast (QuadRope.materialize lqr) rqr
+                | _, Slice _ when isSparse rqr -> fast lqr (QuadRope.materialize rqr)
+
+                // Sparse quad ropes of zero result in zero.
+                | Sparse (h, w, 0.0), _
+                | _, Sparse (h, w, 0.0) -> Sparse (h, w, 0.0)
+
+                // Sparse quad ropes of one result in the other quad rope.
+                | Sparse (_, _, 1.0), qr
+                | qr, Sparse (_, _, 1.0) -> qr
+
+                // Fall back to general case.
+                | _ when isSparse lqr or isSparse rqr -> gen lqr rqr
+                | _ -> zip (*) lqr rqr
+
+        fast lqr rqr

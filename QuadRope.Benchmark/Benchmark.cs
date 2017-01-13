@@ -332,6 +332,31 @@ namespace RadTrees.Benchmark
             }
         }
 
+        public static void SparsePointwise(Options opts)
+        {
+            var d  = QuadRopeModule.init(opts.Size, opts.Size, upperDiag);
+            var s = QuadRopeModule.SparseDouble.upperDiagonal(opts.Size, 1.0);
+            if (opts.Threads == 1) {
+                MarkThreads("Dense pointwise",  1, () => QuadRopeModule.SparseDouble.pointwise(d, d));
+                MarkThreads("Sparse pointwise", 1, () => QuadRopeModule.SparseDouble.pointwise(s, d));
+                MarkThreads("Dense zip",        1, () => QuadRopeModule.zip(times, d, d));
+                MarkThreads("Sparse zip",       1, () => QuadRopeModule.zip(times, s, d));
+            } else {
+                MarkThreads("Dense pointwise",
+                            opts.Threads,
+                            () => Parallel.QuadRopeModule.SparseDouble.pointwise(d, d));
+                MarkThreads("Sparse pointwise",
+                            opts.Threads,
+                            () => Parallel.QuadRopeModule.SparseDouble.pointwise(s, d));
+                MarkThreads("Dense zip",
+                            opts.Threads,
+                            () => Parallel.QuadRopeModule.zip(times, d, d));
+                MarkThreads("Sparse zip",
+                            opts.Threads,
+                            () => Parallel.QuadRopeModule.zip(times, s, d));
+            }
+        }
+
         static Dictionary<string, Action<Options>> tests = new Dictionary<string, Action<Options>>()
         {
             {"all", Run},
@@ -343,7 +368,8 @@ namespace RadTrees.Benchmark
             {"primes", Factorization},
             {"fibseq", Fibonacci},
             {"mmult", MatrixMultiplication},
-            {"prod", SparseProduct}
+            {"prod", SparseProduct},
+            {"point", SparsePointwise}
         };
 
         public static void PrintModes()

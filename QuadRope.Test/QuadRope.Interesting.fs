@@ -45,3 +45,17 @@ let ``parallel sparse product equals reduce (*)`` (a : int QuadRope) =
     if not (d < 0.0001) then
         printfn "sparse = %A, dense = %A, d = %A" sparse dense d
     System.Double.IsNaN d || d < 0.0001
+
+let ``sparse point-wise multiplication equals zip (*)`` (a : int QuadRope) =
+    let a = QuadRope.map float a
+    let b = a |> QuadRope.hrev |> QuadRope.vrev
+    let sparse = QuadRope.SparseDouble.pointwise a b
+    let dense = QuadRope.zip (*) a b
+    QuadRope.equals sparse dense
+
+let ``parallel sparse point-wise multiplication equals zip (*)`` (a : int QuadRope) =
+    let a = QuadRope.map float a
+    let b = a |> QuadRope.hrev |> QuadRope.vrev
+    let sparse = Parallel.QuadRope.SparseDouble.pointwise a b
+    let dense = QuadRope.zip (*) a b
+    QuadRope.equals sparse dense

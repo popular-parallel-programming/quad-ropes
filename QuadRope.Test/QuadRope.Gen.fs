@@ -30,9 +30,10 @@ module Gen =
     let size = Gen.choose (1, maxSize)
 
     let genRopeOf h w =
-        Gen.oneof (seq { yield gen { return QuadRope.init h w (*)};
-                         yield gen { let! v = Gen.choose (0, h * w)
-                                     return QuadRope.create h w v}})
+        Gen.oneof (seq { yield gen { return QuadRope.init h w (*)}
+                         yield gen { return QuadRope.create h w 0}
+                         yield gen { return QuadRope.create h w 1} })
+
 
     let genRope =
         gen { let! h = size

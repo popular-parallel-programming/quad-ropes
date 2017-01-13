@@ -181,6 +181,9 @@ module QuadRope =
     let zip = QuadRope.zip
     let reduce = QuadRope.reduce
 
+    let sum = QuadRope.SparseDouble.sum
+    let pointwise = QuadRope.SparseDouble.pointwise
+
     let mmult (lm : double QuadRope) rm =
         let trm = transpose rm
         init (rows lm)
@@ -188,7 +191,7 @@ module QuadRope =
              (fun i j ->
               let lr = slice i 0 1 (cols lm) lm
               let rr = slice j 0 1 (cols trm) trm
-              reduce (+) 0.0 (zip (*) lr rr))
+              sum (pointwise lr rr))
 
     module Parallel =
         let map = Parallel.QuadRope.map
@@ -217,6 +220,9 @@ module QuadRope =
         let zip = Parallel.QuadRope.zip
         let reduce = Parallel.QuadRope.reduce
 
+        let sum = Parallel.QuadRope.SparseDouble.sum
+        let pointwise = Parallel.QuadRope.SparseDouble.pointwise
+
         let mmult (lm : double QuadRope) rm =
             let trm = transpose rm
             init (rows lm)
@@ -224,4 +230,4 @@ module QuadRope =
                  (fun i j ->
                   let lr = slice i 0 1 (cols lm) lm
                   let rr = slice j 0 1 (cols trm) trm
-                  reduce (+) 0.0 (zip (*) lr rr))
+                  sum (pointwise lr rr))

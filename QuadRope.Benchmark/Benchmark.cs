@@ -283,17 +283,31 @@ namespace RadTrees.Benchmark
             MarkThreads("QuadRope.fibseq", opts.Threads, () => Examples.QuadRope.fibseq(opts.Size));
         }
 
+	public static FSharpFunc<int, FSharpFunc<int, double>> upperDiag =
+	    Utils.Functions.toFunc2<int, int, double>((x, y) => x < y ? 1.0 : 0.0);
+
         public static void MatrixMultiplication(Options opts)
         {
-            var arr = Array2DModule.Initialize(opts.Size, opts.Size, timesInt);
-            var rope = QuadRopeModule.init(opts.Size, opts.Size, timesInt);
-            MarkThreads("Array2D.mmult",      1, () => Examples.Array2D.mmult(arr, arr));
-            MarkThreads("Array2D.mmultImp",   1, () => Examples.Array2D.mmultImp(arr, arr));
-            MarkThreads("QuadRope.mmult",     1, () => Examples.QuadRope.mmult(rope, rope));
+            var arr0 = Array2DModule.Initialize(opts.Size, opts.Size, timesInt);
+            var arr1 = Array2DModule.Initialize(opts.Size, opts.Size, upperDiag);
+            var qr = QuadRopeModule.init(opts.Size, opts.Size, timesInt);
+            var upperDense = QuadRopeModule.init(opts.Size, opts.Size, upperDiag);
+            var upperSparse = QuadRopeModule.SparseDouble.upperDiagonal(opts.Size, 1.0);
+
+            MarkThreads("Array2D.mmult",         1, () => Examples.Array2D.mmult(arr1, arr0));
+            MarkThreads("Array2D.mmult imperative", 1, () => Examples.Array2D.mmultImp(arr1, arr0));
+            MarkThreads("QuadRope.mmult dense",  1, () => Examples.QuadRope.mmult(upperDense, qr));
+            MarkThreads("QuadRope.mmult sparse", 1, () => Examples.QuadRope.mmult(upperSparse, qr));
+
             for (int t = 2; t <= opts.Threads; ++t) {
-                MarkThreads("Array2D.mmult",    t, () => Examples.Array2D.Parallel.mmult(arr, arr));
-                MarkThreads("Array2D.mmultImp", t, () => Examples.Array2D.Parallel.mmultImp(arr, arr));
-                MarkThreads("QuadRope.mmult",   t, () => Examples.QuadRope.Parallel.mmult(rope, rope));
+                MarkThreads("Array2D.mmult",
+                            t, () => Examples.Array2D.Parallel.mmult(arr1, arr0));
+                MarkThreads("Array2D.mmult imperative",
+                            t, () => Examples.Array2D.Parallel.mmultImp(arr1, arr0));
+                MarkThreads("QuadRope.mmult dense",
+                            t, () => Examples.QuadRope.Parallel.mmult(upperDense, qr));
+                MarkThreads("QuadRope.mmult sparse",
+                            t, () => Examples.QuadRope.Parallel.mmult(upperSparse, qr));
             }
         }
 
@@ -303,9 +317,6 @@ namespace RadTrees.Benchmark
             Mark("seq-reallocate", () => QuadRopeModule.reallocate(rope));
             Mark("par-reallocate", () => Parallel.QuadRopeModule.reallocate(rope));
         }
-
-	public static FSharpFunc<int, FSharpFunc<int, double>> upperDiag =
-	    Utils.Functions.toFunc2<int, int, double>((x, y) => x < y ? 1.0 : 0.0);
 
         public static void SparseProduct(Options opts)
         {

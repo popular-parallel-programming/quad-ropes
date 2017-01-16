@@ -970,6 +970,14 @@ let transpose qr =
 let equals qr0 qr1 =
     reduce (&&) true (zip (=) qr0 qr1)
 
+/// Replace branches of equal values with sparse representations.
+let rec compress = function
+    | Leaf slc when ArraySlice.mapreduce ((=) (ArraySlice.get slc 0 0)) (&&) slc ->
+        create (ArraySlice.rows slc) (ArraySlice.cols slc) (ArraySlice.get slc 0 0)
+    | Node (_, _, _, _, ne, nw, sw, se) ->
+        node (compress ne) (compress nw) (compress sw) (compress se)
+    | qr -> qr
+
 /// Produce a string with the tikz code for printing the rope as a
 /// box diagram. This is useful for illustrating algorithms on
 /// quad ropes.

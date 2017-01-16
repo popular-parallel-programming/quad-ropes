@@ -28,8 +28,7 @@ open Types
 
 type Handle = class end
 
-let ``sparse product equals reduce (*)`` (a : int QuadRope) =
-    let a = QuadRope.map float a
+let ``sparse product equals reduce (*)`` (a : float QuadRope) =
     let sparse = QuadRope.SparseDouble.prod a
     let dense = QuadRope.reduce (*) 1.0 a
     let d = abs (sparse - dense)
@@ -37,8 +36,7 @@ let ``sparse product equals reduce (*)`` (a : int QuadRope) =
         printfn "sparse = %A, dense = %A, d = %A" sparse dense d
     System.Double.IsNaN d || d < 0.0001
 
-let ``parallel sparse product equals reduce (*)`` (a : int QuadRope) =
-    let a = QuadRope.map float a
+let ``parallel sparse product equals reduce (*)`` (a : float QuadRope) =
     let sparse = Parallel.QuadRope.SparseDouble.prod a
     let dense = QuadRope.reduce (*) 1.0 a
     let d = abs (sparse - dense)
@@ -46,23 +44,20 @@ let ``parallel sparse product equals reduce (*)`` (a : int QuadRope) =
         printfn "sparse = %A, dense = %A, d = %A" sparse dense d
     System.Double.IsNaN d || d < 0.0001
 
-let ``sparse point-wise multiplication equals zip (*)`` (a : int QuadRope) =
-    let a = QuadRope.map float a
+let ``sparse point-wise multiplication equals zip (*)`` (a : float QuadRope) =
     let b = a |> QuadRope.hrev |> QuadRope.vrev
     let sparse = QuadRope.SparseDouble.pointwise a b
     let dense = QuadRope.zip (*) a b
     QuadRope.equals sparse dense
 
-let ``parallel sparse point-wise multiplication equals zip (*)`` (a : int QuadRope) =
-    let a = QuadRope.map float a
+let ``parallel sparse point-wise multiplication equals zip (*)`` (a : float QuadRope) =
     let b = a |> QuadRope.hrev |> QuadRope.vrev
     let sparse = Parallel.QuadRope.SparseDouble.pointwise a b
     let dense = QuadRope.zip (*) a b
     QuadRope.equals sparse dense
 
-let ``sparse point-wise equals dense product`` (a : int QuadRope) =
+let ``sparse point-wise equals dense product`` (a : float QuadRope) =
     (QuadRope.rows a = QuadRope.cols a) ==> lazy (
-        let a = QuadRope.map float a
         let dense = QuadRope.init (QuadRope.rows a) (QuadRope.cols a) (fun i j -> if i < j then 1.0 else 0.0)
         let sparse = QuadRope.SparseDouble.upperDiagonal (QuadRope.rows a) 1.0
         QuadRope.equals (QuadRope.SparseDouble.pointwise dense a) (QuadRope.SparseDouble.pointwise sparse a))

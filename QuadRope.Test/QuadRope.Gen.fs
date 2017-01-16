@@ -75,10 +75,18 @@ module Gen =
         | _ -> Seq.empty
 
     type QuadRopeGen =
-        static member QuadRope () =
-            { new Arbitrary<int QuadRope>() with
-              override x.Generator = genCatRope
-              override x.Shrinker rope = shrink rope
+        static member IntQuadRope () =
+            {
+                new Arbitrary<int QuadRope>() with
+                override x.Generator = genCatRope
+                override x.Shrinker rope = shrink rope
+            }
+
+        static member FloatQuadRope () =
+            {
+                new Arbitrary<float QuadRope>() with
+                override x.Generator = genCatRope |> Gen.map (QuadRope.map float)
+                override x.Shrinker rope = shrink rope
             }
 
     let register () =

@@ -57,7 +57,6 @@ let leaf slc =
 /// existing nodes. This function maintains node construction invariants.
 let rec internal node ne nw sw se =
     match ne, nw, sw, se with
-
         // No nesting if all but one argument are empty.
         | _,     Empty, Empty, Empty -> ne
         | Empty, _,     Empty, Empty -> nw
@@ -93,10 +92,11 @@ let rec internal node ne nw sw se =
 
         // No optimization possible, create a standard node.
         | _ ->
-            let d = [ne; nw; sw; se] |> List.map depth |> List.max
-            let h = rows nw + rows sw
-            let w = cols nw + cols ne
-            Node ([ne; nw; sw; se] |> List.exists isSparse, d + 1, h, w, ne, nw, sw, se)
+            Node (isSparse ne || isSparse nw || isSparse sw || isSparse se,
+                  max (max (depth ne) (depth nw)) (max (depth sw) (depth se)) + 1,
+                  rows nw + rows sw,
+                  cols nw + cols ne,
+                  ne, nw, sw, se)
 
 let inline internal flatNode w e =
     node e w Empty Empty (* NB: Arguments switched. *)

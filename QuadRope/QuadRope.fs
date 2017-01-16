@@ -703,7 +703,7 @@ let rec internal genZip f lqr rqr tgt =
             let se = genZip f lse rse (Target.se tgt lqr)
             node ne nw sw se
         | Slice _ -> genZip f (materialize lqr) rqr tgt
-        | Sparse (_, _, v) -> map (f v) rqr
+        | Sparse (_, _, v) -> map (f v) rqr // lqr is sparse, hence tgt must be empty.
 
 /// True if the shape of two ropes match.
 let internal shapesMatch a b =

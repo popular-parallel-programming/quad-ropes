@@ -627,28 +627,28 @@ let vmap f qr =
     init 1 (cols qr) (fun _ j -> slice 0 j (rows qr) 1 qr |> f)
 
 /// Slice b to match the NE branch of a.
-let internal sliceToMatchNE a b =
+let sliceToMatchNE a b =
     match a with
         | Node (_, _, _, _, ne, nw, _, _) ->
             slice 0 (cols nw) (rows ne) (cols ne) b
         | _ -> Empty
 
 /// Slice b to match the NW branch of a.
-let internal sliceToMatchNW a b =
+let sliceToMatchNW a b =
     match a with
         | Node (_, _, _, _, _, nw, _, _) ->
             slice 0 0 (rows nw) (cols nw) b
         | _ -> slice 0 0 (rows a) (cols a) b
 
 /// Slice b to match the SW branch of a.
-let internal sliceToMatchSW a b =
+let sliceToMatchSW a b =
     match a with
         | Node (_, _, _, _, _, nw, sw, _) ->
             slice (rows nw) 0 (rows sw) (cols sw) b
         | _ -> Empty
 
 /// Slice b to match the SE branch of a.
-let internal sliceToMatchSE a b =
+let sliceToMatchSE a b =
     match a with
         | Node (_, _, _, _, ne, _, sw, se) ->
             slice (rows ne) (cols sw) (rows se) (cols se) b
@@ -657,7 +657,7 @@ let internal sliceToMatchSE a b =
 /// Slice b as to match the sub-shapes of a. If a is empty, the
 /// resulting slices will all be empty. If a is not a Node, all slices
 /// except for the NW slice will be empty.
-let internal sliceToMatch a b =
+let sliceToMatch a b =
     sliceToMatchNE a b, sliceToMatchNW a b, sliceToMatchSW a b, sliceToMatchSE a b
 
 /// Zip implementation for the general case where we do not assume

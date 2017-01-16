@@ -53,9 +53,6 @@ let leaf slc =
     else
         Leaf slc
 
-let internal nodemapreduce2 f g ne nw sw se =
-    g (g (f ne) (f nw)) (g (f sw) (f se))
-
 /// Pseudo-constructor for generating a new rope out of some
 /// existing nodes. This function maintains node construction invariants.
 let rec internal node ne nw sw se =
@@ -96,10 +93,10 @@ let rec internal node ne nw sw se =
 
         // No optimization possible, create a standard node.
         | _ ->
-            let d = nodemapreduce2 depth max ne nw sw se
+            let d = [ne; nw; sw; se] |> List.map depth |> List.max
             let h = rows nw + rows sw
             let w = cols nw + cols ne
-            Node (nodemapreduce2 isSparse (||) ne nw sw se, d, h, w, ne, nw, sw, se)
+            Node ([ne; nw; sw; se] |> List.exists isSparse, d + 1, h, w, ne, nw, sw, se)
 
 let inline internal flatNode w e =
     node e w Empty Empty (* NB: Arguments switched. *)

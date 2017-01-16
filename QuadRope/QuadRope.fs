@@ -695,13 +695,13 @@ let rec internal genZip f lqr rqr tgt =
         | Leaf slc ->
             let rqr = materialize rqr
             leaf (Target.mapi (fun i j v -> f v (fastGet rqr i j)) slc tgt)
-        | Node (s, d, h, w, ne, nw, sw, se) ->
-            let ne', nw', sw', se' = sliceToMatch lqr rqr
-            let nw'' = genZip f nw nw' tgt
-            let ne'' = genZip f ne ne' (Target.ne tgt lqr)
-            let sw'' = genZip f sw sw' (Target.sw tgt lqr)
-            let se'' = genZip f se se' (Target.se tgt lqr)
-            Node (s, d, h, w, ne'', nw'', sw'', se'')
+        | Node (_, _, _, _, lne, lnw, lsw, lse) ->
+            let rne, rnw, rsw, rse = sliceToMatch lqr rqr
+            let nw = genZip f lnw rnw tgt
+            let ne = genZip f lne rne (Target.ne tgt lqr)
+            let sw = genZip f lsw rsw (Target.sw tgt lqr)
+            let se = genZip f lse rse (Target.se tgt lqr)
+            node ne nw sw se
         | Slice _ -> genZip f (materialize lqr) rqr tgt
         | Sparse (_, _, v) -> map (f v) rqr
 

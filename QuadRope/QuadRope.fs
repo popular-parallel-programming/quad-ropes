@@ -60,14 +60,41 @@ let internal nodemapreduce2 f g ne nw sw se =
 /// existing nodes. This function maintains node construction invariants.
 let rec internal node ne nw sw se =
     match ne, nw, sw, se with
+
+        // No nesting if all but one argument are empty.
         | _,     Empty, Empty, Empty -> ne
         | Empty, _,     Empty, Empty -> nw
         | Empty, Empty, _,     Empty -> sw
         | Empty, Empty, Empty, _     -> se
+
+        // Move all arguments to the upper left.
         | Empty, Empty, _,     _     -> node se sw Empty Empty
         | _,     Empty, Empty, _     -> node Empty ne se Empty
         | _,     Empty, _,     Empty -> node ne sw Empty Empty
         | Empty, _    , Empty, _     -> node se nw Empty Empty
+
+        // Combine sparse trees if they have the same value.
+        | Sparse (_, w2, a), Sparse (h1, w1, b), Sparse (h2, _, c), Sparse (_, _, d)
+            when a = b && b = c && c = d ->
+                Sparse (h1 + h2, w1 + w2, a)
+
+        | Sparse (h2, w2, a), Sparse (h1, w1, b), _, _
+            when h1 = h2 && a = b ->
+                node Empty (Sparse (h1, w1 + w2, a)) (node se sw Empty Empty) Empty
+
+        | _, _, Sparse (h1, w1, a), Sparse (h2, w2, b)
+            when h1 = h2 && a = b ->
+                node Empty (node ne nw Empty Empty) (Sparse (h1, w1 + w2, a)) Empty
+
+        | _, Sparse (h1, w1, a), Sparse (h2, w2, b), _
+            when w1 = w2 && a = b ->
+                node (node Empty ne se Empty) (Sparse (h1 + h2, w1, a)) Empty Empty
+
+        | Sparse (h1, w1, a), _, _, Sparse (h2, w2, b)
+            when w1 = w2 && a = b ->
+                node (Sparse (h1 + h2, w1, a)) (node Empty nw sw Empty) Empty Empty
+
+        // No optimization possible, create a standard node.
         | _ ->
             let d = nodemapreduce2 depth max ne nw sw se
             let h = rows nw + rows sw

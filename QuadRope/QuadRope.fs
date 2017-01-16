@@ -726,28 +726,34 @@ let internal subShapesMatch a b =
 let rec internal fastZip f lqr rqr tgt =
     match lqr, rqr with
         | Empty, Empty -> Empty
+
         // Initialize target if any of the two quad ropes is dense.
         | _ when Target.isEmpty tgt && (not (isSparse lqr) || not (isSparse rqr)) ->
             fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
+
         | Leaf ls, Leaf rs when shapesMatch lqr rqr ->
             leaf (Target.map2 f ls rs tgt)
+
         | Node (_, _, _, _, lne, lnw, lsw, lse), Node (_, _, _, _, rne, rnw, rsw, rse)
             when subShapesMatch lqr rqr ->
                 node (fastZip f lne rne (Target.ne tgt lqr))
                      (fastZip f lnw rnw tgt)
                      (fastZip f lsw rsw (Target.sw tgt lqr))
                      (fastZip f lse rse (Target.se tgt lqr))
+
         // It may pay off to reallocate first if both reallocated quad
         // ropes have the same internal shape. This might be
         // over-fitted to matrix multiplication.
         | Slice _, Slice _ -> fastZip f (materialize lqr) (materialize rqr) tgt
         | Slice _, _ ->       fastZip f (materialize lqr) rqr tgt
         | Slice _, Slice _ -> fastZip f lqr (materialize rqr) tgt
+
         // Sparse branches can be reduced to either a single call to f
         // in case both arguments are sparse, or to a mapping f.
         | Sparse (h, w, v1), Sparse (_, _, v2) -> Sparse (h, w, f v1 v2)
         | Sparse (_, _, v), _ -> map (f v) rqr
         | _, Sparse (_, _, v) -> map (fun x -> f x v) lqr
+
         // Fall back to general case.
         | _ -> genZip f lqr rqr tgt
 

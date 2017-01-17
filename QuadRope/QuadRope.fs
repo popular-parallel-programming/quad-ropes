@@ -410,10 +410,6 @@ let vcat upper lower =
                Node (_, _, _, _, nel, nwl, Empty, Empty)) ->
                 node neu nwu nwl nel
 
-            // Merge sparse nodes of same element.
-            | Sparse (h1, w, v1), Sparse (h2, _, v2) when v1 = v2 ->
-                Sparse (h1 + h2, w, v1)
-
             // Create a new node pointing to arguments.
             | _ -> thinNode upper lower
 
@@ -462,10 +458,6 @@ let hcat left right =
             | (Node (_, _, _, _, Empty, lnw, lsw, Empty),
                Node (_, _, _, _, Empty, rnw, rsw, Empty)) ->
                 node rnw lnw lsw rsw
-
-            // Merge sparse nodes of same element.
-            | Sparse (h, w1, v1), Sparse (_, w2, v2) when v1 = v2 ->
-                Sparse (h, w1 + w2, v1)
 
             // Create a new node pointing to arguments.
             | _ -> flatNode left right

@@ -702,7 +702,7 @@ let rec internal genZip f lqr rqr tgt =
         | Sparse (_, _, v) -> map (f v) rqr // lqr is sparse, hence tgt must be empty.
 
 /// True if the shape of two ropes match.
-let internal shapesMatch a b =
+let shapesMatch a b =
     rows a = rows b && cols a = cols b
 
 /// True if a and b are nodes and the shapes of all their sub-ropes in

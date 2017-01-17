@@ -354,7 +354,11 @@ let materialize qr =
                 let nw' = materialize i j h w nw
                 let ne' = materialize i (j - cols nw) h (w - cols nw') ne
                 let sw' = materialize (i - rows nw) j (h - rows nw') w sw
-                let se' = materialize (i - rows ne) (j - cols sw) (h - rows ne') (w - cols sw') se
+                let se' = materialize (i - rows ne)
+                                      (j - cols sw)
+                                      (h - if isEmpty ne' then rows nw' else rows ne')
+                                      (w - if isEmpty sw' then cols nw' else cols sw')
+                                      se
                 node ne' nw' sw' se'
             | Slice (x, y, r, c, qr) ->
                 materialize (i + x) (j + y) (min r h) (min c w) qr
@@ -622,7 +626,7 @@ let map f qr =
             | Empty ->
                 Empty
             // Initialize target as soon as quad rope is dense.
-            | _ when not (isSparse qr) && Target.isEmpty tgt ->
+            | _ when Target.isEmpty tgt && not (isSparse qr) ->
                 map qr (Target.make (rows qr) (cols qr))
             // Write into target and construct new leaf.
             | Leaf slc ->

@@ -765,7 +765,7 @@ let rec internal fastZip f lqr rqr tgt =
 let zip f lqr rqr =
     if not (shapesMatch lqr rqr) then
         failwith "Quad ropes must have the same shape."
-    fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
+    fastZip f lqr rqr Target.empty
 
 /// Apply f to all values of the rope and reduce the resulting values
 /// to a single scalar using g. Variable epsilon is the neutral

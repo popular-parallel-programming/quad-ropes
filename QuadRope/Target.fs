@@ -61,24 +61,6 @@ let inline makeWithFringe h w value =
 let inline incrementRow tgt i = increment tgt i 0
 let inline incrementCol tgt j = increment tgt 0 j
 
-/// Adjust target descriptor to match north-eastern child.
-let ne tgt = function
-    | Node (_, _, _, _, _, nw, _, _) ->
-        incrementCol tgt (Types.cols nw)
-    | _ -> tgt
-
-/// Adjust target descriptor to match south-western child.
-let sw tgt = function
-    | Node (_, _, _, _, _, nw, _, _) ->
-        incrementRow tgt (Types.rows nw)
-    | _ -> tgt
-
-/// Adjust target descriptor to match south-eastern child.
-let se tgt = function
-    | Node (_, _, _, _, ne, _, sw, _) ->
-        increment tgt (Types.rows ne) (Types.cols sw)
-    | _ -> tgt
-
 /// Generalized write to target.
 let inline writemap (tgt : _ Target) f r c v =
     tgt.vals.[tgt.i + r, tgt.j + c] <- f v

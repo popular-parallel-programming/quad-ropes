@@ -1,2 +1,2 @@
 #!/bin/bash
-mono QuadRope.Test/bin/Debug/QuadRope.Test.exe
+mono --debug QuadRope.Test/bin/Debug/QuadRope.Test.exe

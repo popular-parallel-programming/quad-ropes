@@ -156,7 +156,7 @@ let isSingleton slc =
 
 /// True if array slice contains no elements.
 let isEmpty slc =
-    rows slc = 0 || cols slc = 0
+    rows slc <= 0 || cols slc <= 0
 
 /// Concatenate two array slices in first dimension.
 let cat1 left right =

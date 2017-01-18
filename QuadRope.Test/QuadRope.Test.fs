@@ -35,18 +35,6 @@ module private Utils =
     let makeIndicesFrom qr =
         makeIndices (QuadRope.rows qr) (QuadRope.cols qr)
 
-    let rec maintainsTight = function
-        | Node (_, _, _, _, ne, nw, Empty, Empty) ->
-            maintainsTight ne && maintainsTight nw
-        | Node (_, _, _, _, Empty, nw, sw, Empty) ->
-            maintainsTight nw && maintainsTight sw
-        | Node (_, _, _, _, _, Empty, _, _)
-        | Node (_, _, _, _, _, _, Empty, _) -> false
-        | Node (_, _, _, _, ne, nw, sw, se) ->
-            maintainsTight ne && maintainsTight nw && maintainsTight sw && maintainsTight se
-        | Slice _ as qr -> maintainsTight qr
-        | _ -> true
-
     let access rope (i, j) =
         try
             ignore (QuadRope.get rope i j)
@@ -113,12 +101,6 @@ let ``vbalance maintains order`` (NonNegativeInt x) =
     for i in 1 .. x do
         r <- QuadRope.vcat r (QuadRope.singleton i)
     QuadRope.forallCols (<) r
-
-let ``hrev maintains uper-left invariant`` (a: int QuadRope) =
-    maintainsTight (QuadRope.hrev a)
-
-let ``vrev maintains uper-left invariant`` (a: int QuadRope) =
-    maintainsTight (QuadRope.vrev a)
 
 let ``hrev of hrev is identity`` (a : int QuadRope) =
     pointWiseEqual a (QuadRope.hrev (QuadRope.hrev a))

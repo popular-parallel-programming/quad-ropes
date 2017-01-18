@@ -615,18 +615,13 @@ module SparseDouble =
                 | Node (true, _, _, _, lne, lnw, Empty, Empty), Node (_, _, _, _, rne, rnw, Empty, Empty)
                 | Node (_, _, _, _, lne, lnw, Empty, Empty), Node (true, _, _, _, rne, rnw, Empty, Empty)
                     when QuadRope.subShapesMatch lqr rqr ->
-                        let ne, nw = par2 (fun () -> fast lne rne)
-                                          (fun () -> fast lnw rnw)
-                        flatNode nw ne
+                        par2 (fun () -> fast lnw rnw) (fun () -> fast lne rne) ||> flatNode
 
                 // Thin node.
                 | Node (true, _, _, _, Empty, lnw, lsw, Empty), Node (_, _, _, _, Empty, rnw, rsw, Empty)
                 | Node (_, _, _, _, Empty, lnw, lsw, Empty), Node (true, _, _, _, Empty, rnw, rsw, Empty)
                     when QuadRope.subShapesMatch lqr rqr ->
-                        let nw, sw = par2 (fun () -> fast lnw rnw)
-                                          (fun () -> fast lsw rsw)
-                        thinNode nw sw
-
+                        par2 (fun () -> fast lnw rnw) (fun () -> fast lsw rsw) ||> thinNode
                 // Full node.
                 | Node (_, _, _, _, lne, lnw, lsw, lse), Node (true, _, _, _, rne, rnw, rsw, rse)
                 | Node (true, _, _, _, lne, lnw, lsw, lse), Node (_, _, _, _, rne, rnw, rsw, rse)
@@ -653,4 +648,6 @@ module SparseDouble =
                 | _ when isSparse lqr or isSparse rqr -> gen lqr rqr
                 | _ -> zip (*) lqr rqr
 
+        if not (QuadRope.shapesMatch lqr rqr) then
+            invalidArg "rqr" "Quad ropes must be of equal shape."
         fast lqr rqr

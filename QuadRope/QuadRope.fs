@@ -1089,24 +1089,17 @@ module SparseDouble =
                  (lowerDiagonal m v)
 
     /// Multiply two quad ropes of doubles point-wise.
-    let pointwise lqr rqr =
+    let pointwise (lqr : float QuadRope) (rqr : float QuadRope) : float QuadRope =
         /// General case for quad ropes of different structure.
         let rec gen lqr rqr =
-            match rqr with
-                // Sparse quad ropes of zero result in zero.
-                | Sparse (_, _, 0.0) -> rqr
-                | Sparse (_, _, 1.0) -> lqr
-                | _ ->
-                    match lqr with
-                        | Node (true, _, _, _, lne, lnw, lsw, lse) ->
-                            let rne, rnw, rsw, rse = sliceToMatch lqr rqr
-                            node (gen lne rne)
-                                 (gen lnw rnw)
-                                 (gen lsw rsw)
-                                 (gen lse rse)
-                        | Sparse (_, _, 0.0) -> lqr
-                        | Sparse (_, _, 1.0) -> rqr
-                        | _ -> zip (*) lqr rqr
+            match lqr with
+                | Node (true, _, _, _, lne, lnw, lsw, lse) ->
+                    let rne, rnw, rsw, rse = sliceToMatch lqr rqr
+                    node (gen lne rne) (gen lnw rnw) (gen lsw rsw) (gen lse rse)
+                | Sparse (_, _, 0.0) -> lqr
+                | Sparse (_, _, 1.0) -> rqr
+                | _ when isSparse rqr -> gen rqr lqr
+                | _ -> zip (*) lqr rqr
 
         /// Fast case for quad ropes of equal structure.
         let rec fast lqr rqr =
@@ -1114,29 +1107,33 @@ module SparseDouble =
                 // Recurse on nodes if at least one of them is sparse.
                 | Node (_, _, _, _, lne, lnw, lsw, lse), Node (true, _, _, _, rne, rnw, rsw, rse)
                 | Node (true, _, _, _, lne, lnw, lsw, lse), Node (_, _, _, _, rne, rnw, rsw, rse)
-
                     when subShapesMatch lqr rqr ->
-                        node (fast lne rne)
-                             (fast lnw rnw)
-                             (fast lsw rsw)
-                             (fast lse rse)
+                        node (fast lne rne) (fast lnw rnw) (fast lsw rsw) (fast lse rse)
 
                 // It may pay off to materialize if slices are sparse.
                 | Slice _, _ when isSparse lqr -> fast (materialize lqr) rqr
                 | _, Slice _ when isSparse rqr -> fast lqr (materialize rqr)
 
                 // Sparse quad ropes of zero result in zero.
-                | Sparse (h, w, 0.0), _
-                | _, Sparse (h, w, 0.0) -> Sparse (h, w, 0.0)
+                | Sparse (_, _, 0.0), _ -> lqr
+                | _, Sparse (_, _, 0.0) -> rqr
 
                 // Sparse quad ropes of one result in the other quad rope.
-                | Sparse (_, _, 1.0), qr
-                | qr, Sparse (_, _, 1.0) -> qr
+                | Sparse (_, _, 1.0), _ -> rqr
+                | _, Sparse (_, _, 1.0) -> lqr
 
                 // Fall back to general case.
-                | _ when isSparse lqr or isSparse rqr -> gen lqr rqr
-                | _ -> zip (*) lqr rqr
-        fast lqr rqr
+                | _ -> gen lqr rqr
+
+        if not (shapesMatch lqr rqr) then
+            invalidArg "rqr" "Quad ropes must be of equal shape."
+        // Since multiplication is commutative, move the shallower
+        // quad rope left to recurse on its structure instead of the
+        // deeper one.
+        if depth rqr < depth lqr then
+            fast rqr lqr
+        else
+            fast lqr rqr
 
 module SparseString =
     let cat = reduce (+) ""

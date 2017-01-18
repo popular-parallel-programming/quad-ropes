@@ -683,23 +683,30 @@ let sliceToMatch a b =
 /// Zip implementation for the general case where we do not assume
 /// that both ropes have the same internal structure.
 let rec internal genZip f lqr rqr tgt =
-    match lqr with
-        | Empty -> Empty
-        // Initialize target if any of the two quad ropes is dense.
-        | _ when Target.isEmpty tgt && not (isSparse lqr) ->
-            genZip f lqr rqr (Target.make (rows lqr) (cols lqr))
-        | Leaf slc ->
-            let rqr = materialize rqr
-            leaf (Target.mapi (fun i j v -> f v (fastGet rqr i j)) slc tgt)
-        | Node (_, _, _, _, lne, lnw, lsw, lse) ->
-            let rne, rnw, rsw, rse = sliceToMatch lqr rqr
-            let nw = genZip f lnw rnw tgt
-            let ne = genZip f lne rne (Target.ne tgt lqr)
-            let sw = genZip f lsw rsw (Target.sw tgt lqr)
-            let se = genZip f lse rse (Target.se tgt lqr)
-            node ne nw sw se
-        | Slice _ -> genZip f (materialize lqr) rqr tgt
-        | Sparse (_, _, v) -> map (f v) rqr // lqr is sparse, hence tgt must be empty.
+    match rqr with
+        | Sparse (_, _, v) -> map (fun x -> f x v) lqr
+        | _ ->
+            match lqr with
+                | Empty -> Empty
+
+                | _ when Target.isEmpty tgt && (not (isSparse lqr) || not (isSparse rqr)) ->
+                    genZip f lqr rqr (Target.make (rows lqr) (cols lqr))
+
+                | Leaf slc ->
+                    // Able to call map
+                    match materialize rqr with
+                        | Sparse (_, _, v') -> leaf (Target.map (fun v -> f v v') slc tgt)
+                        | rqr -> leaf (Target.mapi (fun i j v -> f v (fastGet rqr i j)) slc tgt)
+
+                | Node (_, _, _, _, lne, lnw, lsw, lse) ->
+                    let rne, rnw, rsw, rse = sliceToMatch lqr rqr
+                    node (genZip f lne rne (Target.ne tgt lqr))
+                         (genZip f lnw rnw tgt)
+                         (genZip f lsw rsw (Target.sw tgt lqr))
+                         (genZip f lse rse (Target.se tgt lqr))
+
+                | Slice _ -> genZip f (materialize lqr) rqr tgt
+                | Sparse (_, _, v) -> map (f v) rqr // lqr is sparse, hence tgt must be empty.
 
 /// True if the shape of two ropes match.
 let shapesMatch a b =

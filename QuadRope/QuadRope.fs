@@ -55,7 +55,7 @@ let leaf slc =
         Leaf slc
 
 /// Pseudo-constructor for initializing a new HCat node.
-let internal flatNode a b =
+let internal hnode a b =
     match a, b with
         | Empty, _ -> b
         | _, Empty -> a
@@ -66,7 +66,7 @@ let internal flatNode a b =
         | _ -> failwith "Cannot hcat nodes of different height."
 
 /// Pseudo-constructor for initializing a new VCat node.
-let internal thinNode a b =
+let internal vnode a b =
     match a, b with
         | Empty, _ -> b
         | _, Empty -> a
@@ -175,13 +175,13 @@ let hbalance qr =
             qr
         else
             let rs = collect qr []
-            reduceList (rebuild flatNode) rs
+            reduceList (rebuild hnode) rs
     and collect qr rs  =
         match qr with
             | Empty -> rs
             | HCat (_, _, _, _, a, b) -> collect a (collect b rs)
             | VCat (_, _, _, _, a, b) ->
-                thinNode (hbalance a) (hbalance b) :: rs
+                vnode (hbalance a) (hbalance b) :: rs
             | _ -> qr :: rs
     hbalance qr
 
@@ -192,12 +192,12 @@ let vbalance qr =
             qr
         else
             let rs = collect qr []
-            reduceList (rebuild thinNode) rs
+            reduceList (rebuild vnode) rs
     and collect qr rs  =
         match qr with
             | Empty -> rs
             | HCat (_, _, _, _, a, b) ->
-                flatNode (vbalance a) (vbalance b) :: rs
+                hnode (vbalance a) (vbalance b) :: rs
             | VCat (_, _, _, _, a, b) ->
                 collect a (collect b rs)
             | _ -> qr :: rs
@@ -209,8 +209,8 @@ let vbalance qr =
 module Boehm =
     let hbalance qr =
         let rec insert qr n = function
-            | r0 :: r1 :: qrs when depth r1 <= n -> insert qr n (flatNode r1 r0 :: qrs)
-            | r0 :: qrs when depth r0 <= n -> (flatNode r0 qr) :: qrs
+            | r0 :: r1 :: qrs when depth r1 <= n -> insert qr n (hnode r1 r0 :: qrs)
+            | r0 :: qrs when depth r0 <= n -> (hnode r0 qr) :: qrs
             | qrs -> qr :: qrs
         let rec hbalance qr qrs =
             match qr with
@@ -222,12 +222,12 @@ module Boehm =
         if isBalancedH qr then
             qr
         else
-            List.reduce (fun ne nw -> flatNode nw ne) (hbalance qr [])
+            List.reduce (fun ne nw -> hnode nw ne) (hbalance qr [])
 
     let vbalance qr =
         let rec insert qr n = function
-            | r0 :: r1 :: qrs when depth r1 <= n -> insert qr n (thinNode r1 r0 :: qrs)
-            | r0 :: qrs when depth r0 <= n -> (thinNode r0 qr) :: qrs
+            | r0 :: r1 :: qrs when depth r1 <= n -> insert qr n (vnode r1 r0 :: qrs)
+            | r0 :: qrs when depth r0 <= n -> (vnode r0 qr) :: qrs
             | qrs -> qr :: qrs
         let rec vbalance qr qrs =
             match qr with
@@ -239,7 +239,7 @@ module Boehm =
         if isBalancedV qr then
             qr
         else
-            List.reduce (fun sw nw -> thinNode nw sw) (vbalance qr [])
+            List.reduce (fun sw nw -> vnode nw sw) (vbalance qr [])
 
 /// Compute the "subrope" starting from indexes i, j taking h and w
 /// elements in vertical and horizontal direction.
@@ -329,11 +329,11 @@ let materialize qr =
             | HCat (_, _, _, _, a, b) ->
                 let a' = materialize i j h w a
                 let b' = materialize i (j - cols a) h (w - cols a') b
-                flatNode a' b'
+                hnode a' b'
             | VCat (_, _, _, _, a, b) ->
                 let a' = materialize i j h w a
                 let b' = materialize (i - rows a) j (h - rows a') w b
-                thinNode a' b'
+                vnode a' b'
             | Slice (x, y, r, c, qr) ->
                 materialize (i + x) (j + y) (min r h) (min c w) qr
             | Sparse (h', w', v) ->
@@ -360,14 +360,14 @@ let vcat a b =
 
             // Merge first-level leaves.
             | VCat (_, _, _, _, aa, Leaf ab), Leaf b when canMerge ab b ->
-                thinNode aa (leaf (ArraySlice.cat1 ab b))
+                vnode aa (leaf (ArraySlice.cat1 ab b))
             | Leaf a, VCat (_, _, _, _, Leaf ba, bb) when canMerge a ba ->
-                thinNode (leaf (ArraySlice.cat1 a ba)) bb
+                vnode (leaf (ArraySlice.cat1 a ba)) bb
 
             // TODO: Further optimizations?
 
             // Create a new node pointing to arguments.
-            | _ -> thinNode a b
+            | _ -> vnode a b
 
     if (not ((isEmpty a) || (isEmpty b))) && cols a <> cols b then
         invalidArg "b" "B quad rope must be of same width as a quad rope."
@@ -392,14 +392,14 @@ let hcat a b =
 
             // Merge sub-leaves.
             | HCat (_, _, _, _, aa, Leaf ab), Leaf b when canMerge ab b ->
-                flatNode aa (leaf (ArraySlice.cat2 ab b))
+                hnode aa (leaf (ArraySlice.cat2 ab b))
             | Leaf a, HCat (_, _, _, _, Leaf ba, bb) when canMerge a ba ->
-                flatNode (leaf (ArraySlice.cat2 a ba)) bb
+                hnode (leaf (ArraySlice.cat2 a ba)) bb
 
             // TODO: Further optimizations?
 
             // Create a new node pointing to arguments.
-            | _ -> flatNode a b
+            | _ -> hnode a b
 
     if (not ((isEmpty a) || (isEmpty b))) && rows a <> rows b then
         invalidArg "b" "B quad rope must be of same height as a quad rope."
@@ -413,9 +413,9 @@ let hrev qr =
             | Leaf slc ->
                 leaf (Target.hrev slc tgt)
             | HCat (_, _, _, _, a, b) ->
-                flatNode (hrev b (Target.incrementCol tgt (cols a))) (hrev a tgt)
+                hnode (hrev b (Target.incrementCol tgt (cols a))) (hrev a tgt)
             | VCat (_, _, _, _, a, b) ->
-                thinNode (hrev a tgt) (hrev b (Target.incrementRow tgt (rows a)))
+                vnode (hrev a tgt) (hrev b (Target.incrementRow tgt (rows a)))
             | Slice _ ->
                 hrev (materialize qr) tgt
             | _ -> qr
@@ -428,9 +428,9 @@ let vrev qr =
             | Leaf slc ->
                 leaf (Target.vrev slc tgt)
             | HCat (_, _, _, _, a, b) ->
-                flatNode (vrev a tgt) (vrev b (Target.incrementCol tgt (cols a)))
+                hnode (vrev a tgt) (vrev b (Target.incrementCol tgt (cols a)))
             | VCat (_, _, _, _, a, b) ->
-                thinNode (vrev b (Target.incrementRow tgt (rows a))) (vrev a tgt)
+                vnode (vrev b (Target.incrementRow tgt (rows a))) (vrev a tgt)
             | Slice _ ->
                 vrev (materialize qr) tgt
             | _ -> qr
@@ -448,7 +448,7 @@ let internal fromArraySlice slc =
             vsplit slc
         else
             let a, b = ArraySlice.hsplit2 slc
-            flatNode (vsplit a) (vsplit b)
+            hnode (vsplit a) (vsplit b)
     /// Build nodes by splitting underlying slices vertically.
     and vsplit slc =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
@@ -459,7 +459,7 @@ let internal fromArraySlice slc =
             hsplit slc
         else
             let a, b = ArraySlice.vsplit2 slc
-            thinNode (hsplit a) (hsplit b)
+            vnode (hsplit a) (hsplit b)
     hsplit slc
 
 /// Initialize a rope from a native 2D-array.
@@ -560,10 +560,10 @@ let map f qr =
                 Leaf (Target.map f slc tgt)
             // Adjust target descriptor horizontally.
             | HCat (_, _, _, _, a, b) ->
-                flatNode (map a tgt) (map b (Target.incrementCol tgt (cols a)))
+                hnode (map a tgt) (map b (Target.incrementCol tgt (cols a)))
             // Adjust target descriptor vertically.
             | VCat (_, _, _, _, a, b) ->
-                thinNode (map a tgt) (map b (Target.incrementRow tgt (rows a)))
+                vnode (map a tgt) (map b (Target.incrementRow tgt (rows a)))
             // Materialize quad rope and then map.
             | Slice _ ->
                 map (materialize qr) tgt
@@ -600,11 +600,11 @@ let rec internal genZip f lqr rqr tgt =
 
                 | HCat (_, _, _, _, aa, ab) ->
                     let ba, bb = hsplit2 rqr (cols aa)
-                    flatNode (genZip f aa ba tgt) (genZip f ab bb (Target.incrementCol tgt (cols aa)))
+                    hnode (genZip f aa ba tgt) (genZip f ab bb (Target.incrementCol tgt (cols aa)))
 
                 | VCat (_, _, _, _, aa, ab) ->
                     let ba, bb = vsplit2 rqr (rows aa)
-                    thinNode (genZip f aa ba tgt) (genZip f ab bb (Target.incrementRow tgt (rows aa)))
+                    vnode (genZip f aa ba tgt) (genZip f ab bb (Target.incrementRow tgt (rows aa)))
 
                 | Slice _ -> genZip f (materialize lqr) rqr tgt
                 | Sparse (_, _, v) -> map (f v) rqr // lqr is sparse, hence tgt must be empty.
@@ -628,11 +628,11 @@ let rec internal fastZip f lqr rqr tgt =
 
         | HCat (_, _, _, _, aa, ab), HCat (_, _, _, _, ba, bb)
             when shapesMatch aa ba && shapesMatch ab bb ->
-                flatNode (fastZip f aa ba tgt) (fastZip f ab bb (Target.incrementCol tgt (cols aa)))
+                hnode (fastZip f aa ba tgt) (fastZip f ab bb (Target.incrementCol tgt (cols aa)))
 
         | VCat (_, _, _, _, aa, ab), VCat (_, _, _, _, ba, bb)
             when shapesMatch aa ba && shapesMatch ab bb ->
-                flatNode (fastZip f aa ba tgt) (fastZip f ab bb (Target.incrementRow tgt (rows aa)))
+                hnode (fastZip f aa ba tgt) (fastZip f ab bb (Target.incrementRow tgt (rows aa)))
 
         // It may pay off to reallocate first if both reallocated quad
         // ropes have the same internal shape. This might be
@@ -696,14 +696,14 @@ let rec hscan f states = function
     | HCat (_, _, _, _, a, b) ->
         let a' = hscan f states a
         let b' = hscan f (fun i -> get a' i (cols a' - 1)) b
-        flatNode a' b'
+        hnode a' b'
     | VCat (_, _, _, _, a, b) ->
         // Offset states function by rows of a; recursion does not
         // maintain index offset.
-        thinNode (hscan f states a) (hscan f (((+) (rows a)) >> states) b)
+        vnode (hscan f states a) (hscan f (((+) (rows a)) >> states) b)
     | Slice _ as qr -> hscan f states (materialize qr)
     | Sparse (h, w, v) ->
-         hscan f states (init h w (fun _ _ -> v))
+        hscan f states (init h w (fun _ _ -> v))
 
 /// Compute the column-wise prefix sum of the rope for f starting
 /// with states.
@@ -713,11 +713,11 @@ let rec vscan f states = function
     | HCat (_, _, _, _, a, b) ->
         // Offset states function by cols of a; recursion does not
         // maintain index offset.
-        flatNode (vscan f states a) (vscan f (((+) (cols a)) >> states) b)
+        hnode (vscan f states a) (vscan f (((+) (cols a)) >> states) b)
     | VCat (_, _, _, _, a, b) ->
         let a' = vscan f states a
         let b' = vscan f (get a' (rows a' - 1)) b
-        thinNode a' b'
+        vnode a' b'
     | Slice _ as qr -> vscan f states (materialize qr)
     | Sparse (h, w, v) ->
          vscan f states (init h w (fun _ _ -> v))
@@ -739,14 +739,14 @@ let scan plus minus init qr =
                 let a' = scan pre a tgt
                 let tgt' = Target.incrementCol tgt (cols a)
                 let b' = scan (Target.get tgt') b tgt'
-                flatNode a' b'
+                hnode a' b'
 
             // Scanning b depends on scanning a; a resides "left of" b.
             | VCat (_, _, _, _, a, b) ->
                 let a' = scan pre a tgt
                 let tgt' = Target.incrementRow tgt (rows a)
                 let b' = scan (Target.get tgt') b tgt'
-                thinNode a' b'
+                vnode a' b'
 
             | Slice _ -> scan pre (materialize qr) tgt
 
@@ -797,7 +797,7 @@ let rec hfilter p = function
     | Empty -> Empty
     | Leaf slc -> leaf (ArraySlice.filter2 p slc)
     | HCat (_, _, 1, _, a, b) ->
-        flatNode (hfilter p a) (hfilter p b)
+        hnode (hfilter p a) (hfilter p b)
     | Sparse (1, _, v) as qr when p v -> qr
     | Sparse (1, _, _) -> Empty
     | _ -> failwith "Quad rope height must be exactly one."
@@ -808,7 +808,7 @@ let rec vfilter p = function
     | Empty -> Empty
     | Leaf slc -> leaf (ArraySlice.filter1 p slc)
     | VCat (_, _, _, 1, a, b) ->
-        thinNode (vfilter p a) (vfilter p b)
+        vnode (vfilter p a) (vfilter p b)
     | Sparse (_, 1, v) as qr when p v -> qr
     | Sparse (_, 1, _) -> Empty
     | _ -> failwith "Quad rope width must be exactly one."
@@ -822,9 +822,9 @@ let transpose qr =
             | Leaf slc ->
                 leaf (Target.transpose slc tgt)
             | HCat (_, _, _, _, a, b) ->
-                thinNode (transpose a tgt) (transpose b (Target.incrementCol tgt (cols a)))
+                vnode (transpose a tgt) (transpose b (Target.incrementCol tgt (cols a)))
             | VCat (_, _, _, _, a, b) ->
-                flatNode (transpose a tgt) (transpose b (Target.incrementRow tgt (rows a)))
+                hnode (transpose a tgt) (transpose b (Target.incrementRow tgt (rows a)))
             | Slice _ ->
                 transpose (materialize qr) tgt
             | Sparse (h, w, v) -> Sparse (w, h, v)
@@ -840,9 +840,9 @@ let rec compress = function
     | Leaf slc when ArraySlice.mapreduce ((=) (ArraySlice.get slc 0 0)) (&&) slc ->
         create (ArraySlice.rows slc) (ArraySlice.cols slc) (ArraySlice.get slc 0 0)
     | HCat (_, _, _, _, a, b) ->
-        flatNode (compress a) (compress b)
+        hnode (compress a) (compress b)
     | VCat (_, _, _, _, a, b) ->
-        thinNode (compress a) (compress b)
+        vnode (compress a) (compress b)
     | qr -> qr
 
 module SparseDouble =
@@ -876,12 +876,12 @@ module SparseDouble =
             // Branching instead of bit-operations allows us to re-use
             // already allocated elements in the optimal case.
             if n &&& 1 = 1 then
-                flatNode (thinNode (identity (m + 1)) (create m (m + 1) 0.0))
-                         (thinNode (create (m + 1) m 0.0) (identity m))
+                hnode (vnode (identity (m + 1)) (create m (m + 1) 0.0))
+                         (vnode (create (m + 1) m 0.0) (identity m))
             else
                 let sparse = Sparse (m, m, 0.0)
                 let vals = identity m
-                flatNode (thinNode vals sparse) (thinNode sparse vals)
+                hnode (vnode vals sparse) (vnode sparse vals)
 
     /// Initialize an upper diagonal matrix with all non-zero values
     /// set to v.
@@ -892,8 +892,8 @@ module SparseDouble =
             let m = n >>> 1
             let m' = if n &&& 1 = 1 then m + 1 else m
             // TODO: Optimize for re-use.
-            flatNode (thinNode (upperDiagonal m' v) (create m' m v))
-                     (thinNode (create m m' 0.0) (upperDiagonal m v))
+            hnode (vnode (upperDiagonal m v) (create m' m v))
+                     (vnode (create m m' 0.0) (upperDiagonal m' v))
 
     /// Initialize a lower diagonal matrix with all non-zero values
     /// set to v.
@@ -904,8 +904,8 @@ module SparseDouble =
             let m = n >>> 1
             let m' = if n &&& 1 = 1 then m + 1 else m
             // TODO: Optimize for re-use.
-            flatNode (thinNode (lowerDiagonal m' v) (create m' m 0.0))
-                     (thinNode (create m m' v) (lowerDiagonal m v))
+            hnode (vnode (lowerDiagonal m v) (create m' m 0.0))
+                     (vnode (create m m' v) (lowerDiagonal m' v))
 
     /// Multiply two quad ropes of doubles point-wise.
     let pointwise (lqr : float QuadRope) (rqr : float QuadRope) : float QuadRope =
@@ -914,10 +914,10 @@ module SparseDouble =
             match lqr with
                 | HCat (true, _, _, _, aa, ab) ->
                     let ba, bb = hsplit2 rqr (cols aa)
-                    flatNode (gen aa ba) (gen ab bb)
+                    hnode (gen aa ba) (gen ab bb)
                 | VCat (true, _, _, _, aa, ab) ->
                     let ba, bb = vsplit2 rqr (rows aa)
-                    thinNode (gen aa ba) (gen ab bb)
+                    vnode (gen aa ba) (gen ab bb)
                 | Sparse (_, _, 0.0) -> lqr
                 | Sparse (_, _, 1.0) -> rqr
                 | _ when isSparse rqr -> gen rqr lqr
@@ -930,12 +930,12 @@ module SparseDouble =
                 | HCat (_,    _, _, _, aa, ab), HCat (true, _, _, _, ba, bb)
                 | HCat (true, _, _, _, aa, ab), HCat (_,    _, _, _, ba, bb)
                     when shapesMatch aa ba && shapesMatch ab bb ->
-                        flatNode (fast aa ba) (fast ab bb)
+                        hnode (fast aa ba) (fast ab bb)
 
                 | VCat (_,    _, _, _, aa, ab), VCat (true, _, _, _, ba, bb)
                 | VCat (true, _, _, _, aa, ab), VCat (_,    _, _, _, ba, bb)
                     when shapesMatch aa ba && shapesMatch ab bb ->
-                        thinNode (fast aa ba) (fast ab bb)
+                        vnode (fast aa ba) (fast ab bb)
 
                 // It may pay off to materialize if slices are sparse.
                 | Slice _, _ when isSparse lqr -> fast (materialize lqr) rqr

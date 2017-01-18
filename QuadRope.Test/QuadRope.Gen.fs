@@ -66,11 +66,10 @@ module Gen =
                           yield Gen.map (fun (u, l) -> QuadRope.vcat u l) vs })
 
     let shrink = function
-        | Node (_, _, _, _, ne, nw, sw, se) ->
-            seq { if not (QuadRope.isEmpty ne) then yield ne
-                  if not (QuadRope.isEmpty nw) then yield nw
-                  if not (QuadRope.isEmpty sw) then yield sw
-                  if not (QuadRope.isEmpty se) then yield se
+        | HCat (_, _, _, _, a, b)
+        | VCat (_, _, _, _, a, b) ->
+            seq { if not (QuadRope.isEmpty a) then yield a
+                  if not (QuadRope.isEmpty b) then yield b
                   yield QuadRope.Empty }
         | _ -> Seq.empty
 

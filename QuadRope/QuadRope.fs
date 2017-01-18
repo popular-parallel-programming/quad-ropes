@@ -59,8 +59,6 @@ let internal hnode a b =
     match a, b with
         | Empty, _ -> b
         | _, Empty -> a
-        | Sparse (h1, w1, v1), Sparse (h2, w2, v2) when h1 = h2 && v1 = v2 ->
-            Sparse (h1, w1 + w2, v1)
         | _ when rows a = rows b ->
             HCat (isSparse a || isSparse b, max (depth a) (depth b), rows a, cols a + cols b, a, b)
         | _ -> failwith "Cannot hcat nodes of different height."
@@ -70,8 +68,6 @@ let internal vnode a b =
     match a, b with
         | Empty, _ -> b
         | _, Empty -> a
-        | Sparse (h1, w1, v1), Sparse (h2, w2, v2) when w1 = w2 && v1 = v2 ->
-            Sparse (h1 + h2, w1, v1)
         | _ when cols a = cols b ->
             VCat (isSparse a || isSparse b, max (depth a) (depth b), rows a + rows b, cols a, a, b)
         | _ -> failwith "Cannot vcat nodes of different width."
@@ -364,6 +360,9 @@ let vcat a b =
             | Leaf a, VCat (_, _, _, _, Leaf ba, bb) when canMerge a ba ->
                 vnode (leaf (ArraySlice.cat1 a ba)) bb
 
+            | Sparse (h1, w1, v1), Sparse (h2, w2, v2) when w1 = w2 && v1 = v2 ->
+                Sparse (h1 + h2, w1, v1)
+
             // TODO: Further optimizations?
 
             // Create a new node pointing to arguments.
@@ -395,6 +394,9 @@ let hcat a b =
                 hnode aa (leaf (ArraySlice.cat2 ab b))
             | Leaf a, HCat (_, _, _, _, Leaf ba, bb) when canMerge a ba ->
                 hnode (leaf (ArraySlice.cat2 a ba)) bb
+
+            | Sparse (h1, w1, v1), Sparse (h2, w2, v2) when h1 = h2 && v1 = v2 ->
+                Sparse (h1, w1 + w2, v1)
 
             // TODO: Further optimizations?
 
@@ -840,9 +842,9 @@ let rec compress = function
     | Leaf slc when ArraySlice.mapreduce ((=) (ArraySlice.get slc 0 0)) (&&) slc ->
         create (ArraySlice.rows slc) (ArraySlice.cols slc) (ArraySlice.get slc 0 0)
     | HCat (_, _, _, _, a, b) ->
-        hnode (compress a) (compress b)
+        hcat (compress a) (compress b)
     | VCat (_, _, _, _, a, b) ->
-        vnode (compress a) (compress b)
+        vcat (compress a) (compress b)
     | qr -> qr
 
 module SparseDouble =

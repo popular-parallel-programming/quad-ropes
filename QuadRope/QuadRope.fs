@@ -274,28 +274,27 @@ let slice i j h w qr =
             Slice (i0, j0, h0, w0, qr)
 
 /// Split rope vertically from row i, taking h rows.
-let inline vsplit i h qr =
+let inline vslice i h qr =
     slice i 0 h (cols qr) qr
 
 /// Split rope horizontally from column j, taking w columns.
-let inline hsplit j w qr =
+let inline hslice j w qr =
     slice 0 j (rows qr) w qr
 
 /// Split rope in two at row i.
 let inline vsplit2 qr i =
-    vsplit 0 i qr, vsplit i (rows qr) qr
+    vslice 0 i qr, vslice i (rows qr) qr
 
 /// Split rope in two at column j.
 let inline hsplit2 qr j =
-    hsplit 0 j qr, hsplit j (cols qr) qr
+    hslice 0 j qr, hslice j (cols qr) qr
 
 /// Split a quad rope in four quadrants that differ by at most one row
-/// and column in size. Return order is ne, nw, sw, se, same order as
-/// in the Node constructor.
+/// and column in size. Return order is (a, b), (c, d).
 let inline split4 qr =
-    slice 0               (cols qr >>> 1) (rows qr >>> 1) (cols qr)       qr,
     slice 0               0               (rows qr >>> 1) (cols qr >>> 1) qr,
     slice (rows qr >>> 1) 0               (rows qr)       (cols qr >>> 1) qr,
+    slice 0               (cols qr >>> 1) (rows qr >>> 1) (cols qr)       qr,
     slice (rows qr >>> 1) (cols qr >>> 1) (rows qr)       (cols qr)       qr
 
 // Get a single row or column

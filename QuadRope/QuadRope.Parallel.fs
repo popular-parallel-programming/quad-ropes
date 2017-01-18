@@ -33,39 +33,40 @@ let private depth = Types.depth
 let private isEmpty = Types.isEmpty
 
 let private isSparse = QuadRope.isSparse
-let private node = QuadRope.node
 let private leaf = QuadRope.leaf
 let private flatNode = QuadRope.flatNode
 let private thinNode = QuadRope.thinNode
 
 let private s_max = QuadRope.s_max
 
-// These come in handy for making the code more concise; not
-// necessarily more readable though.
-let (||||>) (a, b, c, d) f =
-    f a b c d
-
 /// Generate a new quad rope in parallel.
 let init h w (f : int -> int -> _) =
-    let rec init slc =
+    /// Build nodes by splitting underlying slices horizontally.
+    let rec hsplit slc =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
-        else if ArraySlice.rows slc <= s_max && ArraySlice.cols slc <= s_max then
+        else if ArraySlice.cols slc <= s_max && ArraySlice.rows slc <= s_max then
             ArraySlice.init slc f // Write into shared array.
             leaf slc
         else if ArraySlice.cols slc <= s_max then
-            par2 (fun () -> init (ArraySlice.upperHalf slc)) (fun () -> init (ArraySlice.lowerHalf slc))
-            ||> thinNode
-        else if ArraySlice.rows slc <= s_max then
-            par2 (fun () -> init (ArraySlice.leftHalf slc)) (fun () -> init (ArraySlice.rightHalf slc))
-            ||> flatNode
+            vsplit slc
         else
-            par4 (fun () -> init (ArraySlice.ne slc))
-                 (fun () -> init (ArraySlice.nw slc))
-                 (fun () -> init (ArraySlice.sw slc))
-                 (fun () -> init (ArraySlice.se slc))
-            ||||> node
-    init (ArraySlice.zeroCreate h w)
+            par2 (fun () -> vsplit (ArraySlice.leftHalf slc)) (fun () -> vsplit (ArraySlice.rightHalf slc))
+            ||> flatNode
+    /// Build nodes by splitting underlying slices vertically.
+    and vsplit slc =
+        if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
+            Empty
+        else if ArraySlice.cols slc <= s_max && ArraySlice.rows slc <= s_max then
+            ArraySlice.init slc f // Write into shared array.
+            leaf slc
+        else if ArraySlice.rows slc <= s_max then
+            hsplit slc
+        else
+            par2 (fun () -> hsplit (ArraySlice.upperHalf slc)) (fun () -> hsplit (ArraySlice.lowerHalf slc))
+            ||> thinNode
+
+    hsplit (ArraySlice.zeroCreate h w)
 
 /// Apply a function f to all scalars in parallel.
 let map f qr =
@@ -81,19 +82,12 @@ let map f qr =
             | Leaf slc ->
                 leaf (Target.map f slc tgt)
 
-            // Node recursive, parallel cases, adjust target descriptor.
-            | Node (_, _, _, _, ne, nw, Empty, Empty) ->
-                par2 (fun () -> map nw tgt) (fun () -> map ne (Target.ne tgt qr)) ||> flatNode
+            // Parallel recursive cases, adjust target descriptor.
+            | HCat (_, _, _, _, a, b) ->
+                par2 (fun () -> map a tgt) (fun () -> map b (Target.incrementCol tgt (cols a))) ||> flatNode
 
-            | Node (_, _, _, _, Empty, nw, sw, Empty) ->
-                par2 (fun () -> map nw tgt) (fun () -> map sw (Target.sw tgt qr)) ||> thinNode
-
-            | Node (_, _, _, _, ne, nw, sw, se) ->
-                par4 (fun () -> map ne (Target.ne tgt qr))
-                     (fun () -> map nw tgt)
-                     (fun () -> map sw (Target.sw tgt qr))
-                     (fun () -> map se (Target.se tgt qr))
-                ||||> node
+            | VCat (_, _, _, _, a, b) ->
+                par2 (fun () -> map a tgt) (fun () -> map b (Target.incrementRow tgt (rows a))) ||> thinNode
 
             // Materialize quad rope and then map.
             | Slice _ ->
@@ -120,38 +114,24 @@ let rec private genZip f lqr rqr tgt =
         // Initialize target if any of the two quad ropes is dense.
         | _ when Target.isEmpty tgt && not (isSparse lqr) ->
             genZip f lqr rqr (Target.make (rows lqr) (cols lqr))
-        | Node (_, _, _, _, ne, nw, Empty, Empty) ->
+
+        | HCat (_, _, _, _, aa, ab) ->
             par2 (fun () ->
-                  let rnw = QuadRope.slice 0 0 (rows nw) (cols nw) rqr
-                  genZip f nw rnw tgt)
+                  let ba = QuadRope.hslice 0 (cols aa) rqr
+                  genZip f aa ba tgt)
                  (fun () ->
-                  let rne = QuadRope.slice 0 (cols nw) (rows ne) (cols ne) rqr
-                  genZip f ne rne (Target.ne tgt lqr))
+                  let bb = QuadRope.hslice (cols aa) (cols ab) rqr
+                  genZip f ab bb (Target.incrementCol tgt (cols aa)))
             ||> flatNode
 
-        | Node (_, _, _, _, Empty, nw, sw, Empty) ->
+        | VCat (_, _, _, _, aa, ab) ->
             par2 (fun () ->
-                  let rnw = QuadRope.slice 0 0 (rows nw) (cols nw) rqr
-                  genZip f nw rnw tgt)
+                  let ba = QuadRope.vslice 0 (rows aa) rqr
+                  genZip f aa ba tgt)
                  (fun () ->
-                  let rsw = QuadRope.slice (rows nw)  0 (rows sw) (cols sw) rqr
-                  genZip f sw rsw (Target.sw tgt lqr))
-            ||> thinNode
-
-        | Node (_, _, _, _, ne, nw, sw, se) ->
-            par4 (fun () ->
-                  let rne = QuadRope.slice 0 (cols nw) (rows ne) (cols ne) rqr
-                  genZip f ne rne (Target.ne tgt lqr))
-                 (fun () ->
-                  let rnw = QuadRope.slice 0 0 (rows nw) (cols nw) rqr
-                  genZip f nw rnw tgt)
-                 (fun () ->
-                  let rsw = QuadRope.slice (rows nw) 0 (rows sw) (cols sw) rqr
-                  genZip f sw rsw (Target.sw tgt lqr))
-                 (fun () ->
-                  let rse = QuadRope.slice (rows ne) (cols sw) (rows se) (cols se) rqr
-                  genZip f se rse (Target.se tgt lqr))
-            ||||> node
+                  let bb = QuadRope.vslice (rows aa) (rows ab) rqr
+                  genZip f ab bb (Target.incrementRow tgt (rows aa)))
+            ||> flatNode
 
         | Slice _ -> genZip f (QuadRope.materialize lqr) rqr tgt
         | _ -> QuadRope.genZip f lqr rqr tgt
@@ -169,25 +149,17 @@ let rec private fastZip f lqr rqr tgt =
         | Leaf _, Leaf _ when QuadRope.shapesMatch lqr rqr ->
                 QuadRope.fastZip f lqr rqr tgt
 
-        | Node (_, _, _, _, lne, lnw, Empty, Empty), Node (_, _, _, _, rne, rnw, Empty, Empty)
-            when QuadRope.subShapesMatch lqr rqr ->
-                par2 (fun () -> fastZip f lnw rnw tgt)
-                     (fun () -> fastZip f lne rne (Target.ne tgt lqr))
+        | HCat (_, _, _, _, aa, ab), HCat (_, _, _, _, ba, bb)
+            when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
+                par2 (fun () -> fastZip f aa ba tgt)
+                     (fun () -> fastZip f ab bb (Target.incrementCol tgt (cols aa)))
                 ||> flatNode
 
-        | Node (_, _, _, _, Empty, lnw, lsw, Empty), Node (_, _, _, _, Empty, rnw, rsw, Empty)
-            when QuadRope.subShapesMatch lqr rqr ->
-                par2 (fun () -> fastZip f lnw rnw tgt)
-                     (fun () -> fastZip f lsw rsw (Target.sw tgt lqr))
+        | VCat (_, _, _, _, aa, ab), HCat (_, _, _, _, ba, bb)
+             when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
+                par2 (fun () -> fastZip f aa ab tgt)
+                     (fun () -> fastZip f ba bb (Target.incrementRow tgt (rows aa)))
                 ||> thinNode
-
-        | Node (_, _, _, _, lne, lnw, lsw, lse), Node (_, _, _, _, rne, rnw, rsw, rse)
-            when QuadRope.subShapesMatch lqr rqr ->
-                par4 (fun () -> fastZip f lne rne (Target.ne tgt lqr))
-                     (fun () -> fastZip f lnw rnw tgt)
-                     (fun () -> fastZip f lsw rsw (Target.sw tgt lqr))
-                     (fun () -> fastZip f lse rse (Target.se tgt lqr))
-                ||||> node
 
         // It may pay off to reallocate first if both reallocated quad
         // ropes have the same internal shape. This might be
@@ -216,18 +188,12 @@ let zip f lqr rqr =
 /// neutral element for g. We assume that g epsilon x = g x epsilon =
 /// x.
 let rec mapreduce f g epsilon = function
-    | Node (_, _, _, _, ne, nw, Empty, Empty) ->
-        par2 (fun () -> mapreduce f g epsilon nw) (fun () -> mapreduce f g epsilon ne) ||> g
+    | HCat (_, _, _, _, a, b) ->
+        par2 (fun () -> mapreduce f g epsilon a) (fun () -> mapreduce f g epsilon b) ||> g
 
-    | Node (_, _, _, _, Empty, nw, sw, Empty) ->
-        par2 (fun () -> mapreduce f g epsilon nw) (fun () -> mapreduce f g epsilon sw) ||> g
+    | VCat (_, _, _, _, a, b) ->
+        par2 (fun () -> mapreduce f g epsilon a) (fun () -> mapreduce f g epsilon b) ||> g
 
-    | Node (_, _, _, _, ne, nw, sw, se) ->
-        let ne', nw', sw', se' = par4 (fun () -> mapreduce f g epsilon ne)
-                                      (fun () -> mapreduce f g epsilon nw)
-                                      (fun () -> mapreduce f g epsilon sw)
-                                      (fun () -> mapreduce f g epsilon se)
-        g (g nw' ne') (g sw' se')
     | Slice _ as qr -> mapreduce f g epsilon (QuadRope.materialize qr)
     | qr -> QuadRope.mapreduce f g epsilon qr
 
@@ -252,16 +218,16 @@ let exists p qr = mapreduce p (||) false qr
 /// Remove all elements from rope for which p does not hold in
 /// parallel. Input rope must be of height 1.
 let rec hfilter p = function
-    | Node (_, _, 1, _, ne, nw, Empty, Empty) ->
-        par2 (fun () -> hfilter p nw) (fun () -> hfilter p ne) ||> flatNode
+    | HCat (_, _, 1, _, a, b) ->
+        par2 (fun () -> hfilter p a) (fun () -> hfilter p b) ||> flatNode
     | Slice _ as qr -> hfilter p (QuadRope.materialize qr)
     | qr -> QuadRope.hfilter p qr
 
 /// Remove all elements from rope for which p does not hold in
 /// parallel. Input rope must be of width 1.
 let rec vfilter p = function
-    | Node (_, _, _, 1, Empty, nw, sw, Empty) ->
-        par2 (fun () -> vfilter p nw) (fun () -> vfilter p sw) ||> thinNode
+    | VCat (_, _, _, 1, a, b) ->
+        par2 (fun () -> vfilter p a) (fun () -> vfilter p b) ||> thinNode
     | Slice _ as qr -> vfilter p (QuadRope.materialize qr)
     | qr -> QuadRope.vfilter p qr
 
@@ -271,18 +237,12 @@ let hrev qr =
         match qr with
             | Leaf slc ->
                 leaf (Target.hrev slc tgt)
-            | Node (_, _, _, _, ne, nw, Empty, Empty) ->
-                par2 (fun () -> hrev ne (Target.ne tgt qr)) (fun () -> hrev nw tgt) ||> flatNode
-
-            | Node (_, _, _, _, Empty, nw, sw, Empty) ->
-                par2 (fun () -> hrev nw tgt) (fun () -> hrev sw (Target.sw tgt qr)) ||> thinNode
-
-            | Node (_, _, _, _, ne, nw, sw, se) ->
-                par4 (fun () -> hrev nw tgt)
-                     (fun () -> hrev ne (Target.ne tgt qr))
-                     (fun () -> hrev se (Target.se tgt qr))
-                     (fun () -> hrev sw (Target.sw tgt qr))
-                ||||> node
+            | HCat (_, _, _, _, a, b) ->
+                par2 (fun () -> hrev b (Target.incrementCol tgt (cols a))) (fun () -> hrev a tgt)
+                ||> flatNode
+            | VCat (_, _, _, _, a, b) ->
+                par2 (fun () -> hrev a tgt) (fun () -> hrev b (Target.incrementRow tgt (rows a)))
+                ||> thinNode
             | Slice _ ->
                 hrev (QuadRope.materialize qr) tgt
             | _ -> qr
@@ -294,19 +254,12 @@ let vrev qr =
         match qr with
             | Leaf slc ->
                 leaf (Target.vrev slc tgt)
-            | Node (_, _, _, _, ne, nw, Empty, Empty) ->
-                par2 (fun () -> vrev nw tgt) (fun () -> vrev ne (Target.ne tgt qr)) ||> flatNode
-
-            | Node (_, _, _, _, Empty, nw, sw, Empty) ->
-                par2 (fun () -> vrev sw (Target.sw tgt qr)) (fun () -> vrev nw tgt) ||> thinNode
-
-            | Node (_, _, _, _, ne, nw, sw, se) ->
-                par4 (fun () -> vrev se (Target.se tgt qr))
-                     (fun () -> vrev sw (Target.sw tgt qr))
-                     (fun () -> vrev nw tgt)
-                     (fun () -> vrev ne (Target.ne tgt qr))
-                ||||> node
-
+            | HCat (_, _, _, _, a, b) ->
+                par2 (fun () -> vrev a tgt) (fun () -> vrev b (Target.incrementCol tgt (cols a)))
+                ||> flatNode
+            | VCat (_, _, _, _, a, b) ->
+                par2 (fun () -> vrev b (Target.incrementRow tgt (rows a))) (fun () -> vrev a tgt)
+                ||> thinNode
             | Slice _ ->
                 vrev (QuadRope.materialize qr) tgt
             | _ -> qr
@@ -320,18 +273,12 @@ let transpose qr =
             | Empty -> Empty
             | Leaf slc ->
                 leaf (Target.transpose slc tgt)
-            | Node (_, _, _, _, ne, nw, Empty, Empty) ->
-                par2 (fun () -> transpose nw tgt) (fun () -> transpose ne (Target.ne tgt qr)) ||> thinNode
-
-            | Node (_, _, _, _, Empty, nw, sw, Empty) ->
-                par2 (fun () -> transpose nw tgt) (fun () -> transpose sw (Target.sw tgt qr)) ||> flatNode
-
-            | Node (_, _, _, _, ne, nw, sw, se) ->
-                par4 (fun () -> transpose sw (Target.sw tgt qr))
-                     (fun () -> transpose nw tgt)
-                     (fun () -> transpose ne (Target.ne tgt qr))
-                     (fun () -> transpose se (Target.se tgt qr))
-                ||||> node
+            | HCat (_, _, _, _, a, b) ->
+                par2 (fun () -> transpose a tgt) (fun () -> transpose b (Target.incrementCol tgt (cols a)))
+                ||> thinNode
+            | VCat (_, _, _, _, a, b) ->
+                par2 (fun () -> transpose a tgt) (fun () -> transpose b (Target.incrementRow tgt (rows a)))
+                ||> flatNode
             | Slice _ ->
                 transpose (QuadRope.materialize qr) tgt
             | Sparse (h, w, v) -> Sparse (w, h, v)
@@ -344,19 +291,12 @@ let iteri f qr =
         | Empty -> ()
         | Leaf vs -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
 
-        | Node (_, _, _, _, ne, nw, Empty, Empty) ->
-            par2 (fun () -> iteri f i j nw) (fun () -> iteri f i (j + cols nw) ne)
+        | HCat (_, _, _, _, a, b) ->
+            par2 (fun () -> iteri f i j a) (fun () -> iteri f i (j + cols a) b)
             |> ignore
 
-        | Node (_, _, _, _, Empty, nw, sw, Empty) ->
-            par2 (fun () -> iteri f i j nw) (fun () -> iteri f (i + rows nw) j sw)
-            |> ignore
-
-        | Node (_, _, _, _, ne, nw, sw, se) ->
-            par4 (fun () -> iteri f i j nw)
-                 (fun () -> iteri f i (j + cols nw) ne)
-                 (fun () -> iteri f (i + rows nw) j sw)
-                 (fun () -> iteri f (i + rows ne) (j + cols sw) se)
+        | VCat (_, _, _, _, a, b) ->
+            par2 (fun () -> iteri f i j a) (fun () -> iteri f (i + rows a) j b)
             |> ignore
 
         | Slice _ as qr -> iteri f i j (QuadRope.materialize qr)
@@ -369,21 +309,21 @@ let iteri f qr =
 
         // Wide sparse quad rope, split horizontally.
         | Sparse (h, w, _) as qr when h <= s_max ->
-            let nw, ne = QuadRope.hsplit2 qr (w / 2)
-            par2 (fun () -> iteri f i j nw) (fun () -> iteri f i (j + w / 2) ne) |> ignore
+            let w' = w / 2
+            par2 (fun () -> iteri f i j (QuadRope.hslice 0 w' qr))
+                 (fun () -> iteri f i (j + w') (QuadRope.hslice w' w qr))
+            |> ignore
 
         // Tall sparse quad rope, split vertically.
         | Sparse (h, w, _) as qr when w <= s_max ->
-            let nw, sw = QuadRope.vsplit2 qr (h / 2)
-            par2 (fun () -> iteri f i j nw) (fun () -> iteri f (i + h / 2) j sw) |> ignore
+            let h' = h / 2
+            par2 (fun () -> iteri f i j (QuadRope.vslice 0 h' qr))
+                 (fun () -> iteri f (i + h') j (QuadRope.vslice h' h qr))
+            |> ignore
 
         | Sparse _ as qr ->
-            let ne, nw, sw, se = QuadRope.split4 qr
-            par4 (fun () -> iteri f i (j + cols nw) ne)
-                 (fun () -> iteri f i j nw)
-                 (fun () -> iteri f (i + rows nw) j sw)
-                 (fun () -> iteri f (i + rows ne) (j + cols sw) se)
-            |> ignore
+            let a, b, c, d = QuadRope.split4 qr
+            iteri f i j (flatNode (thinNode a b) (thinNode c d))
 
     iteri f 0 0 qr
 
@@ -400,24 +340,24 @@ let fromArray2D arr =
     let rec init h0 w0 h1 w1 arr =
         let h = h1 - h0
         let w = w1 - w0
-        if h <= QuadRope.s_max && w <= QuadRope.s_max then
-            QuadRope.leaf (ArraySlice.makeSlice h0 w0 h w arr)
-        else if w <= QuadRope.s_max then
-            let hpv = h0 + (h >>> 1)
-            let n, s = par2 (fun () -> init h0 w0 hpv w1 arr) (fun () -> init hpv w0 h1 w1 arr)
-            QuadRope.thinNode n s
-        else if h <= QuadRope.s_max then
-            let wpv = w0 + (w >>> 1)
-            let w, e = par2 (fun () -> init h0 w0 h1 wpv arr) (fun () -> init h0 wpv h1 w1 arr)
-            QuadRope.flatNode w e
-        else
+        if s_max < h && s_max < w then
             let hpv = h0 + (h >>> 1)
             let wpv = w0 + (w >>> 1)
             let ne, nw, sw, se = par4 (fun () -> init h0 wpv hpv w1 arr)
                                       (fun () -> init h0 w0 hpv wpv arr)
                                       (fun () -> init hpv w0 h1 wpv arr)
                                       (fun () -> init hpv wpv h1 w1 arr)
-            QuadRope.node ne nw sw se
+            flatNode (thinNode nw sw) (thinNode ne se)
+        else if w <= QuadRope.s_max && QuadRope.s_max < h then
+            let hpv = h0 + (h >>> 1)
+            let n, s = par2 (fun () -> init h0 w0 hpv w1 arr) (fun () -> init hpv w0 h1 w1 arr)
+            thinNode n s
+        else if QuadRope.s_max < w && h <= QuadRope.s_max then
+            let wpv = w0 + (w >>> 1)
+            let w, e = par2 (fun () -> init h0 w0 h1 wpv arr) (fun () -> init h0 wpv h1 w1 arr)
+            flatNode w e
+        else
+            QuadRope.leaf (ArraySlice.makeSlice h0 w0 h w arr)
     init 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
 
 /// Reallocate a rope form the ground up. Sometimes, this is the
@@ -452,57 +392,49 @@ let scan plus minus init qr =
                 Target.scan plus minus pre slc tgt
                 Leaf (Target.toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc))
 
-            // Flat node, no obvious parallelism.
-            | Node (s, d, h, w, ne, nw, Empty, Empty) ->
-                let nw' = scan pre nw tgt
-                let tgt_ne = Target.ne tgt qr
-                let ne' = scan (Target.get tgt_ne) ne tgt_ne
-                Node (s, d, h, w, ne', nw', Empty, Empty)
-
-            // Thin nodes, no obvious parallelism.
-            | Node (s, d, h, w, Empty, nw, sw, Empty) ->
-                let nw' = scan pre nw tgt
-                let tgt_sw = Target.sw tgt qr
-                let sw' = scan (Target.get tgt_sw) sw tgt_sw
-                Node (s, d, h, w, Empty, nw', sw', Empty)
-
-            // Parallel case; NE and SW depend only on NW, SE
-            // depends on all other children. Scan NE and SW in
+            // Parallel cases: b and c depend only on a, d
+            // depends on all other children. Scan b and c in
             // parallel.
-            | Node (s, d, h, w, ne, nw, sw, se) when rows ne <= rows nw && cols sw <= cols nw ->
+            | HCat (_, _, _, _, VCat (_, _, _, _, a, b), VCat (_, _, _, _, c, d))
+                when rows c <= rows a && cols b <= cols a ->
+                    let a' = scan pre a tgt
+                    let b', c' = par2 (fun () ->
+                                       let tgt' = Target.incrementRow tgt (rows a)
+                                       scan (Target.get tgt') b tgt')
+                                      (fun () ->
+                                       let tgt' = Target.incrementCol tgt (cols a)
+                                       scan (Target.get tgt') c tgt')
+                    let tgt' = Target.increment tgt (rows c) (cols b)
+                    let d' = scan (Target.get tgt') d tgt'
+                    flatNode (thinNode a' b') (thinNode c' d')
 
-                let nw' = scan pre nw tgt
-                let ne', sw' = par2 (fun () ->
-                                     let tgt_ne = Target.ne tgt qr
-                                     scan (Target.get tgt_ne) ne tgt_ne)
-                                    (fun () ->
-                                     let tgt_sw = Target.sw tgt qr
-                                     scan (Target.get tgt_sw) sw tgt_sw)
-                let tgt_se = Target.se tgt qr
-                let se' = scan (Target.get tgt_se) se tgt_se
-                Node (s, d, h, w, ne', nw', sw', se')
+            // We need a second case to re-construct nodes correctly.
+            | VCat (_, _, _, _, HCat (_, _, _, _, a, c), HCat (_, _, _, _, b, d))
+                when rows c <= rows a && cols b <= cols a ->
+                    let a' = scan pre a tgt
+                    let b', c' = par2 (fun () ->
+                                       let tgt' = Target.incrementRow tgt (rows a)
+                                       scan (Target.get tgt') b tgt')
+                                      (fun () ->
+                                       let tgt' = Target.incrementCol tgt (cols a)
+                                       scan (Target.get tgt') c tgt')
+                    let tgt' = Target.increment tgt (rows c) (cols b)
+                    let d' = scan (Target.get tgt') d tgt'
+                    thinNode (flatNode a' b') (flatNode c' d')
 
-            // Sequential case; SW depends on NE.
-            | Node (s, d, h, w, ne, nw, sw, se) when cols nw < cols sw ->
-                let nw' = scan pre nw tgt
-                let tgt_ne = Target.ne tgt qr
-                let ne' = scan (Target.get tgt_ne) ne tgt_ne
-                let tgt_sw = Target.sw tgt qr
-                let sw' = scan (Target.get tgt_sw) sw tgt_sw
-                let tgt_se = Target.se tgt qr
-                let se' = scan (Target.get tgt_se) se tgt_se
-                Node (s, d, h, w, ne', nw', sw', se')
 
-            // Sequential case; NE depends on SW.
-            | Node (s, d, h, w, ne, nw, sw, se) -> // when rows nw < rows ne
-                let nw' = scan pre nw tgt
-                let tgt_sw = Target.sw tgt qr
-                let sw' = scan (Target.get tgt_sw) sw tgt_sw
-                let tgt_ne = Target.ne tgt qr
-                let ne' = scan (Target.get tgt_ne) ne tgt_ne
-                let tgt_se = Target.se tgt qr
-                let se' = scan (Target.get tgt_se) se tgt_se
-                Node (s, d, h, w, ne', nw', sw', se')
+            // Sequential cases.
+            | HCat (_, _, _, _, a, b) ->
+                let a' = scan pre a tgt
+                let tgt' = Target.incrementCol tgt (cols a)
+                let b' = scan (Target.get tgt') b tgt'
+                flatNode a' b'
+
+            | VCat (_, _, _, _, a, b) ->
+                let a' = scan pre a tgt
+                let tgt' = Target.incrementRow tgt (rows a)
+                let b' = scan (Target.get tgt') b tgt'
+                thinNode a' b'
 
             | Slice _ -> scan pre (QuadRope.materialize qr) tgt
 
@@ -520,17 +452,8 @@ let scan plus minus init qr =
             // If both dimensions are larger than s_max, we can
             // actually do some work in parallel.
             | Sparse _ -> // when s_max < h && s_max < w
-                let ne, nw, sw, se = QuadRope.split4 qr
-                let nw' = scan pre nw tgt
-                let ne', sw' = par2 (fun () ->
-                                     let tgt_ne = Target.incrementCol tgt (cols nw')
-                                     scan (Target.get tgt_ne) ne tgt_ne)
-                                    (fun () ->
-                                     let tgt_sw = Target.incrementRow tgt (rows nw')
-                                     scan (Target.get tgt_sw) sw tgt_sw)
-                let tgt_se = Target.increment tgt (rows nw') (cols sw')
-                let se' = scan (Target.get tgt_se) se tgt_se
-                node ne' nw' sw' se'
+                let a, b, c, d = QuadRope.split4 qr
+                scan pre (flatNode (thinNode a b) (thinNode c d)) tgt
 
     // Initial target and start of recursion.
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
@@ -550,22 +473,23 @@ module SparseDouble =
     /// parallel. This function short-circuits the computation where
     /// possible, but it does not stop already running computations.
     let rec prod = function
-        | Node (_, _, _, _, Sparse (_, _, 0.0), _, _, _)
-        | Node (_, _, _, _, _, Sparse (_, _, 0.0), _, _)
-        | Node (_, _, _, _, _, _, Sparse (_, _, 0.0), _)
-        | Node (_, _, _, _, _, _, _, Sparse (_, _, 0.0))
+        | HCat (_, _, _, _, Sparse (_, _, 0.0), _)
+        | HCat (_, _, _, _, _, Sparse (_, _, 0.0))
+        | VCat (_, _, _, _, Sparse (_, _, 0.0), _)
+        | VCat (_, _, _, _, _, Sparse (_, _, 0.0))
         | Sparse (_, _, 0.0) -> 0.0
         | Sparse (_, _, 1.0) -> 1.0
-        | Node (true, _, _, _, ne, nw, Empty, Empty) ->
-            par2 (fun () -> prod ne) (fun () -> prod nw) ||> (*)
-        | Node (true, _, _, _, Empty, nw, sw, Empty) ->
-            par2 (fun () -> prod nw) (fun () -> prod sw) ||> (*)
-        | Node (true, _, _, _, ne, nw, sw, se) ->
-            let n = par2 (fun () -> prod ne) (fun () -> prod nw) ||> (*)
-            if n = 0.0 then
+        | HCat (true, _, _, _, a, b) ->
+            par2 (fun () -> prod a) (fun () -> prod b) ||> (*)
+        | VCat (true, _, _, _, a, b) ->
+            par2 (fun () -> prod a) (fun () -> prod b) ||> (*)
+        | HCat (_, _, _, _, VCat (_, _, _, _, a, b), VCat (_, _, _, _, c, d))
+        | VCat (_, _, _, _, HCat (_, _, _, _, a, c), HCat (_, _, _, _, b, d)) ->
+            let ab = par2 (fun () -> prod a) (fun () -> prod b) ||> (*)
+            if ab = 0.0 then
                 0.0
             else
-                n * (par2 (fun () -> prod sw) (fun () -> prod se) ||> (*))
+                ab * (par2 (fun () -> prod c) (fun () -> prod d) ||> (*))
 
         | Slice _ as qr -> prod (QuadRope.materialize qr)
         | qr -> reduce (*) 1.0 qr
@@ -581,25 +505,16 @@ module SparseDouble =
                 | _ ->
                     match lqr with
                         // Flat node.
-                        | Node (true, _, _, _, ne, nw, Empty, Empty) ->
-                                let ne', nw' = par2 (fun () -> gen ne (QuadRope.sliceToMatchNE lqr rqr))
-                                                    (fun () -> gen nw (QuadRope.sliceToMatchNW lqr rqr))
-                                flatNode nw' ne'
+                        | HCat (true, _, _, _, aa, ab) ->
+                                let a', b' = par2 (fun () -> gen aa (QuadRope.hslice 0 (cols aa) rqr))
+                                                  (fun () -> gen ab (QuadRope.hslice (cols aa) (cols ab) rqr))
+                                flatNode a' b'
 
                         // Thin node.
-                        | Node (true, _, _, _, Empty, nw, sw, Empty) ->
-                            let nw', sw' = par2 (fun () -> gen nw (QuadRope.sliceToMatchNW lqr rqr))
-                                                (fun () -> gen sw (QuadRope.sliceToMatchSW lqr rqr))
-                            thinNode nw' sw'
-
-                        // Full node.
-                        | Node (true, _, _, _, ne, nw, sw, se) ->
-                            let ne', nw', sw', se' =
-                                par4 (fun () -> gen ne (QuadRope.sliceToMatchNE lqr rqr))
-                                     (fun () -> gen nw (QuadRope.sliceToMatchNW lqr rqr))
-                                     (fun () -> gen sw (QuadRope.sliceToMatchSW lqr rqr))
-                                     (fun () -> gen se (QuadRope.sliceToMatchSE lqr rqr))
-                            node ne' nw' sw' se'
+                        | VCat (true, _, _, _, aa, ab) ->
+                            let a', b' = par2 (fun () -> gen aa (QuadRope.vslice 0 (rows aa) rqr))
+                                              (fun () -> gen ab (QuadRope.vslice (rows aa) (rows ab) rqr))
+                            thinNode a' b'
 
                         | Sparse (_, _, 0.0) -> lqr
                         | Sparse (_, _, 1.0) -> rqr
@@ -612,25 +527,16 @@ module SparseDouble =
                 // Recurse on nodes if at least one of them is sparse.
 
                 // Flat node.
-                | Node (true, _, _, _, lne, lnw, Empty, Empty), Node (_, _, _, _, rne, rnw, Empty, Empty)
-                | Node (_, _, _, _, lne, lnw, Empty, Empty), Node (true, _, _, _, rne, rnw, Empty, Empty)
-                    when QuadRope.subShapesMatch lqr rqr ->
-                        par2 (fun () -> fast lnw rnw) (fun () -> fast lne rne) ||> flatNode
+                | HCat (true, _, _, _, aa, ab), HCat (_,    _, _, _, ba, bb)
+                | HCat (_,    _, _, _, aa, ab), HCat (true, _, _, _, ba, bb)
+                    when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
+                        par2 (fun () -> fast aa ba) (fun () -> fast ab bb) ||> flatNode
 
                 // Thin node.
-                | Node (true, _, _, _, Empty, lnw, lsw, Empty), Node (_, _, _, _, Empty, rnw, rsw, Empty)
-                | Node (_, _, _, _, Empty, lnw, lsw, Empty), Node (true, _, _, _, Empty, rnw, rsw, Empty)
-                    when QuadRope.subShapesMatch lqr rqr ->
-                        par2 (fun () -> fast lnw rnw) (fun () -> fast lsw rsw) ||> thinNode
-                // Full node.
-                | Node (_, _, _, _, lne, lnw, lsw, lse), Node (true, _, _, _, rne, rnw, rsw, rse)
-                | Node (true, _, _, _, lne, lnw, lsw, lse), Node (_, _, _, _, rne, rnw, rsw, rse)
-                    when QuadRope.subShapesMatch lqr rqr ->
-                        let ne, nw, sw, se = par4 (fun () -> fast lne rne)
-                                                  (fun () -> fast lnw rnw)
-                                                  (fun () -> fast lsw rsw)
-                                                  (fun () -> fast lse rse)
-                        node ne nw sw se
+                | VCat (true, _, _, _, aa, ab), HCat (_,    _, _, _, ba, bb)
+                | VCat (_,    _, _, _, aa, ab), HCat (true, _, _, _, ba, bb)
+                    when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
+                        par2 (fun () -> fast aa ba) (fun () -> fast ab bb) ||> thinNode
 
                 // It may pay off to materialize if slices are sparse.
                 | Slice _, _ when isSparse lqr -> fast (QuadRope.materialize lqr) rqr

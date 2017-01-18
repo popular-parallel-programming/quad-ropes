@@ -32,7 +32,8 @@ type 'a ArraySlice when 'a : equality =
 type 'a QuadRope when 'a : equality =
     | Empty
     | Leaf of 'a ArraySlice
-    | Node of bool * int * int * int * 'a QuadRope * 'a QuadRope * 'a QuadRope * 'a QuadRope
+    | HCat of bool * int * int * int * 'a QuadRope * 'a QuadRope // rows a = rows b
+    | VCat of bool * int * int * int * 'a QuadRope * 'a QuadRope // cols a = cols b
     | Slice of int * int * int * int * 'a QuadRope
     | Sparse of int * int * 'a
 
@@ -40,7 +41,8 @@ type 'a QuadRope when 'a : equality =
 let rows = function
     | Empty -> 0
     | Leaf slc -> slc.h
-    | Node (_, _, h, _, _, _, _, _) -> h
+    | HCat (_, _, h, _, _, _) -> h
+    | VCat (_, _, h, _, _, _) -> h
     | Slice (_, _, h, _, _) -> h
     | Sparse (h, _, _) -> h
 
@@ -48,13 +50,15 @@ let rows = function
 let cols = function
     | Empty -> 0
     | Leaf slc -> slc.w
-    | Node (_, _, _, w, _, _, _, _) -> w
+    | HCat (_, _, _, w, _, _) -> w
+    | VCat (_, _, _, w, _, _) -> w
     | Slice (_, _, _, w, _) -> w
     | Sparse (_, w, _) -> w
 
 /// Depth of a rectangular tree.
 let rec depth = function
-    | Node (_, d, _, _, _, _, _, _) -> d
+    | HCat (_, d, _, _, _, _) -> d
+    | VCat (_, d, _, _, _, _) -> d
     | Slice (_, _, _, _, qr) -> depth qr
     | _ -> 0
 

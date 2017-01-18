@@ -420,8 +420,7 @@ let scan plus minus init qr =
                                        scan (Target.get tgt') c tgt')
                     let tgt' = Target.increment tgt (rows c) (cols b)
                     let d' = scan (Target.get tgt') d tgt'
-                    vnode (hnode a' b') (hnode c' d')
-
+                    vnode (hnode a' c') (hnode b' d')
 
             // Sequential cases.
             | HCat (_, _, _, _, a, b) ->

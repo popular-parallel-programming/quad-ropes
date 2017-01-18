@@ -443,24 +443,24 @@ let internal fromArraySlice slc =
     let rec hsplit slc =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
+        else if ArraySlice.cols slc <= s_max && ArraySlice.rows slc <= s_max then
+            leaf slc
         else if ArraySlice.cols slc <= s_max then
-            let a, b = ArraySlice.hsplit2 slc
-            flatNode (vsplit a) (vsplit b)
-        else if ArraySlice.rows slc <= s_max then
             vsplit slc
         else
-            leaf slc
+            let a, b = ArraySlice.hsplit2 slc
+            flatNode (vsplit a) (vsplit b)
     /// Build nodes by splitting underlying slices vertically.
     and vsplit slc =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
+        else if ArraySlice.cols slc <= s_max && ArraySlice.rows slc <= s_max then
+            leaf slc
         else if ArraySlice.rows slc <= s_max then
+            hsplit slc
+        else
             let a, b = ArraySlice.vsplit2 slc
             thinNode (hsplit a) (hsplit b)
-        else if ArraySlice.cols slc <= s_max then
-             hsplit slc
-        else
-            leaf slc
     hsplit slc
 
 /// Initialize a rope from a native 2D-array.

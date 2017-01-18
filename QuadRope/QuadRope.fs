@@ -632,7 +632,7 @@ let rec internal fastZip f lqr rqr tgt =
 
         | VCat (_, _, _, _, aa, ab), VCat (_, _, _, _, ba, bb)
             when shapesMatch aa ba && shapesMatch ab bb ->
-                hnode (fastZip f aa ba tgt) (fastZip f ab bb (Target.incrementRow tgt (rows aa)))
+                vnode (fastZip f aa ba tgt) (fastZip f ab bb (Target.incrementRow tgt (rows aa)))
 
         // It may pay off to reallocate first if both reallocated quad
         // ropes have the same internal shape. This might be

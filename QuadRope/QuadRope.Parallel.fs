@@ -131,7 +131,7 @@ let rec private genZip f lqr rqr tgt =
                  (fun () ->
                   let bb = QuadRope.vslice (rows aa) (rows ab) rqr
                   genZip f ab bb (Target.incrementRow tgt (rows aa)))
-            ||> hnode
+            ||> vnode
 
         | Slice _ -> genZip f (QuadRope.materialize lqr) rqr tgt
         | _ -> QuadRope.genZip f lqr rqr tgt

@@ -24,19 +24,34 @@ module internal RadTrees.ArraySlice
 open RadTrees
 open Types
 
+/// This is the empty slice. It does not refer to any array and you
+/// cannot retrieve any values from it.
+let emptySlice = { r = 0; c = 0; h = 0; w = 0; vals = null }
+
 /// Instantiate a new array slice that allows accessing the entire
 /// array.
-let inline make arr =
-    { r = 0; c = 0; h = Array2D.length1 arr; w = Array2D.length2 arr; vals = arr }
+let make arr =
+    if Array2D.isEmpty arr then
+        emptySlice
+    else
+        { r = 0; c = 0; h = Array2D.length1 arr; w = Array2D.length2 arr; vals = arr }
 
 /// Instantiate a new array slice that allows accessing the array only
 /// in the specified area.
-let inline makeSlice i j h w arr =
-    { r = max 0 i
-      c = max 0 j
-      h = max 0 (min h (Array2D.length1 arr))
-      w = max 0 (min w (Array2D.length2 arr))
-      vals = arr }
+let makeSlice i j h w arr =
+    let i' = max 0 i
+    let j' = max 0 j
+    if (Array2D.isEmpty arr
+        || h <= 0 || w <= 0
+        || Array2D.length1 arr <= i' || Array2D.length2 arr <= j')
+    then
+        emptySlice
+    else
+        { r = max 0 i
+          c = max 0 j
+          h = max 0 (min h (Array2D.length1 arr))
+          w = max 0 (min w (Array2D.length2 arr))
+          vals = arr }
 
 /// Compute a new array from a slice.
 let inline private sliceArray slc =
@@ -76,10 +91,6 @@ let set slc i j v =
     let vals = slc.vals.[minr slc .. maxr slc, minc slc .. maxc slc]
     vals.[i, j] <- v
     make vals
-
-/// This is the empty slice. It does not refer to any array and you
-/// cannot retrieve any values from it.
-let emptySlice = { r = 0; c = 0; h = 0; w = 0; vals = null }
 
 /// Slice up an array slice. This is a constant time operation and no
 /// arrays are re-allocated.

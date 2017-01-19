@@ -896,10 +896,10 @@ module SparseDouble =
             init n n (fun i j -> if i < j then v else 0.0)
         else
             let m = n >>> 1
-            let m' = if n &&& 1 = 1 then m + 1 else m
+            let m' = m + (n &&& 1)
             // TODO: Optimize for re-use.
             hnode (vnode (upperDiagonal m v) (create m' m v))
-                     (vnode (create m m' 0.0) (upperDiagonal m' v))
+                  (vnode (create m m' 0.0) (upperDiagonal m' v))
 
     /// Initialize a lower diagonal matrix with all non-zero values
     /// set to v.
@@ -908,10 +908,10 @@ module SparseDouble =
             init n n (fun i j -> if i < j then 0.0 else v)
         else
             let m = n >>> 1
-            let m' = if n &&& 1 = 1 then m + 1 else m
+            let m' = m + (n &&& 1)
             // TODO: Optimize for re-use.
             hnode (vnode (lowerDiagonal m v) (create m' m 0.0))
-                     (vnode (create m m' v) (lowerDiagonal m' v))
+                  (vnode (create m m' v) (lowerDiagonal m' v))
 
     /// Multiply two quad ropes of doubles point-wise.
     let pointwise (lqr : float QuadRope) (rqr : float QuadRope) : float QuadRope =

@@ -504,15 +504,15 @@ module SparseDouble =
                     match lqr with
                         // Flat node.
                         | HCat (true, _, _, _, aa, ab) ->
-                            let a', b' = par2 (fun () -> gen aa (QuadRope.hslice 0 (cols aa) rqr))
-                                              (fun () -> gen ab (QuadRope.hslice (cols aa) (cols ab) rqr))
-                            hnode a' b'
+                            par2 (fun () -> gen aa (QuadRope.hslice 0 (cols aa) rqr))
+                                 (fun () -> gen ab (QuadRope.hslice (cols aa) (cols ab) rqr))
+                            ||> hnode
 
                         // Thin node.
                         | VCat (true, _, _, _, aa, ab) ->
-                            let a', b' = par2 (fun () -> gen aa (QuadRope.vslice 0 (rows aa) rqr))
-                                              (fun () -> gen ab (QuadRope.vslice (rows aa) (rows ab) rqr))
-                            vnode a' b'
+                            par2 (fun () -> gen aa (QuadRope.vslice 0 (rows aa) rqr))
+                                 (fun () -> gen ab (QuadRope.vslice (rows aa) (rows ab) rqr))
+                            ||> vnode
 
                         | Sparse (_, _, 0.0) -> lqr
                         | Sparse (_, _, 1.0) -> rqr

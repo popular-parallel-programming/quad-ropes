@@ -28,21 +28,19 @@ open Types
 
 type Handle = class end
 
+let epsilon = 0.001
+
 let ``sparse product equals reduce (*)`` (a : float QuadRope) =
     let sparse = QuadRope.SparseDouble.prod a
     let dense = QuadRope.reduce (*) 1.0 a
     let d = abs (sparse - dense)
-    if not (d < 0.0001) then
-        printfn "sparse = %A, dense = %A, d = %A" sparse dense d
-    System.Double.IsNaN d || d < 0.0001
+    (System.Double.IsNaN d || d <= epsilon) |@ sprintf "sparse = %F, dense = %F, d = %A" sparse dense d
 
 let ``parallel sparse product equals reduce (*)`` (a : float QuadRope) =
     let sparse = Parallel.QuadRope.SparseDouble.prod a
     let dense = QuadRope.reduce (*) 1.0 a
     let d = abs (sparse - dense)
-    if not (d < 0.0001) then
-        printfn "sparse = %A, dense = %A, d = %A" sparse dense d
-    System.Double.IsNaN d || d < 0.0001
+    (System.Double.IsNaN d || d < epsilon) |@ sprintf "sparse = %A, dense = %A, d = %A" sparse dense d
 
 let ``sparse point-wise multiplication equals zip (*)`` (a : float QuadRope) =
     let b = a |> QuadRope.hrev |> QuadRope.vrev

@@ -522,8 +522,6 @@ module SparseDouble =
         /// Fast case for quad ropes of equal structure.
         let rec fast lqr rqr =
             match lqr, rqr with
-                // Recurse on nodes if at least one of them is sparse.
-
                 // Flat node.
                 | HCat (true, _, _, _, aa, ab), HCat (_,    _, _, _, ba, bb)
                 | HCat (_,    _, _, _, aa, ab), HCat (true, _, _, _, ba, bb)
@@ -549,7 +547,7 @@ module SparseDouble =
                 | qr, Sparse (_, _, 1.0) -> qr
 
                 // Fall back to general case.
-                | _ when isSparse lqr or isSparse rqr -> gen lqr rqr
+                | _ when isSparse lqr || isSparse rqr -> gen lqr rqr
                 | _ -> zip (*) lqr rqr
 
         if not (QuadRope.shapesMatch lqr rqr) then

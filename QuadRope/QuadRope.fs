@@ -839,7 +839,7 @@ let transpose qr =
 /// Compare two quad ropes element wise and return true if they are
 /// equal. False otherwise.
 let equals qr0 qr1 =
-    reduce (&&) true (zip (=) qr0 qr1)
+    rows qr0 = rows qr1 && cols qr0 = cols qr1 && reduce (&&) true (zip (=) qr0 qr1)
 
 /// Replace branches of equal values with sparse representations.
 let rec compress = function

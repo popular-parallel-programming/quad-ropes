@@ -57,10 +57,17 @@ module Gen =
                                      return QuadRope.slice i j h w qr }
                          })
 
+    // Check that two quad ropes a and b can be concatenated.
+    let canCat f g (a, b) =
+        f a = f b && g a + g b <= 10 * maxSize
+
+
+    let canHCat = canCat QuadRope.rows QuadRope.cols
+    let canVCat = canCat QuadRope.cols QuadRope.rows
+
     let genCatRope =
-        let eq f (a, b) = f a = f b
-        let hs = Gen.oneof (seq { yield Gen.where (eq QuadRope.rows) (Gen.two genRevRope) })
-        let vs = Gen.oneof (seq { yield Gen.where (eq QuadRope.cols) (Gen.two genRevRope) })
+        let hs = Gen.oneof (seq { yield Gen.where canHCat (Gen.two genRevRope) })
+        let vs = Gen.oneof (seq { yield Gen.where canVCat (Gen.two genRevRope) })
         Gen.oneof ( seq { yield genRevRope;
                           yield Gen.map (fun (l, r) -> QuadRope.hcat l r) hs;
                           yield Gen.map (fun (u, l) -> QuadRope.vcat u l) vs })

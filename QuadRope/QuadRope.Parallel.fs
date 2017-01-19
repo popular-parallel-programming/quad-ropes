@@ -478,10 +478,6 @@ module SparseDouble =
         | VCat (_, _, _, _, _, Sparse (_, _, 0.0))
         | Sparse (_, _, 0.0) -> 0.0
         | Sparse (_, _, 1.0) -> 1.0
-        | HCat (true, _, _, _, a, b) ->
-            par2 (fun () -> prod a) (fun () -> prod b) ||> (*)
-        | VCat (true, _, _, _, a, b) ->
-            par2 (fun () -> prod a) (fun () -> prod b) ||> (*)
         | HCat (_, _, _, _, VCat (_, _, _, _, a, b), VCat (_, _, _, _, c, d))
         | VCat (_, _, _, _, HCat (_, _, _, _, a, c), HCat (_, _, _, _, b, d)) ->
             let ab = par2 (fun () -> prod a) (fun () -> prod b) ||> (*)
@@ -489,7 +485,10 @@ module SparseDouble =
                 0.0
             else
                 ab * (par2 (fun () -> prod c) (fun () -> prod d) ||> (*))
-
+        | HCat (_, _, _, _, a, b) ->
+            par2 (fun () -> prod a) (fun () -> prod b) ||> (*)
+        | VCat (_, _, _, _, a, b) ->
+            par2 (fun () -> prod a) (fun () -> prod b) ||> (*)
         | Slice _ as qr -> prod (QuadRope.materialize qr)
         | qr -> reduce (*) 1.0 qr
 

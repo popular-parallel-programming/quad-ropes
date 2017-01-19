@@ -333,7 +333,8 @@ let materialize qr =
             | Slice (x, y, r, c, qr) ->
                 materialize (i + x) (j + y) (min r h) (min c w) qr
             | Sparse (h', w', v) ->
-                create (min h (h' - i)) (min w (w' - j)) v
+                // We replicate the code for computing indices from slice here.
+                create (min h (h' - (max 0 i))) (min w (w' - (max 0 j))) v
     match qr with
         | Slice (i, j, h, w, qr) -> materialize i j h w qr
         | qr -> qr

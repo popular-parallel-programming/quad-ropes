@@ -54,8 +54,8 @@ let ``parallel sparse point-wise multiplication equals zip (*)`` (a : float Quad
     let dense = QuadRope.zip (*) a b
     QuadRope.equals sparse dense
 
-let ``sparse point-wise equals dense product`` (a : float QuadRope) =
-    (QuadRope.rows a = QuadRope.cols a) ==> lazy (
-        let dense = QuadRope.init (QuadRope.rows a) (QuadRope.cols a) (fun i j -> if i < j then 1.0 else 0.0)
+let ``sparse point-wise is commutative`` (a : float QuadRope) =
+    QuadRope.rows a = QuadRope.cols a ==> lazy (
         let sparse = QuadRope.SparseDouble.upperDiagonal (QuadRope.rows a) 1.0
-        QuadRope.equals (QuadRope.SparseDouble.pointwise dense a) (QuadRope.SparseDouble.pointwise sparse a))
+        QuadRope.equals (QuadRope.SparseDouble.pointwise a sparse)
+                        (QuadRope.SparseDouble.pointwise sparse a))

@@ -30,10 +30,9 @@ module Gen =
     let size = Gen.choose (1, maxSize)
 
     let genRopeOf h w =
-        Gen.oneof (seq { yield gen { return QuadRope.init h w (*)}
-                         yield gen { return QuadRope.create h w 0}
-                         yield gen { return QuadRope.create h w 1} })
-
+        Gen.oneof [ Gen.map QuadRope.fromArray2D (Gen.array2DOfDim (h, w) Arb.generate<int>)
+                    Gen.constant (QuadRope.create h w 0)
+                    Gen.constant (QuadRope.create h w 1) ]
 
     let genRope =
         gen { let! h = size
@@ -41,36 +40,32 @@ module Gen =
               return! genRopeOf h w }
 
     let genRevRope =
-        Gen.oneof (seq { yield genRope;
-                         yield Gen.map QuadRope.hrev genRope;
-                         yield Gen.map QuadRope.vrev genRope;
-                         yield Gen.map (QuadRope.hrev >> QuadRope.vrev) genRope;
-                         yield Gen.map (QuadRope.vrev >> QuadRope.hrev) genRope })
+        Gen.oneof [ genRope
+                    Gen.map QuadRope.hrev genRope
+                    Gen.map QuadRope.vrev genRope
+                    Gen.map (QuadRope.hrev >> QuadRope.vrev) genRope
+                    Gen.map (QuadRope.vrev >> QuadRope.hrev) genRope ]
 
     let genSliceRope =
-        Gen.oneof (seq { yield genRevRope;
-                         yield gen { let! i = size
-                                     let! j = size
-                                     let! h = size
-                                     let! w = size
-                                     let! qr = genRevRope
-                                     return QuadRope.slice i j h w qr }
-                         })
+        Gen.oneof [ genRevRope
+                    gen { let! i = size
+                          let! j = size
+                          let! h = size
+                          let! w = size
+                          let! qr = genRevRope
+                          return QuadRope.slice i j h w qr } ]
 
     // Check that two quad ropes a and b can be concatenated.
     let canCat f g (a, b) =
         f a = f b && g a + g b <= 10 * maxSize
 
-
     let canHCat = canCat QuadRope.rows QuadRope.cols
     let canVCat = canCat QuadRope.cols QuadRope.rows
 
     let genCatRope =
-        let hs = Gen.oneof (seq { yield Gen.where canHCat (Gen.two genRevRope) })
-        let vs = Gen.oneof (seq { yield Gen.where canVCat (Gen.two genRevRope) })
-        Gen.oneof ( seq { yield genRevRope;
-                          yield Gen.map (fun (l, r) -> QuadRope.hcat l r) hs;
-                          yield Gen.map (fun (u, l) -> QuadRope.vcat u l) vs })
+        Gen.oneof [ genRevRope
+                    Gen.map ((<||) QuadRope.hcat) (Gen.where canHCat (Gen.two genRevRope))
+                    Gen.map ((<||) QuadRope.vcat) (Gen.where canVCat (Gen.two genRevRope)) ]
 
     let shrink = function
         | HCat (_, _, _, _, a, b)
@@ -91,7 +86,7 @@ module Gen =
         static member FloatQuadRope () =
             {
                 new Arbitrary<float QuadRope>() with
-                override x.Generator = genCatRope |> Gen.map (QuadRope.map float)
+                override x.Generator = Gen.map (QuadRope.map float) genCatRope
                 override x.Shrinker rope = shrink rope
             }
 

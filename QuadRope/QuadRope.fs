@@ -470,8 +470,11 @@ let fromArray2D arr =
     fromArraySlice (ArraySlice.make arr)
 
 /// Generate a new tree without any intermediate values.
-let inline init h w f =
-    fromArray2D (Array2D.init h w f)
+let init h w f =
+    if h <= 0 || w <= 0 then
+        Empty
+    else
+        fromArray2D (Array2D.init h w f)
 
 /// Generate a singleton quad rope.
 let inline singleton v =

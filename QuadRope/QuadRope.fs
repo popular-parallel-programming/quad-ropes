@@ -286,7 +286,7 @@ let inline hsplit2 qr j =
     hslice 0 j qr, hslice j (cols qr) qr
 
 /// Split a quad rope in four quadrants that differ by at most one row
-/// and column in size. Return order is (a, b), (c, d).
+/// and column in size. Return order is HCat (VCat (a, b), VCat (c, d)).
 let inline split4 qr =
     slice 0               0               (rows qr >>> 1) (cols qr >>> 1) qr,
     slice (rows qr >>> 1) 0               (rows qr)       (cols qr >>> 1) qr,

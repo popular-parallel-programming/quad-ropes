@@ -25,7 +25,7 @@ open FsCheck
 open RadTrees
 open Types
 
-module private Utils =
+module Utils =
 
     let makeIndices h w =
         seq { for i in 0..h - 1 do
@@ -42,13 +42,13 @@ module private Utils =
         with
             | _ -> false
 
-    let equalMap a b f g = fun (i, j) -> f (QuadRope.get a i j) = g (QuadRope.get b i j)
-    let equal a b = equalMap a b id id
+    let pointWiseEqualMap a b f g=
+        let mutable eq = true
+        QuadRope.iteri (fun i j v -> eq <- eq && (f v = g (QuadRope.get b i j))) a
+        eq
 
-    let pointWiseEqualMap a b f g =
-        Seq.forall (equalMap a b f g) (makeIndices (QuadRope.rows a) (QuadRope.cols a))
-
-    let pointWiseEqual a b = pointWiseEqualMap a b id id
+    let pointWiseEqual a b =
+        pointWiseEqualMap a b id id
 
 open Utils
 
@@ -146,12 +146,11 @@ let ``slice is equal to materialized slice`` (a : int QuadRope) (NonNegativeInt 
                                                                 (NonNegativeInt j)
                                                                 (NonNegativeInt h)
                                                                 (NonNegativeInt w) =
-    (i < QuadRope.rows a && i < h && j < QuadRope.cols a && j < w) ==>
-    lazy (let b = QuadRope.slice i j h w a
-          let c = QuadRope.materialize b
-          Seq.forall
-            (fun (i0, j0) -> QuadRope.get b i0 j0 = QuadRope.get c i0 j0)
-            (makeIndicesFrom b))
+    (i < h && j < w) ==> lazy (
+        let b = QuadRope.slice i j h w a
+        let c = QuadRope.materialize b
+        QuadRope.rows b = QuadRope.rows c && QuadRope.cols b = QuadRope.cols c
+        && pointWiseEqual c b)
 
 let ``recursive slice computes correct indices`` (a : int QuadRope) (d : NonNegativeInt) =
     let i = 1

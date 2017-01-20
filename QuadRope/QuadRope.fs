@@ -331,9 +331,16 @@ let materialize qr =
                 let b' = materialize (i - rows a) j (h - rows a') w b
                 vnode a' b'
             | Slice (x, y, r, c, qr) ->
-                materialize (i + x) (j + y) (min r h) (min c w) qr
+                // We replicate the code for computing indices from
+                // function slice.
+                materialize (i + x)
+                            (j + y)
+                            (min (max 0 (r - (max 0 i))) h)
+                            (min (max 0 (c - (max 0 j))) w)
+                            qr
             | Sparse (h', w', v) ->
-                // We replicate the code for computing indices from slice here.
+                // We replicate the code for computing indices from
+                // function slice.
                 create (min h (h' - (max 0 i))) (min w (w' - (max 0 j))) v
     match qr with
         | Slice (i, j, h, w, qr) -> materialize i j h w qr

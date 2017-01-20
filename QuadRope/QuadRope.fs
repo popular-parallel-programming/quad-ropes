@@ -350,8 +350,8 @@ let materialize qr =
 /// may result in actually keeping parts of a large area in memory
 /// twice. TODO: Consider other options.
 let vcat a b =
-    let canMerge a b =
-        ArraySlice.cols a = ArraySlice.cols b && ArraySlice.rows a + ArraySlice.rows b <= s_max
+    let inline canMerge a b =
+        ArraySlice.rows a + ArraySlice.rows b <= s_max
     let rec vcat a b =
         match a, b with
             // Concatenation with Empty yields argument.
@@ -385,8 +385,8 @@ let vcat a b =
 /// this may result in actually keeping parts of a large area in
 /// memory twice. TODO: Consider other options.
 let hcat a b =
-    let canMerge a b =
-        ArraySlice.rows a = ArraySlice.rows b && ArraySlice.cols a + ArraySlice.cols b <= s_max
+    let inline canMerge a b =
+        ArraySlice.cols a + ArraySlice.cols b <= s_max
     let rec hcat a b =
         match a, b with
             // Concatenation with Empty yields argument.

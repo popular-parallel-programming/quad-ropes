@@ -27,7 +27,10 @@ open Types
 open Utils
 
 /// The maximal size of a leaf array in any direction.
-let s_max = match Env.getInt "LEAF_MAX_SIZE" with | None -> 32 | Some v -> v
+let s_max =
+    match Env.getInt "LEAF_MAX_SIZE" with
+        | None -> 32 // Or some other, sensible default.
+        | Some v -> v
 
 // Aliases for more concise code.
 let inline rows qr = Types.rows qr

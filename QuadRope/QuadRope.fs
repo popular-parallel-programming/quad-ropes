@@ -858,70 +858,80 @@ let rec compress = function
         vcat (compress a) (compress b)
     | qr -> qr
 
-module SparseDouble =
-    let sum = reduce (+) 0.0
+/// This module contains functions that are optimized for sparse quad
+/// ropes and operations over rings, e.g. (+, *, int). These functions
+/// can be instantiated for any type as long as it forms a ring.
+module Sparse =
 
     /// Compute the product of all values in a quad rope. This
     /// function short-circuits the computation if a branch evaluates
     /// to 0.
-    let rec prod = function
-        | HCat (_, _, _, _, Sparse (_, _, 0.0), _)
-        | HCat (_, _, _, _, _, Sparse (_, _, 0.0))
-        | VCat (_, _, _, _, Sparse (_, _, 0.0), _)
-        | VCat (_, _, _, _, _, Sparse (_, _, 0.0))
-        | Sparse (_, _, 0.0) -> 0.0
-        | Sparse (_, _, 1.0) -> 1.0
-        | HCat (_, _, _, _, a, b) ->
-            let a' = prod a
-            if a' = 0.0 then 0.0 else a' * prod b
-        | VCat (_, _, _, _, a, b) ->
-            let a' = prod a
-            if a' = 0.0 then 0.0 else a' * prod b
-        | Slice _ as qr -> prod (materialize qr)
-        | qr -> reduce (*) 1.0 qr
+    let prod (*) zero one =
+        let rec prod = function
+            | HCat (_, _, _, _, Sparse (_, _, v), _)
+            | HCat (_, _, _, _, _, Sparse (_, _, v))
+            | VCat (_, _, _, _, Sparse (_, _, v), _)
+            | VCat (_, _, _, _, _, Sparse (_, _, v))
+            | Sparse (_, _, v) when v = zero -> zero
+            | Sparse (_, _, v) when v = one -> one
+            | HCat (_, _, _, _, a, b) ->
+                let a' = prod a
+                if a' = zero then zero else a' * prod b
+            | VCat (_, _, _, _, a, b) ->
+                let a' = prod a
+                if a' = zero then zero else a' * prod b
+            | Slice _ as qr -> prod (materialize qr)
+            | qr -> reduce (*) one qr
+        prod
 
     /// Initialize an identity matrix of h height and w width.
-    let rec identity n =
-        if n <= smax then
-            init n n (fun i j -> if i = j then 1.0 else 0.0)
-        else
-            let m = n >>> 1
-            // Branching instead of bit-operations allows us to re-use
-            // already allocated elements in the optimal case.
-            if n &&& 1 = 1 then
-                hnode (vnode (identity (m + 1)) (create m (m + 1) 0.0))
-                         (vnode (create (m + 1) m 0.0) (identity m))
+    let identity zero one =
+        let rec identity n =
+            if n <= smax then
+                init n n (fun i j -> if i = j then one else zero)
             else
-                let sparse = Sparse (m, m, 0.0)
-                let vals = identity m
-                hnode (vnode vals sparse) (vnode sparse vals)
+                let m = n >>> 1
+                // Branching instead of bit-operations allows us to re-use
+                // already allocated elements in the optimal case.
+                if n &&& 1 = 1 then
+                    hnode (vnode (identity (m + 1)) (create m (m + 1) zero))
+                             (vnode (create (m + 1) m zero) (identity m))
+                else
+                    let sparse = Sparse (m, m, zero)
+                    let vals = identity m
+                    hnode (vnode vals sparse) (vnode sparse vals)
+        identity
 
     /// Initialize an upper diagonal matrix with all non-zero values
     /// set to v.
-    let rec upperDiagonal n v =
-        if n <= smax then
-            init n n (fun i j -> if i < j then v else 0.0)
-        else
-            let m = n >>> 1
-            let m' = m + (n &&& 1)
-            // TODO: Optimize for re-use.
-            hnode (vnode (upperDiagonal m v) (create m' m v))
-                  (vnode (create m m' 0.0) (upperDiagonal m' v))
+    let upperDiagonal zero =
+        let rec upperDiagonal n v =
+            if n <= smax then
+                init n n (fun i j -> if i < j then v else zero)
+            else
+                let m = n >>> 1
+                let m' = m + (n &&& 1)
+                // TODO: Optimize for re-use.
+                hnode (vnode (upperDiagonal m v) (create m' m v))
+                      (vnode (create m m' zero) (upperDiagonal m' v))
+        upperDiagonal
 
     /// Initialize a lower diagonal matrix with all non-zero values
     /// set to v.
-    let rec lowerDiagonal n v =
-        if n <= smax then
-            init n n (fun i j -> if i < j then 0.0 else v)
-        else
-            let m = n >>> 1
-            let m' = m + (n &&& 1)
-            // TODO: Optimize for re-use.
-            hnode (vnode (lowerDiagonal m v) (create m' m 0.0))
-                  (vnode (create m m' v) (lowerDiagonal m' v))
+    let lowerDiagonal zero =
+        let rec lowerDiagonal n v =
+            if n <= smax then
+                init n n (fun i j -> if i < j then zero else v)
+            else
+                let m = n >>> 1
+                let m' = m + (n &&& 1)
+                // TODO: Optimize for re-use.
+                hnode (vnode (lowerDiagonal m v) (create m' m zero))
+                      (vnode (create m m' v) (lowerDiagonal m' v))
+        lowerDiagonal
 
     /// Multiply two quad ropes of doubles point-wise.
-    let pointwise (lqr : float QuadRope) (rqr : float QuadRope) : float QuadRope =
+    let pointwise (*) zero one =
         /// General case for quad ropes of different structure.
         let rec gen lqr rqr =
             match lqr with
@@ -931,8 +941,8 @@ module SparseDouble =
                 | VCat (true, _, _, _, aa, ab) ->
                     let ba, bb = vsplit2 rqr (rows aa)
                     vnode (gen aa ba) (gen ab bb)
-                | Sparse (_, _, 0.0) -> lqr
-                | Sparse (_, _, 1.0) -> rqr
+                | Sparse (_, _, v) when v = zero -> lqr
+                | Sparse (_, _, v) when v = one -> rqr
                 | _ when isSparse rqr -> gen rqr lqr
                 | _ -> zip (*) lqr rqr
 
@@ -955,25 +965,58 @@ module SparseDouble =
                 | _, Slice _ when isSparse rqr -> fast lqr (materialize rqr)
 
                 // Sparse quad ropes of zero result in zero.
-                | Sparse (_, _, 0.0), _ -> lqr
-                | _, Sparse (_, _, 0.0) -> rqr
+                | Sparse (_, _, v), _ when v = zero-> lqr
+                | _, Sparse (_, _, v) when v = zero -> rqr
 
                 // Sparse quad ropes of one result in the other quad rope.
-                | Sparse (_, _, 1.0), _ -> rqr
-                | _, Sparse (_, _, 1.0) -> lqr
+                | Sparse (_, _, v), _ when v = one -> rqr
+                | _, Sparse (_, _, v) when v = one -> lqr
 
                 // Fall back to general case.
                 | _ -> gen lqr rqr
 
-        if not (shapesMatch lqr rqr) then
-            invalidArg "rqr" "Quad ropes must be of equal shape."
-        // Since multiplication is commutative, move the shallower
-        // quad rope left to recurse on its structure instead of the
-        // deeper one.
-        if depth rqr < depth lqr then
-            fast rqr lqr
-        else
-            fast lqr rqr
+        let pointwise lqr rqr =
+            if not (shapesMatch lqr rqr) then
+                invalidArg "rqr" "Quad ropes must be of equal shape."
+            // Since multiplication is commutative, move the shallower
+            // quad rope left to recurse on its structure instead of the
+            // deeper one.
+            if depth rqr < depth lqr then
+                fast rqr lqr
+            else
+                fast lqr rqr
+
+        pointwise
+
+/// Functions on sparse quad ropes of floats.
+module SparseDouble =
+
+    // Instantiating functions.
+    let private iprod = Sparse.prod (*) 0.0 1.0
+    let private iidentity = Sparse.identity 0.0 1.0
+    let private iupperDiagonal = Sparse.upperDiagonal 0.0
+    let private ilowerDiagonal = Sparse.lowerDiagonal 0.0
+    let private ipointwise : float QuadRope -> float QuadRope -> float QuadRope = Sparse.pointwise (*) 0.0 1.0
+
+    /// Compute the sum of all values in the matrix.
+    let sum = reduce (+) 0.0
+
+    /// Compute the product of all values in the matrix.
+    let prod qr = iprod qr
+
+    /// Construct a sparse identity matrix of size n * n.
+    let identity n = iidentity n
+
+    /// Construct a sparse upper diagonal matrix of size n * n, where
+    /// all non-zero elements are v.
+    let upperDiagonal n v = iupperDiagonal n v
+
+    /// Construct a sparse lower diagonal matrix of size n * n, where
+    /// all non-zero elements are v.
+    let lowerDiagonal n v = ilowerDiagonal n v
+
+    /// Compute the point-wise multiplication of two quad ropes.
+    let pointwise a b = ipointwise a b
 
 module SparseString =
     let cat = reduce (+) ""

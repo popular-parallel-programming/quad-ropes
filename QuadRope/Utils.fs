@@ -133,20 +133,3 @@ module Functions =
         let f4 b0 b1 b2 b3 =
             f.Invoke(b0, b1, b2, b3)
         f4
-
-module Env =
-    open System
-
-    /// Parse an integer from a
-    let private parseInt s =
-        try
-            Some (Int32.Parse s)
-        with _ ->
-            None
-
-    /// Get an option for the environment variable "var".
-    let get var =
-        Option.ofObj (Environment.GetEnvironmentVariable var)
-
-    /// Get an option for an integer environment variable.
-    let getInt = get >> Option.bind parseInt

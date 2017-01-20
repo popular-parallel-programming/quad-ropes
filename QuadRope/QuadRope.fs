@@ -26,11 +26,12 @@ module RadTrees.QuadRope
 open Types
 open Utils
 
-/// The maximal size of a leaf array in any direction.
-let smax =
-    match Env.getInt "LEAF_MAX_SIZE" with
-        | None -> 32 // Or some other, sensible default.
-        | Some v -> v
+(* The maximal size of a leaf array in any direction. *)
+#if DEBUG
+let smax = 4
+#else
+let smax = 32
+#endif
 
 // Aliases for more concise code.
 let inline rows qr = Types.rows qr

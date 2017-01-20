@@ -37,7 +37,7 @@ let private leaf = QuadRope.leaf
 let private hnode = QuadRope.hnode
 let private vnode = QuadRope.vnode
 
-let private s_max = QuadRope.s_max
+let private smax = QuadRope.smax
 
 /// Generate a new quad rope in parallel.
 let init h w (f : int -> int -> _) =
@@ -45,10 +45,10 @@ let init h w (f : int -> int -> _) =
     let rec hsplit slc =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
-        else if ArraySlice.cols slc <= s_max && ArraySlice.rows slc <= s_max then
+        else if ArraySlice.cols slc <= smax && ArraySlice.rows slc <= smax then
             ArraySlice.init slc f // Write into shared array.
             leaf slc
-        else if ArraySlice.cols slc <= s_max then
+        else if ArraySlice.cols slc <= smax then
             vsplit slc
         else
             par2 (fun () -> vsplit (ArraySlice.leftHalf slc)) (fun () -> vsplit (ArraySlice.rightHalf slc))
@@ -57,10 +57,10 @@ let init h w (f : int -> int -> _) =
     and vsplit slc =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
-        else if ArraySlice.cols slc <= s_max && ArraySlice.rows slc <= s_max then
+        else if ArraySlice.cols slc <= smax && ArraySlice.rows slc <= smax then
             ArraySlice.init slc f // Write into shared array.
             leaf slc
-        else if ArraySlice.rows slc <= s_max then
+        else if ArraySlice.rows slc <= smax then
             hsplit slc
         else
             par2 (fun () -> hsplit (ArraySlice.upperHalf slc)) (fun () -> hsplit (ArraySlice.lowerHalf slc))
@@ -302,20 +302,20 @@ let iteri f qr =
         | Slice _ as qr -> iteri f i j (QuadRope.materialize qr)
 
         // Small sparse quad rope, process sequentially.
-        | Sparse (h, w, v) when h <= s_max && w <= s_max ->
+        | Sparse (h, w, v) when h <= smax && w <= smax ->
             for r in i .. i + h - 1 do
                 for c in j .. j + w - 1 do
                     f r c v
 
         // Wide sparse quad rope, split horizontally.
-        | Sparse (h, w, _) as qr when h <= s_max ->
+        | Sparse (h, w, _) as qr when h <= smax ->
             let w' = w / 2
             par2 (fun () -> iteri f i j (QuadRope.hslice 0 w' qr))
                  (fun () -> iteri f i (j + w') (QuadRope.hslice w' w qr))
             |> ignore
 
         // Tall sparse quad rope, split vertically.
-        | Sparse (h, w, _) as qr when w <= s_max ->
+        | Sparse (h, w, _) as qr when w <= smax ->
             let h' = h / 2
             par2 (fun () -> iteri f i j (QuadRope.vslice 0 h' qr))
                  (fun () -> iteri f (i + h') j (QuadRope.vslice h' h qr))
@@ -340,7 +340,7 @@ let fromArray2D arr =
     let rec init h0 w0 h1 w1 arr =
         let h = h1 - h0
         let w = w1 - w0
-        if s_max < h && s_max < w then
+        if smax < h && smax < w then
             let hpv = h0 + (h >>> 1)
             let wpv = w0 + (w >>> 1)
             let ne, nw, sw, se = par4 (fun () -> init h0 wpv hpv w1 arr)
@@ -348,11 +348,11 @@ let fromArray2D arr =
                                       (fun () -> init hpv w0 h1 wpv arr)
                                       (fun () -> init hpv wpv h1 w1 arr)
             hnode (vnode nw sw) (vnode ne se)
-        else if w <= QuadRope.s_max && QuadRope.s_max < h then
+        else if w <= QuadRope.smax && QuadRope.smax < h then
             let hpv = h0 + (h >>> 1)
             let n, s = par2 (fun () -> init h0 w0 hpv w1 arr) (fun () -> init hpv w0 h1 w1 arr)
             vnode n s
-        else if QuadRope.s_max < w && h <= QuadRope.s_max then
+        else if QuadRope.smax < w && h <= QuadRope.smax then
             let wpv = w0 + (w >>> 1)
             let w, e = par2 (fun () -> init h0 w0 h1 wpv arr) (fun () -> init h0 wpv h1 w1 arr)
             hnode w e
@@ -438,7 +438,7 @@ let scan plus minus init qr =
             | Slice _ -> scan pre (QuadRope.materialize qr) tgt
 
             // Materialize a sparse leaf and scan it.
-            | Sparse (h, w, v) when h <= s_max || w <= s_max ->
+            | Sparse (h, w, v) when h <= smax || w <= smax ->
                 // Fill the target imperatively.
                 Target.fill tgt h w v
                 // Get a slice over the target.
@@ -448,9 +448,9 @@ let scan plus minus init qr =
                 // Make a new quad rope from array slice.
                 leaf slc
 
-            // If both dimensions are larger than s_max, we can
+            // If both dimensions are larger than smax, we can
             // actually do some work in parallel.
-            | Sparse _ -> // when s_max < h && s_max < w
+            | Sparse _ -> // when smax < h && smax < w
                 let a, b, c, d = QuadRope.split4 qr
                 scan pre (hnode (vnode a b) (vnode c d)) tgt
 

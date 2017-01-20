@@ -27,7 +27,7 @@ open Types
 open Utils
 
 /// The maximal size of a leaf array in any direction.
-let s_max =
+let smax =
     match Env.getInt "LEAF_MAX_SIZE" with
         | None -> 32 // Or some other, sensible default.
         | Some v -> v
@@ -350,7 +350,7 @@ let materialize qr =
 /// twice. TODO: Consider other options.
 let vcat a b =
     let inline canMerge a b =
-        ArraySlice.rows a + ArraySlice.rows b <= s_max
+        ArraySlice.rows a + ArraySlice.rows b <= smax
     let rec vcat a b =
         match a, b with
             // Concatenation with Empty yields argument.
@@ -385,7 +385,7 @@ let vcat a b =
 /// memory twice. TODO: Consider other options.
 let hcat a b =
     let inline canMerge a b =
-        ArraySlice.cols a + ArraySlice.cols b <= s_max
+        ArraySlice.cols a + ArraySlice.cols b <= smax
     let rec hcat a b =
         match a, b with
             // Concatenation with Empty yields argument.
@@ -451,9 +451,9 @@ let internal fromArraySlice slc =
     let rec hsplit slc =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
-        else if ArraySlice.cols slc <= s_max && ArraySlice.rows slc <= s_max then
+        else if ArraySlice.cols slc <= smax && ArraySlice.rows slc <= smax then
             leaf slc
-        else if ArraySlice.cols slc <= s_max then
+        else if ArraySlice.cols slc <= smax then
             vsplit slc
         else
             let a, b = ArraySlice.hsplit2 slc
@@ -462,9 +462,9 @@ let internal fromArraySlice slc =
     and vsplit slc =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
-        else if ArraySlice.cols slc <= s_max && ArraySlice.rows slc <= s_max then
+        else if ArraySlice.cols slc <= smax && ArraySlice.rows slc <= smax then
             leaf slc
-        else if ArraySlice.rows slc <= s_max then
+        else if ArraySlice.rows slc <= smax then
             hsplit slc
         else
             let a, b = ArraySlice.vsplit2 slc
@@ -881,7 +881,7 @@ module SparseDouble =
 
     /// Initialize an identity matrix of h height and w width.
     let rec identity n =
-        if n <= s_max then
+        if n <= smax then
             init n n (fun i j -> if i = j then 1.0 else 0.0)
         else
             let m = n >>> 1
@@ -898,7 +898,7 @@ module SparseDouble =
     /// Initialize an upper diagonal matrix with all non-zero values
     /// set to v.
     let rec upperDiagonal n v =
-        if n <= s_max then
+        if n <= smax then
             init n n (fun i j -> if i < j then v else 0.0)
         else
             let m = n >>> 1
@@ -910,7 +910,7 @@ module SparseDouble =
     /// Initialize a lower diagonal matrix with all non-zero values
     /// set to v.
     let rec lowerDiagonal n v =
-        if n <= s_max then
+        if n <= smax then
             init n n (fun i j -> if i < j then 0.0 else v)
         else
             let m = n >>> 1

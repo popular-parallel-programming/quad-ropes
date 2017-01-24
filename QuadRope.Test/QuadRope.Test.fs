@@ -208,26 +208,6 @@ let ``reallocate results in logically equal rope`` (a : int QuadRope) =
     pointWiseEqual a (QuadRope.map id a)
 
 
-let ``balanceH maintains layout`` (a : int QuadRope) =
-    not (QuadRope.isBalancedH a) ==> lazy (pointWiseEqual a (QuadRope.hbalance a))
-
-
-let ``balanceH maintains or improves depth`` (a : int QuadRope) =
-    not (QuadRope.isBalancedH a) ==>
-    lazy (let b = QuadRope.hbalance a
-          QuadRope.depth b <= QuadRope.depth a)
-
-
-let ``balanceV maintains layout`` (a : int QuadRope) =
-    not (QuadRope.isBalancedV a) ==> lazy (pointWiseEqual a (QuadRope.vbalance a))
-
-
-let ``balanceV maintains or improves depth`` (a : int QuadRope) =
-    not (QuadRope.isBalancedV a) ==>
-    lazy (let b = QuadRope.vbalance a
-          QuadRope.depth b <= QuadRope.depth a)
-
-
 let ``map modifies all values`` (a : int QuadRope) (f : int -> int) =
     pointWiseEqualMap a (QuadRope.map f a) f id
 

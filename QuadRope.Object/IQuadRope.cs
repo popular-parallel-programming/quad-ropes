@@ -83,34 +83,6 @@ namespace RadTrees.QuadRope.Object
         public abstract IQuadRope<T> Set(int row, int col, T v);
 
         /// <summary>
-        ///   True if the rope is horizontally balanced, false otherwise.
-        /// </summary>
-        public bool IsBalancedHorizontally
-        {
-            get { return QuadRopeModule.isBalancedH(qr); }
-        }
-
-        /// <summary>
-        ///   True if the rope is vertically balanced, false otherwise.
-        /// </summary>
-        public bool IsBalancedVertically
-        {
-            get { return QuadRopeModule.isBalancedV(qr); }
-        }
-
-        /// <summary>
-        ///   Create a new instance where the underlying rope is
-        ///   horizontally balanced.
-        /// </summary>
-        public abstract IQuadRope<T> BalanceHorizontally();
-
-        /// <summary>
-        ///   Cerate a new instance where the underlying rope is
-        ///   vertically balanced.
-        /// </summary>
-        public abstract IQuadRope<T> BalanceVertically();
-
-        /// <summary>
         ///   Concatenate the rows of this and that.
         /// </summary>
         public abstract IQuadRope<T> ConcatHorizontally(IQuadRope<T> other);

@@ -134,109 +134,6 @@ let set root i j v =
     checkBounds root i j
     set root i j v
 
-let private isBalanced d s =
-    d < 45 && Fibonacci.fib (d + 2) <= s
-
-/// True if rope is balanced horizontally. False otherwise.
-let isBalancedH = function
-    | HCat (_, d, _, w, _, _) -> isBalanced d w
-    | VCat (_, d, _, w, _, _) -> isBalanced d w
-    | _ -> true
-
-/// True if rope is balanced vertically. False otherwise.
-let isBalancedV = function
-    | HCat (_, d, h, _, _, _) -> isBalanced d h
-    | VCat (_, d, h, _, _, _) -> isBalanced d h
-    | _ -> true
-
-/// Calls <code>f</code> recursively on a list of quad ropes until the
-/// list is reduced to a single quad rope.
-let rec private reduceList f = function
-    | []  -> Empty
-    | [n] -> n
-    | ns  -> reduceList f (f ns)
-
-/// Rebuild one level of the original quad rope using
-/// <code>merge</code> to merge adjacent quad ropes.
-let rec private rebuild merge nodes =
-    match nodes with
-        | [] -> []
-        | [x] -> [x]
-        | x :: y :: nodes -> merge x y :: (rebuild merge nodes)
-
-/// Balance rope horizontally.
-let hbalance qr =
-    let rec hbalance qr =
-        if isBalancedH qr then
-            qr
-        else
-            let rs = collect qr []
-            reduceList (rebuild hnode) rs
-    and collect qr rs  =
-        match qr with
-            | Empty -> rs
-            | HCat (_, _, _, _, a, b) -> collect a (collect b rs)
-            | VCat (_, _, _, _, a, b) ->
-                vnode (hbalance a) (hbalance b) :: rs
-            | _ -> qr :: rs
-    hbalance qr
-
-/// Balance rope vertically.
-let vbalance qr =
-    let rec vbalance qr =
-        if isBalancedV qr then
-            qr
-        else
-            let rs = collect qr []
-            reduceList (rebuild vnode) rs
-    and collect qr rs  =
-        match qr with
-            | Empty -> rs
-            | HCat (_, _, _, _, a, b) ->
-                hnode (vbalance a) (vbalance b) :: rs
-            | VCat (_, _, _, _, a, b) ->
-                collect a (collect b rs)
-            | _ -> qr :: rs
-    vbalance qr
-
-/// Balancing after Boehm et al. It turns out that this is slightly
-/// slower than reduce-rebuild balancing and the resulting tree is of
-/// greater height.
-module Boehm =
-    let hbalance qr =
-        let rec insert qr n = function
-            | r0 :: r1 :: qrs when depth r1 <= n -> insert qr n (hnode r1 r0 :: qrs)
-            | r0 :: qrs when depth r0 <= n -> (hnode r0 qr) :: qrs
-            | qrs -> qr :: qrs
-        let rec hbalance qr qrs =
-            match qr with
-                | Empty -> qrs
-                | HCat (_, _, _, _, a, b) when not (isBalancedH qr) ->
-                    hbalance b (hbalance a qrs)
-                | _ ->
-                    insert qr (Fibonacci.nth (cols qr)) qrs
-        if isBalancedH qr then
-            qr
-        else
-            List.reduce (fun ne nw -> hnode nw ne) (hbalance qr [])
-
-    let vbalance qr =
-        let rec insert qr n = function
-            | r0 :: r1 :: qrs when depth r1 <= n -> insert qr n (vnode r1 r0 :: qrs)
-            | r0 :: qrs when depth r0 <= n -> (vnode r0 qr) :: qrs
-            | qrs -> qr :: qrs
-        let rec vbalance qr qrs =
-            match qr with
-                | Empty -> qrs
-                | VCat (_, _, _, _, a, b) when not (isBalancedV qr) ->
-                    vbalance b (vbalance a qrs)
-                | _ ->
-                    insert qr (Fibonacci.nth (rows qr)) qrs
-        if isBalancedV qr then
-            qr
-        else
-            List.reduce (fun sw nw -> vnode nw sw) (vbalance qr [])
-
 /// Compute the "subrope" starting from indexes i, j taking h and w
 /// elements in vertical and horizontal direction.
 let slice i j h w qr =
@@ -346,7 +243,22 @@ let materialize qr =
         | Slice (i, j, h, w, qr) -> materialize i j h w qr
         | qr -> qr
 
-/// Balance a quad rope by rotation.
+let private isBalanced d s =
+    d < 45 && Fibonacci.fib (d + 2) <= s
+
+/// True if rope is balanced horizontally. False otherwise.
+let isBalancedH = function
+    | HCat (_, d, _, w, _, _)
+    | VCat (_, d, _, w, _, _) -> isBalanced d w
+    | _ -> true
+
+/// True if rope is balanced vertically. False otherwise.
+let isBalancedV = function
+    | HCat (_, d, h, _, _, _)
+    | VCat (_, d, h, _, _, _) -> isBalanced d h
+    | _ -> true
+
+/// Balance a quad rope by rotation in worst-case O(log n) time.
 let rec balance qr =
     match qr with
         // Balancing horizontally requires at least two nested hcat

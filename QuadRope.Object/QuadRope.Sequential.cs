@@ -34,16 +34,6 @@ namespace RadTrees.QuadRope.Object
                 : base(qr)
         { }
 
-        public override IQuadRope<T> BalanceHorizontally()
-        {
-            return new SequentialQuadRope<T>(QuadRopeModule.hbalance(qr));
-        }
-
-        public override IQuadRope<T> BalanceVertically()
-        {
-            return new SequentialQuadRope<T>(QuadRopeModule.vbalance(qr));
-        }
-
         public override IQuadRope<T> ConcatHorizontally(IQuadRope<T> other)
         {
             return new SequentialQuadRope<T>(QuadRopeModule.hcat(qr, other.qr));

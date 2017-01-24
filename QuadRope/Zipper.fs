@@ -39,14 +39,21 @@ let rec private next qr p =
 /// Split the path into processed and unprocessed branches.
 let rec private splitPath a b p =
     /// NOTE: This will not work. The problem is that we can not
-    /// guarantee that, if we split a node in two, that the
-    /// remainder will be of the correct size to be merged with
-    /// the accumulated trees. This problem can be elided by
-    /// forcing all quad ropes to have only exactly k many rows or
-    /// columns. Hence, LTS is possible for 1D-ropes, where k = 1
-    /// for either dimension.
+    /// guarantee that, if we split a node in two, that the remainder
+    /// will be of the correct size to be merged with the accumulated
+    /// trees. This problem can be elided by diallowing either hcat or
+    /// vcat, thereby forcing all quad ropes to have only exactly k
+    /// many rows or columns. Quad ropes of height or width k cannot
+    /// be composed vertically or horizontally, respectively. Hence,
+    /// LTS is possible for 1D-ropes, where k = 1 for either
+    /// dimension.
     match p with
         | Top -> a, b
+
+        // It may be possible though to detect the cases where this is
+        // not possible and to "finish" mapping over the missing
+        // branch first (maybe in parallel) in order to be able to
+        // deliver a well formed quad rope.
 
         // Current branch is left, concatenate the other one to
         // the right.

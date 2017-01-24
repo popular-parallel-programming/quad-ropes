@@ -60,7 +60,7 @@ let internal hnode a b =
         | Empty, _ -> b
         | _, Empty -> a
         | _ when rows a = rows b ->
-            HCat (isSparse a || isSparse b, max (depth a) (depth b), rows a, cols a + cols b, a, b)
+            HCat (isSparse a || isSparse b, max (depth a) (depth b) + 1, rows a, cols a + cols b, a, b)
         | _ -> failwith "Cannot hcat nodes of different height."
 
 /// Pseudo-constructor for initializing a new VCat node.
@@ -69,7 +69,7 @@ let internal vnode a b =
         | Empty, _ -> b
         | _, Empty -> a
         | _ when cols a = cols b ->
-            VCat (isSparse a || isSparse b, max (depth a) (depth b), rows a + rows b, cols a, a, b)
+            VCat (isSparse a || isSparse b, max (depth a) (depth b) + 1, rows a + rows b, cols a, a, b)
         | _ -> failwith "Cannot vcat nodes of different width."
 
 let inline private withinRange qr i j =

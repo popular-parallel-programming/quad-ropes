@@ -94,16 +94,16 @@ let ``vcat height is equal to height sum`` (a : int QuadRope) (b : int QuadRope)
 
 let ``hbalance maintains order`` (NonNegativeInt x) =
     let mutable r = QuadRope.singleton 0
-    for i in 1 .. x do
+    for i in 1 .. x * 10 do
         r <- QuadRope.hcat r (QuadRope.singleton i)
-    QuadRope.forallRows (<) r
+    QuadRope.forallRows (<) r && QuadRope.isBalancedH r
 
 
 let ``vbalance maintains order`` (NonNegativeInt x) =
     let mutable r = QuadRope.singleton 0
-    for i in 1 .. x do
+    for i in 1 .. x * 10 do
         r <- QuadRope.vcat r (QuadRope.singleton i)
-    QuadRope.forallCols (<) r
+    QuadRope.forallCols (<) r && QuadRope.isBalancedV r
 
 
 let ``hrev of hrev is identity`` (a : int QuadRope) =

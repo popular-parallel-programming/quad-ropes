@@ -26,7 +26,7 @@ let right = function
 let rec print = function
     | HCat (_, _, _, _, a, b) -> sprintf "(hcat %s %s)" (print a) (print b)
     | VCat (_, _, _, _, a, b) -> sprintf "(vcat %s %s)" (print a) (print b)
+    | Slice (_, _, _, _, qr) -> sprintf "/%s/" (print qr)
     | Sparse _ -> "."
-    | Slice _ -> "/"
     | Leaf _ -> "[]"
     | Empty -> "e"

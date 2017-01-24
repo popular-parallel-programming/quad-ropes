@@ -346,6 +346,35 @@ let materialize qr =
         | Slice (i, j, h, w, qr) -> materialize i j h w qr
         | qr -> qr
 
+/// Balance a quad rope by rotation.
+let rec balance qr =
+    match qr with
+        // Balancing horizontally requires at least two nested hcat
+        // nodes.
+        | HCat (_, _, _, _, a, b) when not (isBalancedH qr) ->
+            match a, b with
+                | HCat (_, _, _, _, aa, ab), b
+                    when depth aa > depth ab && depth aa > depth b ->
+                        hnode aa (balance (hnode ab b))
+                | a, HCat (_, _, _, _, ba, bb)
+                    when depth a < depth bb && depth ba < depth bb ->
+                        hnode (balance (hnode a ba)) bb
+                | _ -> qr
+
+        // The same holds for balancing vertically and vcat nodes.
+        | VCat (_, _, _, _, a, b) when not (isBalancedV qr) ->
+            match a, b with
+                | VCat (_, _, _, _, aa, ab), b
+                    when depth aa > depth ab && depth aa > depth b ->
+                        vnode aa (balance (vnode ab b))
+                | a, VCat (_, _, _, _, ba, bb)
+                    when depth a < depth bb && depth ba < depth bb ->
+                        vnode (balance (vnode a ba)) bb
+                | _ -> qr
+
+        // All other cases cannot be balanced.
+        | _ -> qr
+
 /// Concatenate two trees vertically. For the sake of leave size, this
 /// may result in actually keeping parts of a large area in memory
 /// twice. TODO: Consider other options.
@@ -379,7 +408,7 @@ let vcat a b =
     if (not ((isEmpty a) || (isEmpty b))) && cols a <> cols b then
         invalidArg "b" "B quad rope must be of same width as a quad rope."
     else
-        vbalance (vcat a b)
+        balance (vcat a b)
 
 /// Concatenate two trees horizontally. For the sake of leave size,
 /// this may result in actually keeping parts of a large area in
@@ -414,7 +443,7 @@ let hcat a b =
     if (not ((isEmpty a) || (isEmpty b))) && rows a <> rows b then
         invalidArg "b" "B quad rope must be of same height as a quad rope."
     else
-        hbalance (hcat a b)
+        balance (hcat a b)
 
 /// Reverse rope horizontally.
 let hrev qr =

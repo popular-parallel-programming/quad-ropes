@@ -36,11 +36,13 @@ let ``sparse product equals reduce (*)`` (a : float QuadRope) =
     let d = abs (sparse - dense)
     (System.Double.IsNaN d || d <= epsilon) |@ sprintf "sparse = %F, dense = %F, d = %A" sparse dense d
 
+
 let ``parallel sparse product equals reduce (*)`` (a : float QuadRope) =
     let sparse = Parallel.QuadRope.SparseDouble.prod a
     let dense = QuadRope.reduce (*) 1.0 a
     let d = abs (sparse - dense)
     (System.Double.IsNaN d || d < epsilon) |@ sprintf "sparse = %A, dense = %A, d = %A" sparse dense d
+
 
 let ``sparse point-wise multiplication equals zip (*)`` (a : float QuadRope) =
     let b = a |> QuadRope.hrev |> QuadRope.vrev
@@ -48,11 +50,13 @@ let ``sparse point-wise multiplication equals zip (*)`` (a : float QuadRope) =
     let dense = QuadRope.zip (*) a b
     QuadRope.equals sparse dense
 
+
 let ``parallel sparse point-wise multiplication equals zip (*)`` (a : float QuadRope) =
     let b = a |> QuadRope.hrev |> QuadRope.vrev
     let sparse = Parallel.QuadRope.SparseDouble.pointwise a b
     let dense = QuadRope.zip (*) a b
     QuadRope.equals sparse dense
+
 
 let ``sparse point-wise is commutative`` (a : float QuadRope) =
     QuadRope.rows a = QuadRope.cols a ==> lazy (

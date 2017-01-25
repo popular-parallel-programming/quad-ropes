@@ -261,7 +261,7 @@ let rec balance qr =
     match qr with
         // Balancing horizontally requires at least two nested hcat
         // nodes.
-        | HCat (_, _, _, _, a, b) when not (isBalancedH qr) ->
+        | HCat (_, _, _, _, a, b) ->
             match a, b with
                 | HCat (_, _, _, _, aa, ab), b
                     when depth aa > depth ab && depth aa > depth b ->
@@ -272,7 +272,7 @@ let rec balance qr =
                 | _ -> qr
 
         // The same holds for balancing vertically and vcat nodes.
-        | VCat (_, _, _, _, a, b) when not (isBalancedV qr) ->
+        | VCat (_, _, _, _, a, b) ->
             match a, b with
                 | VCat (_, _, _, _, aa, ab), b
                     when depth aa > depth ab && depth aa > depth b ->

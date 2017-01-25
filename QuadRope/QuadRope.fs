@@ -243,20 +243,18 @@ let materialize qr =
         | Slice (i, j, h, w, qr) -> materialize i j h w qr
         | qr -> qr
 
-let private isBalanced d s =
-    d < 45 && Fibonacci.fib (d + 2) <= s
+let inline private isBalancedCriterion d s =
+    d < 45 && Fibonacci.fib (d + 1) <= s
 
-/// True if rope is balanced horizontally. False otherwise.
-let isBalancedH = function
-    | HCat (_, d, _, w, _, _)
-    | VCat (_, d, _, w, _, _) -> isBalanced d w
+/// True if rope is balanced in both dimensions. False otherwise.
+let isBalanced = function
+    | HCat (_, d, h, w, _, _)
+    | VCat (_, d, h, w, _, _) ->
+        isBalancedCriterion d (max h w)
     | _ -> true
 
-/// True if rope is balanced vertically. False otherwise.
-let isBalancedV = function
-    | HCat (_, d, h, _, _, _)
-    | VCat (_, d, h, _, _, _) -> isBalanced d h
-    | _ -> true
+let isBalancedH qr = isBalancedCriterion (depth qr) (cols qr)
+let isBalancedV qr = isBalancedCriterion (depth qr) (rows qr)
 
 /// Balance a quad rope by rotation in worst-case O(log n) time.
 let rec balance qr =

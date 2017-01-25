@@ -23,10 +23,17 @@ let right = function
     | VCat (_, _, _, _, _, qr)
     | qr -> qr
 
-let rec print = function
-    | HCat (_, _, _, _, a, b) -> sprintf "(hcat %s %s)" (print a) (print b)
-    | VCat (_, _, _, _, a, b) -> sprintf "(vcat %s %s)" (print a) (print b)
-    | Slice (_, _, _, _, qr) -> sprintf "/%s/" (print qr)
-    | Sparse _ -> "."
-    | Leaf _ -> "[]"
-    | Empty -> "e"
+let print qr =
+    let rec print n qr =
+        let tabs = String.replicate n " "
+        match qr with
+            | HCat (_, _, _, _, a, b) ->
+                sprintf "\n%s(hcat %s %s)" tabs (print (n + 1) a) (print (n + 1) b)
+            | VCat (_, _, _, _, a, b) ->
+                sprintf "\n%s(vcat %s %s)" tabs (print (n + 1) a) (print (n + 1) b)
+            | Slice (_, _, _, _, qr) ->
+                sprintf "/%s/" (print (n + 1) qr)
+            | Sparse _ -> "."
+            | Leaf _ -> "[]"
+            | Empty -> "e"
+    print 0 qr

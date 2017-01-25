@@ -172,7 +172,7 @@ let rec private fastZip f lqr rqr tgt =
         // in case both arguments are sparse, or to a mapping f.
         | Sparse (h, w, v1), Sparse (_, _, v2) -> Sparse (h, w, f v1 v2)
         | Sparse (_, _, v), _ -> map (f v) rqr
-        | _, Sparse (_, _, v) -> map (((<|) f) v) lqr
+        | _, Sparse (_, _, v) -> map (fun x -> f x v) lqr
 
         // Fall back to general case.
         | _ -> genZip f lqr rqr tgt

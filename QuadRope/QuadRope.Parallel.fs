@@ -27,10 +27,10 @@ open RadTrees
 open Types
 open Utils.Tasks
 
-let private rows = Types.rows
-let private cols = Types.cols
-let private depth = Types.depth
-let private isEmpty = Types.isEmpty
+let private rows = QuadRope.rows
+let private cols = QuadRope.cols
+let private depth = QuadRope.depth
+let private isEmpty = QuadRope.isEmpty
 
 let private isSparse = QuadRope.isSparse
 let private leaf = QuadRope.leaf

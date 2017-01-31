@@ -275,7 +275,7 @@ let ``transpose of transpose is identity`` (a : int QuadRope) =
 let ``zip ignores internal structure`` (a : int QuadRope) (b : int QuadRope) =
     (QuadRope.rows a = QuadRope.rows b && QuadRope.cols a = QuadRope.cols b) ==>
     lazy (QuadRope.equals (QuadRope.zip (+) a b)
-                          (QuadRope.init (rows a) (cols b) (fun r c -> QuadRope.get a r c + QuadRope.get b r c)))
+                          (QuadRope.init (QuadRope.rows a) (QuadRope.cols b) (fun r c -> QuadRope.get a r c + QuadRope.get b r c)))
 
 
 let ``toArray -> fromArray produces equal rope`` (a : int QuadRope) =

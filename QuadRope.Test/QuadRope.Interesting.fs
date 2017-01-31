@@ -48,7 +48,7 @@ module Utils =
 
     /// Compute whether the bound of any quad rope is exceeded.
     let isBalanced qr =
-        depth qr < 2 * (int (log (float (nodes qr)) + 1.0))
+        QuadRope.depth qr < 2 * (int (log (float (nodes qr)) + 1.0))
 
 
 type Handle = class end

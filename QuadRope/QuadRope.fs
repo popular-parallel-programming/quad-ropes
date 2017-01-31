@@ -33,11 +33,34 @@ let smax = 4
 let smax = 16
 #endif
 
-// Aliases for more concise code.
-let inline rows qr = Types.rows qr
-let inline cols qr = Types.cols qr
-let inline depth qr = Types.depth qr
-let inline isEmpty qr = Types.isEmpty qr
+/// Number of rows in a rectangular tree.
+let rows = function
+    | Empty -> 0
+    | Leaf slc -> ArraySlice.rows slc
+    | HCat (_, _, h, _, _, _) -> h
+    | VCat (_, _, h, _, _, _) -> h
+    | Slice (_, _, h, _, _) -> h
+    | Sparse (h, _, _) -> h
+
+/// Number of columns in a rectangular tree.
+let cols = function
+    | Empty -> 0
+    | Leaf slc -> ArraySlice.cols slc
+    | HCat (_, _, _, w, _, _) -> w
+    | VCat (_, _, _, w, _, _) -> w
+    | Slice (_, _, _, w, _) -> w
+    | Sparse (_, w, _) -> w
+
+/// Depth of a rectangular tree.
+let rec depth = function
+    | HCat (_, d, _, _, _, _) -> d
+    | VCat (_, d, _, _, _, _) -> d
+    | Slice (_, _, _, _, qr) -> depth qr
+    | _ -> 0
+
+let isEmpty = function
+    | Empty -> true
+    | _ -> false
 
 /// True if the quad rope contains a sparse sub-tree.
 let rec isSparse = function

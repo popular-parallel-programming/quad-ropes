@@ -591,7 +591,7 @@ let rec internal fastZip f lqr rqr tgt =
         // over-fitted to matrix multiplication.
         | Slice _, Slice _ -> fastZip f (materialize lqr) (materialize rqr) tgt
         | Slice _, _ ->       fastZip f (materialize lqr) rqr tgt
-        | Slice _, Slice _ -> fastZip f lqr (materialize rqr) tgt
+        | _, Slice _ ->       fastZip f lqr (materialize rqr) tgt
 
         // Sparse branches can be reduced to either a single call to f
         // in case both arguments are sparse, or to a mapping f.

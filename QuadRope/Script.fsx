@@ -37,3 +37,21 @@ let print qr =
             | Leaf _ -> "[]"
             | Empty -> "e"
     print 0 qr
+
+let rec dontimes n f s =
+    if n <= 0 then
+        s
+    else dontimes (n - 1) f (f s)
+
+let adversarial =
+    let rec hcat qr n =
+        let qr' = QuadRope.create (QuadRope.rows qr) 1 0
+        let qr'' = QuadRope.hcat qr qr'
+        if n <= 0 then qr'' else vcat qr'' (n - 1)
+    and     vcat qr n =
+        let qr' = QuadRope.create 1 (QuadRope.cols qr) 0
+        let qr'' = QuadRope.vcat qr qr'
+        if n <= 0 then qr'' else hcat qr'' (n - 1)
+    hcat
+
+let q = adversarial (QuadRope.init 1 5 (+)) 10

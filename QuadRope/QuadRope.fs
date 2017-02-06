@@ -54,26 +54,22 @@ let leaf slc =
     else
         Leaf slc
 
-/// Pseudo-constructor for initializing a new HCat node.
+/// Pseudo-constructor for initializing a new HCat node. No
+/// optimization for sparse quad ropes.
 let internal hnode a b =
     match a, b with
         | Empty, _ -> b
         | _, Empty -> a
-        | Sparse (h1, w1, v1), Sparse (h2, w2, v2)
-            when h1 = h2 && v1 = v2 ->
-                Sparse (h1, w1 + w2, v1)
         | _ when rows a = rows b ->
             HCat (isSparse a || isSparse b, max (depth a) (depth b) + 1, rows a, cols a + cols b, a, b)
         | _ -> failwith "Cannot hcat nodes of different height."
 
-/// Pseudo-constructor for initializing a new VCat node.
+/// Pseudo-constructor for initializing a new VCat node. No
+/// optimization for sparse quad ropes.
 let internal vnode a b =
     match a, b with
         | Empty, _ -> b
         | _, Empty -> a
-        | Sparse (h1, w1, v1), Sparse (h2, w2, v2)
-            when w1 = w2 && v1 = v2 ->
-                Sparse (h1 + h2, w1, v1)
         | _ when cols a = cols b ->
             VCat (isSparse a || isSparse b, max (depth a) (depth b) + 1, rows a + rows b, cols a, a, b)
         | _ -> failwith "Cannot vcat nodes of different width."
@@ -249,76 +245,10 @@ let materialize qr =
         | Slice (i, j, h, w, qr) -> materialize i j h w qr
         | qr -> qr
 
-let inline private isBalancedCriterion d s =
-    d < 45 && Fibonacci.fib (d + 1) <= s
-
-/// True if rope is balanced in both dimensions. False otherwise.
-let isBalanced = function
-    | HCat (_, d, h, w, _, _)
-    | VCat (_, d, h, w, _, _) ->
-        isBalancedCriterion d (max h w)
-    | _ -> true
-
-let isBalancedH qr = isBalancedCriterion (depth qr) (cols qr)
-let isBalancedV qr = isBalancedCriterion (depth qr) (rows qr)
-
-/// Balance a quad rope by rotation in worst-case O(log n) time.
-let rec balance qr =
-    match qr with
-        // Balancing horizontally requires at least two nested hcat
-        // nodes.
-        | HCat (_, _, _, _, a, b) ->
-            match a, b with
-                // Balance repeated hcat instances.
-                | HCat (_, _, _, _, aa, ab), b
-                    when depth aa > depth ab && depth aa > depth b ->
-                        hnode aa (balance (hnode ab b))
-                | a, HCat (_, _, _, _, ba, bb)
-                    when depth a < depth bb && depth ba < depth bb ->
-                        hnode (balance (hnode a ba)) bb
-
-                // Balance sparse branches by splitting them.
-                | VCat (_, _, _, _, aa, ab), Sparse _
-                     when rows ab < rows b && depth a > 2 ->
-                         let b', b'' = vsplit2 b (rows aa) // O(1)
-                         vnode (balance (hnode aa b')) (balance (hnode ab b'')) // O(2 log n)
-                | Sparse _, VCat (_, _, _, _, ba, bb)
-                     when rows ba < rows a && depth b > 2 ->
-                         let a', a'' = vsplit2 a (rows ba)
-                         vnode (balance (hnode a' ba)) (balance (hnode a'' bb))
-
-                | _ -> qr
-
-        // The same holds for balancing vertically and vcat nodes.
-        | VCat (_, _, _, _, a, b) ->
-            match a, b with
-                // Balance repeated vcat instances.
-                | VCat (_, _, _, _, aa, ab), b
-                    when depth aa > depth ab && depth aa > depth b ->
-                        vnode aa (balance (vnode ab b))
-                | a, VCat (_, _, _, _, ba, bb)
-                    when depth a < depth bb && depth ba < depth bb ->
-                        vnode (balance (vnode a ba)) bb
-
-                // Balance sparse branches by splitting them.
-                | HCat (_, _, _, _, aa, ab), Sparse _
-                    when cols ab < cols b && depth a > 2 ->
-                        let b', b'' = hsplit2 b (cols aa)
-                        hnode (balance (vnode aa b')) (balance (vnode ab b''))
-                | Sparse _, HCat (_, _, _, _, ba, bb)
-                    when cols ba < cols a && depth b > 2 ->
-                        let a', a'' = hsplit2 a (cols ba)
-                        hnode (balance (vnode a' ba)) (balance (vnode a'' bb))
-
-                | _ -> qr
-
-        // All other cases cannot be balanced.
-        | _ -> qr
-
 /// Concatenate two trees vertically. For the sake of leave size, this
 /// may result in actually keeping parts of a large area in memory
 /// twice. TODO: Consider other options.
-let vcat a b =
+let vcatnb a b =
     let inline canMerge a b =
         ArraySlice.rows a + ArraySlice.rows b <= smax
     let rec vcat a b =
@@ -348,12 +278,12 @@ let vcat a b =
     if (not ((isEmpty a) || (isEmpty b))) && cols a <> cols b then
         invalidArg "b" "B quad rope must be of same width as a quad rope."
     else
-        balance (vcat a b)
+        vcat a b
 
 /// Concatenate two trees horizontally. For the sake of leave size,
 /// this may result in actually keeping parts of a large area in
 /// memory twice. TODO: Consider other options.
-let hcat a b =
+let private hcatnb a b =
     let inline canMerge a b =
         ArraySlice.cols a + ArraySlice.cols b <= smax
     let rec hcat a b =
@@ -383,7 +313,76 @@ let hcat a b =
     if (not ((isEmpty a) || (isEmpty b))) && rows a <> rows b then
         invalidArg "b" "B quad rope must be of same height as a quad rope."
     else
-        balance (hcat a b)
+        hcat a b
+
+let inline private isBalancedCriterion d s =
+    d < 45 && Fibonacci.fib (d + 1) <= s
+
+/// True if rope is balanced in both dimensions. False otherwise.
+let isBalanced = function
+    | HCat (_, d, h, w, _, _)
+    | VCat (_, d, h, w, _, _) ->
+        isBalancedCriterion d (max h w)
+    | _ -> true
+
+let isBalancedH qr = isBalancedCriterion (depth qr) (cols qr)
+let isBalancedV qr = isBalancedCriterion (depth qr) (rows qr)
+
+/// Balance a quad rope by rotation in worst-case O(log n) time.
+let rec balance qr =
+    match qr with
+        // Balancing horizontally requires at least two nested hcat
+        // nodes.
+        | HCat (_, _, _, _, a, b) ->
+            match a, b with
+                // Balance repeated hcat instances.
+                | HCat (_, _, _, _, aa, ab), b
+                    when depth aa > depth ab && depth aa > depth b ->
+                        hcatnb aa (balance (hcatnb ab b))
+                | a, HCat (_, _, _, _, ba, bb)
+                    when depth a < depth bb && depth ba < depth bb ->
+                        hcatnb (balance (hcatnb a ba)) bb
+
+                // Balance sparse branches by splitting them.
+                | VCat (_, _, _, _, aa, ab), Sparse _
+                     when rows ab < rows b && depth a > 2 ->
+                         let b', b'' = vsplit2 b (rows aa) // O(1)
+                         vcatnb (balance (hcatnb aa b')) (balance (hcatnb ab b'')) // O(2 log n)
+                | Sparse _, VCat (_, _, _, _, ba, bb)
+                     when rows ba < rows a && depth b > 2 ->
+                         let a', a'' = vsplit2 a (rows ba)
+                         vcatnb (balance (hcatnb a' ba)) (balance (hcatnb a'' bb))
+
+                | _ -> qr
+
+        // The same holds for balancing vertically and vcat nodes.
+        | VCat (_, _, _, _, a, b) ->
+            match a, b with
+                // Balance repeated vcat instances.
+                | VCat (_, _, _, _, aa, ab), b
+                    when depth aa > depth ab && depth aa > depth b ->
+                        vcatnb aa (balance (vcatnb ab b))
+                | a, VCat (_, _, _, _, ba, bb)
+                    when depth a < depth bb && depth ba < depth bb ->
+                        vcatnb (balance (vcatnb a ba)) bb
+
+                // Balance sparse branches by splitting them.
+                | HCat (_, _, _, _, aa, ab), Sparse _
+                    when cols ab < cols b && depth a > 2 ->
+                        let b', b'' = hsplit2 b (cols aa)
+                        hcatnb (balance (vcatnb aa b')) (balance (vcatnb ab b''))
+                | Sparse _, HCat (_, _, _, _, ba, bb)
+                    when cols ba < cols a && depth b > 2 ->
+                        let a', a'' = hsplit2 a (cols ba)
+                        hcatnb (balance (vcatnb a' ba)) (balance (vcatnb a'' bb))
+
+                | _ -> qr
+
+        // All other cases cannot be balanced.
+        | _ -> qr
+
+let vcat a b = balance (vcatnb a b)
+let hcat a b = balance (hcatnb a b)
 
 /// Reverse rope horizontally.
 let hrev qr =

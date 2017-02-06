@@ -59,6 +59,9 @@ let internal hnode a b =
     match a, b with
         | Empty, _ -> b
         | _, Empty -> a
+        | Sparse (h1, w1, v1), Sparse (h2, w2, v2)
+            when h1 = h2 && v1 = v2 ->
+                Sparse (h1, w1 + w2, v1)
         | _ when rows a = rows b ->
             HCat (isSparse a || isSparse b, max (depth a) (depth b) + 1, rows a, cols a + cols b, a, b)
         | _ -> failwith "Cannot hcat nodes of different height."
@@ -68,6 +71,9 @@ let internal vnode a b =
     match a, b with
         | Empty, _ -> b
         | _, Empty -> a
+        | Sparse (h1, w1, v1), Sparse (h2, w2, v2)
+            when w1 = w2 && v1 = v2 ->
+                Sparse (h1 + h2, w1, v1)
         | _ when cols a = cols b ->
             VCat (isSparse a || isSparse b, max (depth a) (depth b) + 1, rows a + rows b, cols a, a, b)
         | _ -> failwith "Cannot vcat nodes of different width."
@@ -263,23 +269,47 @@ let rec balance qr =
         // nodes.
         | HCat (_, _, _, _, a, b) ->
             match a, b with
+                // Balance repeated hcat instances.
                 | HCat (_, _, _, _, aa, ab), b
                     when depth aa > depth ab && depth aa > depth b ->
                         hnode aa (balance (hnode ab b))
                 | a, HCat (_, _, _, _, ba, bb)
                     when depth a < depth bb && depth ba < depth bb ->
                         hnode (balance (hnode a ba)) bb
+
+                // Balance sparse branches by splitting them.
+                | VCat (_, _, _, _, aa, ab), Sparse _
+                     when rows ab < rows b && depth a > 2 ->
+                         let b', b'' = vsplit2 b (rows aa) // O(1)
+                         vnode (balance (hnode aa b')) (balance (hnode ab b'')) // O(2 log n)
+                | Sparse _, VCat (_, _, _, _, ba, bb)
+                     when rows ba < rows a && depth b > 2 ->
+                         let a', a'' = vsplit2 a (rows ba)
+                         vnode (balance (hnode a' ba)) (balance (hnode a'' bb))
+
                 | _ -> qr
 
         // The same holds for balancing vertically and vcat nodes.
         | VCat (_, _, _, _, a, b) ->
             match a, b with
+                // Balance repeated vcat instances.
                 | VCat (_, _, _, _, aa, ab), b
                     when depth aa > depth ab && depth aa > depth b ->
                         vnode aa (balance (vnode ab b))
                 | a, VCat (_, _, _, _, ba, bb)
                     when depth a < depth bb && depth ba < depth bb ->
                         vnode (balance (vnode a ba)) bb
+
+                // Balance sparse branches by splitting them.
+                | HCat (_, _, _, _, aa, ab), Sparse _
+                    when cols ab < cols b && depth a > 2 ->
+                        let b', b'' = hsplit2 b (cols aa)
+                        hnode (balance (vnode aa b')) (balance (vnode ab b''))
+                | Sparse _, HCat (_, _, _, _, ba, bb)
+                    when cols ba < cols a && depth b > 2 ->
+                        let a', a'' = hsplit2 a (cols ba)
+                        hnode (balance (vnode a' ba)) (balance (vnode a'' bb))
+
                 | _ -> qr
 
         // All other cases cannot be balanced.

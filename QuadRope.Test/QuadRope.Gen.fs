@@ -70,9 +70,7 @@ module Gen =
     let shrink = function
         | HCat (_, _, _, _, a, b)
         | VCat (_, _, _, _, a, b) ->
-            seq { if not (QuadRope.isEmpty a) then yield a
-                  if not (QuadRope.isEmpty b) then yield b
-                  yield QuadRope.Empty }
+            seq { yield a; yield b; yield QuadRope.Empty }
         | _ -> Seq.empty
 
     type QuadRopeGen =

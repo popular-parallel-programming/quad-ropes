@@ -345,11 +345,11 @@ let rec balance qr =
 
                 // Balance sparse branches by splitting them.
                 | VCat (_, _, _, _, aa, ab), Sparse _
-                     when rows ab < rows b && depth a > 2 ->
+                     when depth a > 2 ->
                          let b', b'' = vsplit2 b (rows aa) // O(1)
                          vcatnb (balance (hcatnb aa b')) (balance (hcatnb ab b'')) // O(2 log n)
                 | Sparse _, VCat (_, _, _, _, ba, bb)
-                     when rows ba < rows a && depth b > 2 ->
+                     when depth b > 2 ->
                          let a', a'' = vsplit2 a (rows ba)
                          vcatnb (balance (hcatnb a' ba)) (balance (hcatnb a'' bb))
 
@@ -368,11 +368,11 @@ let rec balance qr =
 
                 // Balance sparse branches by splitting them.
                 | HCat (_, _, _, _, aa, ab), Sparse _
-                    when cols ab < cols b && depth a > 2 ->
+                    when depth a > 2 ->
                         let b', b'' = hsplit2 b (cols aa)
                         hcatnb (balance (vcatnb aa b')) (balance (vcatnb ab b''))
                 | Sparse _, HCat (_, _, _, _, ba, bb)
-                    when cols ba < cols a && depth b > 2 ->
+                    when depth b > 2 ->
                         let a', a'' = hsplit2 a (cols ba)
                         hcatnb (balance (vcatnb a' ba)) (balance (vcatnb a'' bb))
 

@@ -96,14 +96,14 @@ let ``hbalance maintains order`` (NonNegativeInt x) =
     let mutable r = QuadRope.singleton 0
     for i in 1 .. x * 10 do
         r <- QuadRope.hcat r (QuadRope.singleton i)
-    QuadRope.forallRows (<) r && QuadRope.isBalancedH r
+    QuadRope.forallRows (<) r
 
 
 let ``vbalance maintains order`` (NonNegativeInt x) =
     let mutable r = QuadRope.singleton 0
     for i in 1 .. x * 10 do
         r <- QuadRope.vcat r (QuadRope.singleton i)
-    QuadRope.forallCols (<) r && QuadRope.isBalancedV r
+    QuadRope.forallCols (<) r
 
 
 let ``hrev of hrev is identity`` (a : int QuadRope) =

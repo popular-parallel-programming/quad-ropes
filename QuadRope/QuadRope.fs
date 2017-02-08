@@ -328,6 +328,10 @@ let isBalanced = function
 let isBalancedH qr = isBalancedCriterion (depth qr) (cols qr)
 let isBalancedV qr = isBalancedCriterion (depth qr) (rows qr)
 
+/// The balancing condition for nodes.
+let inline private balanceCondition a b c =
+    depth b < depth a && depth c <= depth a || depth b <= depth a && depth c < depth c
+
 /// Balance a quad rope by rotation in worst-case O(log n) time.
 let rec balance qr =
     match qr with
@@ -337,10 +341,10 @@ let rec balance qr =
             match a, b with
                 // Balance repeated hcat instances.
                 | HCat (_, _, _, _, aa, ab), b
-                    when depth aa > depth ab && depth aa > depth b ->
+                    when balanceCondition aa ab b ->
                         hcatnb aa (balance (hcatnb ab b))
                 | a, HCat (_, _, _, _, ba, bb)
-                    when depth a < depth bb && depth ba < depth bb ->
+                    when balanceCondition bb ba a ->
                         hcatnb (balance (hcatnb a ba)) bb
 
                 // Balance sparse branches by splitting them.
@@ -360,10 +364,10 @@ let rec balance qr =
             match a, b with
                 // Balance repeated vcat instances.
                 | VCat (_, _, _, _, aa, ab), b
-                    when depth aa > depth ab && depth aa > depth b ->
+                    when balanceCondition aa ab b ->
                         vcatnb aa (balance (vcatnb ab b))
                 | a, VCat (_, _, _, _, ba, bb)
-                    when depth a < depth bb && depth ba < depth bb ->
+                    when balanceCondition bb ba a ->
                         vcatnb (balance (vcatnb a ba)) bb
 
                 // Balance sparse branches by splitting them.

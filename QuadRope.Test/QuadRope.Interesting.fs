@@ -26,6 +26,31 @@ open FsCheck
 open RadTrees
 open Types
 
+module Utils =
+
+    /// Left branch of the quad rope.
+    let left = function
+        | HCat (_, _, _, _, qr, _)
+        | VCat (_, _, _, _, qr, _)
+        | qr -> qr
+
+    /// Right branch of the quad rope.
+    let right = function
+        | HCat (_, _, _, _, _, qr)
+        | VCat (_, _, _, _, _, qr)
+        | qr -> qr
+
+    /// Count number of nodes, i.e. number of elements in the nodes.
+    let rec nodes = function
+        | HCat _ | VCat _ as qr ->
+            nodes (left qr) + nodes (right qr) + 1
+        | _ -> 1
+
+    /// Compute whether the bound of any quad rope is exceeded.
+    let isBalanced qr =
+        depth qr < 2 * (int (log (float (nodes qr)) + 1.0))
+
+
 type Handle = class end
 
 let epsilon = 0.001
@@ -63,3 +88,6 @@ let ``sparse point-wise is commutative`` (a : float QuadRope) =
         let sparse = QuadRope.SparseDouble.upperDiagonal (QuadRope.rows a) 1.0
         QuadRope.equals (QuadRope.SparseDouble.pointwise a sparse)
                         (QuadRope.SparseDouble.pointwise sparse a))
+
+let ``depth(q) < 2*log(k(q) + 1)`` (a : int QuadRope) =
+    Utils.isBalanced a

@@ -353,9 +353,9 @@ let isBalancedV qr = isBalancedCriterion (depth qr) (rows qr)
 
 /// The balancing condition for nodes.
 let inline private balanceCondition a b c =
-    // At least one of b and c is shallower than a while the other one
-    // is at worst as deep as a.
-    (depth b < depth a && depth c <= depth a) || (depth b <= depth a && depth c < depth c)
+    // There is a difference in depth between a and b and c's depth is
+    // less than the maximum depth of a and b.
+    abs (depth a) - (depth b) <> 0 && depth c < max (depth a) (depth b)
 
 /// Balance a quad rope by rotation in worst-case O(log n) time.
 let rec balance qr =

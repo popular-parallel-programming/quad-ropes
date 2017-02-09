@@ -481,8 +481,8 @@ let init h w f =
         fromArray2D (Array2D.init h w f)
 
 /// Generate a singleton quad rope.
-let inline singleton v =
-    create 1 1 v
+let singleton v =
+    leaf (ArraySlice.make (Array2D.singleton v))
 
 /// True if rope is a singleton, false otherwise.
 let isSingleton qr =

@@ -285,10 +285,10 @@ let vcatnb a b =
                 leaf (ArraySlice.cat1 us ls)
 
             // Merge first-level leaves.
-            | VCat (_, _, _, _, aa, Leaf ab), Leaf b when canMerge ab b ->
-                vnode aa (leaf (ArraySlice.cat1 ab b))
-            | Leaf a, VCat (_, _, _, _, Leaf ba, bb) when canMerge a ba ->
-                vnode (leaf (ArraySlice.cat1 a ba)) bb
+            | VCat (_, _, _, _, aa, (Leaf _ as ab)), Leaf _ ->
+                vnode aa (vcat ab b) // O(1) since both args are leafs.
+            | Leaf _, VCat (_, _, _, _, (Leaf _ as ab), bb) ->
+                vnode (vcat a ab) bb // O(1)
 
             | Sparse (h1, w1, v1), Sparse (h2, w2, v2) when w1 = w2 && v1 = v2 ->
                 Sparse (h1 + h2, w1, v1)
@@ -320,10 +320,10 @@ let private hcatnb a b =
                 leaf (ArraySlice.cat2 ls rs)
 
             // Merge sub-leaves.
-            | HCat (_, _, _, _, aa, Leaf ab), Leaf b when canMerge ab b ->
-                hnode aa (leaf (ArraySlice.cat2 ab b))
-            | Leaf a, HCat (_, _, _, _, Leaf ba, bb) when canMerge a ba ->
-                hnode (leaf (ArraySlice.cat2 a ba)) bb
+            | HCat (_, _, _, _, aa, (Leaf _ as ab)), Leaf _ ->
+                hnode aa (hcat ab b) // O(1) since both args are leafs.
+            | Leaf _, HCat (_, _, _, _, (Leaf _ as ba), bb) ->
+                hnode (hcat a ba) bb // O(1)
 
             | Sparse (h1, w1, v1), Sparse (h2, w2, v2) when h1 = h2 && v1 = v2 ->
                 Sparse (h1, w1 + w2, v1)

@@ -333,52 +333,45 @@ let inline private balanceCondition a b c =
     depth b < depth a && depth c <= depth a || depth b <= depth a && depth c < depth c
 
 /// Balance a quad rope by rotation in worst-case O(log n) time.
-let rec balance qr =
+let balance qr =
     match qr with
-        // Balancing horizontally requires at least two nested hcat
-        // nodes.
         | HCat (_, _, _, _, a, b) ->
             match a, b with
                 // Balance repeated hcat instances.
                 | HCat (_, _, _, _, aa, ab), b
                     when balanceCondition aa ab b ->
-                        hcatnb aa (balance (hcatnb ab b))
+                        hcatnb aa ((hcatnb ab b))
                 | a, HCat (_, _, _, _, ba, bb)
                     when balanceCondition bb ba a ->
-                        hcatnb (balance (hcatnb a ba)) bb
+                        hcatnb ((hcatnb a ba)) bb
 
                 // Balance sparse branches by splitting them.
-                | VCat (_, _, _, _, aa, ab), Sparse _
-                    when depth a > 2 ->
+                | VCat (_, _, _, _, aa, ab), Sparse _ when depth a > 2 ->
                         let b', b'' = vsplit2 b (rows aa) // O(1)
-                        vcatnb (balance (hcatnb aa b')) (balance (hcatnb ab b'')) // O(2 log n)
-                | Sparse _, VCat (_, _, _, _, ba, bb)
-                    when depth b > 2 ->
+                        vcatnb ((hcatnb aa b')) ((hcatnb ab b'')) // O(2 log n)
+                | Sparse _, VCat (_, _, _, _, ba, bb) when depth b > 2 ->
                         let a', a'' = vsplit2 a (rows ba)
-                        vcatnb (balance (hcatnb a' ba)) (balance (hcatnb a'' bb))
+                        vcatnb ((hcatnb a' ba)) ((hcatnb a'' bb))
 
                 | _ -> qr
 
-        // The same holds for balancing vertically and vcat nodes.
         | VCat (_, _, _, _, a, b) ->
             match a, b with
                 // Balance repeated vcat instances.
                 | VCat (_, _, _, _, aa, ab), b
                     when balanceCondition aa ab b ->
-                        vcatnb aa (balance (vcatnb ab b))
+                        vcatnb aa ((vcatnb ab b))
                 | a, VCat (_, _, _, _, ba, bb)
                     when balanceCondition bb ba a ->
-                        vcatnb (balance (vcatnb a ba)) bb
+                        vcatnb ((vcatnb a ba)) bb
 
                 // Balance sparse branches by splitting them.
-                | HCat (_, _, _, _, aa, ab), Sparse _
-                    when depth a > 2 ->
+                | HCat (_, _, _, _, aa, ab), Sparse _ when depth a > 2 ->
                         let b', b'' = hsplit2 b (cols aa)
-                        hcatnb (balance (vcatnb aa b')) (balance (vcatnb ab b''))
-                | Sparse _, HCat (_, _, _, _, ba, bb)
-                    when depth b > 2 ->
+                        hcatnb ((vcatnb aa b')) ((vcatnb ab b''))
+                | Sparse _, HCat (_, _, _, _, ba, bb) when depth b > 2 ->
                         let a', a'' = hsplit2 a (cols ba)
-                        hcatnb (balance (vcatnb a' ba)) (balance (vcatnb a'' bb))
+                        hcatnb ((vcatnb a' ba)) ((vcatnb a'' bb))
 
                 | _ -> qr
 

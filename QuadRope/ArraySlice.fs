@@ -71,9 +71,9 @@ let inline cols slc = slc.w
 
 // Handy for iterating.
 let inline minr slc = slc.r
-let inline maxr slc = slc.r + slc.h
+let inline maxr slc = slc.r + slc.h - 1
 let inline minc slc = slc.c
-let inline maxc slc = slc.c + slc.w
+let inline maxc slc = slc.c + slc.w - 1
 
 let inline fastGet slc i j = slc.vals.[slc.r + i, slc.c + j]
 

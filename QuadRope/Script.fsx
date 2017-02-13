@@ -39,9 +39,9 @@ let print qr =
     print 0 qr
 
 let rec dontimes n f s =
-    if n <= 0 then
-        s
-    else dontimes (n - 1) f (f s)
+    match n with
+        | 0 -> s
+        | n -> f n (dontimes (n - 1) f s)
 
 let adversarial =
     let rec hcat qr n =
@@ -54,4 +54,4 @@ let adversarial =
         if n <= 0 then qr'' else hcat qr'' (n - 1)
     hcat
 
-let q = adversarial (QuadRope.init 1 5 (+)) 10
+let q = adversarial (QuadRope.init 1 1 (+)) 10

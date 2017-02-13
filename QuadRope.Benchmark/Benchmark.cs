@@ -368,6 +368,12 @@ namespace RadTrees.Benchmark
             }
         }
 
+        public static void Sieve(Options opts)
+        {
+            MarkThreads("Array2D.sieve",  1, () => Examples.Array2D.sieve(opts.Size));
+            MarkThreads("QuadRope.sieve", 1, () => Examples.QuadRope.sieve(opts.Size));
+        }
+
         static Dictionary<string, Action<Options>> tests = new Dictionary<string, Action<Options>>()
         {
             {"all", Run},
@@ -380,7 +386,8 @@ namespace RadTrees.Benchmark
             {"fibseq", Fibonacci},
             {"mmult", MatrixMultiplication},
             {"prod", SparseProduct},
-            {"point", SparsePointwise}
+            {"point", SparsePointwise},
+            {"sieve", Sieve}
         };
 
         public static void PrintModes()

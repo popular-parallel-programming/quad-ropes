@@ -280,8 +280,8 @@ let iteri2 f left right =
 
 /// Initialize a hopefully empty ArraySlice.
 let internal init slc f =
-    for i in minr slc .. maxr slc - 1 do
-        for j in minc slc .. maxc slc - 1 do
+    for i in minr slc .. maxr slc do
+        for j in minc slc .. maxc slc do
             slc.vals.[i, j] <- f i j
 
 /// Convenience function to create a new empty ArraySlice that can be

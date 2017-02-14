@@ -37,11 +37,11 @@ let sqr x = x * x
 
 
 let ``parallel hmapreduce equal to sequential`` (a : int QuadRope) =
-    QuadRope.hmapreduce sqr (*) 1 a = Parallel.QuadRope.hmapreduce sqr (*) 1 a
+    QuadRope.equals (QuadRope.hmapreduce sqr (*) 1 a) (Parallel.QuadRope.hmapreduce sqr (*) 1 a)
 
 
 let ``parallel vmapreduce equal to sequential`` (a : int QuadRope) =
-    QuadRope.vmapreduce sqr (*) 1 a = Parallel.QuadRope.vmapreduce sqr (*) 1 a
+    QuadRope.equals (QuadRope.vmapreduce sqr (*) 1 a) (Parallel.QuadRope.vmapreduce sqr (*) 1 a)
 
 
 let ``parallel mapreduce equal to sequential``  (a : int QuadRope) =
@@ -49,19 +49,19 @@ let ``parallel mapreduce equal to sequential``  (a : int QuadRope) =
 
 
 let ``parallel map equal to sequential`` (a : int QuadRope) =
-    QuadRope.map sqr a = Parallel.QuadRope.map sqr a
+    QuadRope.equals (QuadRope.map sqr a) (Parallel.QuadRope.map sqr a)
 
 
 let ``parallel hrev equal to sequential`` (a : int QuadRope) =
-    QuadRope.hrev a = Parallel.QuadRope.hrev a
+    QuadRope.equals (QuadRope.hrev a) (Parallel.QuadRope.hrev a)
 
 
 let ``parallel vrev equal to sequential`` (a : int QuadRope) =
-    QuadRope.vrev a = Parallel.QuadRope.vrev a
+    QuadRope.equals (QuadRope.vrev a) (Parallel.QuadRope.vrev a)
 
 
 let ``parallel transpose equal to sequential`` (a : int QuadRope) =
-    QuadRope.transpose a = Parallel.QuadRope.transpose a
+    QuadRope.equals (QuadRope.transpose a) (Parallel.QuadRope.transpose a)
 
 
 let ``parallel zip equal to sequential`` (a : int QuadRope) (b : int QuadRope) =

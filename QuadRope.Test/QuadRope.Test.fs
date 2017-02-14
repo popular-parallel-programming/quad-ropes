@@ -81,6 +81,9 @@ let ``init produces correct values`` (NonNegativeInt h) (NonNegativeInt w) =
 let ``get is always inside bounds`` (a : int QuadRope) =
     Seq.forall (access a) (makeIndicesFrom a)
 
+let ``set changes correct element`` (a : int QuadRope) x =
+    Seq.forall (fun (i, j) -> let a' = QuadRope.set a i j x in QuadRope.get a' i j = x)
+               (makeIndicesFrom a)
 
 let ``hcat width is equal to width sum`` (a : int QuadRope) (b : int QuadRope)  =
     (QuadRope.rows a = QuadRope.rows b) ==>

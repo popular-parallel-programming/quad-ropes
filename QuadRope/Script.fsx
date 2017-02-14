@@ -55,3 +55,43 @@ let adversarial =
     hcat
 
 let q = adversarial (QuadRope.init 1 1 (+)) 10
+
+
+// Amino acid sequence alignment on quad ropes.
+let strlen = String.length
+
+let rec findMaxIdx c i j scores =
+    let c' = max c (QuadRope.get scores i j)
+    if j < QuadRope.cols scores - 1 then
+        findMaxIdx c' i (j + 1) scores
+    else if i < QuadRope.rows scores - 1 then
+        findMaxIdx c' (i + 1) 0 scores
+    else
+        i, j
+
+let findNextIdx i j scores =
+    let a = QuadRope.get scores (i - 1) j
+    let b = QuadRope.get scores i (j - 1)
+    let c = QuadRope.get scores (i - 1) (j - 1)
+    if a > b && a > c then
+        i - 1, j
+    else if b > a && b > c then
+        i, j - 1
+    else
+        i - 1, j - 1
+
+let rec backtrace (i, j) scores trace =
+    let score = QuadRope.get scores i j
+    let trace' = QuadRope.hcat (QuadRope.singleton score) trace
+    if score = 0 then
+        trace'
+    else
+        backtrace (findNextIdx i j scores) scores trace'
+
+let align a b =
+    let f score row col diag =
+        max (max (diag + score) (max (row - 1) (col - 1))) 0
+    let scores =
+        QuadRope.init (strlen a) (strlen b) (fun i j -> if a.[i] = b.[j] then 1 else - 1)
+        |> QuadRope.scan f 0
+    backtrace (findMaxIdx 0 0 0 scores) scores Empty

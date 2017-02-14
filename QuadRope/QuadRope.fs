@@ -727,16 +727,17 @@ let rec vscan f states = function
     | Sparse (h, w, v) ->
          vscan f states (init h w (fun _ _ -> v))
 
-/// Compute the generalized summed area table for functions plus and
-/// minus; all rows and columns are initialized with init.
-let scan plus minus init qr =
+/// Compute the generalized summed area table. All rows and columns
+/// are initialized with init. Function f will be called like this:
+/// f(I(i,j), I(i - 1, j), I(i, j - 1), I(i - 1, j - 1))
+let scan f init qr =
     // Prefix is implicitly passed on through side effects when
     // writing into tgt.
     let rec scan pre qr tgt =
         match qr with
             | Empty -> Empty
             | Leaf slc ->
-                Target.scan plus minus pre slc tgt
+                Target.scan f pre slc tgt
                 Leaf (Target.toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc))
 
             // Scanning b depends on scanning a; a resides "above" b.
@@ -761,7 +762,7 @@ let scan plus minus init qr =
                 // Get a slice over the target.
                 let slc = Target.toSlice tgt h w
                 // Compute prefix imperatively.
-                Target.scan plus minus pre slc tgt
+                Target.scan f pre slc tgt
                 // Make a new quad rope from array slice.
                 fromArraySlice slc
 

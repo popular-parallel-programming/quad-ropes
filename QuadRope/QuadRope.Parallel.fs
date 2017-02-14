@@ -373,10 +373,11 @@ let initAll h w e =
 /// Initialize a rope in parallel with all zeros.
 let initZeros h w = initAll h w 0
 
-/// Compute the generalized summed area table for functions plus and
-/// minus in parallel, if possible; all rows and columns are
-/// initialized with init.
-let scan plus minus init qr =
+/// Compute the generalized summed area table in parallel, if
+/// possible. All rows and columns are initialized with init. Function
+/// f will be called like this:
+/// f(I(i,j), I(i - 1, j), I(i, j - 1), I(i - 1, j - 1))
+let scan f init qr =
     // Prefix is implicitly passed on through side effects when
     // writing into tgt. Therefore, we need to take several cases of
     // dependencies into account:
@@ -389,7 +390,7 @@ let scan plus minus init qr =
         match qr with
             | Empty -> Empty
             | Leaf slc ->
-                Target.scan plus minus pre slc tgt
+                Target.scan f pre slc tgt
                 Leaf (Target.toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc))
 
             // Parallel cases: b and c depend only on a, d
@@ -444,7 +445,7 @@ let scan plus minus init qr =
                 // Get a slice over the target.
                 let slc = Target.toSlice tgt h w
                 // Compute prefix imperatively.
-                Target.scan plus minus pre slc tgt
+                Target.scan f pre slc tgt
                 // Make a new quad rope from array slice.
                 leaf slc
 

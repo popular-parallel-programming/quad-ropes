@@ -101,10 +101,9 @@ namespace RadTrees.QuadRope.Object
             return new ParallelQuadRope<T>(Parallel.QuadRopeModule.vrev(qr));
         }
 
-        public override IQuadRope<T> Scan(Func<T, T, T> plus, Func<T, T, T> minus, T initial)
+        public override IQuadRope<T> Scan(Func<T, T, T, T, T> f, T initial)
         {
-            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.scan(Functions.toFunc2(plus),
-                                                                        Functions.toFunc2(minus),
+            return new ParallelQuadRope<T>(Parallel.QuadRopeModule.scan(Functions.toFunc4(f),
                                                                         initial,
                                                                         qr));
         }

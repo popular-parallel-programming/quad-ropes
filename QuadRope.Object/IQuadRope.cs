@@ -162,7 +162,7 @@ namespace RadTrees.QuadRope.Object
         ///   <code>plus</code>. The function <code>minus</code> is
         ///   assumed to be the inverse of <code>plus</code>.
         /// </summary>
-        public abstract IQuadRope<T> Scan(Func<T, T, T> plus, Func<T, T, T> minus, T initial);
+        public abstract IQuadRope<T> Scan(Func<T, T, T, T, T> f, T initial);
 
         /// <summary>
         ///   Compute the row-wise prefix-sum for the associative

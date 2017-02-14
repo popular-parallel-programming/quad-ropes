@@ -95,10 +95,9 @@ namespace RadTrees.QuadRope.Object
             return new SequentialQuadRope<T>(QuadRopeModule.vrev(qr));
         }
 
-        public override IQuadRope<T> Scan(Func<T, T, T> plus, Func<T, T, T> minus, T initial)
+        public override IQuadRope<T> Scan(Func<T, T, T, T, T> f, T initial)
         {
-            return new SequentialQuadRope<T>(QuadRopeModule.scan(Functions.toFunc2(plus),
-                                                                 Functions.toFunc2(minus),
+            return new SequentialQuadRope<T>(QuadRopeModule.scan(Functions.toFunc4(f),
                                                                  initial,
                                                                  qr));
         }

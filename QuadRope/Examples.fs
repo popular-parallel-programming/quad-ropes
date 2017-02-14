@@ -74,10 +74,18 @@ module Array2D =
                 let fb = get prefix 0 (n-1)
                 prefix @ singleton (fa + fb)
 
-    /// The sieve of Erasthotenes.
+    /// The sieve of Erastothenes
     let sieve n =
         /// Find next element that is larger than p; assumes ns is sorted.
-        let find p ns = reduce (fun a b -> if a < p + 1 then b else a) ns
+        let rec find p i ns =
+            if i >= rows ns then
+                p
+            else
+                let p' = get ns i 0
+                if p' <= p then
+                    find p (i + 1) ns
+                else
+                    p'
 
         /// Enumerate all multiples of p in ns and set them to 0.
         let rec enumerate p c ns =
@@ -88,16 +96,16 @@ module Array2D =
                 ns
 
         /// Mark multiples of p; all unmarked values are primes.
-        let rec sieve p ns =
+        let rec sieve lim p ns =
             let ns' = enumerate p 2 ns
-            let p' = find p ns'
-            if p' <= p then
-                ns
+            let p' = find p (p + 1) ns'
+            if p' <= lim then
+                sieve lim p' ns'
             else
-                sieve (find p ns') ns'
+                ns'
 
         // Call recursive function with initial args.
-        sieve 2 (init n 1 (+))
+        sieve (int (sqrt (float n))) 2 (init n 1 (+))
 
     let mmult (lm : double [,]) rm =
         let trm = transpose rm
@@ -206,10 +214,18 @@ module QuadRope =
                 let fb = get prefix 0 (n-1)
                 prefix @ singleton (fa + fb)
 
-    /// The sieve of Erasthotenes.
+    /// The sieve of Erastothenes.
     let sieve n =
         /// Find next element that is larger than p; assumes ns is sorted.
-        let find p ns = reduce (fun a b -> if a < p + 1 then b else a) p ns
+        let rec find p i ns =
+            if i >= rows ns then
+                p
+            else
+                let p' = get ns i 0
+                if p' <= p then
+                    find p (i + 1) ns
+                else
+                    p'
 
         /// Enumerate all multiples of p in ns and set them to 0.
         let rec enumerate p c ns =
@@ -220,16 +236,16 @@ module QuadRope =
                 ns
 
         /// Mark multiples of p; all unmarked values are primes.
-        let rec sieve p ns =
+        let rec sieve lim p ns =
             let ns' = enumerate p 2 ns
-            let p' = find p ns'
-            if p' <= p then
-                ns
+            let p' = find p (p + 1) ns'
+            if p' <= lim then
+                sieve lim p' ns'
             else
-                sieve (find p ns') ns'
+                ns'
 
         // Call recursive function with initial args.
-        sieve 2 (init n 1 (+))
+        sieve (int (sqrt (float n))) 2 (init n 1 (+))
 
     let sum = QuadRope.SparseDouble.sum
     let pointwise = QuadRope.SparseDouble.pointwise

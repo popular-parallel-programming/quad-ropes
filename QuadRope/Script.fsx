@@ -89,7 +89,7 @@ let rec backtrace (i, j) scores trace =
         backtrace (findNextIdx i j scores) scores trace'
 
 let align a b =
-    let f score row col diag =
+    let f row diag col score =
         max (max (diag + score) (max (row - 1) (col - 1))) 0
     let scores =
         QuadRope.init (strlen a) (strlen b) (fun i j -> if a.[i] = b.[j] then 1 else - 1)

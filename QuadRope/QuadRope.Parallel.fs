@@ -376,7 +376,7 @@ let initZeros h w = initAll h w 0
 /// Compute the generalized summed area table in parallel, if
 /// possible. All rows and columns are initialized with init. Function
 /// f will be called like this:
-/// f(I(i,j), I(i - 1, j), I(i, j - 1), I(i - 1, j - 1))
+/// f(I(i, j - 1), I(i - 1, j - 1), I(i - 1, j), I(i,j))
 let scan f init qr =
     // Prefix is implicitly passed on through side effects when
     // writing into tgt. Therefore, we need to take several cases of

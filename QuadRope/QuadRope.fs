@@ -729,7 +729,7 @@ let rec vscan f states = function
 
 /// Compute the generalized summed area table. All rows and columns
 /// are initialized with init. Function f will be called like this:
-/// f(I(i,j), I(i - 1, j), I(i, j - 1), I(i - 1, j - 1))
+/// f(I(i, j - 1), I(i - 1, j - 1), I(i - 1, j), I(i,j))
 let scan f init qr =
     // Prefix is implicitly passed on through side effects when
     // writing into tgt.
@@ -772,7 +772,7 @@ let scan f init qr =
 /// A less general variant of scan that uses a function and its
 /// inverse. Internally, this also calls scan.
 let sumAreaTable (+) (-) =
-    scan (fun s row col diag -> s + row + col - diag)
+    scan (fun row diag col s -> s + row + col - diag)
 
 /// Checks that some relation p holds between each two adjacent
 /// elements in each row. This is slow and should not really be

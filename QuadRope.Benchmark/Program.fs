@@ -28,18 +28,12 @@ open RadTrees
 open Types
 open Examples
 
-/// Set the number of thread pool threads to t.
-let setThreads t =
-    // Set min threads first, otherwise setting max threads might fail.
-    System.Threading.ThreadPool.SetMinThreads(1, 1) |> ignore
-    if not (System.Threading.ThreadPool.SetMaxThreads(t, t)) then
-        failwith "# Error: could not change the number of thread pool threads."
-
 /// Options for command line.
 type Options = {
   [<Option('m', "mode", Required = true, HelpText = "Which benchmark to run.")>] mode : string;
   [<Option('s', "size", Default = 100, HelpText = "Input size.")>] size : int;
   [<Option('t', "threads", Default = 1, HelpText = "Number of threads.")>] threads : int }
+
 
 /// Benchmark base functions.
 let all (opts : Options) =
@@ -168,6 +162,14 @@ let benchmarks =
       "primes", factorize;
       "sieve", sieve;
       "index", index ] |> Collections.Map
+
+
+/// Set the number of thread pool threads to t.
+let setThreads t =
+    // Set min threads first, otherwise setting max threads might fail.
+    System.Threading.ThreadPool.SetMinThreads(1, 1) |> ignore
+    if not (System.Threading.ThreadPool.SetMaxThreads(t, t)) then
+        failwith "# Error: could not change the number of thread pool threads."
 
 
 /// True if we are running on mono.

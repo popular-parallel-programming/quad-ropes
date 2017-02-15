@@ -11,7 +11,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuadRope.Object", "QuadRope
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "QuadRope.Examples", "QuadRope.Examples\QuadRope.Examples.fsproj", "{9E096AF0-6965-4810-9B2E-1A57FD87496C}"
 EndProject
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "QuadRope.BenchmarkFs", "QuadRope.BenchmarkFs\QuadRope.BenchmarkFs.fsproj", "{CA159E51-19BB-467C-B37A-B388112261FB}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "QuadRope.Benchmark", "QuadRope.Benchmark\QuadRope.Benchmark.fsproj", "{CA159E51-19BB-467C-B37A-B388112261FB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -769,6 +769,11 @@ let scan f init qr =
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
     scan (Target.get tgt) qr tgt
 
+/// A less general variant of scan that uses a function and its
+/// inverse. Internally, this also calls scan.
+let sumAreaTable (+) (-) =
+    scan (fun s row col diag -> s + row + col - diag)
+
 /// Checks that some relation p holds between each two adjacent
 /// elements in each row. This is slow and should not really be
 /// used.

@@ -27,7 +27,7 @@ module QuadRope =
 
 module Array2D =
     let private mmultBuilder pointwise transpose init sum =
-        let mmult lm rm =
+        let mmult (lm : float [,]) rm =
             let trm = transpose rm
             init (Array2D.length1 lm)
                  (Array2D.length2 rm)
@@ -48,7 +48,7 @@ module Array2D =
                                 (Parallel.Array2D.reduce (+))
 
 module Imperative =
-    let mmult (lm : double [,]) rm =
+    let mmult (lm : float [,]) rm =
         let res = Array2D.zeroCreate (Array2D.length1 lm) (Array2D.length2 rm)
         for i = 0 to Array2D.length1 lm - 1 do
             for k = 0 to Array2D.length2 lm - 1 do

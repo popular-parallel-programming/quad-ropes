@@ -23,4 +23,4 @@ module Array2D =
                 let prefix = fibseq (n-1)
                 let fa = Array2D.get prefix 0 (n-2)
                 let fb = Array2D.get prefix 0 (n-1)
-                Array2D.cat1 prefix (Array2D.singleton (fa + fb))
+                Array2D.cat2 prefix (Array2D.singleton (fa + fb))

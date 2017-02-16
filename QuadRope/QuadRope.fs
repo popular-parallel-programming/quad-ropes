@@ -577,6 +577,25 @@ let map f qr =
                 Sparse (h, w, f v)
     map qr Target.empty
 
+
+/// Map a function over a quad rope's values and its indexes.
+let mapi f qr =
+    let rec mapi i j qr tgt =
+        match qr with
+            | Empty -> Empty
+            | Leaf slc ->
+                Leaf (Target.mapi (fun i' j' v -> f (i + i') (j + j') v)  slc tgt)
+            | HCat (_, _, _, _, a, b) ->
+                hnode (mapi i j a tgt) (mapi i (j + cols a) b (Target.incrementCol tgt (cols a)))
+            | VCat (_, _, _, _, a, b) ->
+                vnode (mapi i j a tgt) (mapi (i + rows a) j  b (Target.incrementRow tgt (rows a)))
+            | Slice _ -> mapi i j (materialize qr) tgt
+            | Sparse (h, w, v) ->
+                // TODO: This is slightly inefficient, we traverse the tree twice.
+                mapi i j (init h w (fun _ _ -> v)) tgt
+    mapi 0 0 qr (Target.make (rows qr) (cols qr))
+
+
 /// Map a function f to each row of the quad rope.
 let hmap f qr =
     init (rows qr) 1 (fun i _ -> slice i 0 1 (cols qr) qr |> f)

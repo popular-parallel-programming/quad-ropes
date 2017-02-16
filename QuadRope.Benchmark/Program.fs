@@ -197,4 +197,4 @@ let runBenchmark (opts : Options) =
 let main argv =
     match Parser.Default.ParseArguments<Options> argv with
         | :? Parsed<Options> as parsed -> runBenchmark parsed.Value; 0
-        | :? NotParsed<Options> -> 1
+        | _ -> 1

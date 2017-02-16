@@ -156,8 +156,8 @@ let index (opts : Options) =
     let idx = opts.size / 2
     benchmark ("QuadRope.get", fun () -> QuadRope.get qr idx idx)
           &>> ("Array2D.get",  fun () -> Array2D.get arr idx idx) |> runWithHead
-
-
+    benchmark ("QuadRope.set", fun () -> QuadRope.set qr idx idx 0) |> run
+    benchmark ("Array2D.set",  fun () -> Array2D.set arr idx idx 0) |> run
 
 
 let alignment (opts : Options) =

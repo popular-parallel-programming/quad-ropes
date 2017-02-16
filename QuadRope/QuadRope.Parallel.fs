@@ -32,12 +32,15 @@ let private cols = QuadRope.cols
 let private depth = QuadRope.depth
 let private isEmpty = QuadRope.isEmpty
 
+
 let private isSparse = QuadRope.isSparse
 let private leaf = QuadRope.leaf
 let private hnode = QuadRope.hnode
 let private vnode = QuadRope.vnode
 
+
 let private smax = QuadRope.smax
+
 
 /// Generate a new quad rope in parallel.
 let init h w (f : int -> int -> _) =
@@ -67,6 +70,7 @@ let init h w (f : int -> int -> _) =
             ||> vnode
 
     hsplit (ArraySlice.zeroCreate h w)
+
 
 /// Apply a function f to all scalars in parallel.
 let map f qr =
@@ -128,9 +132,11 @@ let mapi f qr =
 let hmap f qr =
     init (rows qr) 1 (fun i _ -> QuadRope.slice i 0 1 (cols qr) qr |> f)
 
+
 /// Map a function f to each column of the quad rope.
 let vmap f qr =
     init 1 (cols qr) (fun _ j -> QuadRope.slice 0 j (rows qr) 1 qr |> f)
+
 
 /// Zip implementation for the general case where we do not assume
 /// that both ropes have the same internal structure.
@@ -160,6 +166,7 @@ let rec private genZip f lqr rqr tgt =
 
         | Slice _ -> genZip f (QuadRope.materialize lqr) rqr tgt
         | _ -> QuadRope.genZip f lqr rqr tgt
+
 
 /// Zip function that assumes that the internal structure of two ropes
 /// matches. If not, it falls back to the slow, general case.
@@ -202,11 +209,13 @@ let rec private fastZip f lqr rqr tgt =
         // Fall back to general case.
         | _ -> genZip f lqr rqr tgt
 
+
 /// Apply f to each (i, j) of lqr and rqr.
 let zip f lqr rqr =
     if not (QuadRope.shapesMatch lqr rqr) then
         invalidArg "rqr" "Must have the same shape as first argument."
     fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
+
 
 /// Apply f to all values of the rope and reduce the resulting values
 /// to a single scalar using g in parallel. Variable epsilon is the
@@ -222,18 +231,23 @@ let rec mapreduce f g epsilon = function
     | Slice _ as qr -> mapreduce f g epsilon (QuadRope.materialize qr)
     | qr -> QuadRope.mapreduce f g epsilon qr
 
+
 /// Reduce all values of the rope to a single scalar in parallel.
 let reduce f epsilon qr = mapreduce id f epsilon qr
+
 
 let hmapreduce f g epsilon qr = hmap (mapreduce f g epsilon) qr
 let vmapreduce f g epsilon qr = vmap (mapreduce f g epsilon) qr
 
+
 let hreduce f epsilon qr = hmapreduce id f epsilon qr
 let vreduce f epsilon qr = vmapreduce id f epsilon qr
+
 
 /// Apply predicate p to all elements of qr in parallel and reduce the
 /// elements in both dimension using logical and.
 let forall p qr = mapreduce p (&&) true qr
+
 
 /// Apply predicate p to all elements of qr in parallel and reduce the
 /// elements in both dimensions using logical or.
@@ -248,6 +262,7 @@ let rec hfilter p = function
     | Slice _ as qr -> hfilter p (QuadRope.materialize qr)
     | qr -> QuadRope.hfilter p qr
 
+
 /// Remove all elements from rope for which p does not hold in
 /// parallel. Input rope must be of width 1.
 let rec vfilter p = function
@@ -255,6 +270,7 @@ let rec vfilter p = function
         par2 (fun () -> vfilter p a) (fun () -> vfilter p b) ||> vnode
     | Slice _ as qr -> vfilter p (QuadRope.materialize qr)
     | qr -> QuadRope.vfilter p qr
+
 
 /// Reverse the quad rope horizontally in parallel.
 let hrev qr =
@@ -273,6 +289,7 @@ let hrev qr =
             | _ -> qr
     hrev qr (Target.make (rows qr) (cols qr))
 
+
 /// Reverse the quad rope vertically in parallel.
 let vrev qr =
     let rec vrev qr tgt =
@@ -289,6 +306,7 @@ let vrev qr =
                 vrev (QuadRope.materialize qr) tgt
             | _ -> qr
     vrev qr (Target.make (rows qr) (cols qr))
+
 
 /// Transpose the quad rope in parallel. This is equal to swapping
 /// indices, such that get rope i j = get rope j i.
@@ -308,6 +326,7 @@ let transpose qr =
                 transpose (QuadRope.materialize qr) tgt
             | Sparse (h, w, v) -> Sparse (w, h, v)
     transpose qr (Target.make (cols qr) (rows qr))
+
 
 /// Apply a function with side effects to all elements and their
 /// corresponding index pair in parallel.
@@ -352,6 +371,7 @@ let iteri f qr =
 
     iteri f 0 0 qr
 
+
 /// Conversion into 2D array.
 let toArray2D qr =
     let arr = Array2D.zeroCreate (rows qr) (cols qr)
@@ -359,6 +379,7 @@ let toArray2D qr =
     // the rope once.
     iteri (fun i j v -> arr.[i, j] <- v) qr
     arr
+
 
 /// Initialize a rope from a native 2D-array in parallel.
 let fromArray2D arr =
@@ -385,18 +406,22 @@ let fromArray2D arr =
             QuadRope.leaf (ArraySlice.makeSlice h0 w0 h w arr)
     init 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
 
+
 /// Reallocate a rope form the ground up. Sometimes, this is the
 /// only way to improve performance of a badly composed quad rope.
 let inline reallocate qr =
     fromArray2D (toArray2D qr)
+
 
 /// Initialize a rope in parallel where all elements are
 /// <code>e</code>.
 let initAll h w e =
     init h w (fun _ _ -> e)
 
+
 /// Initialize a rope in parallel with all zeros.
 let initZeros h w = initAll h w 0
+
 
 /// Compute the generalized summed area table in parallel, if
 /// possible. All rows and columns are initialized with init. Function
@@ -484,15 +509,20 @@ let scan f init qr =
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
     scan (Target.get tgt) qr tgt
 
+
 /// Compare two quad ropes element wise and return true if they are
 /// equal. False otherwise.
 let equals qr0 qr1 =
     reduce (&&) true (zip (=) qr0 qr1)
 
+
+
 module SparseDouble =
+
     /// We cannot optimize any further than parallelizing; reduce is
     /// already optimized for sparse quad ropes.
     let sum = reduce (+) 0.0
+
 
     /// Compute the product of all values in a quad rope in
     /// parallel. This function short-circuits the computation where
@@ -517,6 +547,7 @@ module SparseDouble =
             par2 (fun () -> prod a) (fun () -> prod b) ||> (*)
         | Slice _ as qr -> prod (QuadRope.materialize qr)
         | qr -> reduce (*) 1.0 qr
+
 
     /// Multiply two quad ropes of doubles point-wise.
     let pointwise lqr rqr =

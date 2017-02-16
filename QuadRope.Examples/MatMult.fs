@@ -3,6 +3,7 @@
 open RadTrees
 
 module QuadRope =
+
     let private mmultBuilder pointwise transpose init sum =
         let mmult lm rm =
             let trm = transpose rm
@@ -14,10 +15,12 @@ module QuadRope =
                   sum (pointwise lr rr))
         mmult
 
+
     let mmult = mmultBuilder QuadRope.SparseDouble.pointwise
                              QuadRope.transpose
                              QuadRope.init
                              QuadRope.SparseDouble.sum
+
 
     let mmultPar = mmultBuilder Parallel.QuadRope.SparseDouble.pointwise
                                 Parallel.QuadRope.transpose
@@ -25,7 +28,9 @@ module QuadRope =
                                 Parallel.QuadRope.SparseDouble.sum
 
 
+
 module Array2D =
+
     let private mmultBuilder pointwise transpose init sum =
         let mmult (lm : float [,]) rm =
             let trm = transpose rm
@@ -37,17 +42,22 @@ module Array2D =
                   sum (pointwise lr rr))
         mmult
 
+
     let mmult = mmultBuilder (Array2D.map2 (*))
                              Array2D.transpose
                              Array2D.init
                              (Array2D.reduce (+))
+
 
     let mmultPar = mmultBuilder (Parallel.Array2D.map2 (*))
                                 Parallel.Array2D.transpose
                                 Parallel.Array2D.init
                                 (Parallel.Array2D.reduce (+))
 
+
+
 module Imperative =
+
     let mmult (lm : float [,]) rm =
         let res = Array2D.zeroCreate (Array2D.length1 lm) (Array2D.length2 rm)
         for i = 0 to Array2D.length1 lm - 1 do
@@ -55,6 +65,7 @@ module Imperative =
                 for j = 0 to Array2D.length2 rm - 1 do
                     res.[i, j] <- res.[i, j] + lm.[i, k] * rm.[k, j]
         res
+
 
     let mmultPar (lm : double [,]) (rm : double [,]) =
         let tm = Array2D.zeroCreate (Array2D.length1 lm) (Array2D.length2 rm)

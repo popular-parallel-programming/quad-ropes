@@ -25,27 +25,34 @@ module internal RadTrees.Target
 
 open Types
 
+
 /// A convenience wrapper for writing into a target array with
 /// some offset.
 type 'a Target = { i : int; j : int; vals : 'a [,] }
 
+
 let inline rows tgt = Array2D.length1 tgt.vals - tgt.i
 let inline cols tgt = Array2D.length2 tgt.vals - tgt.j
+
 
 /// Create a new target descriptor of size h * w.
 let inline make h w = { i = 0; j = 0; vals = Array2D.zeroCreate h w }
 let inline makeWith h w v = { i = 0; j = 0; vals = Array2D.create h w v }
 
+
 /// The "empty target", a target that is not initialized.
 let empty = { i = 0; j = 0; vals = null }
+
 
 /// True if the target is the empty target.
 let inline isEmpty tgt =
     isNull tgt.vals
 
+
 /// Advance the target by i and j in both dimensions.
 let inline increment (tgt : _ Target) i j =
     { tgt with i = tgt.i + i; j = tgt.j + j }
+
 
 /// To avoid having to think about fringes by using conditionals,
 /// we simply extend the target array by one row and one column,
@@ -58,26 +65,33 @@ let inline makeWithFringe h w value =
         tgt.vals.[0, j] <- value
     increment tgt 1 1
 
+
 let inline incrementRow tgt i = increment tgt i 0
 let inline incrementCol tgt j = increment tgt 0 j
+
 
 /// Generalized write to target.
 let inline writemap (tgt : _ Target) f r c v =
     tgt.vals.[tgt.i + r, tgt.j + c] <- f v
 
+
 let inline writemap2 (tgt : _ Target) f r c v1 v2 =
     tgt.vals.[tgt.i + r, tgt.j + c] <- f v1 v2
+
 
 /// Generalized write to target with index pairs.
 let inline writemapi (tgt : _ Target) f r c v =
     tgt.vals.[tgt.i + r, tgt.j + c] <- f r c v
 
+
 let inline writemapi2 (tgt : _ Target) f r c v1 v2 =
     tgt.vals.[tgt.i + r, tgt.j + c] <- f r c v1 v2
+
 
 /// Simplified write to target.
 let inline write (tgt : _ Target) r c v =
     writemap tgt id r c v
+
 
 /// Fill the target descriptor with values.
 let inline fill (tgt : _ Target) h w v =
@@ -85,9 +99,11 @@ let inline fill (tgt : _ Target) h w v =
         for c in tgt.j .. tgt.j + w - 1 do
             tgt.vals.[r, c] <- v
 
+
 /// Build a leaf node from a target for a given height and width.
 let inline toSlice (tgt : _ Target) h w =
     ArraySlice.makeSlice tgt.i tgt.j h w tgt.vals
+
 
 /// Map a function to the values of a leaf and return a new leaf
 /// instance. This writes to the underlying target array.
@@ -95,11 +111,13 @@ let inline map f slc (tgt : _ Target) =
     ArraySlice.iteri (writemap tgt f) slc
     toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
 
+
 /// Map a function to the values of two leafs and return a new leaf
 /// instance. This writes to the underlying target array.
 let inline map2 f slc1 slc2 (tgt : _ Target) =
     ArraySlice.iteri2 (writemap2 tgt f) slc1 slc2
     toSlice tgt (ArraySlice.length1 slc1) (ArraySlice.length2 slc1)
+
 
 /// Map a function to the values and index pairs of a leaf and
 /// return a new leaf instance. This writes to the underlying
@@ -108,9 +126,11 @@ let inline mapi f slc (tgt : _ Target) =
     ArraySlice.iteri (writemapi tgt f) slc
     toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
 
+
 /// Use the offset stored in tgt to iterate over some array slice.
 let inline iteri f slc (tgt : _ Target) =
     ArraySlice.iteri (fun i j v -> f (tgt.i + i) (tgt.j + j) v) slc
+
 
 /// Write the elements of slc in reverse horizontal order into
 /// target.
@@ -118,11 +138,13 @@ let inline hrev slc (tgt : _ Target) =
     ArraySlice.iteri (fun i j v -> write tgt i (ArraySlice.length2 slc - 1 - j) v) slc
     toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
 
+
 /// Write the elements of slc in reverse vertical order into
 /// target.
 let inline vrev slc (tgt : _ Target) =
     ArraySlice.iteri (fun i j v -> write tgt (ArraySlice.length1 slc - 1 - i) j v) slc
     toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
+
 
 /// Write the elements of slc in transposed order into target.
 let inline transpose slc (tgt : _ Target) =
@@ -130,9 +152,11 @@ let inline transpose slc (tgt : _ Target) =
     ArraySlice.iteri (fun i j v -> write tgt' j i v) slc
     toSlice tgt' (ArraySlice.length2 slc) (ArraySlice.length1 slc)
 
+
 /// Read from target with its offset.
 let get (tgt : _ Target) i j =
     tgt.vals.[tgt.i + i, tgt.j + j]
+
 
 /// Generalized two-dimensional scan using a function f and a function
 /// slc to access "state" based on (i, j) position. Function f is

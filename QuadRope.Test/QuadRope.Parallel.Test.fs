@@ -73,5 +73,6 @@ let ``parallel scan equal to sequential`` (a : int QuadRope) =
     let sum a b c d = a + b + c + d
     QuadRope.equals (QuadRope.scan sum 0 a) (Parallel.QuadRope.scan sum 0 a)
 
+
 let ``parallel toArray2D equal to sequential`` (a : int QuadRope) =
     QuadRope.toArray2D a = Parallel.QuadRope.toArray2D a

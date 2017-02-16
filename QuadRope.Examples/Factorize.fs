@@ -17,8 +17,10 @@ module QuadRope =
 
         factorize
 
+
     let factorize = factorizeBuilder QuadRope.map
     let factorizePar = factorizeBuilder Parallel.QuadRope.map
+
 
 
 module Array2D =
@@ -33,6 +35,7 @@ module Array2D =
                     factorize p (k + 1) (Array2D.cat1 (Array2D.singleton k) ks)
             map (fun p -> factorize p 2 (Array2D.zeroCreate 0 1)) vals
         factorize
+
 
     let factorize = factorizeBuilder Array2D.map
     let factorizePar = factorizeBuilder Parallel.Array2D.map

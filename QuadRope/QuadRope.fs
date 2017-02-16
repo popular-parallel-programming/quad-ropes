@@ -33,6 +33,7 @@ let smax = 4
 let smax = 16
 #endif
 
+
 /// Number of rows in a rectangular tree.
 let rows = function
     | Empty -> 0
@@ -41,6 +42,7 @@ let rows = function
     | VCat (_, _, h, _, _, _) -> h
     | Slice (_, _, h, _, _) -> h
     | Sparse (h, _, _) -> h
+
 
 /// Number of columns in a rectangular tree.
 let cols = function
@@ -51,6 +53,7 @@ let cols = function
     | Slice (_, _, _, w, _) -> w
     | Sparse (_, w, _) -> w
 
+
 /// Depth of a rectangular tree.
 let rec depth = function
     | HCat (_, d, _, _, _, _) -> d
@@ -58,9 +61,11 @@ let rec depth = function
     | Slice (_, _, _, _, qr) -> depth qr
     | _ -> 0
 
+
 let isEmpty = function
     | Empty -> true
     | _ -> false
+
 
 /// True if the quad rope contains a sparse sub-tree.
 let rec isSparse = function
@@ -70,12 +75,14 @@ let rec isSparse = function
     | Slice ( _, _, _, _, qr) -> isSparse qr
     | _ -> false
 
+
 /// Construct a Leaf if slc is non-empty. Otherwise, return Empty.
 let leaf slc =
     if ArraySlice.length1 slc = 0 || ArraySlice.length2 slc = 0 then
         Empty
     else
         Leaf slc
+
 
 /// Pseudo-constructor for initializing a new HCat node. No
 /// optimization for sparse quad ropes.
@@ -87,6 +94,7 @@ let internal hnode a b =
             HCat (isSparse a || isSparse b, max (depth a) (depth b) + 1, rows a, cols a + cols b, a, b)
         | _ -> failwith "Cannot hcat nodes of different height."
 
+
 /// Pseudo-constructor for initializing a new VCat node. No
 /// optimization for sparse quad ropes.
 let internal vnode a b =
@@ -97,14 +105,17 @@ let internal vnode a b =
             VCat (isSparse a || isSparse b, max (depth a) (depth b) + 1, rows a + rows b, cols a, a, b)
         | _ -> failwith "Cannot vcat nodes of different width."
 
+
 let inline private withinRange qr i j =
     0 <= i && i < rows qr && 0 <= j && j < cols qr
+
 
 let inline private checkBounds qr i j =
     if rows qr <= i then
         invalidArg "i" (sprintf "First index must be within bounds of quad rope: %d" i)
     if cols qr <= j then
         invalidArg "j" (sprintf "Second index must be within bounds of quad rope: %d" j)
+
 
 /// Get the value of a location in the tree. This function does not
 /// check whether i, j are within bounds.
@@ -125,10 +136,12 @@ let rec internal fastGet qr i j =
         | Slice (x, y, _, _, qr) -> fastGet qr (i + x) (j + y)
         | Sparse (_, _, v) -> v
 
+
 /// Get the value of a location in the tree.
 let get root i j =
     checkBounds root i j
     fastGet root i j
+
 
 /// Compute the "subrope" starting from indexes i, j taking h and w
 /// elements in vertical and horizontal direction.
@@ -162,21 +175,26 @@ let slice i j h w qr =
         | _ ->
             Slice (i0, j0, h0, w0, qr)
 
+
 /// Split rope vertically from row i, taking h rows.
 let inline vslice i h qr =
     slice i 0 h (cols qr) qr
+
 
 /// Split rope horizontally from column j, taking w columns.
 let inline hslice j w qr =
     slice 0 j (rows qr) w qr
 
+
 /// Split rope in two at row i.
 let inline vsplit2 qr i =
     vslice 0 i qr, vslice i (rows qr) qr
 
+
 /// Split rope in two at column j.
 let inline hsplit2 qr j =
     hslice 0 j qr, hslice j (cols qr) qr
+
 
 /// Split a quad rope in four quadrants that differ by at most one row
 /// and column in size. Return order is HCat (VCat (a, b), VCat (c, d)).
@@ -186,13 +204,16 @@ let inline split4 qr =
     slice 0               (cols qr >>> 1) (rows qr >>> 1) (cols qr)       qr,
     slice (rows qr >>> 1) (cols qr >>> 1) (rows qr)       (cols qr)       qr
 
+
 // Get a single row or column
 let row qr i = slice i 0 1 (cols qr) qr
 let col qr j = slice 0 j (rows qr) 1 qr
 
+
 // Get a sequence of rows or columns
 let toRows qr = Seq.init (rows qr) (row qr)
 let toCols qr = Seq.init (cols qr) (col qr)
+
 
 /// Initialize a rope where all elements are <code>v</code>.
 let inline create h w v =
@@ -200,6 +221,7 @@ let inline create h w v =
         Empty
     else
         Sparse (h, w, v)
+
 
 /// Materialize a quad rope slice, i.e. traverse the slice and
 /// allocate new quad rope nodes and new slices on arrays. Does not
@@ -239,6 +261,7 @@ let materialize qr =
         | Slice (i, j, h, w, qr) -> materialize i j h w qr
         | qr -> qr
 
+
 /// Update a tree location without modifying the original tree.
 let set root i j v =
     let rec set qr i j v =
@@ -266,6 +289,7 @@ let set root i j v =
                 leaf (ArraySlice.make vals)
     checkBounds root i j
     set root i j v
+
 
 /// Concatenate two trees vertically. For the sake of leave size, this
 /// may result in actually keeping parts of a large area in memory
@@ -302,6 +326,7 @@ let vcatnb a b =
     else
         vcat a b
 
+
 /// Concatenate two trees horizontally. For the sake of leave size,
 /// this may result in actually keeping parts of a large area in
 /// memory twice. TODO: Consider other options.
@@ -337,8 +362,10 @@ let private hcatnb a b =
     else
         hcat a b
 
+
 let inline private isBalancedCriterion d s =
     d < 45 && Fibonacci.fib (d + 1) <= s
+
 
 /// True if rope is balanced in both dimensions. False otherwise.
 let isBalanced = function
@@ -347,14 +374,17 @@ let isBalanced = function
         isBalancedCriterion d (max h w)
     | _ -> true
 
+
 let isBalancedH qr = isBalancedCriterion (depth qr) (cols qr)
 let isBalancedV qr = isBalancedCriterion (depth qr) (rows qr)
+
 
 /// The balancing condition for nodes.
 let inline private balanceCondition a b c =
     // There is a difference in depth between a and b and c's depth is
     // less than the maximum depth of a and b.
     (depth a) - (depth b) <> 0 && max (depth a) (depth b) > depth c
+
 
 /// Balance a quad rope by rotation in worst-case O(log n) time.
 let rec balance qr =
@@ -404,8 +434,10 @@ let rec balance qr =
         // All other cases cannot be balanced.
         | _ -> qr
 
+
 let vcat a b = balance (vcatnb a b)
 let hcat a b = balance (hcatnb a b)
+
 
 /// Reverse rope horizontally.
 let hrev qr =
@@ -422,6 +454,7 @@ let hrev qr =
             | _ -> qr
     hrev qr (Target.make (rows qr) (cols qr))
 
+
 /// Reverse rope vertically.
 let vrev qr =
     let rec vrev qr tgt =
@@ -436,6 +469,7 @@ let vrev qr =
                 vrev (materialize qr) tgt
             | _ -> qr
     vrev qr (Target.make (rows qr) (cols qr))
+
 
 /// Create a quad rope from an array slice instance.
 let internal fromArraySlice slc =
@@ -463,9 +497,11 @@ let internal fromArraySlice slc =
             vnode (hsplit a) (hsplit b)
     hsplit slc
 
+
 /// Initialize a rope from a native 2D-array.
 let fromArray2D arr =
     fromArraySlice (ArraySlice.make arr)
+
 
 /// Generate a new tree without any intermediate values.
 let init h w f =
@@ -474,13 +510,16 @@ let init h w f =
     else
         fromArray2D (Array2D.init h w f)
 
+
 /// Generate a singleton quad rope.
 let singleton v =
     leaf (ArraySlice.make (Array2D.singleton v))
 
+
 /// True if rope is a singleton, false otherwise.
 let isSingleton qr =
     rows qr = 1 && cols qr = 1
+
 
 /// Initialize a rope from a native array for a given width.
 let fromArray vs w =
@@ -488,6 +527,7 @@ let fromArray vs w =
         invalidArg "w" "Must be evenly divisible by array length."
     let h = Array.length vs / w
     init h w (fun i j -> vs.[i * w + j])
+
 
 /// Apply a function with side effects to all elements of the rope.
 let rec iter f = function
@@ -503,6 +543,7 @@ let rec iter f = function
     | Sparse (h, w, v) ->
         for i in 1 .. h * w do
             f v
+
 
 /// Apply a function with side effects to all elements and their
 /// corresponding index pair.
@@ -523,6 +564,7 @@ let iteri f qr =
                     f r c v
     iteri f 0 0 qr
 
+
 /// Conversion into 1D array.
 let toArray qr =
     let arr = Array.zeroCreate (rows qr * cols qr)
@@ -531,11 +573,14 @@ let toArray qr =
     iteri (fun i j v -> arr.[i * cols qr + j] <- v) qr
     arr
 
+
 let toRowsArray qr =
     toRows qr |> Seq.map toArray |> Seq.toArray
 
+
 let toColsArray qr =
     toCols qr |> Seq.map toArray |> Seq.toArray
+
 
 /// Conversion into 2D array.
 let toArray2D qr =
@@ -545,10 +590,12 @@ let toArray2D qr =
     iteri (fun i j v -> arr.[i, j] <- v) qr
     arr
 
+
 /// Reallocate a rope form the ground up. Sometimes, this is the
 /// only way to improve performance of a badly composed quad rope.
 let inline reallocate qr =
     fromArray2D (toArray2D qr)
+
 
 /// Apply a function to every element in the tree.
 let map f qr =
@@ -599,9 +646,11 @@ let mapi f qr =
 let hmap f qr =
     init (rows qr) 1 (fun i _ -> slice i 0 1 (cols qr) qr |> f)
 
+
 /// Map a function f to each column of the quad rope.
 let vmap f qr =
     init 1 (cols qr) (fun _ j -> slice 0 j (rows qr) 1 qr |> f)
+
 
 /// Zip implementation for the general case where we do not assume
 /// that both ropes have the same internal structure.
@@ -632,9 +681,11 @@ let rec internal genZip f lqr rqr tgt =
                 | Slice _ -> genZip f (materialize lqr) rqr tgt
                 | Sparse (_, _, v) -> map (f v) rqr // lqr is sparse, hence tgt must be empty.
 
+
 /// True if the shape of two ropes match.
 let shapesMatch a b =
     rows a = rows b && cols a = cols b
+
 
 /// Zip function that assumes that the internal structure of two ropes
 /// matches. If not, it falls back to the slow, general case.
@@ -673,11 +724,13 @@ let rec internal fastZip f lqr rqr tgt =
         // Fall back to general case.
         | _ -> genZip f lqr rqr tgt
 
+
 /// Apply f to each (i, j) of lqr and rope.
 let zip f lqr rqr =
     if not (shapesMatch lqr rqr) then
         failwith "Quad ropes must have the same shape."
     fastZip f lqr rqr Target.empty
+
 
 /// Apply f to all values of the rope and reduce the resulting values
 /// to a single scalar using g. Variable epsilon is the neutral
@@ -702,14 +755,18 @@ let rec mapreduce f g epsilon = function
                 acc <- g acc fv
             acc
 
+
 /// Reduce all values of the rope to a single scalar.
 let reduce f epsilon qr = mapreduce id f epsilon qr
+
 
 let hmapreduce f g epsilon qr = hmap (mapreduce f g epsilon) qr
 let vmapreduce f g epsilon qr = vmap (mapreduce f g epsilon) qr
 
+
 let hreduce f epsilon qr = hmapreduce id f epsilon qr
 let vreduce f epsilon qr = vmapreduce id f epsilon qr
+
 
 /// Compute the row-wise prefix sum of the rope for f starting with
 /// states.
@@ -728,6 +785,7 @@ let rec hscan f states = function
     | Sparse (h, w, v) ->
         hscan f states (init h w (fun _ _ -> v))
 
+
 /// Compute the column-wise prefix sum of the rope for f starting
 /// with states.
 let rec vscan f states = function
@@ -744,6 +802,7 @@ let rec vscan f states = function
     | Slice _ as qr -> vscan f states (materialize qr)
     | Sparse (h, w, v) ->
          vscan f states (init h w (fun _ _ -> v))
+
 
 /// Compute the generalized summed area table. All rows and columns
 /// are initialized with init. Function f will be called like this:
@@ -787,10 +846,12 @@ let scan f init qr =
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
     scan (Target.get tgt) qr tgt
 
+
 /// A less general variant of scan that uses a function and its
 /// inverse. Internally, this also calls scan.
 let sumAreaTable (+) (-) =
     scan (fun row diag col s -> s + row + col - diag)
+
 
 /// Checks that some relation p holds between each two adjacent
 /// elements in each row. This is slow and should not really be
@@ -802,6 +863,7 @@ let forallRows p = function
         |> map List.pairwise
         |> mapreduce (List.forall (fun (a, b) -> p a b)) (&&) true
 
+
 /// Checks that some relation p holds between each two adjacent
 /// elements in each column. This is slow and should not really be
 /// used.
@@ -812,13 +874,16 @@ let forallCols p = function
         |> map List.pairwise
         |> mapreduce (List.forall (fun (a, b) -> p a b)) (&&) true
 
+
 /// Apply predicate p to all elements of qr and reduce the
 /// elements in both dimension using logical and.
 let forall p qr = mapreduce p (&&) true qr
 
+
 /// Apply predicate p to all elements of qr and reduce the
 /// elements in both dimensions using logical or.
 let exists p qr = mapreduce p (||) false qr
+
 
 /// Remove all elements from rope for which p does not hold. Input
 /// rope must be of height 1.
@@ -831,6 +896,7 @@ let rec hfilter p = function
     | Sparse (1, _, _) -> Empty
     | _ -> failwith "Quad rope height must be exactly one."
 
+
 /// Remove all elements from rope for which p does not hold. Input
 /// rope must be of width 1.
 let rec vfilter p = function
@@ -841,6 +907,7 @@ let rec vfilter p = function
     | Sparse (_, 1, v) as qr when p v -> qr
     | Sparse (_, 1, _) -> Empty
     | _ -> failwith "Quad rope width must be exactly one."
+
 
 /// Transpose the quad rope. This is equal to swapping indices,
 /// such that get qr i j = get (transpose qr) j i.
@@ -859,10 +926,12 @@ let transpose qr =
             | Sparse (h, w, v) -> Sparse (w, h, v)
     transpose qr (Target.make (cols qr) (rows qr))
 
+
 /// Compare two quad ropes element wise and return true if they are
 /// equal. False otherwise.
 let equals qr0 qr1 =
     rows qr0 = rows qr1 && cols qr0 = cols qr1 && reduce (&&) true (zip (=) qr0 qr1)
+
 
 /// Replace branches of equal values with sparse representations.
 let rec compress = function
@@ -873,6 +942,8 @@ let rec compress = function
     | VCat (_, _, _, _, a, b) ->
         vcat (compress a) (compress b)
     | qr -> qr
+
+
 
 /// This module contains functions that are optimized for sparse quad
 /// ropes and operations over rings, e.g. (+, *, int). These functions
@@ -900,6 +971,7 @@ module Sparse =
             | qr -> reduce (*) one qr
         prod
 
+
     /// Initialize an identity matrix of h height and w width.
     let identity zero one =
         let rec identity n =
@@ -918,6 +990,7 @@ module Sparse =
                     hnode (vnode vals sparse) (vnode sparse vals)
         identity
 
+
     /// Initialize an upper diagonal matrix with all non-zero values
     /// set to v.
     let upperDiagonal zero =
@@ -932,6 +1005,7 @@ module Sparse =
                       (vnode (create m m' zero) (upperDiagonal m' v))
         upperDiagonal
 
+
     /// Initialize a lower diagonal matrix with all non-zero values
     /// set to v.
     let lowerDiagonal zero =
@@ -945,6 +1019,7 @@ module Sparse =
                 hnode (vnode (lowerDiagonal m v) (create m' m zero))
                       (vnode (create m m' v) (lowerDiagonal m' v))
         lowerDiagonal
+
 
     /// Multiply two quad ropes of doubles point-wise.
     let pointwise (*) zero one =
@@ -1004,6 +1079,8 @@ module Sparse =
 
         pointwise
 
+
+
 /// Functions on sparse quad ropes of floats.
 module SparseDouble =
 
@@ -1014,25 +1091,32 @@ module SparseDouble =
     let private ilowerDiagonal = Sparse.lowerDiagonal 0.0
     let private ipointwise : float QuadRope -> float QuadRope -> float QuadRope = Sparse.pointwise (*) 0.0 1.0
 
+
     /// Compute the sum of all values in the matrix.
     let sum = reduce (+) 0.0
+
 
     /// Compute the product of all values in the matrix.
     let prod qr = iprod qr
 
+
     /// Construct a sparse identity matrix of size n * n.
     let identity n = iidentity n
+
 
     /// Construct a sparse upper diagonal matrix of size n * n, where
     /// all non-zero elements are v.
     let upperDiagonal n v = iupperDiagonal n v
 
+
     /// Construct a sparse lower diagonal matrix of size n * n, where
     /// all non-zero elements are v.
     let lowerDiagonal n v = ilowerDiagonal n v
 
+
     /// Compute the point-wise multiplication of two quad ropes.
     let pointwise a b = ipointwise a b
+
 
 module SparseString =
     let cat = reduce (+) ""

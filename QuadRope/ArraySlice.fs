@@ -24,9 +24,11 @@ module internal RadTrees.ArraySlice
 open RadTrees
 open Types
 
+
 /// This is the empty slice. It does not refer to any array and you
 /// cannot retrieve any values from it.
 let emptySlice = { r = 0; c = 0; h = 0; w = 0; vals = null }
+
 
 /// Instantiate a new array slice that allows accessing the entire
 /// array.
@@ -35,6 +37,7 @@ let make arr =
         emptySlice
     else
         { r = 0; c = 0; h = Array2D.length1 arr; w = Array2D.length2 arr; vals = arr }
+
 
 /// Instantiate a new array slice that allows accessing the array only
 /// in the specified area.
@@ -53,21 +56,26 @@ let makeSlice i j h w arr =
           w = max 0 (min w (Array2D.length2 arr))
           vals = arr }
 
+
 /// Compute a new array from a slice.
 let inline private sliceArray slc =
     Array2D.slice slc.r slc.c slc.h slc.w slc.vals
+
 
 /// Compute a new array from a slice, apply function f to it and make
 /// a new array slice from the resulting array.
 let inline private apply f slc = make (f (sliceArray slc))
 
+
 /// The height of an array slice.
 let inline length1 slc = slc.h
 let inline rows slc = slc.h
 
+
 /// The width of an array slice.
 let inline length2 slc = slc.w
 let inline cols slc = slc.w
+
 
 // Handy for iterating.
 let inline minr slc = slc.r
@@ -75,7 +83,9 @@ let inline maxr slc = slc.r + slc.h - 1
 let inline minc slc = slc.c
 let inline maxc slc = slc.c + slc.w - 1
 
+
 let inline fastGet slc i j = slc.vals.[slc.r + i, slc.c + j]
+
 
 /// Return the value are i, j.
 let get slc i j =
@@ -85,12 +95,14 @@ let get slc i j =
         invalidArg "j" "May not access array slice outside of specified bounds."
     fastGet slc i j
 
+
 /// Copy the underlying array, set the value at i, j to v and return a
 /// new array slice from the copy.
 let set slc i j v =
     let vals = slc.vals.[minr slc .. maxr slc, minc slc .. maxc slc]
     vals.[i, j] <- v
     make vals
+
 
 /// Slice up an array slice. This is a constant time operation and no
 /// arrays are re-allocated.
@@ -106,6 +118,7 @@ let slice i j h w slc =
         let w = max 0 (min (cols slc - j) w)
         { slc with r = minr slc + i; c = minc slc + j; h = h; w = w }
 
+
 /// Split into four slices, each differing in size by at most one row
 /// or column. Returned order is NE, NW, SW and SE.
 let split4 slc =
@@ -116,12 +129,14 @@ let split4 slc =
     slice h 0 (h + 1)  w      slc,
     slice h w (h + 1) (w + 1) slc
 
+
 /// Split into two slices, each differing in size by at most one
 /// column. Returned order is W, E.
 let hsplit2 slc =
     let h = rows slc
     let w = cols slc >>> 1
     slice 0 0 h w slc, slice 0 w h (w + 1) slc
+
 
 /// Split into two slices, each differing in size by at most one
 /// row. Returned order is N, S.
@@ -130,44 +145,56 @@ let vsplit2 slc =
     let w = cols slc
     slice 0 0 h w slc, slice h 0 (h + 1) w slc
 
+
 // Convenience function that allow for splitting slices into equal
 // sized parts in parallel.
 
 let inline leftHalf slc =
     slice 0 0 (rows slc) (cols slc >>> 1) slc
 
+
 let inline rightHalf slc =
     slice 0 (cols slc >>> 1) (rows slc) (cols slc) slc
+
 
 let inline upperHalf slc =
     slice 0 0 (rows slc >>> 1) (cols slc) slc
 
+
 let inline lowerHalf slc =
     slice (rows slc >>> 1) 0 (rows slc) (cols slc) slc
+
 
 let inline nw slc =
     slice 0 0 (rows slc >>> 1) (cols slc >>> 1) slc
 
+
 let inline ne slc =
     slice 0 (cols slc >>> 1) (rows slc >>> 1) (cols slc) slc
+
 
 let inline sw slc =
     slice (rows slc >>> 1) 0 (rows slc) (cols slc >>> 1) slc
 
+
 let inline se slc =
     slice (rows slc >>> 1) (cols slc >>> 1) (rows slc) (cols slc) slc
+
 
 /// Produce a singleton array slice.
 let singleton v =
     make (Array2D.singleton v)
 
+
 /// True if array slice contains only a single element.
 let isSingleton slc =
     rows slc = 1 && cols slc = 1
 
+
 /// True if array slice contains no elements.
 let isEmpty slc =
     rows slc <= 0 || cols slc <= 0
+
 
 /// Concatenate two array slices in first dimension.
 let cat1 left right =
@@ -178,6 +205,7 @@ let cat1 left right =
     Array2D.blit right.vals 0 0 vals (rows left) 0 (rows right) (cols right)
     make vals
 
+
 /// Concatenate two arrays in second dimension.
 let cat2 left right =
     if rows left <> rows right then
@@ -187,13 +215,16 @@ let cat2 left right =
     Array2D.blit right.vals 0 0 vals 0 (cols left) (rows right) (cols right)
     make vals
 
+
 /// Revert an array slice in first dimension.
 let rev1 slice =
     apply Array2D.rev1 slice
 
+
 /// Revert an array slice in second dimension.
 let rev2 slice =
     apply Array2D.rev2 slice
+
 
 /// Fold each column of an array slice, calling state with each column
 /// to get the corresponding state.
@@ -205,6 +236,7 @@ let fold1 f state slc =
                             acc <- f acc slc.vals.[x, slc.c + y]
                         acc))
 
+
 /// Fold each row of an array slice, calling state with each row to
 /// get the corresponding state.
 let fold2 f state slc =
@@ -215,13 +247,16 @@ let fold2 f state slc =
                             acc <- f acc slc.vals.[slc.r + x, y]
                         acc))
 
+
 /// Compute the column-wise prefix sum for f.
 let scan1 f state slice =
     apply (Array2D.scan1 f state) slice
 
+
 /// Compute the row-wise prefix sum for f.
 let scan2 f state slice =
     apply (Array2D.scan2 f state) slice
+
 
 /// Map a function f to all values in the array and combine the
 /// results using g.
@@ -237,32 +272,41 @@ let mapreduce f g slc =
             acc <- g acc (f (fastGet slc i j))
     acc
 
+
 let reduce f arr = mapreduce id f arr
+
 
 let sort1 p slice =
     apply (Array2D.sort1 p) slice
 
+
 let sort2 p slice =
     apply (Array2D.sort2 p) slice
+
 
 /// Initialize a 2D array with all zeros.
 let initZeros h w =
     make (Array2D.initZeros h w)
 
+
 let transpose slc =
     make (Array2D.init slc.w slc.h (fun i j -> fastGet slc j i))
+
 
 let filter1 p slice =
     apply (Array2D.filter1 p) slice
 
+
 let filter2 p slice =
     apply (Array2D.filter2 p) slice
+
 
 /// Iterate over all elements in row-first order.
 let iter f slc =
     for i in 0 .. rows slc - 1 do
         for j in 0 .. cols slc - 1 do
             f (fastGet slc i j)
+
 
 /// Iterate over all elements in row-first order and pass indices to
 /// iteration function.
@@ -271,6 +315,7 @@ let iteri f slc =
         for j in 0 .. cols slc - 1 do
             f i j (fastGet slc i j)
 
+
 let iteri2 f left right =
     if rows left <> rows right || cols left <> cols right then
         invalidArg "right" "length1 and length2 must be equal."
@@ -278,11 +323,13 @@ let iteri2 f left right =
         for j in 0 .. cols left - 1 do
             f i j (fastGet left i j) (fastGet right i j)
 
+
 /// Initialize a hopefully empty ArraySlice.
 let internal init slc f =
     for i in minr slc .. maxr slc do
         for j in minc slc .. maxc slc do
             slc.vals.[i, j] <- f i j
+
 
 /// Convenience function to create a new empty ArraySlice that can be
 /// initialized using init.

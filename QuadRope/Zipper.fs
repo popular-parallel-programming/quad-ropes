@@ -3,9 +3,11 @@ module RadTrees.LazySplitting.QuadRope
 open RadTrees
 open RadTrees.Types
 
+
 type private ('a, 'b) Progress =
     | More of 'a
     | Done of 'b
+
 
 type private ('a, 'b) Path when 'a : equality and 'b : equality =
     | Top
@@ -13,6 +15,7 @@ type private ('a, 'b) Path when 'a : equality and 'b : equality =
     | HCatR of 'b QuadRope * ('a, 'b) Path
     | VCatL of ('a, 'b) Path * 'a QuadRope
     | VCatR of 'b QuadRope * ('a, 'b) Path
+
 
 /// Get the "first", i.e. the upper-left-most leaf of the quad
 /// rope.
@@ -24,8 +27,10 @@ let rec private first qr p =
             first a (VCatL (p, b))
         | _ -> qr, p
 
+
 /// Shorthand for first qr Top.
 let private start qr = first qr Top
+
 
 /// Get the next leaf, if any.
 let rec private next qr p =
@@ -35,6 +40,7 @@ let rec private next qr p =
         | HCatR (a, p') -> next (hnode a qr) p'
         | VCatL (p', b) -> More (first b (VCatR (qr, p')))
         | VCatR (a, p') -> next (vnode a qr) p'
+
 
 /// Split the path into processed and unprocessed branches.
 let rec private splitPath a b p =
@@ -75,6 +81,7 @@ let private mapUntil cond f qr =
             | More (qr, p) -> loop qr p
             | Done qr -> Done qr
     start qr ||> loop
+
 
 /// LTS map. Apply f to elements of qr in parallel. Spawn new
 /// tasks if processors are idle. TODO: Current check is always

@@ -32,6 +32,7 @@ let init h w f =
         parfor 0 h (fun i -> for j = 0 to w - 1 do arr.[i, j] <- f i j)
     arr
 
+
 /// Concatenate two arrays in first dimension.
 let cat1 left right =
     if Array2D.length2 left <> Array2D.length2 right then invalidArg "right" "length2 must be equal."
@@ -39,6 +40,7 @@ let cat1 left right =
     let l2 = Array2D.length2 left
     let l1l = Array2D.length1 left
     init l1 l2 (fun i j -> if i < l1l then left.[i, j] else right.[i - l1l, j])
+
 
 /// Concatenate two arrays in second dimension.
 let cat2 left right =
@@ -48,15 +50,18 @@ let cat2 left right =
     let l2l = Array2D.length2 left
     init l1 l2 (fun i j -> if j < l2l then left.[i, j] else right.[i, j - l2l])
 
+
 /// Revert an array in first dimension.
 let rev1 (arr : _ [,]) =
     let h = Array2D.length1 arr
     init h (Array2D.length2 arr) (fun i j -> arr.[h - i, j])
 
+
 /// Revert an array in second dimension.
 let rev2 (arr : _ [,]) =
     let w = Array2D.length2 arr
     init (Array2D.length1 arr) w (fun i j -> arr.[i, w - j])
+
 
 /// Fold each column of a 2D array, calling state with each column to get the state.
 let fold1 f state (arr : _ [,]) =
@@ -66,6 +71,7 @@ let fold1 f state (arr : _ [,]) =
                                         res.[0, j] <- f res.[0, j] arr.[i, j])
     res
 
+
 /// Fold each row of a 2D array, calling state with each row to get the state.
 let fold2 f state (arr : _ [,]) =
     let res = init (Array2D.length1 arr) 1 (fun i _ -> state i)
@@ -74,15 +80,18 @@ let fold2 f state (arr : _ [,]) =
                                         res.[i, 0] <- f res.[i, 0] arr.[i, j])
     res
 
+
 /// Apply f to all elements of arr in parallel.
 let map f (arr : _ [,]) =
     init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> f arr.[i, j])
+
 
 /// Apply f to all elements of arr0 and arr1 in parallel.
 let map2 f (arr0 : _ [,]) (arr1 : _ [,]) =
     if Array2D.length1 arr0 <> Array2D.length1 arr1 || Array2D.length2 arr0 <> Array2D.length2 arr1 then
         invalidArg "arr1" "Both arrays must be of same shape."
     init (Array2D.length1 arr0) (Array2D.length2 arr0) (fun i j -> f arr0.[i, j] arr1.[i, j])
+
 
 /// Reduce each column of a 2D array.
 let mapReduce1 f g (arr : _ [,]) =
@@ -93,6 +102,7 @@ let mapReduce1 f g (arr : _ [,]) =
               acc <- g acc (f arr.[i, j])
           acc)
 
+
 /// Reduce each row of a 2D array.
 let mapReduce2 f g (arr : _ [,]) =
     init (Array2D.length1 arr) 1
@@ -102,8 +112,10 @@ let mapReduce2 f g (arr : _ [,]) =
               acc <- g acc (f arr.[i, j])
           acc)
 
+
 let reduce1 f arr = mapReduce1 id f arr
 let reduce2 f arr = mapReduce2 id f arr
+
 
 /// Map a function f to all values in the array and combine the
 /// results using g.
@@ -123,7 +135,9 @@ let mapReduce f g (arr : _ [,]) =
         mapReduceView (i * h) 0 h (Array2D.length2 arr)
     Array.reduce g (Array.Parallel.init (numthreads()) mapReduceStep)
 
+
 let reduce f arr = mapReduce id f arr
+
 
 let transpose arr =
     init (Array2D.length2 arr) (Array2D.length1 arr) (fun i j -> arr.[j, i])

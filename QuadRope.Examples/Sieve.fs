@@ -14,6 +14,7 @@ module QuadRope =
             else
                 p'
 
+
     /// Enumerate all multiples of p in ns and set them to 0.
     let rec private enumerate p c ns =
         let pc = p * c
@@ -21,6 +22,7 @@ module QuadRope =
             enumerate p (c + 1) (QuadRope.set ns pc 0 0)
         else
                 ns
+
 
     /// The sieve of Erastothenes
     let sieve n =
@@ -36,11 +38,14 @@ module QuadRope =
         // Call recursive function with initial args.
         sieve (int (sqrt (float n))) 2 (QuadRope.init n 1 (+))
 
+
+
 module Array2D =
     let private persistentSet arr v i j =
         let copy = Array2D.copy arr
         copy.[i, j] <- v;
         copy
+
 
     /// Find next element that is larger than p; assumes ns is sorted.
     let rec private find p i ns =
@@ -53,6 +58,7 @@ module Array2D =
             else
                 p'
 
+
     /// Enumerate all multiples of p in ns and set them to 0.
     let rec private enumerate p c ns =
         let pc = p * c
@@ -60,6 +66,7 @@ module Array2D =
             enumerate p (c + 1) (persistentSet ns pc 0 0)
         else
             ns
+
 
     /// The sieve of Erastothenes
     let sieve n =

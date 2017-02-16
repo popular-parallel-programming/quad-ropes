@@ -32,8 +32,10 @@ module Utils =
               for j in 0..w - 1 ->
               i, j }
 
+
     let makeIndicesFrom qr =
         makeIndices (QuadRope.rows qr) (QuadRope.cols qr)
+
 
     let access rope (i, j) =
         try
@@ -42,17 +44,21 @@ module Utils =
         with
             | _ -> false
 
+
     let pointWiseEqualMap a b f g=
         let mutable eq = true
         QuadRope.iteri (fun i j v -> eq <- eq && (f v = g (QuadRope.get b i j))) a
         eq
 
+
     let pointWiseEqual a b =
         pointWiseEqualMap a b id id
+
 
 open Utils
 
 type Handle = class end
+
 
 let ``DEBUG leaf sizes enabled`` () =
     QuadRope.smax = 4
@@ -81,9 +87,11 @@ let ``init produces correct values`` (NonNegativeInt h) (NonNegativeInt w) =
 let ``get is always inside bounds`` (a : int QuadRope) =
     Seq.forall (access a) (makeIndicesFrom a)
 
+
 let ``set changes correct element`` (a : int QuadRope) x =
     Seq.forall (fun (i, j) -> let a' = QuadRope.set a i j x in QuadRope.get a' i j = x)
                (makeIndicesFrom a)
+
 
 let ``hcat width is equal to width sum`` (a : int QuadRope) (b : int QuadRope)  =
     (QuadRope.rows a = QuadRope.rows b) ==>
@@ -152,6 +160,7 @@ let ``get accesses slice correctly`` (a : int QuadRope) (NonNegativeInt i)
           Seq.forall
             (fun (i0, j0) -> QuadRope.get b i0 j0 = QuadRope.get a (i + i0) (j + j0))
             (makeIndicesFrom b))
+
 
 let ``slice is equal to materialized slice`` (a : int QuadRope) (NonNegativeInt i)
                                                                 (NonNegativeInt j)

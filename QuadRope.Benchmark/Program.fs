@@ -179,7 +179,7 @@ let setThreads t =
 
 
 /// True if we are running on mono.
-let isMono = System.Type.GetType "Mono.Runtime" <> null
+let isMono = not (isNull (System.Type.GetType "Mono.Runtime"))
 
 
 /// Run the benchmark that is required by command line args.

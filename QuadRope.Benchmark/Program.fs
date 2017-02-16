@@ -160,8 +160,9 @@ let index (opts : Options) =
     benchmark ("Array2D.set",  fun () -> Array2D.set arr idx idx 0) |> run
 
 
+/// Benchmark Smith-Waterman alignment algorithm.
 let alignment (opts : Options) =
-    let rnd = System.Random()
+    let rnd = System.Random 85491
     let acgt = "ACGT"
     let mkstr() = String.init opts.size (fun _ -> string acgt.[rnd.Next(acgt.Length)])
     let a = mkstr()

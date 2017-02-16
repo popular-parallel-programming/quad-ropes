@@ -191,7 +191,9 @@ let runBenchmark (opts : Options) =
 
     Script.WarmupIterations <- 3
     Script.Iterations <- 50
-    (benchmarks.[opts.mode]) opts
+    match Map.tryFind opts.mode benchmarks with
+        | Some f -> f opts
+        | None -> printfn "No such benchmark: %s" opts.mode
 
 [<EntryPoint>]
 let main argv =

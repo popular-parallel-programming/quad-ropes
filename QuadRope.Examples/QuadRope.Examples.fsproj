@@ -49,6 +49,7 @@
     <Compile Include="VanDerCorput.fs" />
     <Compile Include="Sieve.fs" />
     <Compile Include="Factorize.fs" />
+    <Compile Include="SmithWaterman.fs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\QuadRope\QuadRope.fsproj">

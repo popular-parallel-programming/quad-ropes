@@ -158,6 +158,17 @@ let index (opts : Options) =
           &>> ("Array2D.get",  fun () -> Array2D.get arr idx idx) |> runWithHead
 
 
+
+
+let alignment (opts : Options) =
+    let rnd = System.Random()
+    let acgt = "ACGT"
+    let mkstr() = String.init opts.size (fun _ -> string acgt.[rnd.Next(acgt.Length)])
+    let a = mkstr()
+    let b = mkstr()
+
+    benchmark ("QuadRope.align", fun () -> SmithWaterman.QuadRope.align a b) |> runWithHead
+
 /// A map of benchmark functions and their names. If I had time, this
 /// could be done with attributes instead.
 let benchmarks =
@@ -167,7 +178,8 @@ let benchmarks =
       "fibs", fibonacci;
       "primes", factorize;
       "sieve", sieve;
-      "index", index ] |> Collections.Map
+      "index", index;
+      "align", alignment ] |> Collections.Map
 
 
 /// Set the number of thread pool threads to t.

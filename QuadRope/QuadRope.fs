@@ -130,35 +130,6 @@ let get root i j =
     checkBounds root i j
     fastGet root i j
 
-/// Update a tree location without modifying the original tree.
-let set root i j v =
-    let rec set qr i j v =
-        match qr with
-            | Empty ->
-                invalidArg "qr" "Empty quad rope cannot be set."
-            | Leaf vs ->
-                Leaf (ArraySlice.set vs i j v)
-            | HCat (s, d, h, w, a, b) ->
-                if withinRange a i j then
-                    HCat (s, d, h, w, set a i j v, b)
-                else
-                    HCat (s, d, h, w, a, set b i (j - cols a) v)
-            | VCat (s, d, h, w, a, b) ->
-                if withinRange a i j then
-                    VCat (s, d, h, w, set a i j v, b)
-                else
-                    VCat (s, d, h, w, a, set b (i - rows a) j v)
-            // Set the underlying quad rope with offset.
-            | Slice (x, y, h, w, qr) ->
-                Slice (x, y, h, w, set qr (i + x) (j + y) v)
-            // Initialize
-            | Sparse (h, w, v') ->
-                let vals = Array2D.create h w v'
-                vals.[i, j] <- v
-                leaf (ArraySlice.make vals)
-    checkBounds root i j
-    set root i j v
-
 /// Compute the "subrope" starting from indexes i, j taking h and w
 /// elements in vertical and horizontal direction.
 let slice i j h w qr =
@@ -267,6 +238,34 @@ let materialize qr =
     match qr with
         | Slice (i, j, h, w, qr) -> materialize i j h w qr
         | qr -> qr
+
+/// Update a tree location without modifying the original tree.
+let set root i j v =
+    let rec set qr i j v =
+        match qr with
+            | Empty -> invalidArg "qr" "Empty quad rope cannot be set."
+            | Leaf vs -> Leaf (ArraySlice.set vs i j v)
+
+            | HCat (s, d, h, w, a, b) when withinRange a i j ->
+                HCat (s, d, h, w, set a i j v, b)
+            | HCat (s, d, h, w, a, b) ->
+                HCat (s, d, h, w, a, set b i (j - cols a) v)
+
+            | VCat (s, d, h, w, a, b) when withinRange a i j ->
+                VCat (s, d, h, w, set a i j v, b)
+            | VCat (s, d, h, w, a, b) ->
+                VCat (s, d, h, w, a, set b (i - rows a) j v)
+
+            // Materialize before setting.
+            | Slice _ -> set (materialize qr) i j v
+
+            // Initialize and set.
+            | Sparse (h, w, v') ->
+                let vals = Array2D.create h w v'
+                vals.[i, j] <- v
+                leaf (ArraySlice.make vals)
+    checkBounds root i j
+    set root i j v
 
 /// Concatenate two trees vertically. For the sake of leave size, this
 /// may result in actually keeping parts of a large area in memory

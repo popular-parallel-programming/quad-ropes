@@ -60,38 +60,38 @@ let q = adversarial (QuadRope.init 1 1 (+)) 10
 // Amino acid sequence alignment on quad ropes.
 let strlen = String.length
 
-let rec findMaxIdx c i j scores =
-    let c' = max c (QuadRope.get scores i j)
-    if j < QuadRope.cols scores - 1 then
-        findMaxIdx c' i (j + 1) scores
-    else if i < QuadRope.rows scores - 1 then
-        findMaxIdx c' (i + 1) 0 scores
-    else
-        i, j
+/// Compute the max of a and b by means of f.
+let maxBy f a b = if f a > f b then a else b
 
-let findNextIdx i j scores =
-    let a = QuadRope.get scores (i - 1) j
-    let b = QuadRope.get scores i (j - 1)
-    let c = QuadRope.get scores (i - 1) (j - 1)
-    if a > b && a > c then
-        i - 1, j
-    else if b > a && b > c then
-        i, j - 1
-    else
-        i - 1, j - 1
+/// Find the maximum value in scores and return its index.
+let rec findMax scores =
+    QuadRope.mapi (fun i j s -> (i, j), s) scores
+    |> QuadRope.reduce (maxBy snd) ((0, 0), 0)
+    |> fst
 
+/// Find the next highest index during backtracking.
+let findNextHeigest i j scores =
+    let scores' = QuadRope.set (QuadRope.slice (i - 1) (j - 1) 2 2 scores) 1 1 -1
+    let i', j' = findMax scores'
+    i - 1 + i', j - 1 + j'
+
+/// Backtrack through a score matrix from some starting index pair i
+/// and j.
 let rec backtrace (i, j) scores trace =
     let score = QuadRope.get scores i j
-    let trace' = QuadRope.hcat (QuadRope.singleton score) trace
+    let trace' = trace + score
     if score = 0 then
         trace'
     else
-        backtrace (findNextIdx i j scores) scores trace'
+        backtrace (findNextHighest i j scores) scores trace'
 
+/// Compute the score after Smith-Waterman.
+let swscore row diag col s =
+    max (max (diag + s) (max (row - 1) (col - 1))) 0
+
+/// Compute the alignment cost of two sequences a and b.
 let align a b =
-    let f row diag col score =
-        max (max (diag + score) (max (row - 1) (col - 1))) 0
     let scores =
         QuadRope.init (strlen a) (strlen b) (fun i j -> if a.[i] = b.[j] then 1 else - 1)
-        |> QuadRope.scan f 0
-    backtrace (findMaxIdx 0 0 0 scores) scores Empty
+        |> QuadRope.scan swscore 0
+    backtrace (findMax scores) scores 0

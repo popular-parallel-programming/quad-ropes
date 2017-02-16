@@ -28,6 +28,27 @@ open RadTrees
 open Types
 open Examples
 
+
+/// Benchmark a thunk with a message.
+let benchmark (message, (thunk : unit -> 'a )) =
+    Script.Of (message, System.Func<'a> thunk)
+
+
+/// Add another thunk with a message to the script.
+let (&>>) (script : 'a Script) (message, (thunk : unit -> 'a )) =
+    script.Of (message, System.Func<'a> thunk)
+
+
+/// Run the benchmark script.
+let run (script : _ Script) =
+    script.RunAll() |> ignore
+
+
+/// Run the benchmark script and print header beforehand.
+let runWithHead (script : _ Script) =
+    script.WithHead() |> run
+
+
 /// Options for command line.
 type Options = {
   [<Option('m', "mode", Required = true, HelpText = "Which benchmark to run.")>] mode : string;
@@ -40,35 +61,32 @@ let all (opts : Options) =
     /// Benchmark sequential functions.
     let allSeq (opts : Options) =
         let rope = QuadRope.init opts.size opts.size (*)
-        Script.Of("QuadRope.init",    fun () -> QuadRope.init opts.size opts.size (*))
-              .Of("QuadRope.map",     fun () -> QuadRope.map (fun x -> x * x) rope)
-              .Of("QuadRope.zip",     fun () -> QuadRope.zip (+) rope rope)
-              .WithHead().RunAll() |> ignore
-        Script.Of("QuadRope.reduce",  fun () -> QuadRope.reduce (+) 0 rope).RunAll() |> ignore
+
+        benchmark ("QuadRope.init", fun () -> QuadRope.init opts.size opts.size (*))
+              &>> ("QuadRope.map",  fun () -> QuadRope.map (fun x -> x * x) rope)
+              &>> ("QuadRope.zip",  fun () -> QuadRope.zip (+) rope rope) |> runWithHead
+        benchmark ("QuadRope.reduce", (fun () -> QuadRope.reduce (+) 0 rope)) |> run
 
         let arr = Array2D.init opts.size opts.size (*)
-        Script.Of("Array2D.init",    fun () -> Array2D.init opts.size opts.size (*))
-              .Of("Array2D.map",     fun () -> Array2D.map (fun x -> x * x) arr)
-              .Of("Array2D.zip",     fun () -> Array2D.map2 (+) arr arr)
-              .RunAll() |> ignore
-        Script.Of("Array2D.reduce",  fun () -> Array2D.reduce (+) arr).RunAll() |> ignore
+        benchmark ("Array2D.init",    fun () -> Array2D.init opts.size opts.size (*))
+              &>> ("Array2D.map",     fun () -> Array2D.map (fun x -> x * x) arr)
+              &>> ("Array2D.zip",     fun () -> Array2D.map2 (+) arr arr) |> run
+        benchmark ("Array2D.reduce",  fun () -> Array2D.reduce (+) arr) |> run
 
 
     /// Benchmark parallel functions.
     let allPar (opts : Options) =
         let rope = QuadRope.init opts.size opts.size (*)
-        Script.Of("QuadRope.init",    fun () -> Parallel.QuadRope.init opts.size opts.size (*))
-              .Of("QuadRope.map",     fun () -> Parallel.QuadRope.map (fun x -> x * x) rope)
-              .Of("QuadRope.zip",     fun () -> Parallel.QuadRope.zip (+) rope rope)
-              .WithHead().RunAll() |> ignore
-        Script.Of("QuadRope.reduce",  fun () -> Parallel.QuadRope.reduce (+) 0 rope).RunAll() |> ignore
+        benchmark ("QuadRope.init",    fun () -> Parallel.QuadRope.init opts.size opts.size (*))
+              &>> ("QuadRope.map",     fun () -> Parallel.QuadRope.map (fun x -> x * x) rope)
+              &>> ("QuadRope.zip",     fun () -> Parallel.QuadRope.zip (+) rope rope) |> runWithHead
+        benchmark ("QuadRope.reduce",  fun () -> Parallel.QuadRope.reduce (+) 0 rope) |> run
 
         let arr = Array2D.init opts.size opts.size (*)
-        Script.Of("Array2D.init",    fun () -> Parallel.Array2D.init opts.size opts.size (*))
-              .Of("Array2D.map",     fun () -> Parallel.Array2D.map (fun x -> x * x) arr)
-              .Of("Array2D.zip",     fun () -> Parallel.Array2D.map2 (+) arr arr)
-              .RunAll() |> ignore
-        Script.Of("Array2D.reduce",  fun () -> Parallel.Array2D.reduce (+) arr).RunAll() |> ignore
+        benchmark ("Array2D.init",    fun () -> Parallel.Array2D.init opts.size opts.size (*))
+              &>> ("Array2D.map",     fun () -> Parallel.Array2D.map (fun x -> x * x) arr)
+              &>> ("Array2D.zip",     fun () -> Parallel.Array2D.map2 (+) arr arr) |> run
+        benchmark ("Array2D.reduce",  fun () -> Parallel.Array2D.reduce (+) arr) |> run
 
 
     // Don't run sequentially with task overhead.
@@ -80,10 +98,8 @@ let all (opts : Options) =
 
 /// Benchmark van Der Corput sequence computation.
 let vanDerCorput (opts : Options) =
-    Script.Of("QuadRope.vdc", fun () -> VanDerCorput.QuadRope.vanDerCorput opts.size)
-          .WithHead().RunAll() |> ignore
-    Script.Of("Array2D.vdc",  fun () -> VanDerCorput.Array2D.vanDerCorput opts.size)
-          .RunAll() |> ignore
+    benchmark ("QuadRope.vdc", fun () -> VanDerCorput.QuadRope.vanDerCorput opts.size) |> runWithHead
+    benchmark ("Array2D.vdc",  fun () -> VanDerCorput.Array2D.vanDerCorput opts.size) |> run
 
 
 /// Benchmark matrix multiplication algorithms.
@@ -98,27 +114,21 @@ let matMult (opts: Options) =
     let us = QuadRope.SparseDouble.upperDiagonal opts.size 1.0
 
     if opts.threads = 1 then
-        Script.Of("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmult qr ud)
-              .Of("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmult qr us)
-              .WithHead().RunAll() |> ignore
-        Script.Of("Array2D.mmult",      fun () -> MatMult.Array2D.mmult arr1 arr2)
-              .Of("Array2D.imperative", fun () -> MatMult.Imperative.mmult arr1 arr2)
-              .RunAll() |> ignore
+        benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmult qr ud)
+              &>> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmult qr us) |> runWithHead
+        benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmult arr1 arr2)
+              &>> ("Array2D.imperative", fun () -> MatMult.Imperative.mmult arr1 arr2) |> run
     else
-        Script.Of("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmultPar qr ud)
-              .Of("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmultPar qr us)
-              .WithHead().RunAll() |> ignore
-        Script.Of("Array2D.mmult",      fun () -> MatMult.Array2D.mmultPar arr1 arr2)
-              .Of("Array2D.imperative", fun () -> MatMult.Imperative.mmultPar arr1 arr2)
-              .RunAll() |> ignore
+        benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmultPar qr ud)
+              &>> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmultPar qr us) |> runWithHead
+        benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmultPar arr1 arr2)
+              &>> ("Array2D.imperative", fun () -> MatMult.Imperative.mmultPar arr1 arr2) |> run
 
 
 /// Benchmark computing Fibonacci sequences.
 let fibonacci (opts : Options) =
-    Script.Of("QuadRope.fibonacci", fun () -> Fibonacci.QuadRope.fibseq opts.size)
-          .WithHead().RunAll() |> ignore
-    Script.Of("Array2D.fibonacci", fun () -> Fibonacci.Array2D.fibseq opts.size)
-          .RunAll() |> ignore
+    benchmark ("QuadRope.fibonacci", fun () -> Fibonacci.QuadRope.fibseq opts.size) |> runWithHead
+    benchmark ("Array2D.fibonacci", fun () -> Fibonacci.Array2D.fibseq opts.size) |> run
 
 
 /// Benchmark integer factorization.
@@ -126,21 +136,17 @@ let factorize (opts : Options) =
     let qr = QuadRope.init opts.size opts.size (fun i j -> 1000 + i * j)
     let arr = Array2D.init opts.size opts.size (fun i j -> 1000 + i * j)
     if opts.threads = 1 then
-        Script.Of("QuadRope.factorize", fun () -> Factorize.QuadRope.factorize qr)
-              .WithHead().RunAll() |> ignore
-        Script.Of("Array2D.factorize",  fun () -> Factorize.Array2D.factorize arr)
-              .RunAll() |> ignore
+        benchmark ("QuadRope.factorize", fun () -> Factorize.QuadRope.factorize qr) |> runWithHead
+        benchmark ("Array2D.factorize",  fun () -> Factorize.Array2D.factorize arr) |> run
     else
-        Script.Of("QuadRope.factorize", fun () -> Factorize.QuadRope.factorizePar qr)
-              .WithHead().RunAll() |> ignore
-        Script.Of("Array2D.factorize",  fun () -> Factorize.Array2D.factorizePar arr)
-              .RunAll() |> ignore
+        benchmark ("QuadRope.factorize", fun () -> Factorize.QuadRope.factorizePar qr) |> runWithHead
+        benchmark ("Array2D.factorize",  fun () -> Factorize.Array2D.factorizePar arr) |> run
 
 
 /// Benchmark the sieve of Erastothenes.
 let sieve (opts : Options) =
-    Script.Of("QuadRope.sieve", fun () -> Sieve.QuadRope.sieve opts.size).WithHead().RunAll() |> ignore
-    Script.Of("Array2D.sieve",  fun () -> Sieve.Array2D.sieve opts.size).RunAll() |> ignore
+    benchmark ("QuadRope.sieve", fun () -> Sieve.QuadRope.sieve opts.size) |> runWithHead
+    benchmark ("Array2D.sieve",  fun () -> Sieve.Array2D.sieve opts.size) |> run
 
 
 /// Benchmark index operations.
@@ -148,8 +154,8 @@ let index (opts : Options) =
     let qr = QuadRope.init opts.size opts.size (*)
     let arr = Array2D.init opts.size opts.size (*)
     let idx = opts.size / 2
-    Script.Of("QuadRope.get", fun () -> QuadRope.get qr idx idx)
-          .Of("Array2D.get",  fun () -> Array2D.get arr idx idx).WithHead().RunAll() |> ignore
+    benchmark ("QuadRope.get", fun () -> QuadRope.get qr idx idx)
+          &>> ("Array2D.get",  fun () -> Array2D.get arr idx idx) |> runWithHead
 
 
 /// A map of benchmark functions and their names. If I had time, this

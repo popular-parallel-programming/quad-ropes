@@ -168,6 +168,8 @@ let alignment (opts : Options) =
     let b = mkstr()
 
     benchmark ("QuadRope.align", fun () -> SmithWaterman.QuadRope.align a b) |> runWithHead
+    benchmark ("Array2D.align",  fun () -> SmithWaterman.Array2D.align a b) |> run
+
 
 /// A map of benchmark functions and their names. If I had time, this
 /// could be done with attributes instead.

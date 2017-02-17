@@ -609,4 +609,10 @@ module SparseDouble =
 
         if not (QuadRope.shapesMatch lqr rqr) then
             invalidArg "rqr" "Quad ropes must be of equal shape."
-        fast lqr rqr
+        // Since multiplication is commutative, move the shallower
+        // quad rope left to recurse on its structure instead of the
+        // deeper one.
+        if depth rqr < depth lqr then
+            fast rqr lqr
+        else
+            fast lqr rqr

@@ -62,25 +62,31 @@ let all (opts : Options) =
     let allSeq (opts : Options) =
         let rope = QuadRope.init opts.size opts.size (*)
 
-        benchmark ("QuadRope.init", fun () -> QuadRope.init opts.size opts.size (*))
-               &> ("QuadRope.map",  fun () -> QuadRope.map (fun x -> x * x) rope)
-               &> ("QuadRope.zip",  fun () -> QuadRope.zip (+) rope rope) |> runWithHead
-        benchmark ("QuadRope.reduce", (fun () -> QuadRope.reduce (+) 0 rope)) |> run
+        benchmark ("QuadRope.init",   fun () -> QuadRope.init opts.size opts.size (*))
+               &> ("QuadRope.map",    fun () -> QuadRope.map (fun x -> x * x) rope)
+               &> ("QuadRope.zip",    fun () -> QuadRope.zip (+) rope rope)
+               &> ("QuadRope.scan",   fun () -> QuadRope.scan (fun a b c d -> a + b + c + d) 0 rope)
+               |> runWithHead
+        benchmark ("QuadRope.reduce", fun () -> QuadRope.reduce (+) 0 rope) |> run
 
         let arr = Array2D.init opts.size opts.size (*)
         benchmark ("Array2D.init",    fun () -> Array2D.init opts.size opts.size (*))
                &> ("Array2D.map",     fun () -> Array2D.map (fun x -> x * x) arr)
-               &> ("Array2D.zip",     fun () -> Array2D.map2 (+) arr arr) |> run
+               &> ("Array2D.zip",     fun () -> Array2D.map2 (+) arr arr)
+               &> ("Array2D.scan",    fun () -> Array2D.scan (fun a b c d -> a + b + c + d) 0 arr)
+               |> run
         benchmark ("Array2D.reduce",  fun () -> Array2D.reduce (+) arr) |> run
 
 
     /// Benchmark parallel functions.
     let allPar (opts : Options) =
         let rope = QuadRope.init opts.size opts.size (*)
-        benchmark ("QuadRope.init",    fun () -> Parallel.QuadRope.init opts.size opts.size (*))
-               &> ("QuadRope.map",     fun () -> Parallel.QuadRope.map (fun x -> x * x) rope)
-               &> ("QuadRope.zip",     fun () -> Parallel.QuadRope.zip (+) rope rope) |> runWithHead
-        benchmark ("QuadRope.reduce",  fun () -> Parallel.QuadRope.reduce (+) 0 rope) |> run
+        benchmark ("QuadRope.init",   fun () -> Parallel.QuadRope.init opts.size opts.size (*))
+               &> ("QuadRope.map",    fun () -> Parallel.QuadRope.map (fun x -> x * x) rope)
+               &> ("QuadRope.zip",    fun () -> Parallel.QuadRope.zip (+) rope rope)
+               &> ("QuadRope.scan",   fun () -> Parallel.QuadRope.scan (fun a b c d -> a + b + c + d) 0 rope)
+               |> runWithHead
+        benchmark ("QuadRope.reduce", fun () -> Parallel.QuadRope.reduce (+) 0 rope) |> run
 
         let arr = Array2D.init opts.size opts.size (*)
         benchmark ("Array2D.init",    fun () -> Parallel.Array2D.init opts.size opts.size (*))

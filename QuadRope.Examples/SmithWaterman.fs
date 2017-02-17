@@ -27,28 +27,49 @@ let private btKernel row diag col score =
 
 module QuadRope =
 
-    /// Find the maximum value in scores and return its index.
-    let rec private findMax scores =
-        QuadRope.mapi (fun i j s -> (i, j), s) scores
-        |> QuadRope.reduce (maxBy snd) ((0, 0), 0)
-        |> fst
+    let alignmentBuilder mapi reduce hrev vrev scan init =
+        /// Find the maximum value in scores and return its index.
+        let rec findMax scores =
+            mapi (fun i j s -> (i, j), s) scores
+            |> reduce (maxBy snd) ((0, 0), 0)
+            |> fst
 
 
-    /// Backtrack through a score matrix from some starting index pair i
-    /// and j.
-    let private backtrack (i, j) scores =
-        let scores' = QuadRope.slice 0 0 i j scores // Start from i, j
-                      |> QuadRope.hrev              // Revert row direction.
-                      |> QuadRope.vrev              // Revert column direction.
-                      |> QuadRope.scan btKernel 0   // Take value at i, j as start.
-        QuadRope.get scores' (i - 1) (j - 1) + (QuadRope.get scores i j)
+        /// Backtrack through a score matrix from some starting index pair i
+        /// and j.
+        let backtrack (i, j) scores =
+            let scores' = QuadRope.slice 0 0 i j scores // Start from i, j
+                          |> hrev              // Revert row direction.
+                          |> vrev              // Revert column direction.
+                          |> scan btKernel 0   // Take value at i, j as start.
+            QuadRope.get scores' (i - 1) (j - 1) + (QuadRope.get scores i j)
 
 
-    /// Compute the alignment cost of two sequences a and b.
-    let align a b =
-        let scores = QuadRope.init (strlen a) (strlen b) (dist a b)
-                     |> QuadRope.scan swscore 0
-        backtrack (findMax scores) scores
+        /// Compute the alignment cost of two sequences a and b.
+        let align a b =
+            let scores = init (strlen a) (strlen b) (dist a b)
+                         |> scan swscore 0
+            backtrack (findMax scores) scores
+
+        align
+
+
+    let align =
+        alignmentBuilder QuadRope.mapi
+                         QuadRope.reduce
+                         QuadRope.hrev
+                         QuadRope.vrev
+                         QuadRope.scan
+                         QuadRope.init
+
+
+    let alignPar =
+        alignmentBuilder Parallel.QuadRope.mapi
+                         Parallel.QuadRope.reduce
+                         Parallel.QuadRope.hrev
+                         Parallel.QuadRope.vrev
+                         Parallel.QuadRope.scan
+                         Parallel.QuadRope.init
 
 
 

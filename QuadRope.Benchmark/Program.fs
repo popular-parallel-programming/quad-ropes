@@ -168,9 +168,12 @@ let alignment (opts : Options) =
     let a = mkstr()
     let b = mkstr()
 
-    benchmark ("QuadRope.align", fun () -> SmithWaterman.QuadRope.align a b) |> runWithHead
-    benchmark ("Array2D.align",  fun () -> SmithWaterman.Array2D.align a b) |> run
-
+    if opts.threads = 1 then
+        benchmark ("QuadRope.align", fun () -> SmithWaterman.QuadRope.align a b) |> runWithHead
+        benchmark ("Array2D.align",  fun () -> SmithWaterman.Array2D.align a b) |> run
+    else
+        benchmark ("QuadRope.align", fun () -> SmithWaterman.QuadRope.alignPar a b) |> runWithHead
+        printfn "Array2D.align #Not available."
 
 /// A map of benchmark functions and their names. If I had time, this
 /// could be done with attributes instead.

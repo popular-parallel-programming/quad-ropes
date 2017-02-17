@@ -12,8 +12,8 @@ module QuadRope =
                 else if p % k = 0 then
                     factorize (p / k) k ks
                 else
-                    factorize p (k + 1) (QuadRope.hcat (QuadRope.singleton k) ks)
-            map (fun p -> factorize p 2 Empty) vals
+                    factorize p (k + 1) (k :: ks)
+            map (fun p -> factorize p 2 []) vals
 
         factorize
 
@@ -32,8 +32,8 @@ module Array2D =
                 else if p % k = 0 then
                     factorize (p / k) k ks
                 else
-                    factorize p (k + 1) (Array2D.cat1 (Array2D.singleton k) ks)
-            map (fun p -> factorize p 2 (Array2D.zeroCreate 0 1)) vals
+                    factorize p (k + 1) (k :: ks)
+            map (fun p -> factorize p 2 []) vals
         factorize
 
 

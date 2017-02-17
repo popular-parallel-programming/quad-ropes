@@ -185,6 +185,12 @@ let benchmarks =
       "align", alignment ] |> Collections.Map
 
 
+/// Print all registered benchmarks.
+let printBenchmarks () =
+    printfn "Available benchmarks:\n%s"
+            ((Map.toSeq >> Seq.map fst >> String.concat "\n") benchmarks)
+
+
 /// Set the number of thread pool threads to t.
 let setThreads t =
     // Set min threads first, otherwise setting max threads might fail.
@@ -207,11 +213,12 @@ let runBenchmark (opts : Options) =
     Script.WarmupIterations <- 3
     Script.Iterations <- 50
     match Map.tryFind opts.mode benchmarks with
-        | Some f -> f opts
-        | None -> printfn "No such benchmark: %s" opts.mode
+        | Some f -> f opts; 0
+        | None -> printfn "No such benchmark: %s" opts.mode; 1
+
 
 [<EntryPoint>]
 let main argv =
     match Parser.Default.ParseArguments<Options> argv with
-        | :? Parsed<Options> as parsed -> runBenchmark parsed.Value; 0
-        | _ -> 1
+        | :? Parsed<Options> as parsed -> runBenchmark parsed.Value
+        | _ -> printBenchmarks(); 1

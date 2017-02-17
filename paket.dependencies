@@ -2,4 +2,8 @@ source https://nuget.org/api/v2
 
 nuget FsCheck
 nuget CommandLineParser >= 2.1.1-beta
-nuget LambdaMicrobenchmarking
+
+# The official version does not allow for changing iteration count, so
+# we use a static dependency for now and instead depend on Math.Net.
+#nuget LambdaMicrobenchmarking
+nuget MathNet.Numerics >= 3.2.3

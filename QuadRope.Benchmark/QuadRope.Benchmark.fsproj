@@ -42,7 +42,7 @@
       <HintPath>..\packages\CommandLineParser\lib\net45\CommandLine.dll</HintPath>
     </Reference>
     <Reference Include="LambdaMicrobenchmarking">
-      <HintPath>..\packages\LambdaMicrobenchmarking\lib\net40-client\LambdaMicrobenchmarking.dll</HintPath>
+      <HintPath>..\packages-static\LambdaMicrobenchmarking.dll</HintPath>
     </Reference>
     <Reference Include="MathNet.Numerics">
       <HintPath>..\packages\MathNet.Numerics\lib\net40\MathNet.Numerics.dll</HintPath>

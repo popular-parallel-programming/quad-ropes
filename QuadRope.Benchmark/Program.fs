@@ -35,7 +35,7 @@ let benchmark (message, (thunk : unit -> 'a )) =
 
 
 /// Add another thunk with a message to the script.
-let (&>>) (script : 'a Script) (message, (thunk : unit -> 'a )) =
+let (&>) (script : 'a Script) (message, (thunk : unit -> 'a )) =
     script.Of (message, System.Func<'a> thunk)
 
 
@@ -63,14 +63,14 @@ let all (opts : Options) =
         let rope = QuadRope.init opts.size opts.size (*)
 
         benchmark ("QuadRope.init", fun () -> QuadRope.init opts.size opts.size (*))
-              &>> ("QuadRope.map",  fun () -> QuadRope.map (fun x -> x * x) rope)
-              &>> ("QuadRope.zip",  fun () -> QuadRope.zip (+) rope rope) |> runWithHead
+               &> ("QuadRope.map",  fun () -> QuadRope.map (fun x -> x * x) rope)
+               &> ("QuadRope.zip",  fun () -> QuadRope.zip (+) rope rope) |> runWithHead
         benchmark ("QuadRope.reduce", (fun () -> QuadRope.reduce (+) 0 rope)) |> run
 
         let arr = Array2D.init opts.size opts.size (*)
         benchmark ("Array2D.init",    fun () -> Array2D.init opts.size opts.size (*))
-              &>> ("Array2D.map",     fun () -> Array2D.map (fun x -> x * x) arr)
-              &>> ("Array2D.zip",     fun () -> Array2D.map2 (+) arr arr) |> run
+               &> ("Array2D.map",     fun () -> Array2D.map (fun x -> x * x) arr)
+               &> ("Array2D.zip",     fun () -> Array2D.map2 (+) arr arr) |> run
         benchmark ("Array2D.reduce",  fun () -> Array2D.reduce (+) arr) |> run
 
 
@@ -78,14 +78,14 @@ let all (opts : Options) =
     let allPar (opts : Options) =
         let rope = QuadRope.init opts.size opts.size (*)
         benchmark ("QuadRope.init",    fun () -> Parallel.QuadRope.init opts.size opts.size (*))
-              &>> ("QuadRope.map",     fun () -> Parallel.QuadRope.map (fun x -> x * x) rope)
-              &>> ("QuadRope.zip",     fun () -> Parallel.QuadRope.zip (+) rope rope) |> runWithHead
+               &> ("QuadRope.map",     fun () -> Parallel.QuadRope.map (fun x -> x * x) rope)
+               &> ("QuadRope.zip",     fun () -> Parallel.QuadRope.zip (+) rope rope) |> runWithHead
         benchmark ("QuadRope.reduce",  fun () -> Parallel.QuadRope.reduce (+) 0 rope) |> run
 
         let arr = Array2D.init opts.size opts.size (*)
         benchmark ("Array2D.init",    fun () -> Parallel.Array2D.init opts.size opts.size (*))
-              &>> ("Array2D.map",     fun () -> Parallel.Array2D.map (fun x -> x * x) arr)
-              &>> ("Array2D.zip",     fun () -> Parallel.Array2D.map2 (+) arr arr) |> run
+               &> ("Array2D.map",     fun () -> Parallel.Array2D.map (fun x -> x * x) arr)
+               &> ("Array2D.zip",     fun () -> Parallel.Array2D.map2 (+) arr arr) |> run
         benchmark ("Array2D.reduce",  fun () -> Parallel.Array2D.reduce (+) arr) |> run
 
 
@@ -115,14 +115,14 @@ let matMult (opts: Options) =
 
     if opts.threads = 1 then
         benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmult qr ud)
-              &>> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmult qr us) |> runWithHead
+               &> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmult qr us) |> runWithHead
         benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmult arr1 arr2)
-              &>> ("Array2D.imperative", fun () -> MatMult.Imperative.mmult arr1 arr2) |> run
+               &> ("Array2D.imperative", fun () -> MatMult.Imperative.mmult arr1 arr2) |> run
     else
         benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmultPar qr ud)
-              &>> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmultPar qr us) |> runWithHead
+               &> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmultPar qr us) |> runWithHead
         benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmultPar arr1 arr2)
-              &>> ("Array2D.imperative", fun () -> MatMult.Imperative.mmultPar arr1 arr2) |> run
+               &> ("Array2D.imperative", fun () -> MatMult.Imperative.mmultPar arr1 arr2) |> run
 
 
 /// Benchmark computing Fibonacci sequences.
@@ -155,7 +155,7 @@ let index (opts : Options) =
     let arr = Array2D.init opts.size opts.size (*)
     let idx = opts.size / 2
     benchmark ("QuadRope.get", fun () -> QuadRope.get qr idx idx)
-          &>> ("Array2D.get",  fun () -> Array2D.get arr idx idx) |> runWithHead
+           &> ("Array2D.get",  fun () -> Array2D.get arr idx idx) |> runWithHead
     benchmark ("QuadRope.set", fun () -> QuadRope.set qr idx idx 0) |> run
     benchmark ("Array2D.set",  fun () -> Array2D.set arr idx idx 0) |> run
 

@@ -1,36 +1,71 @@
-:: Scaling benchmarks for single functions
-call benchmark -s 100       >  logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t  2 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t  3 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t  4 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t  5 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t  6 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t  7 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t  8 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t  9 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t 10 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t 11 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t 12 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t 13 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t 14 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t 15 >> logs\benchmark-s100-t16.txt
-call benchmark -s 100 -t 16 >> logs\benchmark-s100-t16.txt
+@echo off
 
-:: Scaling benchmarks for primes
-call benchmark -m primes -s 100 -t 16 > logs\benchmark-primes-s100-t16.txt
+:: This should be less complicated and convoluted.
+set datetime=%date:~6,4%-%date:~3,2%-%date:~0,2%--%time:~0,2%-%time:~3,2%-%time:~6,2%
 
-:: Scaling and size scaling benchmarks for mmult
-call benchmark -m mmult -s 100 -t 16 > logs\benchmark-mmult-s100-t16.txt
-call benchmark -m mmult -s 200 -t 16 > logs\benchmark-mmult-s200-t16.txt
+@echo on
 
-:: Size scaling benchmarks for vdc
-call benchmark -m vdc -s  5 -t 1 > logs\benchmark-vdc-s05-t01.txt
-call benchmark -m vdc -s 10 -t 1 > logs\benchmark-vdc-s10-t01.txt
-call benchmark -m vdc -s 15 -t 1 > logs\benchmark-vdc-s15-t01.txt
-call benchmark -m vdc -s 20 -t 1 > logs\benchmark-vdc-s20-t01.txt
+:: Thread scaling benchmarks for single functions.
+call scripts\benchmark -m all    -s 1000 -t  1  > logs\benchmark-all-s1000-t32-%datetime%.txt
+call scripts\benchmark -m all    -s 1000 -t  2 >> logs\benchmark-all-s1000-t32-%datetime%.txt
+call scripts\benchmark -m all    -s 1000 -t  4 >> logs\benchmark-all-s1000-t32-%datetime%.txt
+call scripts\benchmark -m all    -s 1000 -t  8 >> logs\benchmark-all-s1000-t32-%datetime%.txt
+call scripts\benchmark -m all    -s 1000 -t 16 >> logs\benchmark-all-s1000-t32-%datetime%.txt
+call scripts\benchmark -m all    -s 1000 -t 32 >> logs\benchmark-all-s1000-t32-%datetime%.txt
 
-:: Size scaling benchmarks for fibseq
-call benchmark -m fibseq -s  20 -t 1 logs\benchmark-fibseq-s020-t01.txt
-call benchmark -m fibseq -s  40 -t 1 logs\benchmark-fibseq-s040-t01.txt
-call benchmark -m fibseq -s  80 -t 1 logs\benchmark-fibseq-s080-t01.txt
-call benchmark -m fibseq -s 100 -t 1 logs\benchmark-fibseq-s100-t01.txt
+
+:: Thread scaling benchmarks for primes.
+call scripts\benchmark -m primes -s  400 -t  1  > logs\benchmark-primes-s400-t32-%datetime%.txt
+call scripts\benchmark -m primes -s  400 -t  2 >> logs\benchmark-primes-s400-t32-%datetime%.txt
+call scripts\benchmark -m primes -s  400 -t  4 >> logs\benchmark-primes-s400-t32-%datetime%.txt
+call scripts\benchmark -m primes -s  400 -t  8 >> logs\benchmark-primes-s400-t32-%datetime%.txt
+call scripts\benchmark -m primes -s  400 -t 16 >> logs\benchmark-primes-s400-t32-%datetime%.txt
+call scripts\benchmark -m primes -s  400 -t 32 >> logs\benchmark-primes-s400-t32-%datetime%.txt
+
+
+:: Thread scaling benchmarks for mmult.
+call scripts\benchmark -m mmult  -s  200 -t  1  > logs\benchmark-mmult-s200-t16-%datetime%.txt
+call scripts\benchmark -m mmult  -s  200 -t  2 >> logs\benchmark-mmult-s200-t16-%datetime%.txt
+call scripts\benchmark -m mmult  -s  200 -t  4 >> logs\benchmark-mmult-s200-t16-%datetime%.txt
+call scripts\benchmark -m mmult  -s  200 -t  8 >> logs\benchmark-mmult-s200-t16-%datetime%.txt
+call scripts\benchmark -m mmult  -s  200 -t 16 >> logs\benchmark-mmult-s200-t16-%datetime%.txt
+call scripts\benchmark -m mmult  -s  200 -t 32 >> logs\benchmark-mmult-s200-t16-%datetime%.txt
+
+
+:: Size scaling benchmarks for vdc.
+call scripts\benchmark -m vdc    -s    5 -t  1  > logs\benchmark-vdc-t01-%datetime%.txt
+call scripts\benchmark -m vdc    -s   10 -t  1 >> logs\benchmark-vdc-t01-%datetime%.txt
+call scripts\benchmark -m vdc    -s   15 -t  1 >> logs\benchmark-vdc-t01-%datetime%.txt
+call scripts\benchmark -m vdc    -s   20 -t  1 >> logs\benchmark-vdc-t01-%datetime%.txt
+
+
+:: Size scaling benchmarks for fib.
+call scripts\benchmark -m fibs  -s  100 -t  1  > logs\benchmark-fibs-t01-%datetime%.txt
+call scripts\benchmark -m fibs  -s  200 -t  1 >> logs\benchmark-fibs-t01-%datetime%.txt
+call scripts\benchmark -m fibs  -s  400 -t  1 >> logs\benchmark-fibs-t01-%datetime%.txt
+call scripts\benchmark -m fibs  -s  800 -t  1 >> logs\benchmark-fibs-t01-%datetime%.txt
+call scripts\benchmark -m fibs  -s 1600 -t  1 >> logs\benchmark-fibs-t01-%datetime%.txt
+
+
+:: Size scaling benchmarks for sieve.
+call scripts\benchmark -m sieve  -s  100 -t  1  > logs\benchmark-sieve-t01-%datetime%.txt
+call scripts\benchmark -m sieve  -s  200 -t  1 >> logs\benchmark-sieve-t01-%datetime%.txt
+call scripts\benchmark -m sieve  -s  400 -t  1 >> logs\benchmark-sieve-t01-%datetime%.txt
+call scripts\benchmark -m sieve  -s  800 -t  1 >> logs\benchmark-sieve-t01-%datetime%.txt
+call scripts\benchmark -m sieve  -s 1600 -t  1 >> logs\benchmark-sieve-t01-%datetime%.txt
+
+
+:: Size scaling benchmarks for Smith-Waterman.
+call scripts\benchmark -m align  -s  100 -t  1  > logs\benchmark-align-t01-%datetime%.txt
+call scripts\benchmark -m align  -s  200 -t  1 >> logs\benchmark-align-t01-%datetime%.txt
+call scripts\benchmark -m align  -s  400 -t  1 >> logs\benchmark-align-t01-%datetime%.txt
+call scripts\benchmark -m align  -s  800 -t  1 >> logs\benchmark-align-t01-%datetime%.txt
+call scripts\benchmark -m align  -s 1600 -t  1 >> logs\benchmark-align-t01-%datetime%.txt
+
+
+:: Size scaling benchmarks for indexing operations.
+call scripts\benchmark -m index  -s  100 -t  1  > logs\benchmark-index-t01-%datetime%.txt
+call scripts\benchmark -m index  -s  200 -t  1 >> logs\benchmark-index-t01-%datetime%.txt
+call scripts\benchmark -m index  -s  400 -t  1 >> logs\benchmark-index-t01-%datetime%.txt
+call scripts\benchmark -m index  -s  800 -t  1 >> logs\benchmark-index-t01-%datetime%.txt
+call scripts\benchmark -m index  -s 1600 -t  1 >> logs\benchmark-index-t01-%datetime%.txt

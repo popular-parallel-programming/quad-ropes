@@ -9,9 +9,20 @@ let private maxBy f a b =
     if f a > f b then a else b
 
 
+/// Return a function that computes the element-wise distance between
+/// two strings.
+let dist (a : string) (b : string) =
+    fun i j -> if a.[i] = b.[j] then 1 else - 1
+
+
 /// Compute the score after Smith-Waterman.
 let private swscore row diag col s =
     max (max (diag + s) (max (row - 1) (col - 1))) 0
+
+
+/// A kernel for backtracking through a score matrix.
+let private btKernel row diag col score =
+    max (max row diag) col + score
 
 
 module QuadRope =
@@ -23,30 +34,21 @@ module QuadRope =
         |> fst
 
 
-    /// Find the next highest index during backtracking.
-    let private findNextHighest i j scores =
-        let scores' = QuadRope.set (QuadRope.slice (i - 1) (j - 1) 2 2 scores) 1 1 -1
-        let i', j' = findMax scores'
-        i - 1 + i', j - 1 + j'
-
-
     /// Backtrack through a score matrix from some starting index pair i
     /// and j.
-    let rec private backtrace (i, j) scores trace =
-        let score = QuadRope.get scores i j
-        let trace' = trace + score
-        if score = 0 then
-            trace'
-        else
-            backtrace (findNextHighest i j scores) scores trace'
+    let private backtrack (i, j) scores =
+        let scores' = QuadRope.slice 0 0 i j scores // Start from i, j
+                      |> QuadRope.hrev              // Revert row direction.
+                      |> QuadRope.vrev              // Revert column direction.
+                      |> QuadRope.scan btKernel 0   // Take value at i, j as start.
+        QuadRope.get scores' (i - 1) (j - 1) + (QuadRope.get scores i j)
 
 
     /// Compute the alignment cost of two sequences a and b.
     let align a b =
-        let scores =
-            QuadRope.init (strlen a) (strlen b) (fun i j -> if a.[i] = b.[j] then 1 else - 1)
-            |> QuadRope.scan swscore 0
-        backtrace (findMax scores) scores 0
+        let scores = QuadRope.init (strlen a) (strlen b) (dist a b)
+                     |> QuadRope.scan swscore 0
+        backtrack (findMax scores) scores
 
 
 
@@ -59,27 +61,18 @@ module Array2D =
         |> fst
 
 
-    /// Find the next highest index during backtracking.
-    let private findNextHighest i j scores =
-        let scores' = Array2D.set (Array2D.slice (i - 1) (j - 1) 2 2 scores) 1 1 -1
-        let i', j' = findMax scores'
-        i - 1 + i', j - 1 + j'
-
-
     /// Backtrack through a score matrix from some starting index pair i
     /// and j.
-    let rec private backtrace (i, j) scores trace =
-        let score = Array2D.get scores i j
-        let trace' = trace + score
-        if score = 0 then
-            trace'
-        else
-            backtrace (findNextHighest i j scores) scores trace'
+    let private backtrack (i, j) scores =
+        let scores' = Array2D.slice 0 0 i j scores // Start from i, j
+                      |> Array2D.rev1              // Revert column direction.
+                      |> Array2D.rev2              // Revert row direction.
+                      |> Array2D.scan btKernel 0   // Take value at i, j as start.
+        Array2D.get scores' (i - 1) (j - 1) + (Array2D.get scores i j)
 
 
     /// Compute the alignment cost of two sequences a and b.
     let align a b =
-        let scores =
-            Array2D.init (strlen a) (strlen b) (fun i j -> if a.[i] = b.[j] then 1 else - 1)
-            |> Array2D.scan swscore 0
-        backtrace (findMax scores) scores 0
+        let scores = Array2D.init (strlen a) (strlen b) (dist a b)
+                     |> Array2D.scan swscore 0
+        backtrack (findMax scores) scores

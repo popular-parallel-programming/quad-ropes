@@ -105,22 +105,22 @@ let vanDerCorput (opts : Options) =
 /// Benchmark matrix multiplication algorithms.
 let matMult (opts: Options) =
     // Array matrices
-    let arr1 = Array2D.init opts.size opts.size (fun i j -> float (i * j))
-    let arr2 = Array2D.init opts.size opts.size (fun i j -> if i < j then 0.0 else 1.0)
+    let arr1 = Array2D.init opts.size opts.size (fun i j -> if i < j then 0.0 else 1.0)
+    let arr2 = Array2D.init opts.size opts.size (fun i j -> float (i * j))
 
     // Quad rope matrices
-    let qr = QuadRope.init opts.size opts.size (fun i j -> float (i * j))
     let ud = QuadRope.init opts.size opts.size (fun i j -> if i < j then 0.0 else 1.0)
     let us = QuadRope.SparseDouble.upperDiagonal opts.size 1.0
+    let qr = QuadRope.init opts.size opts.size (fun i j -> float (i * j))
 
     if opts.threads = 1 then
-        benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmult qr ud)
-               &> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmult qr us) |> runWithHead
+        benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmult ud qr)
+               &> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmult us qr) |> runWithHead
         benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmult arr1 arr2)
                &> ("Array2D.imperative", fun () -> MatMult.Imperative.mmult arr1 arr2) |> run
     else
-        benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmultPar qr ud)
-               &> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmultPar qr us) |> runWithHead
+        benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmultPar ud qr)
+               &> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmultPar us qr) |> runWithHead
         benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmultPar arr1 arr2)
                &> ("Array2D.imperative", fun () -> MatMult.Imperative.mmultPar arr1 arr2) |> run
 

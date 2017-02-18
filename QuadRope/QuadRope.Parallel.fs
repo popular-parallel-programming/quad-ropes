@@ -428,6 +428,21 @@ let initZeros h w = initAll h w 0
 /// f will be called like this:
 /// f(I(i, j - 1), I(i - 1, j - 1), I(i - 1, j), I(i,j))
 let scan f init qr =
+
+    /// A quad rope with branches a b d c, where b and c can be
+    /// processed in parallel; i.e., we assume rows c <= rows a and
+    /// cols b <= cols a.
+    let rec parscan pre a b c d tgt =
+        let a' = scan pre a tgt
+        let b', c' = par2 (fun () ->
+                           let tgt' = Target.incrementRow tgt (rows a)
+                           scan (Target.get tgt') b tgt')
+                          (fun () ->
+                           let tgt' = Target.incrementCol tgt (cols a)
+                           scan (Target.get tgt') c tgt')
+        let tgt' = Target.increment tgt (rows c) (cols b)
+        a', b', c', scan (Target.get tgt') d tgt'
+
     // Prefix is implicitly passed on through side effects when
     // writing into tgt. Therefore, we need to take several cases of
     // dependencies into account:
@@ -436,7 +451,7 @@ let scan f init qr =
     // - rows ne <= rows nw && cols sw <= cols nw: scan ne and sw in parallel.
     // - cols nw < cols sw: scan ne before sw.
     // - rows nw < rows ne: scan sw before ne.
-    let rec scan pre qr tgt =
+    and scan pre qr tgt =
         match qr with
             | Empty -> Empty
             | Leaf slc ->
@@ -448,29 +463,13 @@ let scan f init qr =
             // parallel.
             | HCat (_, _, _, _, VCat (_, _, _, _, a, b), VCat (_, _, _, _, c, d))
                 when rows c <= rows a && cols b <= cols a ->
-                    let a' = scan pre a tgt
-                    let b', c' = par2 (fun () ->
-                                       let tgt' = Target.incrementRow tgt (rows a)
-                                       scan (Target.get tgt') b tgt')
-                                      (fun () ->
-                                       let tgt' = Target.incrementCol tgt (cols a)
-                                       scan (Target.get tgt') c tgt')
-                    let tgt' = Target.increment tgt (rows c) (cols b)
-                    let d' = scan (Target.get tgt') d tgt'
+                    let a', b', c', d' = parscan pre a b c d tgt
                     hnode (vnode a' b') (vnode c' d')
 
             // We need a second case to re-construct nodes correctly.
             | VCat (_, _, _, _, HCat (_, _, _, _, a, c), HCat (_, _, _, _, b, d))
                 when rows c <= rows a && cols b <= cols a ->
-                    let a' = scan pre a tgt
-                    let b', c' = par2 (fun () ->
-                                       let tgt' = Target.incrementRow tgt (rows a)
-                                       scan (Target.get tgt') b tgt')
-                                      (fun () ->
-                                       let tgt' = Target.incrementCol tgt (cols a)
-                                       scan (Target.get tgt') c tgt')
-                    let tgt' = Target.increment tgt (rows c) (cols b)
-                    let d' = scan (Target.get tgt') d tgt'
+                    let a', b', c', d' = parscan pre a b c d tgt
                     vnode (hnode a' c') (hnode b' d')
 
             // Sequential cases.

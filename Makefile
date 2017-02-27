@@ -18,3 +18,6 @@ all: paket debug
 
 plots:
 	gnuplot plot.gnuplot
+
+test:
+	mono --debug QuadRope.Test/bin/Debug/QuadRope.Test.exe

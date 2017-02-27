@@ -810,28 +810,28 @@ let rec vscan f states = function
 let scan f init qr =
     // Prefix is implicitly passed on through side effects when
     // writing into tgt.
-    let rec scan pre qr tgt =
+    let rec scan qr tgt =
         match qr with
             | Empty -> Empty
             | Leaf slc ->
-                Target.scan f pre slc tgt
+                Target.scan f slc tgt
                 Leaf (Target.toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc))
 
             // Scanning b depends on scanning a; a resides "above" b.
             | HCat (_, _, _, _, a, b) ->
-                let a' = scan pre a tgt
+                let a' = scan a tgt
                 let tgt' = Target.incrementCol tgt (cols a)
-                let b' = scan (Target.get tgt') b tgt'
+                let b' = scan b tgt'
                 hnode a' b'
 
             // Scanning b depends on scanning a; a resides "left of" b.
             | VCat (_, _, _, _, a, b) ->
-                let a' = scan pre a tgt
+                let a' = scan a tgt
                 let tgt' = Target.incrementRow tgt (rows a)
-                let b' = scan (Target.get tgt') b tgt'
+                let b' = scan b tgt'
                 vnode a' b'
 
-            | Slice _ -> scan pre (materialize qr) tgt
+            | Slice _ -> scan (materialize qr) tgt
 
             | Sparse (h, w, v) ->
                 // Fill the target imperatively.
@@ -839,12 +839,12 @@ let scan f init qr =
                 // Get a slice over the target.
                 let slc = Target.toSlice tgt h w
                 // Compute prefix imperatively.
-                Target.scan f pre slc tgt
+                Target.scan f slc tgt
                 // Make a new quad rope from array slice.
                 fromArraySlice slc
 
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
-    scan (Target.get tgt) qr tgt
+    scan qr tgt
 
 
 /// A less general variant of scan that uses a function and its

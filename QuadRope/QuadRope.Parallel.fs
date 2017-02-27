@@ -432,16 +432,13 @@ let scan f init qr =
     /// A quad rope with branches a b d c, where b and c can be
     /// processed in parallel; i.e., we assume rows c <= rows a and
     /// cols b <= cols a.
-    let rec parscan pre a b c d tgt =
-        let a' = scan pre a tgt
-        let b', c' = par2 (fun () ->
-                           let tgt' = Target.incrementRow tgt (rows a)
-                           scan (Target.get tgt') b tgt')
-                          (fun () ->
-                           let tgt' = Target.incrementCol tgt (cols a)
-                           scan (Target.get tgt') c tgt')
+    let rec parscan a b c d tgt =
+        let a' = scan a tgt
+        let b', c' = par2 (fun () -> scan b (Target.incrementRow tgt (rows a)))
+                          (fun () -> scan c (Target.incrementCol tgt (cols a)))
+
         let tgt' = Target.increment tgt (rows c) (cols b)
-        a', b', c', scan (Target.get tgt') d tgt'
+        a', b', c', scan d tgt'
 
     // Prefix is implicitly passed on through side effects when
     // writing into tgt. Therefore, we need to take several cases of
@@ -451,11 +448,11 @@ let scan f init qr =
     // - rows ne <= rows nw && cols sw <= cols nw: scan ne and sw in parallel.
     // - cols nw < cols sw: scan ne before sw.
     // - rows nw < rows ne: scan sw before ne.
-    and scan pre qr tgt =
+    and scan qr tgt =
         match qr with
             | Empty -> Empty
             | Leaf slc ->
-                Target.scan f pre slc tgt
+                Target.scan f slc tgt
                 Leaf (Target.toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc))
 
             // Parallel cases: b and c depend only on a, d
@@ -463,29 +460,29 @@ let scan f init qr =
             // parallel.
             | HCat (_, _, _, _, VCat (_, _, _, _, a, b), VCat (_, _, _, _, c, d))
                 when rows c <= rows a && cols b <= cols a ->
-                    let a', b', c', d' = parscan pre a b c d tgt
+                    let a', b', c', d' = parscan a b c d tgt
                     hnode (vnode a' b') (vnode c' d')
 
             // We need a second case to re-construct nodes correctly.
             | VCat (_, _, _, _, HCat (_, _, _, _, a, c), HCat (_, _, _, _, b, d))
                 when rows c <= rows a && cols b <= cols a ->
-                    let a', b', c', d' = parscan pre a b c d tgt
+                    let a', b', c', d' = parscan a b c d tgt
                     vnode (hnode a' c') (hnode b' d')
 
             // Sequential cases.
             | HCat (_, _, _, _, a, b) ->
-                let a' = scan pre a tgt
+                let a' = scan a tgt
                 let tgt' = Target.incrementCol tgt (cols a)
-                let b' = scan (Target.get tgt') b tgt'
+                let b' = scan b tgt'
                 hnode a' b'
 
             | VCat (_, _, _, _, a, b) ->
-                let a' = scan pre a tgt
+                let a' = scan a tgt
                 let tgt' = Target.incrementRow tgt (rows a)
-                let b' = scan (Target.get tgt') b tgt'
+                let b' = scan b tgt'
                 vnode a' b'
 
-            | Slice _ -> scan pre (QuadRope.materialize qr) tgt
+            | Slice _ -> scan (QuadRope.materialize qr) tgt
 
             // Materialize a sparse leaf and scan it.
             | Sparse (h, w, v) when h <= smax || w <= smax ->
@@ -494,7 +491,7 @@ let scan f init qr =
                 // Get a slice over the target.
                 let slc = Target.toSlice tgt h w
                 // Compute prefix imperatively.
-                Target.scan f pre slc tgt
+                Target.scan f slc tgt
                 // Make a new quad rope from array slice.
                 leaf slc
 
@@ -502,11 +499,11 @@ let scan f init qr =
             // actually do some work in parallel.
             | Sparse _ -> // when smax < h && smax < w
                 let a, b, c, d = QuadRope.split4 qr
-                scan pre (hnode (vnode a b) (vnode c d)) tgt
+                scan (hnode (vnode a b) (vnode c d)) tgt
 
     // Initial target and start of recursion.
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
-    scan (Target.get tgt) qr tgt
+    scan qr tgt
 
 
 /// Compare two quad ropes element wise and return true if they are

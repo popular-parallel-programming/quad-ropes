@@ -154,7 +154,7 @@ let inline transpose slc (tgt : _ Target) =
 
 
 /// Read from target with its offset.
-let get (tgt : _ Target) i j =
+let inline get (tgt : _ Target) i j =
     tgt.vals.[tgt.i + i, tgt.j + j]
 
 
@@ -162,24 +162,16 @@ let get (tgt : _ Target) i j =
 /// slc to access "state" based on (i, j) position. Function f is
 /// called like this:
 /// f(I(i, j - 1), I(i - 1, j - 1), I(i - 1, j), I(i,j))
-let scan f pres slc tgt =
+let scan f slc tgt =
     // This is the same for every element.
-    let prefix pres i j =
-        f (pres i (j - 1))       // Prefix from same row.
-          (pres (i - 1) (j - 1)) // Prefix from diagonal.
-          (pres (i - 1) j)       // Prefix from same column.
+    let prefix i j =
+        f (get tgt i (j - 1))       // Prefix from same row.
+          (get tgt (i - 1) (j - 1)) // Prefix from diagonal.
+          (get tgt (i - 1) j)       // Prefix from same column.
           (ArraySlice.get slc i j)
 
-    // Compute prefix for top left element.
-    write tgt 0 0 (prefix pres 0 0)
-    // Compute prefix for top row.
-    for i in 1 .. ArraySlice.rows slc - 1 do
-        write tgt i 0 (prefix pres i 0)
-    // Compute prefix for leftmost column.
-    for j in 1 .. ArraySlice.cols slc - 1 do
-        write tgt 0 j (prefix pres 0 j)
     // Compute prefix for remaining elements, taking prefix sums from
     // tgt itself.
-    for i in 1 .. ArraySlice.rows slc - 1 do
-        for j in 1 .. ArraySlice.cols slc - 1 do
-            write tgt i j (prefix (get tgt) i j)
+    for i in 0 .. ArraySlice.rows slc - 1 do
+        for j in 0 .. ArraySlice.cols slc - 1 do
+            write tgt i j (prefix i j)

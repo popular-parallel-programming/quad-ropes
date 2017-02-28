@@ -28,11 +28,12 @@ let private btKernel row diag col score =
 module QuadRope =
 
     let alignmentBuilder mapi reduce hrev vrev scan init =
+
         /// Find the maximum value in scores and return its index.
-        let rec findMax scores =
-            mapi (fun i j s -> (i, j), s) scores
-            |> reduce (maxBy snd) ((0, 0), 0)
-            |> fst
+        let rec findMax =
+            mapi (fun i j s -> (i, j), s)
+            >> reduce (maxBy snd) ((0, 0), 0)
+            >> fst
 
 
         /// Backtrack through a score matrix from some starting index pair i
@@ -76,10 +77,10 @@ module QuadRope =
 module Array2D =
 
     /// Find the maximum value in scores and return its index.
-    let rec private findMax scores =
-        Array2D.mapi (fun i j s -> (i, j), s) scores
-        |> Array2D.reduce (maxBy snd)
-        |> fst
+    let rec private findMax =
+        Array2D.mapi (fun i j s -> (i, j), s)
+        >> Array2D.reduce (maxBy snd)
+        >> fst
 
 
     /// Backtrack through a score matrix from some starting index pair i

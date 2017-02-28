@@ -856,23 +856,19 @@ let sumAreaTable (+) (-) =
 /// Checks that some relation p holds between each two adjacent
 /// elements in each row. This is slow and should not really be
 /// used.
-let forallRows p = function
-    | Empty -> true
-    | qr ->
-        hmapreduce List.singleton List.append [] qr
-        |> map List.pairwise
-        |> mapreduce (List.forall (fun (a, b) -> p a b)) (&&) true
+let forallRows p =
+    hmapreduce List.singleton List.append []
+    >> map List.pairwise
+    >> mapreduce (List.forall (fun (a, b) -> p a b)) (&&) true
 
 
 /// Checks that some relation p holds between each two adjacent
 /// elements in each column. This is slow and should not really be
 /// used.
-let forallCols p = function
-    | Empty -> true
-    | qr ->
-        vmapreduce List.singleton List.append [] qr
-        |> map List.pairwise
-        |> mapreduce (List.forall (fun (a, b) -> p a b)) (&&) true
+let forallCols p =
+    vmapreduce List.singleton List.append []
+    >> map List.pairwise
+    >> mapreduce (List.forall (fun (a, b) -> p a b)) (&&) true
 
 
 /// Apply predicate p to all elements of qr and reduce the

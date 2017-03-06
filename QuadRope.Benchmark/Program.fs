@@ -224,7 +224,7 @@ let runBenchmark (opts : Options) =
         printfn "# Warning: cannot change thread pool thread count on Mono."
 
     Script.WarmupIterations <- 3
-    Script.Iterations <- 100
+    Script.Iterations <- 10
     match Map.tryFind opts.mode benchmarks with
         | Some f -> f opts; 0
         | None -> printfn "No such benchmark: %s" opts.mode; 1

@@ -104,8 +104,12 @@ let all (opts : Options) =
 
 /// Benchmark van Der Corput sequence computation.
 let vanDerCorput (opts : Options) =
-    benchmark ("QuadRope.vdc", fun () -> VanDerCorput.QuadRope.vanDerCorput opts.size) |> runWithHead
-    benchmark ("Array2D.vdc",  fun () -> VanDerCorput.Array2D.vanDerCorput opts.size) |> run
+    if opts.threads = 1 then
+        benchmark ("QuadRope.vdc", fun () -> VanDerCorput.QuadRope.vanDerCorput opts.size) |> runWithHead
+        benchmark ("Array2D.vdc",  fun () -> VanDerCorput.Array2D.vanDerCorput opts.size) |> run
+    else
+        benchmark ("QuadRope.vdc", fun () -> VanDerCorput.QuadRope.vanDerCorputPar opts.size) |> runWithHead
+        benchmark ("Array2D.vdc",  fun () -> VanDerCorput.Array2D.vanDerCorputPar opts.size) |> run
 
 
 /// Benchmark matrix multiplication algorithms.

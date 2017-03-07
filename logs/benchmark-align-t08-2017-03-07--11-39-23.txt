@@ -1,0 +1,3 @@
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	700,648305     73,823 48,829 ms/op      2
+Array2D.align #Not available.

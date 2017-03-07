@@ -1,0 +1,25 @@
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	944,494000     23,071 15,260 ms/op      2
+QuadRope.mmult sparse    	315,449435      0,596  0,394 ms/op      2
+Array2D.mmult            	698,668200     16,378 10,833 ms/op      2
+Array2D.imperative       	 42,173788      2,689  1,779 ms/op      8
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	1173,294370     37,003 24,475 ms/op      2
+QuadRope.mmult sparse    	491,379765     43,996 29,101 ms/op      2
+Array2D.mmult            	1314,312185    144,298 95,444 ms/op      2
+Array2D.imperative       	 19,952903      2,960  1,958 ms/op     16
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	977,462825    247,511 163,713 ms/op      2
+QuadRope.mmult sparse    	323,601255     64,731 42,816 ms/op      2
+Array2D.mmult            	1070,723845    130,371 86,233 ms/op      2
+Array2D.imperative       	 16,880334      4,092  2,707 ms/op     16
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	651,831630     43,361 28,680 ms/op      2
+QuadRope.mmult sparse    	226,705555     23,175 15,329 ms/op      2
+Array2D.mmult            	1061,146945    114,129 75,489 ms/op      2
+Array2D.imperative       	  8,383004      1,293  0,855 ms/op     64
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	564,741915     20,636 13,649 ms/op      2
+QuadRope.mmult sparse    	207,364880     11,659  7,712 ms/op      2
+Array2D.mmult            	1641,260860    585,849 387,503 ms/op      2
+Array2D.imperative       	  7,420585      1,834  1,213 ms/op     32

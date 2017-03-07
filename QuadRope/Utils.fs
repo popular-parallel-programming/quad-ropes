@@ -157,3 +157,22 @@ module Functions =
         let f4 b0 b1 b2 b3 =
             f.Invoke(b0, b1, b2, b3)
         f4
+
+
+    open OptimizedClosures
+
+    let inline adapt2 f = FSharpFunc<_, _, _>.Adapt f
+    let inline adapt3 f = FSharpFunc<_, _, _, _>.Adapt f
+    let inline adapt4 f = FSharpFunc<_, _, _, _, _>.Adapt f
+
+
+    let inline invoke2 (f : FSharpFunc<_, _, _>) a b =
+        f.Invoke(a, b)
+
+
+    let inline invoke3 (f : FSharpFunc<_, _, _, _>) a b c =
+        f.Invoke(a, b, c)
+
+
+    let inline invoke4 (f : FSharpFunc<_, _, _, _, _>) a b c d =
+        f.Invoke(a, b, c, d)

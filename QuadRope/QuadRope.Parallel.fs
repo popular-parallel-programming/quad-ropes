@@ -25,6 +25,7 @@ module RadTrees.Parallel.QuadRope
 
 open RadTrees
 open Types
+open Utils
 open Utils.Tasks
 
 let private rows = QuadRope.rows
@@ -226,15 +227,20 @@ let zip f lqr rqr =
 /// to a single scalar using g in parallel. Variable epsilon is the
 /// neutral element for g. We assume that g epsilon x = g x epsilon =
 /// x.
-let rec mapreduce f g epsilon = function
-    | HCat (_, _, _, _, a, b) ->
-        par2 (fun () -> mapreduce f g epsilon a) (fun () -> mapreduce f g epsilon b) ||> g
+let mapreduce f g epsilon qr =
+    let rec mapreduce f g epsilon = function
+        | HCat (_, _, _, _, a, b) ->
+            par2 (fun () -> mapreduce f g epsilon a) (fun () -> mapreduce f g epsilon b) ||>
+            Functions.invoke2 g
 
-    | VCat (_, _, _, _, a, b) ->
-        par2 (fun () -> mapreduce f g epsilon a) (fun () -> mapreduce f g epsilon b) ||> g
+        | VCat (_, _, _, _, a, b) ->
+            par2 (fun () -> mapreduce f g epsilon a) (fun () -> mapreduce f g epsilon b) ||>
+            Functions.invoke2 g
 
-    | Slice _ as qr -> mapreduce f g epsilon (QuadRope.materialize qr)
-    | qr -> QuadRope.mapreduce f g epsilon qr
+        | Slice _ as qr -> mapreduce f g epsilon (QuadRope.materialize qr)
+        | qr -> QuadRope.mapreduceOpt f g epsilon qr
+
+    mapreduce f (Functions.adapt2 g) epsilon qr
 
 
 /// Reduce all values of the rope to a single scalar in parallel.
@@ -437,13 +443,13 @@ let scan f init qr =
     /// A quad rope with branches a b d c, where b and c can be
     /// processed in parallel; i.e., we assume rows c <= rows a and
     /// cols b <= cols a.
-    let rec parscan a b c d tgt =
-        let a' = scan a tgt
-        let b', c' = par2 (fun () -> scan b (Target.incrementRow tgt (rows a)))
-                          (fun () -> scan c (Target.incrementCol tgt (cols a)))
+    let rec parscan f a b c d tgt =
+        let a' = scan f a tgt
+        let b', c' = par2 (fun () -> scan f b (Target.incrementRow tgt (rows a)))
+                          (fun () -> scan f c (Target.incrementCol tgt (cols a)))
 
         let tgt' = Target.increment tgt (rows c) (cols b)
-        a', b', c', scan d tgt'
+        a', b', c', scan f d tgt'
 
     // Prefix is implicitly passed on through side effects when
     // writing into tgt. Therefore, we need to take several cases of
@@ -453,7 +459,7 @@ let scan f init qr =
     // - rows ne <= rows nw && cols sw <= cols nw: scan ne and sw in parallel.
     // - cols nw < cols sw: scan ne before sw.
     // - rows nw < rows ne: scan sw before ne.
-    and scan qr tgt =
+    and scan f qr tgt =
         match qr with
             | Empty -> Empty
             | Leaf slc ->
@@ -465,29 +471,29 @@ let scan f init qr =
             // parallel.
             | HCat (_, _, _, _, VCat (_, _, _, _, a, b), VCat (_, _, _, _, c, d))
                 when rows c <= rows a && cols b <= cols a ->
-                    let a', b', c', d' = parscan a b c d tgt
+                    let a', b', c', d' = parscan f a b c d tgt
                     hnode (vnode a' b') (vnode c' d')
 
             // We need a second case to re-construct nodes correctly.
             | VCat (_, _, _, _, HCat (_, _, _, _, a, c), HCat (_, _, _, _, b, d))
                 when rows c <= rows a && cols b <= cols a ->
-                    let a', b', c', d' = parscan a b c d tgt
+                    let a', b', c', d' = parscan f a b c d tgt
                     vnode (hnode a' c') (hnode b' d')
 
             // Sequential cases.
             | HCat (_, _, _, _, a, b) ->
-                let a' = scan a tgt
+                let a' = scan f a tgt
                 let tgt' = Target.incrementCol tgt (cols a)
-                let b' = scan b tgt'
+                let b' = scan f b tgt'
                 hnode a' b'
 
             | VCat (_, _, _, _, a, b) ->
-                let a' = scan a tgt
+                let a' = scan f a tgt
                 let tgt' = Target.incrementRow tgt (rows a)
-                let b' = scan b tgt'
+                let b' = scan f b tgt'
                 vnode a' b'
 
-            | Slice _ -> scan (QuadRope.materialize qr) tgt
+            | Slice _ -> scan f (QuadRope.materialize qr) tgt
 
             // Materialize a sparse leaf and scan it.
             | Sparse (h, w, v) when h <= smax || w <= smax ->
@@ -504,11 +510,11 @@ let scan f init qr =
             // actually do some work in parallel.
             | Sparse _ -> // when smax < h && smax < w
                 let a, b, c, d = QuadRope.split4 qr
-                scan (hnode (vnode a b) (vnode c d)) tgt
+                scan f (hnode (vnode a b) (vnode c d)) tgt
 
     // Initial target and start of recursion.
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
-    scan qr tgt
+    scan (Functions.adapt4 f) qr tgt
 
 
 /// Compare two quad ropes element wise and return true if they are

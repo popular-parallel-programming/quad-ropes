@@ -23,7 +23,7 @@ module internal RadTrees.ArraySlice
 
 open RadTrees
 open Types
-
+open Utils
 
 /// This is the empty slice. It does not refer to any array and you
 /// cannot retrieve any values from it.
@@ -265,11 +265,11 @@ let mapreduce f g slc =
     let mutable acc = f (fastGet slc 0 0)
     // Accumulate the first row, skip element at 0,0.
     for j in 1 .. cols slc - 1 do
-        acc <- g acc (f (fastGet slc 0 j))
+        acc <- Functions.invoke2 g acc (f (fastGet slc 0 j))
     // Now accumulate the remaining rows.
     for i in 1 .. rows slc - 1 do
         for j in 0 .. cols slc - 1 do
-            acc <- g acc (f (fastGet slc i j))
+            acc <- Functions.invoke2 g acc (f (fastGet slc i j))
     acc
 
 
@@ -324,11 +324,20 @@ let iteri2 f left right =
             f i j (fastGet left i j) (fastGet right i j)
 
 
+let iteriOpt2 f left right =
+    if rows left <> rows right || cols left <> cols right then
+        invalidArg "right" "length1 and length2 must be equal."
+    for i in 0 .. rows left - 1 do
+        for j in 0 .. cols left - 1 do
+            Functions.invoke4 f i j (fastGet left i j) (fastGet right i j)
+
+
+
 /// Initialize a hopefully empty ArraySlice.
-let internal init slc (f : OptimizedClosures.FSharpFunc<int, int, _>) =
+let internal init slc f =
     for i in minr slc .. maxr slc do
         for j in minc slc .. maxc slc do
-            slc.vals.[i, j] <- f.Invoke(i, j)
+            slc.vals.[i, j] <- Functions.invoke2 f i j
 
 
 /// Convenience function to create a new empty ArraySlice that can be

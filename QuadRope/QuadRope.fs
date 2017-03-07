@@ -735,16 +735,16 @@ let zip f lqr rqr =
 /// Apply f to all values of the rope and reduce the resulting values
 /// to a single scalar using g. Variable epsilon is the neutral
 /// element for g. We assume that g epsilon x = g x epsilon = x.
-let rec mapreduce f g epsilon = function
+let rec internal mapreduceOpt f g epsilon = function
     | Empty -> epsilon
     | Leaf slc ->
         ArraySlice.mapreduce f g slc
     | HCat (_, _, _, _, a, b) ->
-        g (mapreduce f g epsilon a) (mapreduce f g epsilon b)
+        Functions.invoke2 g (mapreduceOpt f g epsilon a) (mapreduceOpt f g epsilon b)
     | VCat (_, _, _, _, a, b) ->
-        g (mapreduce f g epsilon a) (mapreduce f g epsilon b)
+        Functions.invoke2 g (mapreduceOpt f g epsilon a) (mapreduceOpt f g epsilon b)
     | Slice _ as qr ->
-        mapreduce f g epsilon (materialize qr)
+        mapreduceOpt f g epsilon (materialize qr)
     | Sparse (h, w, v) ->
         let fv = f v
         if fv = epsilon then
@@ -752,9 +752,11 @@ let rec mapreduce f g epsilon = function
         else
             let mutable acc = f v
             for i in 2 .. h * w do
-                acc <- g acc fv
+                acc <- Functions.invoke2 g acc fv
             acc
 
+let mapreduce f g epsilon qr =
+    mapreduceOpt f (Functions.adapt2 g) epsilon qr
 
 /// Reduce all values of the rope to a single scalar.
 let reduce f epsilon qr = mapreduce id f epsilon qr
@@ -810,7 +812,7 @@ let rec vscan f states = function
 let scan f init qr =
     // Prefix is implicitly passed on through side effects when
     // writing into tgt.
-    let rec scan qr tgt =
+    let rec scan f qr tgt =
         match qr with
             | Empty -> Empty
             | Leaf slc ->
@@ -819,19 +821,19 @@ let scan f init qr =
 
             // Scanning b depends on scanning a; a resides "above" b.
             | HCat (_, _, _, _, a, b) ->
-                let a' = scan a tgt
+                let a' = scan f a tgt
                 let tgt' = Target.incrementCol tgt (cols a)
-                let b' = scan b tgt'
+                let b' = scan f b tgt'
                 hnode a' b'
 
             // Scanning b depends on scanning a; a resides "left of" b.
             | VCat (_, _, _, _, a, b) ->
-                let a' = scan a tgt
+                let a' = scan f a tgt
                 let tgt' = Target.incrementRow tgt (rows a)
-                let b' = scan b tgt'
+                let b' = scan f b tgt'
                 vnode a' b'
 
-            | Slice _ -> scan (materialize qr) tgt
+            | Slice _ -> scan f (materialize qr) tgt
 
             | Sparse (h, w, v) ->
                 // Fill the target imperatively.
@@ -844,7 +846,7 @@ let scan f init qr =
                 fromArraySlice slc
 
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
-    scan qr tgt
+    scan (Functions.adapt4 f) qr tgt
 
 
 /// A less general variant of scan that uses a function and its
@@ -931,7 +933,7 @@ let equals qr0 qr1 =
 
 /// Replace branches of equal values with sparse representations.
 let rec compress = function
-    | Leaf slc when ArraySlice.mapreduce ((=) (ArraySlice.get slc 0 0)) (&&) slc ->
+    | Leaf slc as qr when forall ((=) (get qr 0 0)) qr ->
         create (ArraySlice.rows slc) (ArraySlice.cols slc) (ArraySlice.get slc 0 0)
     | HCat (_, _, _, _, a, b) ->
         hcat (compress a) (compress b)

@@ -21,15 +21,17 @@
 
 module RadTrees.Parallel.Array2D
 
+open RadTrees.Utils
 open RadTrees.Utils.Tasks
 
 /// Initialize a 2D array in parallel.
 let init h w f =
+    let f' = Functions.adapt2 f
     let arr = Array2D.zeroCreate h w
     if h < w then
-        parfor 0 w (fun j -> for i = 0 to h - 1 do arr.[i, j] <- f i j)
+        parfor 0 w (fun j -> for i = 0 to h - 1 do arr.[i, j] <- Functions.invoke2 f' i j)
     else
-        parfor 0 h (fun i -> for j = 0 to w - 1 do arr.[i, j] <- f i j)
+        parfor 0 h (fun i -> for j = 0 to w - 1 do arr.[i, j] <- Functions.invoke2 f' i j)
     arr
 
 
@@ -120,6 +122,7 @@ let reduce2 f arr = mapReduce2 id f arr
 /// Map a function f to all values in the array and combine the
 /// results using g.
 let mapReduce f g (arr : _ [,]) =
+    let g' = Functions.adapt2 g
     let mapReduceView i0 j0 h w =
         let h = min (i0 + h) (Array2D.length1 arr)
         let w = min (j0 + w) (Array2D.length2 arr)
@@ -128,7 +131,7 @@ let mapReduce f g (arr : _ [,]) =
             acc <- g acc (f arr.[i0, j])
         for i in i0 + 1 .. h - 1 do
             for j in j0 .. w - 1 do
-                acc <- g acc (f arr.[i, j])
+                acc <- Functions.invoke2 g' acc (f arr.[i, j])
         acc
     let h = Array2D.length1 arr / numthreads()
     let mapReduceStep i =

@@ -21,6 +21,8 @@
 
 module RadTrees.Array2D
 
+open Utils
+
 /// Return a fresh copy of arr with the value at i,j replaced with v.
 let set arr i j v =
     let arr0 = Array2D.copy arr
@@ -156,12 +158,13 @@ let reduce2 f arr = mapReduce2 id f arr
 /// Map a function f to all values in the array and combine the
 /// results using g.
 let mapReduce f g (arr : _ [,]) =
+    let g' = Functions.adapt2 g
     let mutable acc = f arr.[0, 0]
     for j in 1 .. Array2D.length2 arr - 1 do
         acc <- g acc (f arr.[0, j])
     for i in 1 .. Array2D.length1 arr - 1 do
         for j in 0 .. Array2D.length2 arr - 1 do
-            acc <- g acc (f arr.[i, j])
+            acc <- Functions.invoke2 g' acc (f arr.[i, j])
     acc
 
 
@@ -198,6 +201,7 @@ let filter2 p arr =
 
 /// Generalization of summed area table, i.e. two-dimensional scan.
 let scan f pre vals =
+    let f' = Functions.adapt4 f
     let sums = Array2D.zeroCreate (Array2D.length1 vals) (Array2D.length2 vals)
 
     /// Computes the prefix sum for the index pair i j.
@@ -205,10 +209,11 @@ let scan f pre vals =
         if i = 0 || j = 0 then
             pre
         else
-            f (Array2D.get sums i (j - 1))       // Prefix from same row.
-              (Array2D.get sums (i - 1) (j - 1)) // Prefix from diagonal.
-              (Array2D.get sums (i - 1) j)       // Prefix from same column.
-              (Array2D.get vals i j)
+            Functions.invoke4 f'
+                              (Array2D.get sums i (j - 1))       // Prefix from same row.
+                              (Array2D.get sums (i - 1) (j - 1)) // Prefix from diagonal.
+                              (Array2D.get sums (i - 1) j)       // Prefix from same column.
+                              (Array2D.get vals i j)
 
     // Iterate over the array sequentially. We need a diagonal pattern
     // to make this parallel

@@ -24,7 +24,7 @@
 module internal RadTrees.Target
 
 open Types
-
+open Utils
 
 /// A convenience wrapper for writing into a target array with
 /// some offset.
@@ -115,7 +115,7 @@ let inline map f slc (tgt : _ Target) =
 /// Map a function to the values of two leafs and return a new leaf
 /// instance. This writes to the underlying target array.
 let inline map2 f slc1 slc2 (tgt : _ Target) =
-    ArraySlice.iteri2 (writemap2 tgt f) slc1 slc2
+    ArraySlice.iteriOpt2 (Functions.adapt4 (writemap2 tgt f)) slc1 slc2
     toSlice tgt (ArraySlice.length1 slc1) (ArraySlice.length2 slc1)
 
 
@@ -163,15 +163,12 @@ let inline get (tgt : _ Target) i j =
 /// called like this:
 /// f(I(i, j - 1), I(i - 1, j - 1), I(i - 1, j), I(i,j))
 let scan f slc tgt =
-    // This is the same for every element.
-    let prefix i j =
-        f (get tgt i (j - 1))       // Prefix from same row.
-          (get tgt (i - 1) (j - 1)) // Prefix from diagonal.
-          (get tgt (i - 1) j)       // Prefix from same column.
-          (ArraySlice.get slc i j)
-
     // Compute prefix for remaining elements, taking prefix sums from
     // tgt itself.
     for i in 0 .. ArraySlice.rows slc - 1 do
         for j in 0 .. ArraySlice.cols slc - 1 do
-            write tgt i j (prefix i j)
+            write tgt i j (Functions.invoke4 f
+                                             (get tgt i (j - 1))       // Prefix from same row.
+                                             (get tgt (i - 1) (j - 1)) // Prefix from diagonal.
+                                             (get tgt (i - 1) j)       // Prefix from same column.
+                                             (ArraySlice.get slc i j))

@@ -325,10 +325,10 @@ let iteri2 f left right =
 
 
 /// Initialize a hopefully empty ArraySlice.
-let internal init slc f =
+let internal init slc (f : OptimizedClosures.FSharpFunc<int, int, _>) =
     for i in minr slc .. maxr slc do
         for j in minc slc .. maxc slc do
-            slc.vals.[i, j] <- f i j
+            slc.vals.[i, j] <- f.Invoke(i, j)
 
 
 /// Convenience function to create a new empty ArraySlice that can be

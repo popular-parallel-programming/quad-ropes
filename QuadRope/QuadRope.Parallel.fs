@@ -45,31 +45,36 @@ let private smax = QuadRope.smax
 /// Generate a new quad rope in parallel.
 let init h w (f : int -> int -> _) =
     /// Build nodes by splitting underlying slices horizontally.
-    let rec hsplit slc =
+    let rec hsplit f slc =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
         else if ArraySlice.cols slc <= smax && ArraySlice.rows slc <= smax then
             ArraySlice.init slc f // Write into shared array.
             leaf slc
         else if ArraySlice.cols slc <= smax then
-            vsplit slc
+            vsplit f slc
         else
-            par2 (fun () -> vsplit (ArraySlice.leftHalf slc)) (fun () -> vsplit (ArraySlice.rightHalf slc))
+            par2 (fun () -> vsplit f (ArraySlice.leftHalf slc))
+                 (fun () -> vsplit f (ArraySlice.rightHalf slc))
             ||> hnode
     /// Build nodes by splitting underlying slices vertically.
-    and vsplit slc =
+    and vsplit f slc =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
         else if ArraySlice.cols slc <= smax && ArraySlice.rows slc <= smax then
             ArraySlice.init slc f // Write into shared array.
             leaf slc
         else if ArraySlice.rows slc <= smax then
-            hsplit slc
+            hsplit f slc
         else
-            par2 (fun () -> hsplit (ArraySlice.upperHalf slc)) (fun () -> hsplit (ArraySlice.lowerHalf slc))
+            par2 (fun () -> hsplit f (ArraySlice.upperHalf slc))
+                 (fun () -> hsplit f (ArraySlice.lowerHalf slc))
             ||> vnode
 
-    hsplit (ArraySlice.zeroCreate h w)
+    // Optimizing closures makes a factor two difference in
+    // performance.
+    let f' = OptimizedClosures.FSharpFunc<_, _, _>.Adapt f
+    hsplit f' (ArraySlice.zeroCreate h w)
 
 
 /// Apply a function f to all scalars in parallel.

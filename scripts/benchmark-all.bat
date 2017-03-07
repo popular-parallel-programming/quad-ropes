@@ -6,11 +6,11 @@ set datetime=%date:~6,4%-%date:~3,2%-%date:~0,2%--%time:~0,2%-%time:~3,2%-%time:
 @echo on
 
 :: Thread scaling benchmarks for single functions.
-call scripts\benchmark -m all    -s 1000 -t  1  > logs\benchmark-all-s1000-t32-%datetime%.txt
-call scripts\benchmark -m all    -s 1000 -t  2 >> logs\benchmark-all-s1000-t32-%datetime%.txt
-call scripts\benchmark -m all    -s 1000 -t  4 >> logs\benchmark-all-s1000-t32-%datetime%.txt
-call scripts\benchmark -m all    -s 1000 -t  8 >> logs\benchmark-all-s1000-t32-%datetime%.txt
-call scripts\benchmark -m all    -s 1000 -t 16 >> logs\benchmark-all-s1000-t32-%datetime%.txt
+call scripts\benchmark -m all    -s 1000 -t  1  > logs\benchmark-all-s1000-t16-%datetime%.txt
+call scripts\benchmark -m all    -s 1000 -t  2 >> logs\benchmark-all-s1000-t16-%datetime%.txt
+call scripts\benchmark -m all    -s 1000 -t  4 >> logs\benchmark-all-s1000-t16-%datetime%.txt
+call scripts\benchmark -m all    -s 1000 -t  8 >> logs\benchmark-all-s1000-t16-%datetime%.txt
+call scripts\benchmark -m all    -s 1000 -t 16 >> logs\benchmark-all-s1000-t16-%datetime%.txt
 
 
 :: Benchmarks for indexing operations.
@@ -26,10 +26,10 @@ call scripts\benchmark -m mmult  -s  200 -t 16 >> logs\benchmark-mmult-s200-t16-
 
 
 :: Thread scaling benchmarks for vdc.
-call scripts\benchmark -m vdc    -s   20 -t  1  > logs\benchmark-vdc-s20-t01-%datetime%.txt
-call scripts\benchmark -m vdc    -s   20 -t  2 >> logs\benchmark-vdc-s20-t02-%datetime%.txt
-call scripts\benchmark -m vdc    -s   20 -t  4 >> logs\benchmark-vdc-s20-t04-%datetime%.txt
-call scripts\benchmark -m vdc    -s   20 -t  8 >> logs\benchmark-vdc-s20-t08-%datetime%.txt
+call scripts\benchmark -m vdc    -s   20 -t  1  > logs\benchmark-vdc-s20-t16-%datetime%.txt
+call scripts\benchmark -m vdc    -s   20 -t  2 >> logs\benchmark-vdc-s20-t16-%datetime%.txt
+call scripts\benchmark -m vdc    -s   20 -t  4 >> logs\benchmark-vdc-s20-t16-%datetime%.txt
+call scripts\benchmark -m vdc    -s   20 -t  8 >> logs\benchmark-vdc-s20-t16-%datetime%.txt
 call scripts\benchmark -m vdc    -s   20 -t 16 >> logs\benchmark-vdc-s20-t16-%datetime%.txt
 
 
@@ -50,8 +50,8 @@ call scripts\benchmark -m sieve  -s 1600 -t  1 >> logs\benchmark-sieve-t01-%date
 
 
 :: Thread scaling benchmarks for Smith-Waterman.
-call scripts\benchmark -m align  -s 1000 -t  1  > logs\benchmark-align-t01-%datetime%.txt
-call scripts\benchmark -m align  -s 1000 -t  2  > logs\benchmark-align-t02-%datetime%.txt
-call scripts\benchmark -m align  -s 1000 -t  4  > logs\benchmark-align-t04-%datetime%.txt
-call scripts\benchmark -m align  -s 1000 -t  8  > logs\benchmark-align-t08-%datetime%.txt
+call scripts\benchmark -m align  -s 1000 -t  1  > logs\benchmark-align-t16-%datetime%.txt
+call scripts\benchmark -m align  -s 1000 -t  2  > logs\benchmark-align-t16-%datetime%.txt
+call scripts\benchmark -m align  -s 1000 -t  4  > logs\benchmark-align-t16-%datetime%.txt
+call scripts\benchmark -m align  -s 1000 -t  8  > logs\benchmark-align-t16-%datetime%.txt
 call scripts\benchmark -m align  -s 1000 -t 16  > logs\benchmark-align-t16-%datetime%.txt

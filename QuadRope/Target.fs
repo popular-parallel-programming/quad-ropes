@@ -108,14 +108,14 @@ let inline toSlice (tgt : _ Target) h w =
 /// Map a function to the values of a leaf and return a new leaf
 /// instance. This writes to the underlying target array.
 let inline map f slc (tgt : _ Target) =
-    ArraySlice.iteriOpt (Functions.adapt3 (writemap tgt f)) slc
+    ArraySlice.iteri (writemap tgt f) slc
     toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
 
 
 /// Map a function to the values of two leafs and return a new leaf
 /// instance. This writes to the underlying target array.
 let inline map2 f slc1 slc2 (tgt : _ Target) =
-    ArraySlice.iteriOpt2 (Functions.adapt4 (writemap2 tgt (Functions.adapt2 f))) slc1 slc2
+    ArraySlice.iteri2 (writemap2 tgt (Functions.adapt2 f)) slc1 slc2
     toSlice tgt (ArraySlice.length1 slc1) (ArraySlice.length2 slc1)
 
 
@@ -123,26 +123,26 @@ let inline map2 f slc1 slc2 (tgt : _ Target) =
 /// return a new leaf instance. This writes to the underlying
 /// target array.
 let inline mapi f slc (tgt : _ Target) =
-    ArraySlice.iteriOpt (Functions.adapt3 (writemapi tgt (Functions.adapt3 f))) slc
+    ArraySlice.iteri (writemapi tgt (Functions.adapt3 f)) slc
     toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
 
 
 /// Use the offset stored in tgt to iterate over some array slice.
 let inline iteri f slc (tgt : _ Target) =
-    ArraySlice.iteriOpt (Functions.adapt3 (fun i j v -> f (tgt.i + i) (tgt.j + j) v)) slc
+    ArraySlice.iteri (fun i j v -> f (tgt.i + i) (tgt.j + j) v) slc
 
 
 /// Write the elements of slc in reverse horizontal order into
 /// target.
 let inline hrev slc (tgt : _ Target) =
-    ArraySlice.iteriOpt (Functions.adapt3 (fun i j v -> write tgt i (ArraySlice.length2 slc - 1 - j) v)) slc
+    ArraySlice.iteri (fun i j v -> write tgt i (ArraySlice.length2 slc - 1 - j) v) slc
     toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
 
 
 /// Write the elements of slc in reverse vertical order into
 /// target.
 let inline vrev slc (tgt : _ Target) =
-    ArraySlice.iteriOpt (Functions.adapt3 (fun i j v -> write tgt (ArraySlice.length1 slc - 1 - i) j v)) slc
+    ArraySlice.iteri (fun i j v -> write tgt (ArraySlice.length1 slc - 1 - i) j v) slc
     toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
 
 
@@ -165,9 +165,10 @@ let inline get (tgt : _ Target) i j =
 let scan f slc tgt =
     // Compute prefix for remaining elements, taking prefix sums from
     // tgt itself.
+    let f' = Functions.adapt4 f
     for i in 0 .. ArraySlice.rows slc - 1 do
         for j in 0 .. ArraySlice.cols slc - 1 do
-            write tgt i j (Functions.invoke4 f
+            write tgt i j (Functions.invoke4 f'
                                              (get tgt i (j - 1))       // Prefix from same row.
                                              (get tgt (i - 1) (j - 1)) // Prefix from diagonal.
                                              (get tgt (i - 1) j)       // Prefix from same column.

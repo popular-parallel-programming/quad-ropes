@@ -740,28 +740,26 @@ let zip f lqr rqr =
 /// Apply f to all values of the rope and reduce the resulting values
 /// to a single scalar using g. Variable epsilon is the neutral
 /// element for g. We assume that g epsilon x = g x epsilon = x.
-let rec internal mapreduceOpt f g epsilon = function
+let rec mapreduce f g epsilon = function
     | Empty -> epsilon
     | Leaf slc ->
         ArraySlice.mapreduce f g slc
     | HCat (_, _, _, _, a, b) ->
-        Functions.invoke2 g (mapreduceOpt f g epsilon a) (mapreduceOpt f g epsilon b)
+        g (mapreduce f g epsilon a) (mapreduce f g epsilon b)
     | VCat (_, _, _, _, a, b) ->
-        Functions.invoke2 g (mapreduceOpt f g epsilon a) (mapreduceOpt f g epsilon b)
+        g (mapreduce f g epsilon a) (mapreduce f g epsilon b)
     | Slice _ as qr ->
-        mapreduceOpt f g epsilon (materialize qr)
+        mapreduce f g epsilon (materialize qr)
     | Sparse (h, w, v) ->
         let fv = f v
         if fv = epsilon then
             epsilon
         else
             let mutable acc = f v
+            let g' = Functions.adapt2 g
             for i in 2 .. h * w do
-                acc <- Functions.invoke2 g acc fv
+                acc <- Functions.invoke2 g' acc fv
             acc
-
-let mapreduce f g epsilon qr =
-    mapreduceOpt f (Functions.adapt2 g) epsilon qr
 
 /// Reduce all values of the rope to a single scalar.
 let reduce f epsilon qr = mapreduce id f epsilon qr
@@ -851,7 +849,7 @@ let scan f init qr =
                 fromArraySlice slc
 
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
-    scan (Functions.adapt4 f) qr tgt
+    scan f qr tgt
 
 
 /// A less general variant of scan that uses a function and its

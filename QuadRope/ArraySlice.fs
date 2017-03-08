@@ -261,15 +261,16 @@ let scan2 f state slice =
 /// Map a function f to all values in the array and combine the
 /// results using g.
 let mapreduce f g slc =
+    let g' = Functions.adapt2 g
     // Pick a starting element.
     let mutable acc = f (fastGet slc 0 0)
     // Accumulate the first row, skip element at 0,0.
     for j in 1 .. cols slc - 1 do
-        acc <- Functions.invoke2 g acc (f (fastGet slc 0 j))
+        acc <- Functions.invoke2 g' acc (f (fastGet slc 0 j))
     // Now accumulate the remaining rows.
     for i in 1 .. rows slc - 1 do
         for j in 0 .. cols slc - 1 do
-            acc <- Functions.invoke2 g acc (f (fastGet slc i j))
+            acc <- Functions.invoke2 g' acc (f (fastGet slc i j))
     acc
 
 

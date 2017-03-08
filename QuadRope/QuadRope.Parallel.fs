@@ -227,20 +227,14 @@ let zip f lqr rqr =
 /// to a single scalar using g in parallel. Variable epsilon is the
 /// neutral element for g. We assume that g epsilon x = g x epsilon =
 /// x.
-let mapreduce f g epsilon qr =
-    let rec mapreduce f g epsilon = function
-        | HCat (_, _, _, _, a, b) ->
-            par2 (fun () -> mapreduce f g epsilon a) (fun () -> mapreduce f g epsilon b) ||>
-            Functions.invoke2 g
-
-        | VCat (_, _, _, _, a, b) ->
-            par2 (fun () -> mapreduce f g epsilon a) (fun () -> mapreduce f g epsilon b) ||>
-            Functions.invoke2 g
-
-        | Slice _ as qr -> mapreduce f g epsilon (QuadRope.materialize qr)
-        | qr -> QuadRope.mapreduceOpt f g epsilon qr
-
-    mapreduce f (Functions.adapt2 g) epsilon qr
+let rec mapreduce f g epsilon = function
+    | HCat (_, _, _, _, a, b) ->
+        par2 (fun () -> mapreduce f g epsilon a) (fun () -> mapreduce f g epsilon b) ||> g
+    | VCat (_, _, _, _, a, b) ->
+        par2 (fun () -> mapreduce f g epsilon a) (fun () -> mapreduce f g epsilon b) ||> g
+    | Slice _ as qr ->
+        mapreduce f g epsilon (QuadRope.materialize qr)
+    | qr -> QuadRope.mapreduce f g epsilon qr
 
 
 /// Reduce all values of the rope to a single scalar in parallel.
@@ -514,7 +508,7 @@ let scan f init qr =
 
     // Initial target and start of recursion.
     let tgt = Target.makeWithFringe (rows qr) (cols qr) init
-    scan (Functions.adapt4 f) qr tgt
+    scan f qr tgt
 
 
 /// Compare two quad ropes element wise and return true if they are

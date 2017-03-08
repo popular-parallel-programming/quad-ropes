@@ -51,7 +51,7 @@ call scripts\benchmark -m sieve  -s 1600 -t  1 >> logs\benchmark-sieve-t01-%date
 
 :: Thread scaling benchmarks for Smith-Waterman.
 call scripts\benchmark -m align  -s 1000 -t  1  > logs\benchmark-align-t16-%datetime%.txt
-call scripts\benchmark -m align  -s 1000 -t  2  > logs\benchmark-align-t16-%datetime%.txt
-call scripts\benchmark -m align  -s 1000 -t  4  > logs\benchmark-align-t16-%datetime%.txt
-call scripts\benchmark -m align  -s 1000 -t  8  > logs\benchmark-align-t16-%datetime%.txt
-call scripts\benchmark -m align  -s 1000 -t 16  > logs\benchmark-align-t16-%datetime%.txt
+call scripts\benchmark -m align  -s 1000 -t  2 >> logs\benchmark-align-t16-%datetime%.txt
+call scripts\benchmark -m align  -s 1000 -t  4 >> logs\benchmark-align-t16-%datetime%.txt
+call scripts\benchmark -m align  -s 1000 -t  8 >> logs\benchmark-align-t16-%datetime%.txt
+call scripts\benchmark -m align  -s 1000 -t 16 >> logs\benchmark-align-t16-%datetime%.txt

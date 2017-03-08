@@ -127,10 +127,6 @@ let scan2 f state (arr : _ [,]) =
     arr
 
 
-let inline map f arr =
-    Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> f arr.[i, j])
-
-
 let map2 f (arr0 : _ [,]) (arr1 : _ [,]) =
     let f' = Functions.adapt2 f
     Array2D.init (Array2D.length1 arr0)

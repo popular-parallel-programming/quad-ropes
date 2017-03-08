@@ -37,5 +37,5 @@ module Array2D =
         factorize
 
 
-    let factorize = factorizeBuilder Array2DExt.map
+    let factorize = factorizeBuilder Array2D.map
     let factorizePar = factorizeBuilder Parallel.Array2DExt.map

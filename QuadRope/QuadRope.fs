@@ -656,7 +656,9 @@ let vmap f qr =
 /// that both ropes have the same internal structure.
 let rec internal genZip f lqr rqr tgt =
     match rqr with
-        | Sparse (_, _, v) -> map (fun x -> f x v) lqr
+        | Sparse (_, _, v) ->
+            let f' = Functions.adapt2 f
+            map (fun x -> Functions.invoke2 f' x v) lqr
         | _ ->
             match lqr with
                 | Empty -> Empty
@@ -665,10 +667,13 @@ let rec internal genZip f lqr rqr tgt =
                     genZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
                 | Leaf slc ->
+                    let f' = Functions.adapt2 f
                     // Able to call map
                     match materialize rqr with
-                        | Sparse (_, _, v') -> leaf (Target.map (fun v -> f v v') slc tgt)
-                        | rqr -> leaf (Target.mapi (fun i j v -> f v (fastGet rqr i j)) slc tgt)
+                        | Sparse (_, _, v') ->
+                            leaf (Target.map (fun v -> Functions.invoke2 f' v v') slc tgt)
+                        | rqr ->
+                            leaf (Target.mapi (fun i j v -> Functions.invoke2 f' v (fastGet rqr i j)) slc tgt)
 
                 | HCat (_, _, _, _, aa, ab) ->
                     let ba, bb = hsplit2 rqr (cols aa)

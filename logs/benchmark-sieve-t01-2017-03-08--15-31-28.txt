@@ -1,0 +1,15 @@
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.sieve           	  0,043391      0,002  0,001 ms/op   8192
+Array2D.sieve            	  0,192008      0,000  0,000 ms/op   2048
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.sieve           	  0,107320      0,000  0,000 ms/op   4096
+Array2D.sieve            	  0,765513      0,000  0,000 ms/op    512
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.sieve           	  0,247586      0,001  0,000 ms/op   1024
+Array2D.sieve            	  3,241230      0,184  0,122 ms/op    128
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.sieve           	  0,536706      0,001  0,000 ms/op    512
+Array2D.sieve            	 13,745079      0,033  0,022 ms/op     32
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.sieve           	  1,255876      0,143  0,095 ms/op    256
+Array2D.sieve            	 60,001855      0,084  0,055 ms/op      8

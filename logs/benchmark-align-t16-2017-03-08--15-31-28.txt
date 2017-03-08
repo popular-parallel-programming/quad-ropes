@@ -1,0 +1,15 @@
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	574,299555     23,203 15,347 ms/op      2
+Array2D.align            	491,282325     12,344  8,165 ms/op      2
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	584,432570     76,781 50,786 ms/op      2
+Array2D.align #Not available.
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	532,881545     71,615 47,369 ms/op      2
+Array2D.align #Not available.
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	579,065345     86,902 57,481 ms/op      2
+Array2D.align #Not available.
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	554,330660     94,607 62,576 ms/op      2
+Array2D.align #Not available.

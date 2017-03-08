@@ -92,7 +92,10 @@ let map f (arr : _ [,]) =
 let map2 f (arr0 : _ [,]) (arr1 : _ [,]) =
     if Array2D.length1 arr0 <> Array2D.length1 arr1 || Array2D.length2 arr0 <> Array2D.length2 arr1 then
         invalidArg "arr1" "Both arrays must be of same shape."
-    init (Array2D.length1 arr0) (Array2D.length2 arr0) (fun i j -> f arr0.[i, j] arr1.[i, j])
+    let f' = Functions.adapt2 f
+    init (Array2D.length1 arr0)
+         (Array2D.length2 arr0)
+         (fun i j -> Functions.invoke2 f' arr0.[i, j] arr1.[i, j])
 
 
 /// Reduce each column of a 2D array.

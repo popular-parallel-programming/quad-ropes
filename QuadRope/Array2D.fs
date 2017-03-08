@@ -128,7 +128,10 @@ let scan2 f state (arr : _ [,]) =
 
 
 let map2 f (arr0 : _ [,]) (arr1 : _ [,]) =
-    Array2D.init (Array2D.length1 arr0) (Array2D.length2 arr0) (fun i j -> f arr0.[i, j] arr1.[i, j])
+    let f' = Functions.adapt2 f
+    Array2D.init (Array2D.length1 arr0)
+                 (Array2D.length2 arr0)
+                 (fun i j -> Functions.invoke2 f' arr0.[i, j] arr1.[i, j])
 
 
 /// Reduce each column of a 2D array.
@@ -215,9 +218,11 @@ let scan f pre vals =
                               (Array2D.get sums (i - 1) j)       // Prefix from same column.
                               (Array2D.get vals i j)
 
+    let prefix' = Functions.adapt2 prefix
+
     // Iterate over the array sequentially. We need a diagonal pattern
     // to make this parallel
     for i in 0 .. Array2D.length1 sums - 1 do
         for j in 0 .. Array2D.length2 sums - 1 do
-            sums.[i, j] <- prefix i j
+            sums.[i, j] <- Functions.invoke2 prefix' i j
     sums

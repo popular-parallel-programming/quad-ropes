@@ -239,18 +239,14 @@ let zip f lqr rqr =
 /// neutral element for g. We assume that g epsilon x = g x epsilon =
 /// x.
 let rec mapreduce f g epsilon = function
-    | HCat (_, _, _, _, a, b) ->
-        par2AndThen (fun () -> mapreduce f g epsilon a)
-                    (fun () -> mapreduce f g epsilon b)
-                    g
-
-    | VCat (_, _, _, _, a, b) ->
+    | HCat (_, _, _, _, a, b) | VCat (_, _, _, _, a, b) ->
         par2AndThen (fun () -> mapreduce f g epsilon a)
                     (fun () -> mapreduce f g epsilon b)
                     g
 
     | Slice _ as qr ->
         mapreduce f g epsilon (QuadRope.materialize qr)
+
     | qr -> QuadRope.mapreduce f g epsilon qr
 
 

@@ -742,14 +742,15 @@ let zip f lqr rqr =
 /// element for g. We assume that g epsilon x = g x epsilon = x.
 let rec mapreduce f g epsilon = function
     | Empty -> epsilon
-    | Leaf slc ->
-        ArraySlice.mapreduce f g slc
-    | HCat (_, _, _, _, a, b) ->
+
+    | Leaf slc -> ArraySlice.mapreduce f g slc
+
+    | HCat (_, _, _, _, a, b) | VCat (_, _, _, _, a, b) ->
         g (mapreduce f g epsilon a) (mapreduce f g epsilon b)
-    | VCat (_, _, _, _, a, b) ->
-        g (mapreduce f g epsilon a) (mapreduce f g epsilon b)
+
     | Slice _ as qr ->
         mapreduce f g epsilon (materialize qr)
+
     | Sparse (h, w, v) ->
         let fv = f v
         if fv = epsilon then

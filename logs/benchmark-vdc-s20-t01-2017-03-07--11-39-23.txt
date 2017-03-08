@@ -1,3 +1,0 @@
-Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
-QuadRope.vdc             	 67,695508      7,011  4,637 ms/op      8
-Array2D.vdc              	 67,029273      1,929  1,276 ms/op      4

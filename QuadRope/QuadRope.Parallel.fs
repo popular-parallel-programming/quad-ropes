@@ -196,26 +196,26 @@ let rec private fastZip f lqr rqr tgt =
             fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
         | Leaf _, Leaf _ when QuadRope.shapesMatch lqr rqr ->
-                QuadRope.fastZip f lqr rqr tgt
+            QuadRope.fastZip f lqr rqr tgt
 
         | HCat (_, _, _, _, aa, ab), HCat (_, _, _, _, ba, bb)
-            when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
-                par2AndThen (fun () -> fastZip f aa ba tgt)
-                            (fun () -> fastZip f ab bb (Target.incrementCol tgt (cols aa)))
-                            hnode
-
-        | VCat (_, _, _, _, aa, ab), HCat (_, _, _, _, ba, bb)
              when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
-                par2AndThen (fun () -> fastZip f aa ab tgt)
-                            (fun () -> fastZip f ba bb (Target.incrementRow tgt (rows aa)))
-                            vnode
+                 par2AndThen (fun () -> fastZip f aa ba tgt)
+                             (fun () -> fastZip f ab bb (Target.incrementCol tgt (cols aa)))
+                             hnode
+
+        | VCat (_, _, _, _, aa, ab), VCat (_, _, _, _, ba, bb)
+             when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
+                 par2AndThen (fun () -> fastZip f aa ba tgt)
+                             (fun () -> fastZip f ab bb (Target.incrementRow tgt (rows aa)))
+                             vnode
 
         // It may pay off to reallocate first if both reallocated quad
         // ropes have the same internal shape. This might be
         // over-fitted to matrix multiplication.
         | Slice _, Slice _ -> fastZip f (QuadRope.materialize lqr) (QuadRope.materialize rqr) tgt
-        | Slice _, _ ->       fastZip f (QuadRope.materialize lqr) rqr tgt
-        | Slice _, Slice _ -> fastZip f lqr (QuadRope.materialize rqr) tgt
+        | Slice _, _       -> fastZip f (QuadRope.materialize lqr) rqr tgt
+        | _, Slice _       -> fastZip f lqr (QuadRope.materialize rqr) tgt
 
         // Sparse branches can be reduced to either a single call to f
         // in case both arguments are sparse, or to a mapping f.
@@ -231,7 +231,7 @@ let rec private fastZip f lqr rqr tgt =
 let zip f lqr rqr =
     if not (QuadRope.shapesMatch lqr rqr) then
         invalidArg "rqr" "Must have the same shape as first argument."
-    fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
+    fastZip f lqr rqr Target.empty
 
 
 /// Apply f to all values of the rope and reduce the resulting values
@@ -612,8 +612,8 @@ module SparseDouble =
                         par2AndThen (fun () -> fast aa ba) (fun () -> fast ab bb) hnode
 
                 // Thin node.
-                | VCat (true, _, _, _, aa, ab), HCat (_,    _, _, _, ba, bb)
-                | VCat (_,    _, _, _, aa, ab), HCat (true, _, _, _, ba, bb)
+                | VCat (true, _, _, _, aa, ab), VCat (_,    _, _, _, ba, bb)
+                | VCat (_,    _, _, _, aa, ab), VCat (true, _, _, _, ba, bb)
                     when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
                         par2AndThen (fun () -> fast aa ba) (fun () -> fast ab bb) vnode
 

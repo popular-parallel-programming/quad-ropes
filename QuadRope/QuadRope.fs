@@ -663,7 +663,7 @@ let rec internal genZip f lqr rqr tgt =
             match lqr with
                 | Empty -> Empty
 
-                | _ when Target.isEmpty tgt && (not (isSparse lqr) || not (isSparse rqr)) ->
+                | _ when Target.isEmpty tgt && not (isSparse lqr) ->
                     genZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
                 | Leaf slc ->
@@ -699,7 +699,7 @@ let rec internal fastZip f lqr rqr tgt =
         | Empty, Empty -> Empty
 
         // Initialize target if any of the two quad ropes is dense.
-        | _ when Target.isEmpty tgt && (not (isSparse lqr) || not (isSparse rqr)) ->
+        | _ when Target.isEmpty tgt && not (isSparse lqr || isSparse rqr) ->
             fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
         | Leaf ls, Leaf rs when shapesMatch lqr rqr ->

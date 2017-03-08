@@ -192,7 +192,7 @@ let rec private fastZip f lqr rqr tgt =
         | Empty, Empty -> Empty
 
         // Initialize target if any of the two quad ropes is dense.
-        | _ when Target.isEmpty tgt && (not (isSparse lqr) || not (isSparse rqr)) ->
+        | _ when Target.isEmpty tgt && not (isSparse lqr) ->
             fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
         | Leaf _, Leaf _ when QuadRope.shapesMatch lqr rqr ->

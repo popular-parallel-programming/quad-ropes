@@ -19,7 +19,7 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-module RadTrees.Parallel.Array2D
+module RadTrees.Parallel.Array2DExt
 
 open RadTrees.Utils
 open RadTrees.Utils.Tasks

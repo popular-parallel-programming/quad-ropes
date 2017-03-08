@@ -25,18 +25,18 @@ module QuadRope =
 
 
 module Array2D =
-    let private vdcBuilder map =
+    let private vdcBuilder cat map =
         let next i is =
-            Array2D.cat1 is (Array2D.cat1 (Array2D.singleton i) (map ((+) i) is))
+            cat is (cat (Array2DExt.singleton i) (map ((+) i) is))
 
         let rec vdc n =
             if n <= 1 then
-                Array2D.singleton 0.5
+                Array2DExt.singleton 0.5
             else
                 next (Math.pow 2.0 -n) (vdc (n - 1))
 
         vdc
 
 
-    let vanDerCorput = vdcBuilder Array2D.map
-    let vanDerCorputPar = vdcBuilder Parallel.Array2D.map
+    let vanDerCorput = vdcBuilder Array2DExt.cat1 Array2DExt.map
+    let vanDerCorputPar = vdcBuilder Parallel.Array2DExt.cat1 Parallel.Array2DExt.map

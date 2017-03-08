@@ -37,22 +37,22 @@ module Array2D =
             init (Array2D.length1 lm)
                  (Array2D.length2 rm)
                  (fun i j ->
-                  let lr = Array2D.slice i 0 1 (Array2D.length2 lm) lm
-                  let rr = Array2D.slice j 0 1 (Array2D.length2 trm) trm
+                  let lr = Array2DExt.slice i 0 1 (Array2D.length2 lm) lm
+                  let rr = Array2DExt.slice j 0 1 (Array2D.length2 trm) trm
                   sum (pointwise lr rr))
         mmult
 
 
-    let mmult = mmultBuilder (Array2D.map2 (*))
-                             Array2D.transpose
+    let mmult = mmultBuilder (Array2DExt.map2 (*))
+                             Array2DExt.transpose
                              Array2D.init
-                             (Array2D.reduce (+))
+                             (Array2DExt.reduce (+))
 
 
-    let mmultPar = mmultBuilder (Parallel.Array2D.map2 (*))
-                                Parallel.Array2D.transpose
-                                Parallel.Array2D.init
-                                (Parallel.Array2D.reduce (+))
+    let mmultPar = mmultBuilder (Parallel.Array2DExt.map2 (*))
+                                Parallel.Array2DExt.transpose
+                                Parallel.Array2DExt.init
+                                (Parallel.Array2DExt.reduce (+))
 
 
 

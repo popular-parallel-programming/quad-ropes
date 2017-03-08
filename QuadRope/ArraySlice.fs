@@ -33,7 +33,7 @@ let emptySlice = { r = 0; c = 0; h = 0; w = 0; vals = null }
 /// Instantiate a new array slice that allows accessing the entire
 /// array.
 let make arr =
-    if Array2D.isEmpty arr then
+    if Array2DExt.isEmpty arr then
         emptySlice
     else
         { r = 0; c = 0; h = Array2D.length1 arr; w = Array2D.length2 arr; vals = arr }
@@ -44,7 +44,7 @@ let make arr =
 let makeSlice i j h w arr =
     let i' = max 0 i
     let j' = max 0 j
-    if (Array2D.isEmpty arr
+    if (Array2DExt.isEmpty arr
         || h <= 0 || w <= 0
         || Array2D.length1 arr <= i' || Array2D.length2 arr <= j')
     then
@@ -59,7 +59,7 @@ let makeSlice i j h w arr =
 
 /// Compute a new array from a slice.
 let inline private sliceArray slc =
-    Array2D.slice slc.r slc.c slc.h slc.w slc.vals
+    Array2DExt.slice slc.r slc.c slc.h slc.w slc.vals
 
 
 /// Compute a new array from a slice, apply function f to it and make
@@ -183,7 +183,7 @@ let inline se slc =
 
 /// Produce a singleton array slice.
 let singleton v =
-    make (Array2D.singleton v)
+    make (Array2DExt.singleton v)
 
 
 /// True if array slice contains only a single element.
@@ -218,12 +218,12 @@ let cat2 left right =
 
 /// Revert an array slice in first dimension.
 let rev1 slice =
-    apply Array2D.rev1 slice
+    apply Array2DExt.rev1 slice
 
 
 /// Revert an array slice in second dimension.
 let rev2 slice =
-    apply Array2D.rev2 slice
+    apply Array2DExt.rev2 slice
 
 
 /// Fold each column of an array slice, calling state with each column
@@ -250,12 +250,12 @@ let fold2 f state slc =
 
 /// Compute the column-wise prefix sum for f.
 let scan1 f state slice =
-    apply (Array2D.scan1 f state) slice
+    apply (Array2DExt.scan1 f state) slice
 
 
 /// Compute the row-wise prefix sum for f.
 let scan2 f state slice =
-    apply (Array2D.scan2 f state) slice
+    apply (Array2DExt.scan2 f state) slice
 
 
 /// Map a function f to all values in the array and combine the
@@ -278,16 +278,16 @@ let reduce f arr = mapreduce id f arr
 
 
 let sort1 p slice =
-    apply (Array2D.sort1 p) slice
+    apply (Array2DExt.sort1 p) slice
 
 
 let sort2 p slice =
-    apply (Array2D.sort2 p) slice
+    apply (Array2DExt.sort2 p) slice
 
 
 /// Initialize a 2D array with all zeros.
 let initZeros h w =
-    make (Array2D.initZeros h w)
+    make (Array2DExt.initZeros h w)
 
 
 let transpose slc =
@@ -295,11 +295,11 @@ let transpose slc =
 
 
 let filter1 p slice =
-    apply (Array2D.filter1 p) slice
+    apply (Array2DExt.filter1 p) slice
 
 
 let filter2 p slice =
-    apply (Array2D.filter2 p) slice
+    apply (Array2DExt.filter2 p) slice
 
 
 /// Iterate over all elements in row-first order.

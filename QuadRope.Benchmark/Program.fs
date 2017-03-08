@@ -25,8 +25,8 @@ open CommandLine
 open LambdaMicrobenchmarking
 
 open RadTrees
-open Types
-open Examples
+open RadTrees.Types
+open RadTrees.Examples
 
 
 /// Benchmark a thunk with a message.
@@ -72,10 +72,10 @@ let all (opts : Options) =
         let arr = Array2D.init opts.size opts.size (*)
         benchmark ("Array2D.init",    fun () -> Array2D.init opts.size opts.size (*))
                &> ("Array2D.map",     fun () -> Array2D.map (fun x -> x * x) arr)
-               &> ("Array2D.zip",     fun () -> Array2D.map2 (+) arr arr)
-               &> ("Array2D.scan",    fun () -> Array2D.scan (fun a b c d -> a + b + c + d) 0 arr)
+               &> ("Array2D.zip",     fun () -> Array2DExt.map2 (+) arr arr)
+               &> ("Array2D.scan",    fun () -> Array2DExt.scan (fun a b c d -> a + b + c + d) 0 arr)
                |> run
-        benchmark ("Array2D.reduce",  fun () -> Array2D.reduce (+) arr) |> run
+        benchmark ("Array2D.reduce",  fun () -> Array2DExt.reduce (+) arr) |> run
 
 
     /// Benchmark parallel functions.
@@ -89,10 +89,10 @@ let all (opts : Options) =
         benchmark ("QuadRope.reduce", fun () -> Parallel.QuadRope.reduce (+) 0 rope) |> run
 
         let arr = Array2D.init opts.size opts.size (*)
-        benchmark ("Array2D.init",    fun () -> Parallel.Array2D.init opts.size opts.size (*))
-               &> ("Array2D.map",     fun () -> Parallel.Array2D.map (fun x -> x * x) arr)
-               &> ("Array2D.zip",     fun () -> Parallel.Array2D.map2 (+) arr arr) |> run
-        benchmark ("Array2D.reduce",  fun () -> Parallel.Array2D.reduce (+) arr) |> run
+        benchmark ("Array2D.init",    fun () -> Parallel.Array2DExt.init opts.size opts.size (*))
+               &> ("Array2D.map",     fun () -> Parallel.Array2DExt.map (fun x -> x * x) arr)
+               &> ("Array2D.zip",     fun () -> Parallel.Array2DExt.map2 (+) arr arr) |> run
+        benchmark ("Array2D.reduce",  fun () -> Parallel.Array2DExt.reduce (+) arr) |> run
 
 
     // Don't run sequentially with task overhead.

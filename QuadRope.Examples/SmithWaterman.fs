@@ -79,22 +79,22 @@ module Array2D =
     /// Find the maximum value in scores and return its index.
     let rec private findMax =
         Array2D.mapi (fun i j s -> (i, j), s)
-        >> Array2D.reduce (maxBy snd)
+        >> Array2DExt.reduce (maxBy snd)
         >> fst
 
 
     /// Backtrack through a score matrix from some starting index pair i
     /// and j.
     let private backtrack (i, j) scores =
-        let scores' = Array2D.slice 0 0 i j scores // Start from i, j
-                      |> Array2D.rev1              // Revert column direction.
-                      |> Array2D.rev2              // Revert row direction.
-                      |> Array2D.scan btKernel 0   // Take value at i, j as start.
+        let scores' = Array2DExt.slice 0 0 i j scores // Start from i, j
+                      |> Array2DExt.rev1              // Revert column direction.
+                      |> Array2DExt.rev2              // Revert row direction.
+                      |> Array2DExt.scan btKernel 0   // Take value at i, j as start.
         Array2D.get scores' (i - 1) (j - 1) + (Array2D.get scores i j)
 
 
     /// Compute the alignment cost of two sequences a and b.
     let align a b =
         let scores = Array2D.init (strlen a) (strlen b) (dist a b)
-                     |> Array2D.scan swscore 0
+                     |> Array2DExt.scan swscore 0
         backtrack (findMax scores) scores

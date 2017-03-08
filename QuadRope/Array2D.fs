@@ -19,7 +19,7 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-module RadTrees.Array2D
+module RadTrees.Array2DExt
 
 open Utils
 
@@ -125,6 +125,10 @@ let scan2 f state (arr : _ [,]) =
         for j in 1 .. Array2D.length2 arr - 1 do
             arr.[i, j] <- f arr.[i, j - 1] arr.[i, j]
     arr
+
+
+let inline map f arr =
+    Array2D.init (Array2D.length1 arr) (Array2D.length2 arr) (fun i j -> f arr.[i, j])
 
 
 let map2 f (arr0 : _ [,]) (arr1 : _ [,]) =

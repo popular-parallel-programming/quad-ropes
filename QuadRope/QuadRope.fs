@@ -513,7 +513,7 @@ let init h w f =
 
 /// Generate a singleton quad rope.
 let singleton v =
-    leaf (ArraySlice.make (Array2D.singleton v))
+    leaf (ArraySlice.singleton v)
 
 
 /// True if rope is a singleton, false otherwise.

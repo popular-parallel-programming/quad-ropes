@@ -158,31 +158,36 @@ let vmap f qr =
 /// Zip implementation for the general case where we do not assume
 /// that both ropes have the same internal structure.
 let rec private genZip f lqr rqr tgt =
-    match lqr with
-        // Initialize target if any of the two quad ropes is dense.
-        | _ when Target.isEmpty tgt && not (isSparse lqr) ->
-            genZip f lqr rqr (Target.make (rows lqr) (cols lqr))
+    match rqr with
+        | Sparse (_, _, v) ->
+            let f' = Functions.adapt2 f
+            map (fun x -> Functions.invoke2 f' x v) lqr
+        | _ ->
+            match lqr with
+                // Initialize target if any of the two quad ropes is dense.
+                | _ when Target.isEmpty tgt && not (isSparse lqr) ->
+                    genZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
-        | HCat (_, _, _, _, aa, ab) ->
-            par2AndThen (fun () ->
-                         let ba = QuadRope.hslice 0 (cols aa) rqr
-                         genZip f aa ba tgt)
-                        (fun () ->
-                         let bb = QuadRope.hslice (cols aa) (cols ab) rqr
-                         genZip f ab bb (Target.incrementCol tgt (cols aa)))
-                        hnode
+                | HCat (_, _, _, _, aa, ab) ->
+                    par2AndThen (fun () ->
+                                 let ba = QuadRope.hslice 0 (cols aa) rqr
+                                 genZip f aa ba tgt)
+                                (fun () ->
+                                 let bb = QuadRope.hslice (cols aa) (cols ab) rqr
+                                 genZip f ab bb (Target.incrementCol tgt (cols aa)))
+                                hnode
 
-        | VCat (_, _, _, _, aa, ab) ->
-            par2AndThen (fun () ->
-                         let ba = QuadRope.vslice 0 (rows aa) rqr
-                         genZip f aa ba tgt)
-                        (fun () ->
-                         let bb = QuadRope.vslice (rows aa) (rows ab) rqr
-                         genZip f ab bb (Target.incrementRow tgt (rows aa)))
-                        vnode
+                | VCat (_, _, _, _, aa, ab) ->
+                    par2AndThen (fun () ->
+                                 let ba = QuadRope.vslice 0 (rows aa) rqr
+                                 genZip f aa ba tgt)
+                                (fun () ->
+                                 let bb = QuadRope.vslice (rows aa) (rows ab) rqr
+                                 genZip f ab bb (Target.incrementRow tgt (rows aa)))
+                                vnode
 
-        | Slice _ -> genZip f (QuadRope.materialize lqr) rqr tgt
-        | _ -> QuadRope.genZip f lqr rqr tgt
+                | Slice _ -> genZip f (QuadRope.materialize lqr) rqr tgt
+                | _ -> QuadRope.genZip f lqr rqr tgt
 
 
 /// Zip function that assumes that the internal structure of two ropes

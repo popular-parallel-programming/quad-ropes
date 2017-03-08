@@ -51,7 +51,7 @@ module Tasks =
     /// Eagerly execute two functions f and g in parallel. This
     /// function blocks the current thread until f and g are computed
     /// and then applies function h to their results.
-    let par2AndThen f g h =
+    let inline par2AndThen f g h =
         let ft = task f
         let gres = g()
         await ft

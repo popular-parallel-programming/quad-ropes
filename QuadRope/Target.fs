@@ -76,16 +76,16 @@ let inline writemap (tgt : _ Target) f r c v =
 
 
 let inline writemap2 (tgt : _ Target) f r c v1 v2 =
-    tgt.vals.[tgt.i + r, tgt.j + c] <- f v1 v2
+    tgt.vals.[tgt.i + r, tgt.j + c] <- Functions.invoke2 f v1 v2
 
 
 /// Generalized write to target with index pairs.
 let inline writemapi (tgt : _ Target) f r c v =
-    tgt.vals.[tgt.i + r, tgt.j + c] <- f r c v
+    tgt.vals.[tgt.i + r, tgt.j + c] <- Functions.invoke3 f r c v
 
 
 let inline writemapi2 (tgt : _ Target) f r c v1 v2 =
-    tgt.vals.[tgt.i + r, tgt.j + c] <- f r c v1 v2
+    tgt.vals.[tgt.i + r, tgt.j + c] <- Functions.invoke4 f r c v1 v2
 
 
 /// Simplified write to target.
@@ -108,14 +108,14 @@ let inline toSlice (tgt : _ Target) h w =
 /// Map a function to the values of a leaf and return a new leaf
 /// instance. This writes to the underlying target array.
 let inline map f slc (tgt : _ Target) =
-    ArraySlice.iteri (writemap tgt f) slc
+    ArraySlice.iteriOpt (Functions.adapt3 (writemap tgt f)) slc
     toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
 
 
 /// Map a function to the values of two leafs and return a new leaf
 /// instance. This writes to the underlying target array.
 let inline map2 f slc1 slc2 (tgt : _ Target) =
-    ArraySlice.iteriOpt2 (Functions.adapt4 (writemap2 tgt f)) slc1 slc2
+    ArraySlice.iteriOpt2 (Functions.adapt4 (writemap2 tgt (Functions.adapt2 f))) slc1 slc2
     toSlice tgt (ArraySlice.length1 slc1) (ArraySlice.length2 slc1)
 
 
@@ -123,26 +123,26 @@ let inline map2 f slc1 slc2 (tgt : _ Target) =
 /// return a new leaf instance. This writes to the underlying
 /// target array.
 let inline mapi f slc (tgt : _ Target) =
-    ArraySlice.iteri (writemapi tgt f) slc
+    ArraySlice.iteriOpt (Functions.adapt3 (writemapi tgt (Functions.adapt3 f))) slc
     toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
 
 
 /// Use the offset stored in tgt to iterate over some array slice.
 let inline iteri f slc (tgt : _ Target) =
-    ArraySlice.iteri (fun i j v -> f (tgt.i + i) (tgt.j + j) v) slc
+    ArraySlice.iteriOpt (Functions.adapt3 (fun i j v -> f (tgt.i + i) (tgt.j + j) v)) slc
 
 
 /// Write the elements of slc in reverse horizontal order into
 /// target.
 let inline hrev slc (tgt : _ Target) =
-    ArraySlice.iteri (fun i j v -> write tgt i (ArraySlice.length2 slc - 1 - j) v) slc
+    ArraySlice.iteriOpt (Functions.adapt3 (fun i j v -> write tgt i (ArraySlice.length2 slc - 1 - j) v)) slc
     toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
 
 
 /// Write the elements of slc in reverse vertical order into
 /// target.
 let inline vrev slc (tgt : _ Target) =
-    ArraySlice.iteri (fun i j v -> write tgt (ArraySlice.length1 slc - 1 - i) j v) slc
+    ArraySlice.iteriOpt (Functions.adapt3 (fun i j v -> write tgt (ArraySlice.length1 slc - 1 - i) j v)) slc
     toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
 
 

@@ -308,29 +308,32 @@ let iter f slc =
             f (fastGet slc i j)
 
 
+/// Same as iteri but for optimized closures.
+let internal iteriOpt f slc =
+    for i in 0 .. rows slc - 1 do
+        for j in 0 .. cols slc - 1 do
+            Functions.invoke3 f i j (fastGet slc i j)
+
+
 /// Iterate over all elements in row-first order and pass indices to
 /// iteration function.
 let iteri f slc =
-    for i in 0 .. rows slc - 1 do
-        for j in 0 .. cols slc - 1 do
-            f i j (fastGet slc i j)
+    iteriOpt (Functions.adapt3 f) slc
 
 
-let iteri2 f left right =
-    if rows left <> rows right || cols left <> cols right then
-        invalidArg "right" "length1 and length2 must be equal."
-    for i in 0 .. rows left - 1 do
-        for j in 0 .. cols left - 1 do
-            f i j (fastGet left i j) (fastGet right i j)
-
-
-let iteriOpt2 f left right =
+/// Same as iteri2 but for optimized closures.
+let internal iteriOpt2 f left right =
     if rows left <> rows right || cols left <> cols right then
         invalidArg "right" "length1 and length2 must be equal."
     for i in 0 .. rows left - 1 do
         for j in 0 .. cols left - 1 do
             Functions.invoke4 f i j (fastGet left i j) (fastGet right i j)
 
+
+/// Iterate over all elements of two slices in row-first order and
+/// pass indices to the iteration function.
+let iteri2 f left right =
+    iteriOpt2 (Functions.adapt4 f) left right
 
 
 /// Initialize a hopefully empty ArraySlice.

@@ -125,12 +125,17 @@ let matMult (opts: Options) =
 
     if opts.threads = 1 then
         benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmult ud qr)
-               &> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmult us qr) |> runWithHead
+               &> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmult us qr)
+               &> ("QuadRope.mmult imp",    fun () -> MatMult.ImperativeQuadRope.mmult ud qr)|> runWithHead
         benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmult arr1 arr2)
                &> ("Array2D.imperative", fun () -> MatMult.Imperative.mmult arr1 arr2) |> run
     else
-        benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmultPar ud qr)
-               &> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmultPar us qr) |> runWithHead
+        benchmark ("QuadRope.mmult dense",      fun () -> MatMult.QuadRope.mmultPar ud qr)
+               &> ("QuadRope.mmult dense opt",  fun () -> MatMult.QuadRope.mmultOpt ud qr)
+               &> ("QuadRope.mmult sparse",     fun () -> MatMult.QuadRope.mmultPar us qr)
+               &> ("QuadRope.mmult sparse opt", fun () -> MatMult.QuadRope.mmultOpt us qr)
+               &> ("QuadRope.mmult imp",        fun () -> MatMult.ImperativeQuadRope.mmultPar ud qr)
+               |> runWithHead
         benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmultPar arr1 arr2)
                &> ("Array2D.imperative", fun () -> MatMult.Imperative.mmultPar arr1 arr2) |> run
 

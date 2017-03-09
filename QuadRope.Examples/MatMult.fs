@@ -27,6 +27,10 @@ module QuadRope =
                                 Parallel.QuadRope.init
                                 Parallel.QuadRope.SparseDouble.sum
 
+    let mmultOpt = mmultBuilder QuadRope.SparseDouble.pointwise
+                                Parallel.QuadRope.transpose
+                                Parallel.QuadRope.init
+                                QuadRope.SparseDouble.sum
 
 
 module Array2D =
@@ -74,3 +78,12 @@ module Imperative =
                 for j = 0 to Array2D.length2 rm - 1 do
                     tm.[i, j] <- tm.[i, j] + lm.[i, k] * rm.[k, j])
         tm
+
+
+module ImperativeQuadRope =
+
+    let private mmultBuilder mmult toArray2D lm rm =
+        QuadRope.fromArray2D (mmult (toArray2D lm) (toArray2D rm))
+
+    let mmult    = mmultBuilder Imperative.mmult QuadRope.toArray2D
+    let mmultPar = mmultBuilder Imperative.mmultPar Parallel.QuadRope.toArray2D

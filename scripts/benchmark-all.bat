@@ -18,11 +18,11 @@ call scripts\benchmark -m index  -s 1000 -t  1  > "logs\benchmark-index-t01-%dat
 
 
 :: Thread scaling benchmarks for mmult.
-call scripts\benchmark -m mmult  -s  200 -t  1  > "logs\benchmark-mmult-s200-t16-%datetime%.txt"
-call scripts\benchmark -m mmult  -s  200 -t  2 >> "logs\benchmark-mmult-s200-t16-%datetime%.txt"
-call scripts\benchmark -m mmult  -s  200 -t  4 >> "logs\benchmark-mmult-s200-t16-%datetime%.txt"
-call scripts\benchmark -m mmult  -s  200 -t  8 >> "logs\benchmark-mmult-s200-t16-%datetime%.txt"
-call scripts\benchmark -m mmult  -s  200 -t 16 >> "logs\benchmark-mmult-s200-t16-%datetime%.txt"
+call scripts\benchmark -m mmult  -s  100 -t  1  > "logs\benchmark-mmult-s100-t16-%datetime%.txt"
+call scripts\benchmark -m mmult  -s  100 -t  2 >> "logs\benchmark-mmult-s100-t16-%datetime%.txt"
+call scripts\benchmark -m mmult  -s  100 -t  4 >> "logs\benchmark-mmult-s100-t16-%datetime%.txt"
+call scripts\benchmark -m mmult  -s  100 -t  8 >> "logs\benchmark-mmult-s100-t16-%datetime%.txt"
+call scripts\benchmark -m mmult  -s  100 -t 16 >> "logs\benchmark-mmult-s100-t16-%datetime%.txt"
 
 
 :: Thread scaling benchmarks for vdc.

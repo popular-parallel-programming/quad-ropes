@@ -743,7 +743,7 @@ let zip f lqr rqr =
 let rec mapreduce f g epsilon = function
     | Empty -> epsilon
 
-    | Leaf slc -> ArraySlice.mapreduce f g slc
+    | Leaf slc -> ArraySlice.mapreduce f g epsilon slc
 
     | HCat (_, _, _, _, a, b) | VCat (_, _, _, _, a, b) ->
         g (mapreduce f g epsilon a) (mapreduce f g epsilon b)

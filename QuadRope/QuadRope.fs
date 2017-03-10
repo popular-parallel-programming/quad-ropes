@@ -630,7 +630,8 @@ let mapi f qr =
         match qr with
             | Empty -> Empty
             | Leaf slc ->
-                Leaf (Target.mapi (fun i' j' v -> f (i + i') (j + j') v)  slc tgt)
+                let f' = Functions.adapt3 f
+                Leaf (Target.mapi (fun i' j' v -> Functions.invoke3 f' (i + i') (j + j') v) slc tgt)
             | HCat (_, _, _, _, a, b) ->
                 hnode (mapi i j a tgt) (mapi i (j + cols a) b (Target.incrementCol tgt (cols a)))
             | VCat (_, _, _, _, a, b) ->

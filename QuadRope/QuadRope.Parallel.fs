@@ -120,7 +120,8 @@ let mapi f qr =
         match qr with
             | Empty -> Empty
             | Leaf slc ->
-                Leaf (Target.mapi (fun i' j' v -> f (i + i') (j + j') v)  slc tgt)
+                let f' = Functions.adapt3 f
+                Leaf (Target.mapi (fun i' j' v -> Functions.invoke3 f' (i + i') (j + j') v) slc tgt)
 
             | HCat (_, _, _, _, a, b) ->
                 par2AndThen (fun () -> mapi i j a tgt)

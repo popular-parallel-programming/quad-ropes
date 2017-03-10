@@ -1,0 +1,15 @@
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 24,250788      0,233  0,154 ms/op     16
+Array2D.vdc              	 58,854619      0,254  0,168 ms/op      8
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 50,125204      6,689  4,424 ms/op      8
+Array2D.vdc              	166,896845     32,996 21,825 ms/op      2
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 37,745215      2,930  1,938 ms/op      8
+Array2D.vdc              	243,774575    106,570 70,489 ms/op      2
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 55,916083      6,585  4,356 ms/op      8
+Array2D.vdc              	227,979225     63,218 41,815 ms/op      2
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 40,165615      8,124  5,373 ms/op      8
+Array2D.vdc              	388,312910    125,762 83,184 ms/op      2

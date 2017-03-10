@@ -1,0 +1,38 @@
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	 44,088438      0,037  0,024 ms/op      8
+QuadRope.mmult sparse    	 29,555254      0,031  0,021 ms/op     16
+QuadRope.mmult imp       	  6,096911      0,004  0,003 ms/op     64
+Array2D.mmult            	 76,971370      0,180  0,119 ms/op      4
+Array2D.imperative       	  5,239650      0,003  0,002 ms/op     64
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	 69,095001     10,638  7,036 ms/op      8
+QuadRope.mmult dense opt 	 36,441621     10,093  6,676 ms/op      8
+QuadRope.mmult sparse    	 48,815029      6,758  4,470 ms/op      8
+QuadRope.mmult sparse opt	 25,787452      6,168  4,080 ms/op     16
+QuadRope.mmult imp       	  3,488037      0,489  0,324 ms/op    128
+Array2D.mmult            	165,805345     17,415 11,519 ms/op      2
+Array2D.imperative       	  2,632142      0,202  0,134 ms/op    128
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	 42,841381      2,734  1,808 ms/op      8
+QuadRope.mmult dense opt 	 21,695953      2,450  1,621 ms/op     16
+QuadRope.mmult sparse    	 62,162885     11,472  7,588 ms/op      4
+QuadRope.mmult sparse opt	 26,783851      2,963  1,960 ms/op     16
+QuadRope.mmult imp       	  4,057929      0,006  0,004 ms/op     64
+Array2D.mmult            	214,287365     31,280 20,689 ms/op      2
+Array2D.imperative       	  2,788763      0,437  0,289 ms/op    128
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	 34,587449      4,640  3,069 ms/op      8
+QuadRope.mmult dense opt 	 13,453730      2,464  1,630 ms/op     32
+QuadRope.mmult sparse    	 21,862201      2,600  1,720 ms/op     16
+QuadRope.mmult sparse opt	  8,160249      0,594  0,393 ms/op     64
+QuadRope.mmult imp       	  1,369410      0,088  0,059 ms/op    256
+Array2D.mmult            	175,707410     17,814 11,783 ms/op      2
+Array2D.imperative       	  0,933835      0,040  0,026 ms/op    512
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	 28,998735      3,487  2,307 ms/op      8
+QuadRope.mmult dense opt 	  8,819896      0,450  0,297 ms/op     32
+QuadRope.mmult sparse    	 19,181504      1,370  0,906 ms/op     16
+QuadRope.mmult sparse opt	  6,254219      0,840  0,555 ms/op     64
+QuadRope.mmult imp       	  1,217194      0,021  0,014 ms/op    256
+Array2D.mmult            	279,888435     31,974 21,149 ms/op      2
+Array2D.imperative       	  0,796916      0,051  0,034 ms/op    512

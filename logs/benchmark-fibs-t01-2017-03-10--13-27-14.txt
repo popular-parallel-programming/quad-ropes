@@ -1,0 +1,15 @@
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.fibonacci       	  0,094556      0,000  0,000 ms/op   4096
+Array2D.fibonacci        	  0,110687      0,004  0,003 ms/op   4096
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.fibonacci       	  0,197547      0,000  0,000 ms/op   2048
+Array2D.fibonacci        	  0,290213      0,000  0,000 ms/op   1024
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.fibonacci       	  0,419461      0,000  0,000 ms/op   1024
+Array2D.fibonacci        	  0,862202      0,000  0,000 ms/op    512
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.fibonacci       	  0,883428      0,002  0,001 ms/op    512
+Array2D.fibonacci        	  2,895823      0,014  0,010 ms/op    128
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.fibonacci       	  1,903582      0,001  0,001 ms/op    256
+Array2D.fibonacci        	 10,836661      0,008  0,005 ms/op     32

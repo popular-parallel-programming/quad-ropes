@@ -30,7 +30,7 @@ open Utils
 #if DEBUG
 let smax = 4
 #else
-let smax = 16
+let smax = 32
 #endif
 
 

@@ -172,7 +172,7 @@ let index (opts : Options) =
     benchmark ("QuadRope.get", fun () -> QuadRope.get qr idx idx)
            &> ("Array2D.get",  fun () -> Array2D.get arr idx idx) |> runWithHead
     benchmark ("QuadRope.set", fun () -> QuadRope.set qr idx idx 0) |> run
-    benchmark ("Array2D.set",  fun () -> Array2D.set arr idx idx 0) |> run
+    benchmark ("Array2D.set",  fun () -> Array2DExt.set arr idx idx 0) |> run
 
 
 /// Benchmark Smith-Waterman alignment algorithm.

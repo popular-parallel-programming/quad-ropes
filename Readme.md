@@ -43,7 +43,7 @@ $ make paket
 $ make release
 ```
 
-Now, you can run the benchmarks. The results will be written into the [log](\log) folder.
+Now, you can run the benchmarks. The results will be written into the [logs](\logs) folder.
 
 
 On Windows:

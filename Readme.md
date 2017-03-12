@@ -1,13 +1,13 @@
 # Quad Ropes #
 
-A quad rope is an immutable, four-ary tree with two-dimensional arrays at its leaves. Quad ropes combine the ideas of a [rope](https://en.wikipedia.org/wiki/Rope_(data_structure)) and [quad trees](https://en.wikipedia.org/wiki/Quadtree).
+A quad rope is a two-dimensional binary tree with small, contiguous arrays at its leafs. Quad ropes combine the ideas of a [rope](https://en.wikipedia.org/wiki/Rope_(data_structure)) and [quad trees](https://en.wikipedia.org/wiki/Quadtree).
 
-Two-dimensional array-like data structures are often used in declarative array programming. The overall idea is to allow for constant-time concatenation while retaining efficiency when compared to native 2D-arrays. Fast concatenation is important for immutable arrays as it allows a more complex gradual construction than a simple ```unfold```.
+Two-dimensional array-like data structures are often used in declarative array programming. The overall idea is to allow for constant-time concatenation while roughly retaining efficiency of standard immutable 2D-arrays. Fast concatenation is important for immutable arrays as it allows a more complex gradual construction than a simple ```unfold```.
 
-Another positive property of immutable trees is that they are inherently parallel. At each node, we can spawn two or four tasks, which are handled by the .Net Task-Parallel Library (TPL).
+Another positive property of immutable trees is that they are inherently parallel. At each node, we can spawn new parallel tasks that are handled by the .Net Task-Parallel Library (TPL).
 
-## Runtime Overview ##
 
+## Runtime Complexity Overview ##
 
 | Operation | Immutable 2D Array | Quad Rope  |
 |-----------|--------------------|------------|
@@ -15,24 +15,103 @@ Another positive property of immutable trees is that they are inherently paralle
 | Set       | O(n)               | O(log n)   |
 | Map       | O(n)               | O(n log n) |
 | Reduce    | O(n)               | O(n log n) |
-| Concat    | O(n)               | O(1)       |
+| Concat    | O(n)               | O(log n)   |
 
-In benchmarks, quad ropes often have only little overhead compared to native 2D arrays. In more interesting algorithms, quad ropes are often faster. In particular, quad ropes can handle nested parallelism much better than nested for-loops over arrays without any tweaking of the TPL thread pool.
+In benchmarks, quad ropes often have only little overhead compared to standard immutable 2D arrays. In more interesting algorithms, quad ropes are often faster. In particular, quad ropes can handle nested parallelism much better than nested for-loops over arrays without any additional tweaking of the TPL thread pool.
+
 
 ## Parallel Operations ##
 
 The majority of functions on quad ropes are available in a parallelized version. Currently, quad ropes use eager tree splitting. Recent research suggests that a more dynamic scheduling approach would be more appropriate.
 
+
+## Benchmarking ##
+
+You can test the performance of this quad rope implementation on your own machine. First, compile in release mode.
+
+On Windows:
+
+```
+> .paket\paket.exe install
+> release.bat
+```
+
+On Linux and Mac with Mono:
+
+```
+$ make paket
+$ make release
+```
+
+Now, you can run the benchmarks. The results will be written into the [log](\log) folder.
+
+
+On Windows:
+
+```
+> scripts\benchmark-all.bat
+```
+
+You wan run individual benchmarks without writing to a file:
+
+```
+> scripts\benchmark.bat --help
+
+QuadRope 1.0.0.0
+Copyright ©  2017
+
+  -m, --mode       Required. Which benchmark to run.
+
+  -s, --size       (Default: 100) Input size.
+
+  -t, --threads    (Default: 1) Number of threads.
+
+  --help           Display this help screen.
+
+  --version        Display version information.
+
+Available benchmarks:
+align
+all
+fibs
+index
+mmult
+primes
+sieve
+vdc
+```
+
+On Linux and Mac, run
+
+```
+$ scripts\benchmark --help
+```
+
+to get the same output.
+
+
+## Unit Tests ##
+
+We use [FsCheck](https://github.com/fscheck/FsCheck) for testing.
+
+On Windows:
+
+```
+> debug.bat
+> test.bat
+```
+
+On Linux and Mac:
+
+```
+$ make debug
+$ make test
+```
+
 ## Contributions ##
 
 Please contribute by opening an issue, using quad ropes in your projects or making a pull request.
 
-## Things Left to Do ##
-
-- [ ] Implement a general "wavefront" ```scan``` in two dimensions.
-- [ ] Parallelize ```scan```.
-- [ ] Re-implement all functions that do not yet allocate a single array.
-- [ ] Improve code quality and documentation.
 
 ## Maintainers ##
 

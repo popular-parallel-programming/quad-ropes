@@ -1,7 +1,9 @@
 ﻿module RadTrees.Examples.Sieve
 
+open RadTrees
+
 module QuadRope =
-    open RadTrees
+
 
     /// Find next element that is larger than p; assumes ns is sorted.
     let rec private find p i ns =
@@ -41,11 +43,6 @@ module QuadRope =
 
 
 module Array2D =
-    let private persistentSet arr v i j =
-        let copy = Array2D.copy arr
-        copy.[i, j] <- v;
-        copy
-
 
     /// Find next element that is larger than p; assumes ns is sorted.
     let rec private find p i ns =
@@ -63,7 +60,7 @@ module Array2D =
     let rec private enumerate p c ns =
         let pc = p * c
         if pc < Array2D.length1 ns then
-            enumerate p (c + 1) (persistentSet ns pc 0 0)
+            enumerate p (c + 1) (Array2DExt.set ns pc 0 0)
         else
             ns
 

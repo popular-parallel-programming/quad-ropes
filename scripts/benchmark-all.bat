@@ -14,7 +14,9 @@ call scripts\benchmark -m all    -s 1000 -t 16 >> "logs\benchmark-all-s1000-t16-
 
 
 :: Benchmarks for indexing operations.
-call scripts\benchmark -m index  -s 1000 -t  1  > "logs\benchmark-index-t01-%datetime%.txt"
+call scripts\benchmark -m index  -s   10 -t  1  > "logs\benchmark-index-t01-%datetime%.txt"
+call scripts\benchmark -m index  -s  100 -t  1 >> "logs\benchmark-index-t01-%datetime%.txt"
+call scripts\benchmark -m index  -s 1000 -t  1 >> "logs\benchmark-index-t01-%datetime%.txt"
 
 
 :: Thread scaling benchmarks for mmult.

@@ -54,11 +54,11 @@
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
     <None Include="App.config" />
-    <Compile Include="Utils.Test.fs" />
-    <Compile Include="QuadRope.Gen.fs" />
-    <Compile Include="QuadRope.Test.fs" />
-    <Compile Include="QuadRope.Parallel.Test.fs" />
-    <Compile Include="QuadRope.Interesting.fs" />
+    <Compile Include="Utils.fs" />
+    <Compile Include="Gen.fs" />
+    <Compile Include="QuadRope.fs" />
+    <Compile Include="QuadRope.Parallel.fs" />
+    <Compile Include="Interesting.fs" />
     <Compile Include="Test.fs" />
   </ItemGroup>
   <ItemGroup>

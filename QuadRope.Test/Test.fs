@@ -33,6 +33,7 @@ module TestRunner =
         Check.QuickAll (typeof<QuadRope.Handle>.DeclaringType)
         Check.QuickAll (typeof<Parallel.QuadRope.Handle>.DeclaringType)
         Check.QuickAll (typeof<Interesting.QuadRope.Handle>.DeclaringType)
+        Check.QuickAll (typeof<Examples.Handle>.DeclaringType)
     [<EntryPoint>]
     let main _ =
         try

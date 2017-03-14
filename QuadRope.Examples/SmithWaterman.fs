@@ -30,7 +30,7 @@ module QuadRope =
     let alignmentBuilder mapi reduce hrev vrev scan init =
 
         /// Find the maximum value in scores and return its index.
-        let rec findMax =
+        let findMax =
             mapi (fun i j s -> (i, j), s)
             >> reduce (maxBy snd) ((0, 0), 0)
             >> fst
@@ -77,7 +77,7 @@ module QuadRope =
 module Array2D =
 
     /// Find the maximum value in scores and return its index.
-    let rec private findMax =
+    let private findMax =
         Array2D.mapi (fun i j s -> (i, j), s)
         >> Array2DExt.reduce (maxBy snd)
         >> fst

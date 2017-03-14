@@ -59,9 +59,15 @@
     <Compile Include="QuadRope.fs" />
     <Compile Include="QuadRope.Parallel.fs" />
     <Compile Include="Interesting.fs" />
+    <Compile Include="Examples.fs" />
     <Compile Include="Test.fs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\QuadRope.Examples\QuadRope.Examples.fsproj">
+      <Name>QuadRope.Examples</Name>
+      <Project>{9e096af0-6965-4810-9b2e-1a57fd87496c}</Project>
+      <Private>True</Private>
+    </ProjectReference>
     <ProjectReference Include="..\QuadRope\QuadRope.fsproj">
       <Name>QuadRope</Name>
       <Project>{465a801e-438b-4b5a-8ef1-658bde154519}</Project>

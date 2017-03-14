@@ -1,0 +1,15 @@
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.get             	  0,000055      0,000  0,000 ms/op 8388608
+Array2D.get              	  0,000021      0,000  0,000 ms/op 16777216
+QuadRope.set             	  0,000650      0,000  0,000 ms/op 524288
+Array2D.set              	  0,001013      0,000  0,000 ms/op 262144
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.get             	  0,000095      0,000  0,000 ms/op 4194304
+Array2D.get              	  0,000020      0,000  0,000 ms/op 16777216
+QuadRope.set             	  0,002756      0,000  0,000 ms/op 131072
+Array2D.set              	  0,059305      0,001  0,000 ms/op   8192
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.get             	  0,000164      0,000  0,000 ms/op 2097152
+Array2D.get              	  0,000020      0,000  0,000 ms/op 16777216
+QuadRope.set             	  0,004199      0,000  0,000 ms/op  65536
+Array2D.set              	  7,517988      0,407  0,269 ms/op     64

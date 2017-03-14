@@ -1,5 +1,0 @@
-Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
-QuadRope.get             	  0,000161      0,000  0,000 ms/op 2097152
-Array2D.get              	  0,000021      0,000  0,000 ms/op 16777216
-QuadRope.set             	  0,004235      0,000  0,000 ms/op  65536
-Array2D.set              	  7,033257      0,414  0,274 ms/op     64

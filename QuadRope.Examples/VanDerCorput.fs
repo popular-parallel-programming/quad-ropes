@@ -38,5 +38,5 @@ module Array2D =
         vdc
 
 
-    let vanDerCorput = vdcBuilder Array2DExt.cat1 Array2D.map
-    let vanDerCorputPar = vdcBuilder Parallel.Array2DExt.cat1 Parallel.Array2DExt.map
+    let vanDerCorput = vdcBuilder Array2DExt.cat2 Array2D.map
+    let vanDerCorputPar = vdcBuilder Parallel.Array2DExt.cat2 Parallel.Array2DExt.map

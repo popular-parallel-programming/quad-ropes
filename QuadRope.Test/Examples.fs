@@ -45,13 +45,23 @@ let ``fibonacci equals array variant`` (NonNegativeInt n) =
     Fibonacci.QuadRope.fibseq n |> QuadRope.toArray2D = Fibonacci.Array2D.fibseq n
 
 
-let ``mmult equals array variant`` (a : float [,]) (b : float [,]) =
-    (not (Utils.isEmpty a) && not (Utils.isEmpty b) && Array2D.length1 a = Array2D.length2 b) ==> lazy (
-        MatMult.QuadRope.mmult (QuadRope.fromArray2D a) (QuadRope.fromArray2D b)
-        |> QuadRope.toArray2D = MatMult.Array2D.mmult a b)
+let epsilon = 0.0001
 
 
-let ``sieve equals array variant`` (NonNegativeInt n) =
+let ``mmult equals array variant`` (a : int [,]) (b : int [,]) =
+    (not (Utils.isEmpty a) && not (Utils.isEmpty b)
+     && Array2D.length1 a = Array2D.length2 b
+     && Array2D.length2 a = Array2D.length1 b) ==> lazy (
+        let a' = Array2D.map float a
+        let b' = Array2D.map float b
+        let qres = MatMult.QuadRope.mmult (QuadRope.fromArray2D a') (QuadRope.fromArray2D b')
+                   |> QuadRope.toArray2D
+        let ares = MatMult.Array2D.mmult a' b'
+        Array2DExt.map2 (-) qres ares
+        |> Array2DExt.mapReduce (fun x -> abs x <= epsilon) (&&))
+
+
+let ``sieve equals array variant`` (PositiveInt n) =
     Sieve.QuadRope.sieve n |> QuadRope.toArray2D = Sieve.Array2D.sieve n
 
 

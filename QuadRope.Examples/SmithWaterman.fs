@@ -5,8 +5,14 @@ open RadTrees
 let private strlen = String.length
 
 /// Compute the max of a and b by means of f.
-let private maxBy f a b =
-    if f a > f b then a else b
+let private orderBy comp f a b =
+    if comp (f a) (f b) then a, b else b, a
+
+
+let maxScore a b =
+    orderBy (>) (fst >> snd) a b
+    ||> orderBy (>) (fst >> fst)
+    ||> orderBy (>) snd |> fst
 
 
 /// Return a function that computes the element-wise distance between
@@ -32,7 +38,7 @@ module QuadRope =
         /// Find the maximum value in scores and return its index.
         let findMax =
             mapi (fun i j s -> (i, j), s)
-            >> reduce (maxBy snd) ((0, 0), 0)
+            >> reduce maxScore ((0, 0), 0)
             >> fst
 
 
@@ -72,7 +78,7 @@ module Array2D =
     /// Find the maximum value in scores and return its index.
     let private findMax =
         Array2D.mapi (fun i j s -> (i, j), s)
-        >> Array2DExt.reduce (maxBy snd)
+        >> Array2DExt.reduce maxScore
         >> fst
 
 

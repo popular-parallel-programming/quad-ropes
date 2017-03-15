@@ -27,7 +27,7 @@ let private btKernel row diag col score =
 
 module QuadRope =
 
-    let alignmentBuilder mapi reduce hrev vrev scan init =
+    let alignmentBuilder mapi reduce scan init =
 
         /// Find the maximum value in scores and return its index.
         let findMax =
@@ -39,17 +39,14 @@ module QuadRope =
         /// Backtrack through a score matrix from some starting index pair i
         /// and j.
         let backtrack (i, j) scores =
-            let scores' = QuadRope.slice 0 0 i j scores // Start from i, j
-                          |> hrev              // Revert row direction.
-                          |> vrev              // Revert column direction.
+            let scores' = QuadRope.slice 0 0 (i + 1) (j + 1) scores // Start from i, j
                           |> scan btKernel 0   // Take value at i, j as start.
-            QuadRope.get scores' (i - 1) (j - 1) + (QuadRope.get scores i j)
+            QuadRope.get scores' i j
 
 
         /// Compute the alignment cost of two sequences a and b.
         let align a b =
-            let scores = init (strlen a) (strlen b) (dist a b)
-                         |> scan swscore 0
+            let scores = init (strlen a) (strlen b) (dist a b) |> scan swscore 0
             backtrack (findMax scores) scores
 
         align
@@ -58,8 +55,6 @@ module QuadRope =
     let align =
         alignmentBuilder QuadRope.mapi
                          QuadRope.reduce
-                         QuadRope.hrev
-                         QuadRope.vrev
                          QuadRope.scan
                          QuadRope.init
 
@@ -67,8 +62,6 @@ module QuadRope =
     let alignPar =
         alignmentBuilder Parallel.QuadRope.mapi
                          Parallel.QuadRope.reduce
-                         Parallel.QuadRope.hrev
-                         Parallel.QuadRope.vrev
                          Parallel.QuadRope.scan
                          Parallel.QuadRope.init
 
@@ -86,15 +79,12 @@ module Array2D =
     /// Backtrack through a score matrix from some starting index pair i
     /// and j.
     let private backtrack (i, j) scores =
-        let scores' = Array2DExt.slice 0 0 i j scores // Start from i, j
-                      |> Array2DExt.rev1              // Revert column direction.
-                      |> Array2DExt.rev2              // Revert row direction.
+        let scores' = Array2DExt.slice 0 0 (i + 1) (j + 1) scores // Start from i, j
                       |> Array2DExt.scan btKernel 0   // Take value at i, j as start.
-        Array2D.get scores' (i - 1) (j - 1) + (Array2D.get scores i j)
+        Array2D.get scores' i j
 
 
     /// Compute the alignment cost of two sequences a and b.
     let align a b =
-        let scores = Array2D.init (strlen a) (strlen b) (dist a b)
-                     |> Array2DExt.scan swscore 0
+        let scores = Array2D.init (strlen a) (strlen b) (dist a b) |> Array2DExt.scan swscore 0
         backtrack (findMax scores) scores

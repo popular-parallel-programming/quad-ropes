@@ -66,7 +66,7 @@ let ``sieve equals array variant`` (PositiveInt n) =
 
 
 let ``smith-waterman equals array variant`` (a : string) (b : string) =
-    (String.length a > 0 && String.length b > 0) ==> lazy (
+    (String.length a > 2 && String.length b > 2) ==> lazy (
         SmithWaterman.QuadRope.align a b = SmithWaterman.Array2D.align a b)
 
 

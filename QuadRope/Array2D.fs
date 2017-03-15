@@ -207,22 +207,20 @@ let scan f pre vals =
     let f' = Functions.adapt4 f
     let sums = Array2D.zeroCreate (Array2D.length1 vals) (Array2D.length2 vals)
 
-    /// Computes the prefix sum for the index pair i j.
-    let prefix i j =
-        if i = 0 || j = 0 then
-            pre
-        else
-            Functions.invoke4 f'
-                              (Array2D.get sums i (j - 1))       // Prefix from same row.
-                              (Array2D.get sums (i - 1) (j - 1)) // Prefix from diagonal.
-                              (Array2D.get sums (i - 1) j)       // Prefix from same column.
-                              (Array2D.get vals i j)
-
-    let prefix' = Functions.adapt2 prefix
-
-    // Iterate over the array sequentially. We need a diagonal pattern
-    // to make this parallel
-    for i in 0 .. Array2D.length1 sums - 1 do
-        for j in 0 .. Array2D.length2 sums - 1 do
-            sums.[i, j] <- Functions.invoke2 prefix' i j
+    // Initialize top left element.
+    sums.[0, 0] <- Functions.invoke4 f' pre pre pre vals.[0, 0]
+    // Initialize row 0
+    for j in 1 .. Array2D.length2 sums - 1 do
+        sums.[0, j] <- Functions.invoke4 f' sums.[0, j - 1] pre pre vals.[0, j]
+    // Compute prefixes.
+    for i in 1 .. Array2D.length1 sums - 1 do
+        // Initialize first element of the i-th row.
+        sums.[i, 0] <- Functions.invoke4 f' pre pre sums.[i - 1, 0] vals.[i, 0]
+        // Compute remaining prefixes of the i-th row'.
+        for j in 1 .. Array2D.length2 sums - 1 do
+            sums.[i, j] <- Functions.invoke4 f'
+                                             sums.[i, j - 1]     // Row prefix
+                                             sums.[i - 1, j - 1] // Diagonal prefix.
+                                             sums.[i - 1, j]     // Column prefix.
+                                             vals.[i, j]         // Current value.
     sums

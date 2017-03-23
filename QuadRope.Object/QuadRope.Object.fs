@@ -39,6 +39,26 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
 
 
 
+    /// Initialize a quad rope from a 2D array.
+    static member FromArray2D array =
+        new QuadRope<_>(QuadRope.fromArray2D array)
+
+    /// Initialize a quad rope from a 2D array.
+    static member FromArray2DPar array =
+        new QuadRope<_>(Parallel.QuadRope.fromArray2D array)
+
+
+
+    /// Construct a 2D array from this quad rope.
+    member this.ToArray2D() =
+        QuadRope.toArray2D this.qr
+
+    /// Construct a 2D array from this quad rope in parallel.
+    member this.ToArray2DPar() =
+        Parallel.QuadRope.toArray2D this.qr
+
+
+
     /// The number of rows in this quad rope.
     member this.Rows = QuadRope.rows this.qr
 

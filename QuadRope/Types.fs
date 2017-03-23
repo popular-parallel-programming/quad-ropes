@@ -21,14 +21,16 @@
 
 module RadTrees.Types
 
+/// A simple view on 2D arrays. Members r and c are row- and
+/// column-offset. Members h and w are height and width of the
+/// view. Member vals is the original array.
 type 'a ArraySlice when 'a : equality =
     internal { r : int; c : int; h : int ; w : int; vals : 'a [,] }
 
 
 /// The quad rope type. A quad rope is either empty, a leaf containing
-/// a (small) array or a node that joins either two or four quad
-/// ropes. To reduce the number of constructors, the node invariants
-/// are maintained in the implementation.
+/// a (small) array or a node that joins either two quad ropes in
+/// horizontal or vertical direction.
 [<CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
 type 'a QuadRope when 'a : equality =
     internal

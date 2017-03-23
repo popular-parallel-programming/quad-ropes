@@ -76,12 +76,16 @@ let rec isSparse = function
     | _ -> false
 
 
+/// Count the total number of nodes in the quad rope, excluding nodes
+/// that are nested in slices.
 let rec countNodes = function
     | HCat (_, _, _, _, a, b)
     | VCat (_, _, _, _, a, b) ->
         1 + countNodes a + countNodes b
     | _ -> 1
 
+/// Return the left branch of a quad rope, if it is a hcat or vcat
+/// instance.
 let leftBranch = function
     | HCat (_, _, _, _, a, _)
     | VCat (_, _, _, _, a, _) ->
@@ -89,6 +93,8 @@ let leftBranch = function
     | _ -> None
 
 
+/// Return the right branch of a quad rope, if it is a hcat of vcat
+/// instance.
 let rightBranch = function
     | HCat (_, _, _, _, _, b)
     | VCat (_, _, _, _, _, b) ->

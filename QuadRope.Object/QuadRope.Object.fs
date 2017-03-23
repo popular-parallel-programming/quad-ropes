@@ -7,10 +7,10 @@ open RadTrees.Types
 open RadTrees.Utils
 
 /// An object wrapper for the functional quad rope type.
-type QuadRope<'a when 'a : equality> private (qr : 'a Types.QuadRope) =
+type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
 
     // The actual quad rope structure.
-    member private this.qr = qr
+    member internal this.qr = qr
 
 
     /// Initialize a new quad rope of r rows and c cols. The value at
@@ -244,3 +244,120 @@ type QuadRope<'a when 'a : equality> private (qr : 'a Types.QuadRope) =
     /// and starting from epsilon.
     member this.ColScanFunc(f, epsilon) =
         new QuadRope<'a>(QuadRope.vscan (Functions.toFunc2 f) (fun _ -> epsilon) this.qr)
+
+
+
+
+    /// A generic sparse quad rope that can optimize some operations
+    /// for an arbitrary ring. Use this to define sparse quad rope
+    /// variants of your own types.
+    type SparseQuadRope<'a when 'a : equality> internal (zero : 'a,
+                                                         one : 'a,
+                                                         plus : 'a -> 'a -> 'a,
+                                                         mul : 'a -> 'a -> 'a,
+                                                         qr : 'a Types.QuadRope) =
+        inherit QuadRope<'a>(qr)
+
+        member internal this.zero = zero
+        member internal this.one = one
+        member internal this.plus = plus
+        member internal this.mul = mul
+
+        /// Compute the generic sum of this quad rope's elements.
+        member this.Sum() =
+            QuadRope.reduce this.plus this.zero this.qr
+
+        /// Compute the generic product of this quad rope's elements.
+        member this.Product() =
+            QuadRope.Sparse.prod this.mul this.zero this.one this.qr
+
+        /// Compute the point-wise generic product of two quad ropes.
+        member this.PointwiseMultiply (other : QuadRope<'a>) =
+            new SparseQuadRope<'a>(this.zero,
+                                   this.one,
+                                   this.plus,
+                                   this.mul,
+                                   QuadRope.Sparse.pointwise this.mul this.zero this.one this.qr other.qr)
+
+
+        /// Initialize a new identity matrix of size n * n for the
+        /// generic ring (zero, one, plus, mul).
+        static member Identity(zero, one, plus, mul, n) =
+            new SparseQuadRope<'a>(zero,
+                                   one,
+                                   plus,
+                                   mul,
+                                   QuadRope.Sparse.identity zero one n)
+
+        /// Initialize a new upper diagonal matrix of size n * n for
+        /// the generic ring (zero, one, plus, mul).
+        static member UpperDiagonal(zero, one, plus, mul, n) =
+            new SparseQuadRope<'a>(zero,
+                                   one,
+                                   plus,
+                                   mul,
+                                   QuadRope.Sparse.upperDiagonal zero n one)
+
+
+        /// Initialize a new lower diagonal matrix of size n * n for
+        /// the generic ring (zero, one, plus, mul).
+        static member LowerDiagonal(zero, one, plus, mul, n) =
+            new SparseQuadRope<'a>(zero,
+                                   one,
+                                   plus,
+                                   mul,
+                                   QuadRope.Sparse.lowerDiagonal zero n one)
+
+
+
+
+    /// A sparse quad rope of doubles that performs optimization
+    /// applicable to the ring (0, 1, +, *).
+    type DoubleQuadRope internal (qr : float Types.QuadRope) =
+        inherit QuadRope<float>(qr)
+
+        /// Compute the sum of all numbers.
+        member this.Sum() =
+            QuadRope.SparseDouble.sum this.qr
+
+        /// Compute the sum of all numbers in parallel.
+        member this.SumPar() =
+            Parallel.QuadRope.SparseDouble.sum this.qr
+
+
+
+        /// Compute the product of all numbers.
+        member this.Product() =
+            QuadRope.SparseDouble.prod this.qr
+
+        /// Compute the product of all numbers in parallel.
+        member this.ProductPar() =
+            Parallel.QuadRope.SparseDouble.prod this.qr
+
+
+
+        /// Generate a new identity matrix quad rope of size n * n.
+        static member Identity n =
+            QuadRope.SparseDouble.identity n
+
+        /// Generate a new upper diagonal matrix of size n * n with v
+        /// at all non-zero indexes.
+        static member UpperDiagonal(n, v) =
+            new DoubleQuadRope(QuadRope.SparseDouble.upperDiagonal n v)
+
+        /// Generate a new lower diagonal matrix of size n * n with v
+        /// at all non-zero indexes.
+        static member LowerDiagonal(n, v) =
+            new DoubleQuadRope(QuadRope.SparseDouble.lowerDiagonal n v)
+
+
+
+        /// Multiply the values of this quad rope to the values of
+        /// another quad rope point-wise.
+        member this.PointwiseMultiply (other : QuadRope<float>) =
+            new DoubleQuadRope(QuadRope.SparseDouble.pointwise this.qr other.qr)
+
+        /// Multiply the values of this quad rope to the values of
+        /// another quad rope point-wise.
+        member this.PointwiseMultiplyPar (other : QuadRope<float>) =
+            new DoubleQuadRope(Parallel.QuadRope.SparseDouble.pointwise this.qr other.qr)

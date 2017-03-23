@@ -75,11 +75,12 @@ module Gen =
                     Gen.map ((<||) QuadRope.vcat) (Gen.where canVCat (Gen.two genRevRope)) ]
 
 
-    let shrink = function
-        | HCat (_, _, _, _, a, b)
-        | VCat (_, _, _, _, a, b) ->
-            seq { yield a; yield b; yield QuadRope.Empty }
-        | _ -> Seq.empty
+    let shrink qr =
+        let a = QuadRope.leftBranch qr
+        let b = QuadRope.rightBranch qr
+        seq { if a.IsSome then yield a.Value
+              if b.IsSome then yield b.Value
+              if a.IsSome && b.IsSome then yield QuadRope.empty }
 
 
     type QuadRopeGen =

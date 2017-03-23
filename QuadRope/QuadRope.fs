@@ -76,6 +76,30 @@ let rec isSparse = function
     | _ -> false
 
 
+let rec countNodes = function
+    | HCat (_, _, _, _, a, b)
+    | VCat (_, _, _, _, a, b) ->
+        1 + countNodes a + countNodes b
+    | _ -> 1
+
+let leftBranch = function
+    | HCat (_, _, _, _, a, _)
+    | VCat (_, _, _, _, a, _) ->
+        Some a
+    | _ -> None
+
+
+let rightBranch = function
+    | HCat (_, _, _, _, _, b)
+    | VCat (_, _, _, _, _, b) ->
+        Some b
+    | _ -> None
+
+
+/// The canonical empty quad rope. TODO: Remove it.
+let empty = Empty
+
+
 /// Construct a Leaf if slc is non-empty. Otherwise, return Empty.
 let leaf slc =
     if ArraySlice.length1 slc = 0 || ArraySlice.length2 slc = 0 then
@@ -216,7 +240,7 @@ let toCols qr = Seq.init (cols qr) (col qr)
 
 
 /// Initialize a rope where all elements are <code>v</code>.
-let inline create h w v =
+let create h w v =
     if h <= 0 || w <= 0 then
         Empty
     else

@@ -22,7 +22,7 @@
 module RadTrees.Types
 
 type 'a ArraySlice when 'a : equality =
-    { r : int; c : int; h : int ; w : int; vals : 'a [,] }
+    internal { r : int; c : int; h : int ; w : int; vals : 'a [,] }
 
 
 /// The quad rope type. A quad rope is either empty, a leaf containing
@@ -31,6 +31,7 @@ type 'a ArraySlice when 'a : equality =
 /// are maintained in the implementation.
 [<CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
 type 'a QuadRope when 'a : equality =
+    internal
     | Empty
     | Leaf of 'a ArraySlice
     | HCat of bool * int * int * int * 'a QuadRope * 'a QuadRope // rows a = rows b

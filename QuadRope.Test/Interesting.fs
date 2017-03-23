@@ -29,29 +29,22 @@ open Types
 module Utils =
 
     /// Left branch of the quad rope.
-    let left = function
-        | HCat (_, _, _, _, qr, _)
-        | VCat (_, _, _, _, qr, _)
-        | qr -> qr
+    let left qr =
+        match QuadRope.leftBranch qr with
+            | Some br -> br
+            | _ -> qr
 
 
     /// Right branch of the quad rope.
-    let right = function
-        | HCat (_, _, _, _, _, qr)
-        | VCat (_, _, _, _, _, qr)
-        | qr -> qr
-
-
-    /// Count number of nodes, i.e. number of elements in the nodes.
-    let rec nodes = function
-        | HCat _ | VCat _ as qr ->
-            nodes (left qr) + nodes (right qr) + 1
-        | _ -> 1
+    let right qr =
+        match QuadRope.rightBranch qr with
+            | Some br -> br
+            | _ -> qr
 
 
     /// Compute whether the bound of any quad rope is exceeded.
     let isBalanced qr =
-        QuadRope.depth qr < 2 * (int (log (float (nodes qr)) + 1.0))
+        QuadRope.depth qr < 2 * (int (log (float (QuadRope.countNodes qr)) + 1.0))
 
 
 

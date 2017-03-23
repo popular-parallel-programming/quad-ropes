@@ -16,26 +16,26 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
     /// Initialize a new quad rope of r rows and c cols. The value at
     /// each index pair (i, h) is initialized by calling function f on
     /// the index values.
-    static member Init(r, c, f : _ -> _ -> 'a) =
-        new QuadRope<'a>(QuadRope.init r c f)
+    static member Init(r, c, f) =
+        new QuadRope<_>(QuadRope.init r c f)
 
     /// Initialize a new quad rope of r rows and c cols in
     /// parallel. The value at each index pair (i, h) is initialized
     /// by calling function f on the index values.
-    static member InitPar(r, c, f : _ -> _ -> 'a) =
-        new QuadRope<'a>(Parallel.QuadRope.init r c f)
+    static member InitPar(r, c, f) =
+        new QuadRope<_>(Parallel.QuadRope.init r c f)
 
     /// Initialize a new quad rope of r rows and c cols. The value at
     /// each index pair (i, h) is initialized by calling Func f on
     /// the index values.
-    static member InitFunc(r, c, f : _ -> _ -> 'a) =
-        new QuadRope<'a>(QuadRope.init r c f)
+    static member InitFunc(r, c, f) =
+        new QuadRope<_>(QuadRope.init r c (Functions.toFunc2 f))
 
     /// Initialize a new quad rope of r rows and c cols in
     /// parallel. The value at each index pair (i, h) is initialized
     /// by calling Func f on the index values.
-    static member InitFuncPar(r, c, f : _ -> _ -> 'a) =
-        new QuadRope<'a>(Parallel.QuadRope.init r c f)
+    static member InitFuncPar(r, c, f) =
+        new QuadRope<_>(Parallel.QuadRope.init r c (Functions.toFunc2 f))
 
 
 
@@ -56,7 +56,7 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
 
     /// Set the value at row i, column j to v.
     member this.Set(i, j, v) =
-        new QuadRope<'a>(QuadRope.set this.qr i j v)
+        new QuadRope<_>(QuadRope.set this.qr i j v)
 
 
 
@@ -64,73 +64,73 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
     /// elements of this quad rope will be "above" the elements of the
     /// other quad rope.
     member this.VCat(other : QuadRope<_>) =
-        new QuadRope<'a>(QuadRope.vcat this.qr other.qr)
+        new QuadRope<_>(QuadRope.vcat this.qr other.qr)
 
     /// Combine this and another quad rope in column-direction. The
     /// elements of this quad rope will be "left of" the elements of
     /// the other quad rope.
     member this.HCat(other : QuadRope<_>) =
-        new QuadRope<'a>(QuadRope.hcat this.qr other.qr)
+        new QuadRope<_>(QuadRope.hcat this.qr other.qr)
 
 
 
     /// Reverse the row order.
     member this.ReverseRows() =
-        new QuadRope<'a>(QuadRope.vrev this.qr)
+        new QuadRope<_>(QuadRope.vrev this.qr)
 
     /// Reverse the row order in parallel.
     member this.ReverseRowsPar() =
-        new QuadRope<'a>(Parallel.QuadRope.vrev this.qr)
+        new QuadRope<_>(Parallel.QuadRope.vrev this.qr)
 
     /// Reverse the column order.
     member this.ReverseCols() =
-        new QuadRope<'a>(QuadRope.hrev this.qr)
+        new QuadRope<_>(QuadRope.hrev this.qr)
 
     /// Reverse the column order in parallel.
     member this.ReverseColsPar() =
-        new QuadRope<'a>(Parallel.QuadRope.hrev this.qr)
+        new QuadRope<_>(Parallel.QuadRope.hrev this.qr)
 
     /// Transpose the quad rope.
     member this.Transpose() =
-        new QuadRope<'a>(QuadRope.transpose this.qr)
+        new QuadRope<_>(QuadRope.transpose this.qr)
 
     /// Transpose the quad rope.
     member this.TransposePar() =
-        new QuadRope<'a>(Parallel.QuadRope.transpose this.qr)
+        new QuadRope<_>(Parallel.QuadRope.transpose this.qr)
 
 
 
     /// Apply function f to all elements.
     member this.Map f =
-        new QuadRope<'b>(QuadRope.map f this.qr)
+        new QuadRope<_>(QuadRope.map f this.qr)
 
     /// Apply function to to all elements and their indices.
     member this.Mapi f =
-        new QuadRope<'b>(QuadRope.mapi f this.qr)
+        new QuadRope<_>(QuadRope.mapi f this.qr)
 
     /// Apply a Func to all elements.
     member this.MapFunc f =
-        new QuadRope<'b>(QuadRope.map (Functions.toFunc1 f) this.qr)
+        new QuadRope<_>(QuadRope.map (Functions.toFunc1 f) this.qr)
 
     /// Apply a Func to all elements and their indices.
     member this.MapiFunc f =
-        new QuadRope<'b>(QuadRope.mapi (Functions.toFunc3 f) this.qr)
+        new QuadRope<_>(QuadRope.mapi (Functions.toFunc3 f) this.qr)
 
     /// Apply function f to all elements.
     member this.MapPar f =
-        new QuadRope<'b>(Parallel.QuadRope.map f this.qr)
+        new QuadRope<_>(Parallel.QuadRope.map f this.qr)
 
     /// Apply function to to all elements and their indices.
     member this.MapiPar f =
-        new QuadRope<'b>(Parallel.QuadRope.mapi f this.qr)
+        new QuadRope<_>(Parallel.QuadRope.mapi f this.qr)
 
     /// Apply a Func to all elements.
     member this.MapFuncPar f =
-        new QuadRope<'b>(Parallel.QuadRope.map (Functions.toFunc1 f) this.qr)
+        new QuadRope<_>(Parallel.QuadRope.map (Functions.toFunc1 f) this.qr)
 
     /// Apply a Func to all elements and their indices.
     member this.MapiFuncPar f =
-        new QuadRope<'b>(Parallel.QuadRope.mapi (Functions.toFunc3 f) this.qr)
+        new QuadRope<_>(Parallel.QuadRope.mapi (Functions.toFunc3 f) this.qr)
 
 
 
@@ -177,26 +177,26 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
     /// Combine this and another quad rope element-wise using function
     /// f. Requires that both quad ropes have equally many rows and
     /// columns. Will throw if this is not the case.
-    member this.ZipWith(f, other : QuadRope<'b>) =
-        new QuadRope<'c>(QuadRope.zip f this.qr other.qr)
+    member this.ZipWith(f, other : QuadRope<_>) =
+        new QuadRope<_>(QuadRope.zip f this.qr other.qr)
 
     /// Combine this and another quad rope element-wise using Func
     /// f. Requires that both quad ropes have equally many rows and
     /// columns. Will throw if this is not the case.
-    member this.ZipWithFunc(f, other : QuadRope<'b>) =
-        new QuadRope<'c>(QuadRope.zip (Functions.toFunc2 f) this.qr other.qr)
+    member this.ZipWithFunc(f, other : QuadRope<_>) =
+        new QuadRope<_>(QuadRope.zip (Functions.toFunc2 f) this.qr other.qr)
 
     /// Combine this and another quad rope element-wise in parallel
     /// using function f. Requires that both quad ropes have equally
     /// many rows and columns. Will throw if this is not the case.
-    member this.ZipWithPar(f, other : QuadRope<'b>) =
-        new QuadRope<'c>(Parallel.QuadRope.zip f this.qr other.qr)
+    member this.ZipWithPar(f, other : QuadRope<_>) =
+        new QuadRope<_>(Parallel.QuadRope.zip f this.qr other.qr)
 
     /// Combine this and another quad rope element-wise in parallel
     /// using Func f. Requires that both quad ropes have equally many
     /// rows and columns. Will throw if this is not the case.
-    member this.ZipWithFuncPar(f, other : QuadRope<'b>) =
-        new QuadRope<'c>(Parallel.QuadRope.zip (Functions.toFunc2 f) this.qr other.qr)
+    member this.ZipWithFuncPar(f, other : QuadRope<_>) =
+        new QuadRope<_>(Parallel.QuadRope.zip (Functions.toFunc2 f) this.qr other.qr)
 
 
 
@@ -204,41 +204,41 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
     /// rope using function f and starting all columns and rows from
     /// epsilon.
     member this.Scan(f, epsilon) =
-        new QuadRope<'a>(QuadRope.scan f epsilon this.qr)
+        new QuadRope<_>(QuadRope.scan f epsilon this.qr)
 
     /// Compute the partial prefix sum of the elements in this quad
     /// rope using Func f and starting all columns and rows from
     /// epsilon.
     member this.ScanFunc(f, epsilon) =
-        new QuadRope<'a>(QuadRope.scan (Functions.toFunc4 f) epsilon this.qr)
+        new QuadRope<_>(QuadRope.scan (Functions.toFunc4 f) epsilon this.qr)
 
     /// Compute the partial prefix sum of the elements in this quad
     /// rope in parallel using function f and starting all columns and
     /// rows from epsilon.
     member this.ScanPar(f, epsilon) =
-        new QuadRope<'a>(Parallel.QuadRope.scan f epsilon this.qr)
+        new QuadRope<_>(Parallel.QuadRope.scan f epsilon this.qr)
 
     /// Compute the partial prefix sum of the elements in this quad
     /// rope in parallel using Func f and starting all columns and
     /// rows from epsilon.
     member this.ScanFuncPar(f, epsilon) =
-        new QuadRope<'a>(Parallel.QuadRope.scan (Functions.toFunc4 f) epsilon this.qr)
+        new QuadRope<_>(Parallel.QuadRope.scan (Functions.toFunc4 f) epsilon this.qr)
 
 
     /// Compute the partial prefix sum of each row using function f
     /// and starting from epsilon.
     member this.RowScan(f, epsilon) =
-        new QuadRope<'a>(QuadRope.hscan f (fun _ -> epsilon) this.qr)
+        new QuadRope<_>(QuadRope.hscan f (fun _ -> epsilon) this.qr)
 
     /// Compute the partial prefix sum of each row using Func f
     /// and starting from epsilon.
     member this.RowScanFunc(f, epsilon) =
-        new QuadRope<'a>(QuadRope.hscan (Functions.toFunc2 f) (fun _ -> epsilon) this.qr)
+        new QuadRope<_>(QuadRope.hscan (Functions.toFunc2 f) (fun _ -> epsilon) this.qr)
 
     /// Compute the partial prefix sum of each column using function f
     /// and starting from epsilon.
     member this.ColScan(f, epsilon) =
-        new QuadRope<'a>(QuadRope.vscan f (fun _ -> epsilon) this.qr)
+        new QuadRope<_>(QuadRope.vscan f (fun _ -> epsilon) this.qr)
 
     /// Compute the partial prefix sum of each column using function f
     /// and starting from epsilon.
@@ -272,41 +272,41 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
             QuadRope.Sparse.prod this.mul this.zero this.one this.qr
 
         /// Compute the point-wise generic product of two quad ropes.
-        member this.PointwiseMultiply (other : QuadRope<'a>) =
-            new SparseQuadRope<'a>(this.zero,
-                                   this.one,
-                                   this.plus,
-                                   this.mul,
-                                   QuadRope.Sparse.pointwise this.mul this.zero this.one this.qr other.qr)
+        member this.PointwiseMultiply (other : QuadRope<_>) =
+            new SparseQuadRope<_>(this.zero,
+                                  this.one,
+                                  this.plus,
+                                  this.mul,
+                                  QuadRope.Sparse.pointwise this.mul this.zero this.one this.qr other.qr)
 
 
         /// Initialize a new identity matrix of size n * n for the
         /// generic ring (zero, one, plus, mul).
         static member Identity(zero, one, plus, mul, n) =
-            new SparseQuadRope<'a>(zero,
-                                   one,
-                                   plus,
-                                   mul,
-                                   QuadRope.Sparse.identity zero one n)
+            new SparseQuadRope<_>(zero,
+                                  one,
+                                  plus,
+                                  mul,
+                                  QuadRope.Sparse.identity zero one n)
 
         /// Initialize a new upper diagonal matrix of size n * n for
         /// the generic ring (zero, one, plus, mul).
         static member UpperDiagonal(zero, one, plus, mul, n) =
-            new SparseQuadRope<'a>(zero,
-                                   one,
-                                   plus,
-                                   mul,
-                                   QuadRope.Sparse.upperDiagonal zero n one)
+            new SparseQuadRope<_>(zero,
+                                  one,
+                                  plus,
+                                  mul,
+                                  QuadRope.Sparse.upperDiagonal zero n one)
 
 
         /// Initialize a new lower diagonal matrix of size n * n for
         /// the generic ring (zero, one, plus, mul).
         static member LowerDiagonal(zero, one, plus, mul, n) =
-            new SparseQuadRope<'a>(zero,
-                                   one,
-                                   plus,
-                                   mul,
-                                   QuadRope.Sparse.lowerDiagonal zero n one)
+            new SparseQuadRope<_>(zero,
+                                  one,
+                                  plus,
+                                  mul,
+                                  QuadRope.Sparse.lowerDiagonal zero n one)
 
 
 
@@ -354,10 +354,10 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
 
         /// Multiply the values of this quad rope to the values of
         /// another quad rope point-wise.
-        member this.PointwiseMultiply (other : QuadRope<float>) =
+        member this.PointwiseMultiply (other : QuadRope<_>) =
             new DoubleQuadRope(QuadRope.SparseDouble.pointwise this.qr other.qr)
 
         /// Multiply the values of this quad rope to the values of
         /// another quad rope point-wise.
-        member this.PointwiseMultiplyPar (other : QuadRope<float>) =
+        member this.PointwiseMultiplyPar (other : QuadRope<_>) =
             new DoubleQuadRope(Parallel.QuadRope.SparseDouble.pointwise this.qr other.qr)

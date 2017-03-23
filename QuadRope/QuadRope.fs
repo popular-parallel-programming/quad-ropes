@@ -977,6 +977,11 @@ let rec compress = function
     | qr -> qr
 
 
+/// Construct a string representation for some quad rope.
+let toString qr =
+    sprintf "%A" (toArray2D qr)
+
+
 
 /// This module contains functions that are optimized for sparse quad
 /// ropes and operations over rings, e.g. (+, *, int). These functions

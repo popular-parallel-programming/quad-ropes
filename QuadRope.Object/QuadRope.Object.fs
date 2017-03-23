@@ -266,6 +266,9 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
         new QuadRope<'a>(QuadRope.vscan (Functions.toFunc2 f) (fun _ -> epsilon) this.qr)
 
 
+    override this.ToString() =
+        QuadRope.toString this.qr
+
 
 
     /// A generic sparse quad rope that can optimize some operations

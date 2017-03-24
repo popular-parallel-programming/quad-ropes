@@ -269,8 +269,20 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
         new QuadRope<'a>(QuadRope.vscan (Functions.toFunc2 f) (fun _ -> epsilon) this.qr)
 
 
+    // Standard overrides.
+
     override this.ToString() =
         QuadRope.toString this.qr
+
+    override this.Equals(o : obj) =
+        match o with
+            | :? QuadRope<'a> as other -> QuadRope.equals this.qr other.qr
+            | _ -> false
+
+    override this.GetHashCode() =
+        let mutable code = 51
+        QuadRope.iter (fun v -> code <- code + (73 * FSharp.Core.LanguagePrimitives.GenericHash v)) this.qr
+        code
 
 
 

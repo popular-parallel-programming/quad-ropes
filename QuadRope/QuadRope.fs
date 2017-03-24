@@ -413,7 +413,7 @@ let isBalancedV qr = isBalancedCriterion (depth qr) (rows qr)
 let inline private balanceCondition a b c =
     // There is a difference in depth between a and b and c's depth is
     // less than the maximum depth of a and b.
-    (depth a) - (depth b) <> 0 && max (depth a) (depth b) > depth c
+    depth a <> depth b && max (depth a) (depth b) > depth c
 
 
 /// Balance a quad rope by rotation in worst-case O(log n) time.

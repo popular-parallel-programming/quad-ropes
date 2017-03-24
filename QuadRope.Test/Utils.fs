@@ -22,9 +22,8 @@
 module QuadRopes.Test.Utils
 
 open FsCheck
-open QuadRopes
-open Types
-open Utils
+
+open QuadRopes.Utils
 
 type Handle = class end
 

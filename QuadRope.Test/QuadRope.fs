@@ -23,7 +23,7 @@ module QuadRopes.Test.QuadRope
 
 open FsCheck
 open QuadRopes
-open Types
+open QuadRopes.Types
 
 module Utils =
 

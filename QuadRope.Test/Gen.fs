@@ -24,7 +24,7 @@ namespace QuadRopes.Test
 module Gen =
     open FsCheck
     open QuadRopes
-    open Types
+    open QuadRopes.Types
 
     let maxSize = 14
     let size = Gen.choose (1, maxSize)

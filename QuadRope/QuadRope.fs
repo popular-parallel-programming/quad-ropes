@@ -23,8 +23,8 @@
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module QuadRopes.QuadRope
 
-open Types
-open Utils
+open QuadRopes.Types
+open QuadRopes.Utils
 
 (* The maximal size of a leaf array in any direction. *)
 #if DEBUG

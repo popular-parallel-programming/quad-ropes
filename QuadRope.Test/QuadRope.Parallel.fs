@@ -23,7 +23,7 @@ module QuadRopes.Test.Parallel.QuadRope
 
 open FsCheck
 open QuadRopes
-open Types
+open QuadRopes.Types
 
 type Handle = class end
 

@@ -22,7 +22,6 @@
 module QuadRopes.Examples.Factorize
 
 open QuadRopes
-open Types
 
 module QuadRope =
     let private factorizeBuilder map =

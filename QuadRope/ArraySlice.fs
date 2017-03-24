@@ -22,8 +22,8 @@
 module internal QuadRopes.ArraySlice
 
 open QuadRopes
-open Types
-open Utils
+open QuadRopes.Types
+open QuadRopes.Utils
 
 /// This is the empty slice. It does not refer to any array and you
 /// cannot retrieve any values from it.

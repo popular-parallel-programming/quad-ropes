@@ -23,8 +23,8 @@
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
 module internal QuadRopes.Target
 
-open Types
-open Utils
+open QuadRopes.Types
+open QuadRopes.Utils
 
 /// A convenience wrapper for writing into a target array with
 /// some offset.

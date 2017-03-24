@@ -278,24 +278,6 @@ let forall p qr = mapreduce p (&&) true qr
 let exists p qr = mapreduce p (||) false qr
 
 
-/// Remove all elements from rope for which p does not hold in
-/// parallel. Input rope must be of height 1.
-let rec hfilter p = function
-    | HCat (_, _, 1, _, a, b) ->
-        par2AndThen (fun () -> hfilter p a) (fun () -> hfilter p b) hnode
-    | Slice _ as qr -> hfilter p (QuadRope.materialize qr)
-    | qr -> QuadRope.hfilter p qr
-
-
-/// Remove all elements from rope for which p does not hold in
-/// parallel. Input rope must be of width 1.
-let rec vfilter p = function
-    | VCat (_, _, _, 1, a, b) ->
-        par2AndThen (fun () -> vfilter p a) (fun () -> vfilter p b) vnode
-    | Slice _ as qr -> vfilter p (QuadRope.materialize qr)
-    | qr -> QuadRope.vfilter p qr
-
-
 /// Reverse the quad rope horizontally in parallel.
 let hrev qr =
     let rec hrev qr tgt =

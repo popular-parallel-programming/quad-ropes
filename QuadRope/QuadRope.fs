@@ -910,29 +910,6 @@ let forall p qr = mapreduce p (&&) true qr
 let exists p qr = mapreduce p (||) false qr
 
 
-/// Remove all elements from rope for which p does not hold. Input
-/// rope must be of height 1.
-let rec hfilter p = function
-    | Empty -> Empty
-    | Leaf slc -> leaf (ArraySlice.filter2 p slc)
-    | HCat (_, _, 1, _, a, b) ->
-        hnode (hfilter p a) (hfilter p b)
-    | Sparse (1, _, v) as qr when p v -> qr
-    | Sparse (1, _, _) -> Empty
-    | _ -> failwith "Quad rope height must be exactly one."
-
-
-/// Remove all elements from rope for which p does not hold. Input
-/// rope must be of width 1.
-let rec vfilter p = function
-    | Empty -> Empty
-    | Leaf slc -> leaf (ArraySlice.filter1 p slc)
-    | VCat (_, _, _, 1, a, b) ->
-        vnode (vfilter p a) (vfilter p b)
-    | Sparse (_, 1, v) as qr when p v -> qr
-    | Sparse (_, 1, _) -> Empty
-    | _ -> failwith "Quad rope width must be exactly one."
-
 
 /// Transpose the quad rope. This is equal to swapping indices,
 /// such that get qr i j = get (transpose qr) j i.

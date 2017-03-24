@@ -252,14 +252,6 @@ let ``map >> reduce = mapreduce`` (a : int64 QuadRope) =
      lazy (QuadRope.mapreduce (fun x -> x * x) (+) 0L a = QuadRope.reduce (+) 0L (QuadRope.map (fun x -> x * x) a))
 
 
-let ``hfilter removes elements correctly`` (a : int64 QuadRope) (Fun p) =
-    QuadRope.rows a = 1 ==> lazy QuadRope.forall p (QuadRope.hfilter p a)
-
-
-let ``vfilter removes elements correctly`` (a : int64 QuadRope) (Fun p) =
-    QuadRope.cols a = 1 ==> lazy QuadRope.forall p (QuadRope.vfilter p a)
-
-
 let ``last of hscan = hreduce`` (a : int64 QuadRope) =
     let b = QuadRope.hscan (+) (fun _ -> 0L) a
     let c = QuadRope.hreduce (+) 0L a

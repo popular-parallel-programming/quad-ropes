@@ -1,8 +1,11 @@
-﻿// Learn more about F# at http://fsharp.org. See the 'F# Tutorial' project
-// for more guidance on F# programming.
+﻿#load @"../QuadRope/Utils.fs"
+#load @"../QuadRope/Types.fs"
+#load @"../QuadRope/Array2D.fs"
+#load @"../QuadRope/ArraySlice.fs"
+#load @"../QuadRope/Target.fs"
+#load @"../QuadRope/QuadRope.fs"
+#load @"../QuadRope/QuadRope.Parallel.fs"
 
-#load "Library1.fs"
-open QuadRope.Object
+#load @"QuadRope.Object.fs"
 
-// Define your library scripting code here
-
+open QuadRopes.QuadRope.Object

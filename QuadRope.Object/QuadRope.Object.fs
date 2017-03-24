@@ -79,6 +79,9 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
         new QuadRope<_>(QuadRope.set this.qr i j v)
 
 
+    member this.Item
+        with get(i, j) = this.Get(i, j)
+
 
     /// Combine this and another quad rope in row-direction. The
     /// elements of this quad rope will be "above" the elements of the

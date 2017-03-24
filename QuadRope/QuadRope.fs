@@ -21,7 +21,7 @@
 
 [<RequireQualifiedAccessAttribute>]
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
-module RadTrees.QuadRope
+module QuadRopes.QuadRope
 
 open Types
 open Utils

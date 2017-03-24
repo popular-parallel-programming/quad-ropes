@@ -19,10 +19,10 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-module RadTrees.Test.Parallel.QuadRope
+module QuadRopes.Test.Parallel.QuadRope
 
 open FsCheck
-open RadTrees
+open QuadRopes
 open Types
 
 type Handle = class end

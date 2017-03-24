@@ -21,7 +21,7 @@
 
 [<RequireQualifiedAccessAttribute>]
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
-module internal RadTrees.Target
+module internal QuadRopes.Target
 
 open Types
 open Utils

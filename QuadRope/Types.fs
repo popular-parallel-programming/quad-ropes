@@ -19,7 +19,7 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-module RadTrees.Types
+module QuadRopes.Types
 
 /// A simple view on 2D arrays. Members r and c are row- and
 /// column-offset. Members h and w are height and width of the

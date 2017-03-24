@@ -1,6 +1,6 @@
-﻿module RadTrees.Examples.Fibonacci
+﻿module QuadRopes.Examples.Fibonacci
 
-open RadTrees
+open QuadRopes
 
 module QuadRope =
     let rec fibseq n =

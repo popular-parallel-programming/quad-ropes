@@ -1,10 +1,10 @@
-﻿namespace RadTrees.QuadRope.Object
+﻿namespace QuadRopes.QuadRope.Object
 
 open System
 
-open RadTrees
-open RadTrees.Types
-open RadTrees.Utils
+open QuadRopes
+open QuadRopes.Types
+open QuadRopes.Utils
 
 /// An object wrapper for the functional quad rope type.
 type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =

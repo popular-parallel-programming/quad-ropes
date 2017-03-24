@@ -1,6 +1,6 @@
-﻿module RadTrees.Examples.Sieve
+﻿module QuadRopes.Examples.Sieve
 
-open RadTrees
+open QuadRopes
 
 module QuadRope =
 

@@ -19,11 +19,11 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-module RadTrees.Examples
+module QuadRopes.Examples
 
-open RadTrees
-open RadTrees.Types
-open RadTrees.Utils.Tasks
+open QuadRopes
+open QuadRopes.Types
+open QuadRopes.Utils.Tasks
 
 module private Functions =
     let inline pow x y = System.Math.Pow ((float x), (float y))

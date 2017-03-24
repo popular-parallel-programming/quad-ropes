@@ -1,6 +1,6 @@
-﻿module RadTrees.Examples.Factorize
+﻿module QuadRopes.Examples.Factorize
 
-open RadTrees
+open QuadRopes
 open Types
 
 module QuadRope =

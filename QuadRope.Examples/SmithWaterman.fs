@@ -1,6 +1,6 @@
-module RadTrees.Examples.SmithWaterman
+module QuadRopes.Examples.SmithWaterman
 
-open RadTrees
+open QuadRopes
 
 let private strlen = String.length
 

@@ -19,7 +19,7 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-namespace RadTrees.Test
+namespace QuadRopes.Test
 
 module TestRunner =
     open FsCheck

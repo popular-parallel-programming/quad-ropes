@@ -1,7 +1,7 @@
-module RadTrees.LazySplitting.QuadRope
+module QuadRopes.LazySplitting.QuadRope
 
-open RadTrees
-open RadTrees.Types
+open QuadRopes
+open QuadRopes.Types
 
 
 type private ('a, 'b) Progress =

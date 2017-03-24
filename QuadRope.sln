@@ -7,7 +7,7 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "QuadRope", "QuadRope\QuadRo
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "QuadRope.Test", "QuadRope.Test\QuadRope.Test.fsproj", "{6ACAAAE8-1533-4509-99EA-23A790003240}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuadRope.Object", "QuadRope.Object\QuadRope.Object.csproj", "{77AEF065-7EA7-4A6D-AD1C-00260DA8FF44}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "QuadRope.Object", "QuadRope.Object\QuadRope.Object.fsproj", "{77AEF065-7EA7-4A6D-AD1C-00260DA8FF44}"
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "QuadRope.Examples", "QuadRope.Examples\QuadRope.Examples.fsproj", "{9E096AF0-6965-4810-9B2E-1A57FD87496C}"
 EndProject

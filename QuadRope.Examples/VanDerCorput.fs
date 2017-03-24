@@ -1,6 +1,6 @@
-﻿module RadTrees.Examples.VanDerCorput
+﻿module QuadRopes.Examples.VanDerCorput
 
-open RadTrees
+open QuadRopes
 
 module private Math =
     let inline pow x y = System.Math.Pow ((float x), (float y))

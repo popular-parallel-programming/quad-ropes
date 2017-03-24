@@ -19,11 +19,11 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-namespace RadTrees.Test
+namespace QuadRopes.Test
 
 module Gen =
     open FsCheck
-    open RadTrees
+    open QuadRopes
     open Types
 
     let maxSize = 14

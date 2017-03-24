@@ -20,10 +20,10 @@
 //   with the software or the use or other dealings in the software.
 
 /// Interesting properties about quad ropes.
-module RadTrees.Test.Interesting.QuadRope
+module QuadRopes.Test.Interesting.QuadRope
 
 open FsCheck
-open RadTrees
+open QuadRopes
 open Types
 
 module Utils =

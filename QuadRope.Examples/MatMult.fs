@@ -1,6 +1,6 @@
-﻿module RadTrees.Examples.MatMult
+﻿module QuadRopes.Examples.MatMult
 
-open RadTrees
+open QuadRopes
 
 module QuadRope =
 

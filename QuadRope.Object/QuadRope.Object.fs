@@ -269,6 +269,19 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
         new QuadRope<'a>(QuadRope.vscan (Functions.toFunc2 f) (fun _ -> epsilon) this.qr)
 
 
+
+    /// Return true if there exists an element in this quad rope for
+    /// which the property p holds. False otherwise.
+    member this.Exists p =
+        QuadRope.exists p this.qr
+
+    /// Return true if the property p holds for all elements in this
+    /// quad rope. False otherwise.
+    member this.Forall p =
+        QuadRope.forall p this.qr
+
+
+
     // Standard overrides.
 
     override this.ToString() =

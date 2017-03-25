@@ -44,8 +44,8 @@ NUGET
       System.ValueTuple (>= 4.3.0)
     MathNet.Numerics (3.17.0)
       TaskParallelLibrary (>= 1.0.2856) - framework: net35
-    Microsoft.NETCore.Platforms (1.1.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453, dnxcore50
-    Microsoft.NETCore.Targets (1.1.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453, dnxcore50
+    Microsoft.NETCore.Platforms (1.1.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453, dnxcore50
+    Microsoft.NETCore.Targets (1.1.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453, dnxcore50
     System.Collections (4.3.0)
       Microsoft.NETCore.Platforms (>= 1.1.0) - framework: dnxcore50
       Microsoft.NETCore.Targets (>= 1.1.0) - framework: dnxcore50
@@ -61,11 +61,11 @@ NUGET
       System.Threading (>= 4.3.0) - framework: dnxcore50
       System.Threading.Tasks (>= 4.3.0) - framework: dnxcore50
     System.Console (4.3.0)
-      Microsoft.NETCore.Platforms (>= 1.1.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453
-      Microsoft.NETCore.Targets (>= 1.1.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453
-      System.IO (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453
-      System.Runtime (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453
-      System.Text.Encoding (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453
+      Microsoft.NETCore.Platforms (>= 1.1.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453
+      Microsoft.NETCore.Targets (>= 1.1.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453
+      System.IO (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453
+      System.Runtime (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453
+      System.Text.Encoding (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453
     System.Diagnostics.Contracts (4.3.0) - framework: dnxcore50
       System.Runtime (>= 4.3.0) - framework: dnxcore50
     System.Diagnostics.Debug (4.3.0)
@@ -105,9 +105,9 @@ NUGET
       System.Globalization (>= 4.3.0) - framework: dnxcore50
       System.IO (>= 4.3.0) - framework: dnxcore50
       System.Linq (>= 4.3.0) - framework: dnxcore50
-      System.ObjectModel (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full
+      System.ObjectModel (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full
       System.Reflection (>= 4.3.0) - framework: dnxcore50
-      System.Reflection.Emit (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full
+      System.Reflection.Emit (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full
       System.Reflection.Emit.ILGeneration (>= 4.3.0) - framework: dnxcore50
       System.Reflection.Emit.Lightweight (>= 4.3.0) - framework: dnxcore50
       System.Reflection.Extensions (>= 4.3.0) - framework: dnxcore50
@@ -151,7 +151,7 @@ NUGET
       System.Runtime (>= 4.3.0) - framework: dnxcore50
       System.Runtime.Handles (>= 4.3.0) - framework: dnxcore50
     System.Net.Requests (4.3.0)
-      Microsoft.NETCore.Platforms (>= 1.1.0) - framework: net10, net11, net20, net30, net35, net40, net40-full
+      Microsoft.NETCore.Platforms (>= 1.1.0) - framework: net10, net11, net20, net35, net40, net40-full
       System.Collections (>= 4.3.0) - framework: dnxcore50
       System.Diagnostics.Debug (>= 4.3.0) - framework: dnxcore50
       System.Diagnostics.Tracing (>= 4.3.0) - framework: dnxcore50
@@ -165,27 +165,27 @@ NUGET
       System.Threading (>= 4.3.0) - framework: dnxcore50
       System.Threading.Tasks (>= 4.3.0) - framework: dnxcore50
     System.Net.WebHeaderCollection (4.3.0) - framework: dnxcore50
-    System.ObjectModel (4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, dnxcore50
+    System.ObjectModel (4.3.0) - framework: net10, net11, net20, net35, net40, net40-full, dnxcore50
     System.Reflection (4.3.0)
       Microsoft.NETCore.Platforms (>= 1.1.0) - framework: dnxcore50
       Microsoft.NETCore.Targets (>= 1.1.0) - framework: dnxcore50
       System.IO (>= 4.3.0) - framework: dnxcore50
       System.Reflection.Primitives (>= 4.3.0) - framework: dnxcore50
       System.Runtime (>= 4.3.0) - framework: dnxcore50
-    System.Reflection.Emit (4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full
-      System.IO (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full
-      System.Reflection (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full
-      System.Reflection.Emit.ILGeneration (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full
-      System.Reflection.Primitives (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full
-      System.Runtime (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full
-    System.Reflection.Emit.ILGeneration (4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, dnxcore50
+    System.Reflection.Emit (4.3.0) - framework: net10, net11, net20, net35, net40, net40-full
+      System.IO (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full
+      System.Reflection (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full
+      System.Reflection.Emit.ILGeneration (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full
+      System.Reflection.Primitives (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full
+      System.Runtime (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full
+    System.Reflection.Emit.ILGeneration (4.3.0) - framework: net10, net11, net20, net35, net40, net40-full, dnxcore50
     System.Reflection.Emit.Lightweight (4.3.0) - framework: dnxcore50
     System.Reflection.Extensions (4.3.0)
       Microsoft.NETCore.Platforms (>= 1.1.0) - framework: dnxcore50
       Microsoft.NETCore.Targets (>= 1.1.0) - framework: dnxcore50
       System.Reflection (>= 4.3.0) - framework: dnxcore50
       System.Runtime (>= 4.3.0) - framework: dnxcore50
-    System.Reflection.Primitives (4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, dnxcore50
+    System.Reflection.Primitives (4.3.0) - framework: net10, net11, net20, net35, net40, net40-full, dnxcore50
       Microsoft.NETCore.Platforms (>= 1.1.0) - framework: dnxcore50
       Microsoft.NETCore.Targets (>= 1.1.0) - framework: dnxcore50
       System.Runtime (>= 4.3.0) - framework: dnxcore50
@@ -211,10 +211,10 @@ NUGET
       Microsoft.NETCore.Platforms (>= 1.1.0) - framework: dnxcore50
       Microsoft.NETCore.Targets (>= 1.1.0) - framework: dnxcore50
       System.Runtime (>= 4.3.0) - framework: dnxcore50
-    System.Runtime.Handles (4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453, dnxcore50
-      Microsoft.NETCore.Platforms (>= 1.1.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453
-      Microsoft.NETCore.Targets (>= 1.1.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453
-      System.Runtime (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453
+    System.Runtime.Handles (4.3.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453, dnxcore50
+      Microsoft.NETCore.Platforms (>= 1.1.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453
+      Microsoft.NETCore.Targets (>= 1.1.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453
+      System.Runtime (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453
     System.Runtime.InteropServices (4.3.0) - framework: dnxcore50
       Microsoft.NETCore.Platforms (>= 1.1.0) - framework: dnxcore50
       Microsoft.NETCore.Targets (>= 1.1.0) - framework: dnxcore50
@@ -274,7 +274,7 @@ NUGET
       System.Security.Cryptography.Primitives (>= 4.3.0) - framework: dnxcore50
       System.Text.Encoding (>= 4.3.0) - framework: dnxcore50
       System.Threading (>= 4.3.0) - framework: dnxcore50
-    System.Text.Encoding (4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453, dnxcore50
+    System.Text.Encoding (4.3.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453, dnxcore50
     System.Text.Encoding.Extensions (4.3.0) - framework: dnxcore50
       Microsoft.NETCore.Platforms (>= 1.1.0) - framework: dnxcore50
       Microsoft.NETCore.Targets (>= 1.1.0) - framework: dnxcore50
@@ -304,16 +304,16 @@ NUGET
       System.Threading (>= 4.3.0) - framework: dnxcore50
       System.Threading.Tasks (>= 4.3.0) - framework: dnxcore50
     System.Threading.Thread (4.3.0)
-      System.Runtime (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453
+      System.Runtime (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453
     System.Threading.ThreadPool (4.3.0)
-      System.Runtime (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453
-      System.Runtime.Handles (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full, net45, net451, net452, net453
+      System.Runtime (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453
+      System.Runtime.Handles (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full, net45, net451, net452, net453
     System.Threading.Timer (4.3.0)
       Microsoft.NETCore.Platforms (>= 1.1.0) - framework: dnxcore50
       Microsoft.NETCore.Targets (>= 1.1.0) - framework: dnxcore50
       System.Runtime (>= 4.3.0) - framework: dnxcore50
     System.ValueTuple (4.3.0)
-      System.Collections (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full
-      System.Resources.ResourceManager (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full
-      System.Runtime (>= 4.3.0) - framework: net10, net11, net20, net30, net35, net40, net40-full
+      System.Collections (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full
+      System.Resources.ResourceManager (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full
+      System.Runtime (>= 4.3.0) - framework: net10, net11, net20, net35, net40, net40-full
     TaskParallelLibrary (1.0.2856) - framework: net35

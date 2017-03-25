@@ -32,8 +32,8 @@ You can test the performance of this quad rope implementation on your own machin
 On Windows:
 
 ```
-> .paket\paket.exe install
-> release.bat
+> build --paket
+> build --release
 ```
 
 On Linux and Mac with Mono:

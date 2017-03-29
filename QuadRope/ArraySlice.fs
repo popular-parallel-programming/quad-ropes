@@ -200,20 +200,32 @@ let isEmpty slc =
 let cat1 left right =
     if cols left <> cols right then
         invalidArg "right" "length2 must be equal."
-    let vals = Array2D.zeroCreate (rows left + rows right) (cols left)
-    Array2D.blit left.vals  left.r  left.c  vals  0          0 (rows left)  (cols left)
-    Array2D.blit right.vals right.r right.c vals (rows left) 0 (rows right) (cols right)
-    make vals
+    // Check whether both arguments are slices of the same underlying
+    // value array.
+    if left.vals = right.vals && left.r + left.h = right.r && left.c + left.w = right.c then
+        makeSlice left.r left.c (rows left + rows right) (cols left) left.vals
+    // If not, just copy.
+    else
+        let vals = Array2D.zeroCreate (rows left + rows right) (cols left)
+        Array2D.blit left.vals  left.r  left.c  vals  0          0 (rows left)  (cols left)
+        Array2D.blit right.vals right.r right.c vals (rows left) 0 (rows right) (cols right)
+        make vals
 
 
 /// Concatenate two arrays in second dimension.
 let cat2 left right =
     if rows left <> rows right then
         invalidArg "right" "length1 must be equal."
-    let vals = Array2D.zeroCreate (rows left) (cols left + cols right)
-    Array2D.blit left.vals  left.r  left.c  vals 0  0          (rows left)  (cols left)
-    Array2D.blit right.vals right.r right.c vals 0 (cols left) (rows right) (cols right)
-    make vals
+    // Check whether both arguments are slices of the same underlying
+    // value array.
+    if left.vals = right.vals && left.r + left.h = right.r && left.c + left.w = right.c then
+        makeSlice left.r left.c (rows left) (cols left + rows left) left.vals
+    // If not, just copy.
+    else
+        let vals = Array2D.zeroCreate (rows left) (cols left + cols right)
+        Array2D.blit left.vals  left.r  left.c  vals 0  0          (rows left)  (cols left)
+        Array2D.blit right.vals right.r right.c vals 0 (cols left) (rows right) (cols right)
+        make vals
 
 
 /// Revert an array slice in first dimension.

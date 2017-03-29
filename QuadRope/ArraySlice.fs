@@ -201,8 +201,8 @@ let cat1 left right =
     if cols left <> cols right then
         invalidArg "right" "length2 must be equal."
     let vals = Array2D.zeroCreate (rows left + rows right) (cols left)
-    Array2D.blit left.vals  0 0 vals  0          0 (rows left)  (cols left)
-    Array2D.blit right.vals 0 0 vals (rows left) 0 (rows right) (cols right)
+    Array2D.blit left.vals  left.r  left.c  vals  0          0 (rows left)  (cols left)
+    Array2D.blit right.vals right.r right.c vals (rows left) 0 (rows right) (cols right)
     make vals
 
 
@@ -211,8 +211,8 @@ let cat2 left right =
     if rows left <> rows right then
         invalidArg "right" "length1 must be equal."
     let vals = Array2D.zeroCreate (rows left) (cols left + cols right)
-    Array2D.blit left.vals  0 0 vals 0  0          (rows left)  (cols left)
-    Array2D.blit right.vals 0 0 vals 0 (cols left) (rows right) (cols right)
+    Array2D.blit left.vals  left.r  left.c  vals 0  0          (rows left)  (cols left)
+    Array2D.blit right.vals right.r right.c vals 0 (cols left) (rows right) (cols right)
     make vals
 
 

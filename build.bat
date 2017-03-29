@@ -49,6 +49,7 @@ echo.
 echo Options:
 echo   -r  /r  --release  - Build in release mode.
 echo   -c  /c  --clean    - Remove all binaries.
+echo   -p  /p  --paket    - Install required packages locally.
 echo   -h  /h  --help     - Show this message.
 
 :END

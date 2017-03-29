@@ -27,6 +27,8 @@ The majority of functions on quad ropes are available in a parallelized version.
 
 ## Benchmarking ##
 
+**NB:** To reproduce the results of the ARRAY'17 paper, [checkout this commit](https://github.com/popular-parallel-programming/quad-ropes/commit/a89ac162271f9277fa8bc87596b3417238d256ee).
+
 You can test the performance of this quad rope implementation on your own machine. First, compile in release mode.
 
 On Windows:

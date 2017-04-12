@@ -25,6 +25,10 @@ module QuadRope.Types
 /// column-offset. Members h and w are height and width of the
 /// view. Member vals is the original array.
 type 'a ArraySlice when 'a : equality =
+    #if DEBUG
+    #else
+    internal
+    #endif
     { rowOff : int; // Offset in the data array.
       colOff : int;
       rowStride : int; // Stride direction; could be different than 1 and -1.
@@ -39,7 +43,10 @@ type 'a ArraySlice when 'a : equality =
 /// horizontal or vertical direction.
 [<CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
 type 'a QuadRope when 'a : equality =
+    #if DEBUG
+    #else
     internal
+    #endif
     | Empty
     | Leaf of vs      : 'a ArraySlice
 

@@ -190,6 +190,22 @@ let alignment (opts : Options) =
         benchmark ("QuadRope.align", fun () -> SmithWaterman.QuadRope.alignPar a b) |> runWithHead
         printfn "Array2D.align #Not available."
 
+
+/// Benchmark Conway's Game of Life.
+let gameOfLife (opts : Options) =
+    let rnd = System.Random(987)
+    let world = QuadRope.init opts.size opts.size (fun _ _ -> rnd.Next(0, 2))
+    if opts.threads = 1 then
+        benchmark ("QuadRope.gameOfLife x 100", fun () -> GameOfLife.QuadRope.gameOfLife 100 world)
+        |> runWithHead
+        let arrayWorld = QuadRope.toArray2D world
+        benchmark ("Array2D.gameOfLife x 100", fun () -> GameOfLife.Array2D.gameOfLife 100 arrayWorld)
+        |> run
+    else
+        benchmark ("QuadRope.gameOfLife x 100", fun () -> GameOfLife.QuadRope.gameOfLifePar 100 world)
+        |> runWithHead
+
+
 /// A map of benchmark functions and their names. If I had time, this
 /// could be done with attributes instead.
 let benchmarks =
@@ -200,7 +216,8 @@ let benchmarks =
       "primes", factorize;
       "sieve", sieve;
       "index", index;
-      "align", alignment ] |> Collections.Map
+      "align", alignment;
+      "gol", gameOfLife] |> Collections.Map
 
 
 /// Print all registered benchmarks.

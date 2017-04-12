@@ -462,35 +462,31 @@ let hcat a b = balance (hcatnb a b)
 
 
 /// Reverse rope horizontally.
-let hrev qr =
-    let rec hrev qr tgt =
-        match qr with
-            | Leaf slc ->
-                leaf (Target.hrev slc tgt)
-            | HCat (left = a; right = b) ->
-                hnode (hrev b (Target.incrementCol tgt (cols a))) (hrev a tgt)
-            | VCat (left = a; right = b) ->
-                vnode (hrev a tgt) (hrev b (Target.incrementRow tgt (rows a)))
-            | Slice _ ->
-                hrev (materialize qr) tgt
-            | _ -> qr
-    hrev qr (Target.make (rows qr) (cols qr))
+let rec hrev qr =
+    match qr with
+        | Leaf slc ->
+            leaf (ArraySlice.hrev slc)
+        | HCat (_, _, _, _, a, b) ->
+            hnode (hrev b) (hrev a)
+        | VCat (_, _, _, _, a, b) ->
+            vnode (hrev a) (hrev b)
+        | Slice _ ->
+            hrev (materialize qr)
+        | _ -> qr
 
 
 /// Reverse rope vertically.
-let vrev qr =
-    let rec vrev qr tgt =
-        match qr with
-            | Leaf slc ->
-                leaf (Target.vrev slc tgt)
-            | HCat (left = a; right = b) ->
-                hnode (vrev a tgt) (vrev b (Target.incrementCol tgt (cols a)))
-            | VCat (left = a; right = b) ->
-                vnode (vrev b (Target.incrementRow tgt (rows a))) (vrev a tgt)
-            | Slice _ ->
-                vrev (materialize qr) tgt
-            | _ -> qr
-    vrev qr (Target.make (rows qr) (cols qr))
+let rec vrev qr =
+    match qr with
+        | Leaf slc ->
+            leaf (ArraySlice.vrev slc)
+        | HCat (_, _, _, _, a, b) ->
+            hnode (vrev a) (vrev b)
+        | VCat (_, _, _, _, a, b) ->
+            vnode (vrev b) (vrev a)
+        | Slice _ ->
+            vrev (materialize qr)
+        | _ -> qr
 
 
 /// Create a quad rope from an array slice instance.

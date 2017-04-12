@@ -223,14 +223,14 @@ let hcat left right =
 
 
 /// Revert an array slice in first dimension.
-let hrev slc =
+let vrev slc =
     { slc with rowOff = slc.rowOff + slc.rowStride * (slc.rows - 1);
                rowStride = -slc.rowStride }
 
 
 
 /// Revert an array slice in second dimension.
-let vrev slc =
+let hrev slc =
     { slc with colOff = slc.colOff + slc.colStride * (slc.cols - 1);
                colStride = -slc.colStride }
 

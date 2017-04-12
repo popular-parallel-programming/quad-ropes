@@ -461,10 +461,13 @@ let initZeros h w = initAll h w 0
 /// f(I(i, j - 1), I(i - 1, j - 1), I(i - 1, j), I(i,j))
 let scan f init qr =
 
+    let inline parCond a b c _ =
+        rows c <= rows a && cols b <= cols a
+
     /// A quad rope with branches a b d c, where b and c can be
     /// processed in parallel; i.e., we assume rows c <= rows a and
     /// cols b <= cols a.
-    let rec parscan f a b c d tgt =
+    let rec parScan f a b c d tgt =
         let a' = scan f a tgt
         let b', c' = par2 (fun () -> scan f b (Target.incrementRow tgt (rows a)))
                           (fun () -> scan f c (Target.incrementCol tgt (cols a)))
@@ -491,14 +494,14 @@ let scan f init qr =
             // depends on all other children. Scan b and c in
             // parallel.
             | HCat (_, _, _, _, VCat (_, _, _, _, a, b), VCat (_, _, _, _, c, d))
-                when rows c <= rows a && cols b <= cols a ->
-                    let a', b', c', d' = parscan f a b c d tgt
+                when parCond a b c d ->
+                    let a', b', c', d' = parScan f a b c d tgt
                     hnode (vnode a' b') (vnode c' d')
 
             // We need a second case to re-construct nodes correctly.
             | VCat (_, _, _, _, HCat (_, _, _, _, a, c), HCat (_, _, _, _, b, d))
-                when rows c <= rows a && cols b <= cols a ->
-                    let a', b', c', d' = parscan f a b c d tgt
+                when parCond a b c d ->
+                    let a', b', c', d' = parScan f a b c d tgt
                     vnode (hnode a' c') (hnode b' d')
 
             // Sequential cases.

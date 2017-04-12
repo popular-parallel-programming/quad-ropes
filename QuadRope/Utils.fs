@@ -62,7 +62,10 @@ module Tasks =
     /// function blocks the current thread until f and g are computed
     /// and returns their unwrapped results.
     let inline par2 f g =
-        par2AndThen f g (fun x y -> x, y)
+        let ft = task f
+        let gres = g()
+        await ft
+        result ft, gres
 
 
     /// Eagerly execute four functions in parallel. This function

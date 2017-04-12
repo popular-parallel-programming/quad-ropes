@@ -201,7 +201,7 @@ let isEmpty slc =
 
 
 /// Concatenate two array slices in first dimension.
-let cat1 left right =
+let vcat left right =
     if cols left <> cols right then
         invalidArg "right" "length2 must be equal."
     let data = Array2D.zeroCreate (rows left + rows right) (cols left)
@@ -215,7 +215,7 @@ let cat1 left right =
 
 
 /// Concatenate two arrays in second dimension.
-let cat2 left right =
+let hcat left right =
     if rows left <> rows right then
         invalidArg "right" "length1 must be equal."
     let data = Array2D.zeroCreate (rows left) (cols left + cols right)

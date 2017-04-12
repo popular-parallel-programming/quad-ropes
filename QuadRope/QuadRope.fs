@@ -327,7 +327,7 @@ let vcatnb a b =
 
             // Merge single leaves.
             | Leaf us, Leaf ls when canMerge us ls ->
-                leaf (ArraySlice.cat1 us ls)
+                leaf (ArraySlice.vcat us ls)
 
             // Merge first-level leaves.
             | VCat (left = aa; right = Leaf _ as ab), Leaf _ ->
@@ -363,7 +363,7 @@ let private hcatnb a b =
 
             // Merge single leaves.
             | Leaf ls, Leaf rs when canMerge ls rs ->
-                leaf (ArraySlice.cat2 ls rs)
+                leaf (ArraySlice.hcat ls rs)
 
             // Merge sub-leaves.
             | HCat (left = aa; right = Leaf _ as ab), Leaf _ ->

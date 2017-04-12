@@ -25,7 +25,13 @@ module QuadRope.Types
 /// column-offset. Members h and w are height and width of the
 /// view. Member vals is the original array.
 type 'a ArraySlice when 'a : equality =
-    internal { r : int; c : int; h : int ; w : int; vals : 'a [,] }
+    { rowOff : int; // Offset in the data array.
+      colOff : int;
+      rowStride : int; // Stride direction; could be different than 1 and -1.
+      colStride : int
+      rows : int; // Size of the array.
+      cols : int;
+      data : 'a [,] } // Data array.
 
 
 /// The quad rope type. A quad rope is either empty, a leaf containing

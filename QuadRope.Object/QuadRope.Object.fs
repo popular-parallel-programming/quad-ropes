@@ -272,22 +272,22 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
     /// Compute the partial prefix sum of each row using function f
     /// and starting from epsilon.
     member this.RowScan(f, epsilon) =
-        new QuadRope<_>(QuadRope.hscan f (fun _ -> epsilon) this.qr)
+        new QuadRope<_>(QuadRope.hscan f epsilon this.qr)
 
     /// Compute the partial prefix sum of each row using Func f
     /// and starting from epsilon.
     member this.RowScanFunc(f, epsilon) =
-        new QuadRope<_>(QuadRope.hscan (Functions.toFunc2 f) (fun _ -> epsilon) this.qr)
+        new QuadRope<_>(QuadRope.hscan (Functions.toFunc2 f) epsilon this.qr)
 
     /// Compute the partial prefix sum of each column using function f
     /// and starting from epsilon.
     member this.ColScan(f, epsilon) =
-        new QuadRope<_>(QuadRope.vscan f (fun _ -> epsilon) this.qr)
+        new QuadRope<_>(QuadRope.vscan f epsilon this.qr)
 
     /// Compute the partial prefix sum of each column using function f
     /// and starting from epsilon.
     member this.ColScanFunc(f, epsilon) =
-        new QuadRope<'a>(QuadRope.vscan (Functions.toFunc2 f) (fun _ -> epsilon) this.qr)
+        new QuadRope<'a>(QuadRope.vscan (Functions.toFunc2 f) epsilon this.qr)
 
 
 

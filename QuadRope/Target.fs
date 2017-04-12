@@ -109,14 +109,14 @@ let inline toSlice (tgt : _ Target) h w =
 /// instance. This writes to the underlying target array.
 let inline map f slc (tgt : _ Target) =
     ArraySlice.iteri (writemap tgt f) slc
-    toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
+    toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc)
 
 
 /// Map a function to the values of two leafs and return a new leaf
 /// instance. This writes to the underlying target array.
 let inline map2 f slc1 slc2 (tgt : _ Target) =
     ArraySlice.iteri2 (writemap2 tgt (Functions.adapt2 f)) slc1 slc2
-    toSlice tgt (ArraySlice.length1 slc1) (ArraySlice.length2 slc1)
+    toSlice tgt (ArraySlice.rows slc1) (ArraySlice.cols slc1)
 
 
 /// Map a function to the values and index pairs of a leaf and
@@ -124,7 +124,7 @@ let inline map2 f slc1 slc2 (tgt : _ Target) =
 /// target array.
 let inline mapi f slc (tgt : _ Target) =
     ArraySlice.iteri (writemapi tgt (Functions.adapt3 f)) slc
-    toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
+    toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc)
 
 
 /// Use the offset stored in tgt to iterate over some array slice.
@@ -135,22 +135,22 @@ let inline iteri f slc (tgt : _ Target) =
 /// Write the elements of slc in reverse horizontal order into
 /// target.
 let inline hrev slc (tgt : _ Target) =
-    ArraySlice.iteri (fun i j v -> write tgt i (ArraySlice.length2 slc - 1 - j) v) slc
-    toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
+    ArraySlice.iteri (fun i j v -> write tgt i (ArraySlice.cols slc - 1 - j) v) slc
+    toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc)
 
 
 /// Write the elements of slc in reverse vertical order into
 /// target.
 let inline vrev slc (tgt : _ Target) =
-    ArraySlice.iteri (fun i j v -> write tgt (ArraySlice.length1 slc - 1 - i) j v) slc
-    toSlice tgt (ArraySlice.length1 slc) (ArraySlice.length2 slc)
+    ArraySlice.iteri (fun i j v -> write tgt (ArraySlice.rows slc - 1 - i) j v) slc
+    toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc)
 
 
 /// Write the elements of slc in transposed order into target.
 let inline transpose slc (tgt : _ Target) =
     let tgt' = { tgt with i = tgt.j; j = tgt.i } // Target must be transposed, too.
     ArraySlice.iteri (fun i j v -> write tgt' j i v) slc
-    toSlice tgt' (ArraySlice.length2 slc) (ArraySlice.length1 slc)
+    toSlice tgt' (ArraySlice.cols slc) (ArraySlice.rows slc)
 
 
 /// Read from target with its offset.

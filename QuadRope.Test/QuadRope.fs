@@ -253,26 +253,26 @@ let ``map >> reduce = mapreduce`` (a : int64 QuadRope) =
 
 
 let ``last of hscan = hreduce`` (a : int64 QuadRope) =
-    let b = QuadRope.hscan (+) (fun _ -> 0L) a
+    let b = QuadRope.hscan (+) 0L a
     let c = QuadRope.hreduce (+) 0L a
     QuadRope.equals (QuadRope.col b (QuadRope.cols b - 1)) c
 
 
 let ``last of vscan = vreduce`` (a : int64 QuadRope) =
-    let b = QuadRope.vscan (+) (fun _ -> 0L) a
+    let b = QuadRope.vscan (+) 0L a
     let c = QuadRope.vreduce (+) 0L a
     QuadRope.equals (QuadRope.row b (QuadRope.rows b - 1)) c
 
 
 let ``hscan's elements are strictly ordered`` (a : int64 QuadRope) =
     let b = QuadRope.map List.singleton a
-    let c = QuadRope.hscan (@) (fun _ -> []) b
+    let c = QuadRope.hscan (@) [] b
     c |> QuadRope.map (List.length) |> QuadRope.forallRows (<)
 
 
 let ``vscan's elements are strictly ordered`` (a : int64 QuadRope) =
     let b = QuadRope.map List.singleton a
-    let c = QuadRope.vscan (@) (fun _ -> []) b
+    let c = QuadRope.vscan (@) [] b
     c |> QuadRope.map (List.length) |> QuadRope.forallCols (<)
 
 

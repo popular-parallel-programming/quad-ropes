@@ -27,7 +27,14 @@ open QuadRope.Utils
 
 /// This is the empty slice. It does not refer to any array and you
 /// cannot retrieve any values from it.
-let emptySlice = { r = 0; c = 0; h = 0; w = 0; vals = null }
+let emptySlice =
+    { rowOff = 0;
+      colOff = 0;
+      rowStride = 1;
+      colStride = 1;
+      rows = 0;
+      cols = 0;
+      data = null }
 
 
 /// Instantiate a new array slice that allows accessing the entire
@@ -36,7 +43,13 @@ let make arr =
     if Array2DExt.isEmpty arr then
         emptySlice
     else
-        { r = 0; c = 0; h = Array2D.length1 arr; w = Array2D.length2 arr; vals = arr }
+        { rowOff = 0;
+          colOff = 0;
+          rowStride = 1;
+          colStride = 1;
+          rows = Array2D.length1 arr;
+          cols = Array2D.length2 arr;
+          data = arr }
 
 
 /// Instantiate a new array slice that allows accessing the array only
@@ -50,41 +63,26 @@ let makeSlice i j h w arr =
     then
         emptySlice
     else
-        { r = max 0 i
-          c = max 0 j
-          h = max 0 (min h (Array2D.length1 arr))
-          w = max 0 (min w (Array2D.length2 arr))
-          vals = arr }
-
-
-/// Compute a new array from a slice.
-let inline private sliceArray slc =
-    Array2DExt.slice slc.r slc.c slc.h slc.w slc.vals
-
-
-/// Compute a new array from a slice, apply function f to it and make
-/// a new array slice from the resulting array.
-let inline private apply f slc = make (f (sliceArray slc))
+        { rowOff = max 0 i;
+          colOff = max 0 j;
+          rowStride = 1;
+          colStride = 1;
+          rows = max 0 (min h (Array2D.length1 arr));
+          cols = max 0 (min w (Array2D.length2 arr));
+          data = arr }
 
 
 /// The height of an array slice.
-let inline length1 slc = slc.h
-let inline rows slc = slc.h
+let inline rows slc = slc.rows
 
 
 /// The width of an array slice.
-let inline length2 slc = slc.w
-let inline cols slc = slc.w
+let inline cols slc = slc.cols
 
 
-// Handy for iterating.
-let inline minr slc = slc.r
-let inline maxr slc = slc.r + slc.h - 1
-let inline minc slc = slc.c
-let inline maxc slc = slc.c + slc.w - 1
-
-
-let inline fastGet slc i j = slc.vals.[slc.r + i, slc.c + j]
+let inline fastGet slc i j =
+    slc.data.[slc.rowOff + i * slc.rowStride,
+              slc.colOff + j * slc.colStride]
 
 
 /// Return the value are i, j.
@@ -99,9 +97,9 @@ let get slc i j =
 /// Copy the underlying array, set the value at i, j to v and return a
 /// new array slice from the copy.
 let set slc i j v =
-    let vals = slc.vals.[minr slc .. maxr slc, minc slc .. maxc slc]
-    vals.[i, j] <- v
-    make vals
+    let data = Array2D.init slc.rows slc.cols (fastGet slc)
+    data.[i, j] <- v
+    make data
 
 
 /// Slice up an array slice. This is a constant time operation and no
@@ -109,14 +107,20 @@ let set slc i j v =
 let slice i j h w slc =
     if i <= 0 && j <= 0 && rows slc <= h && cols slc <= w then
         slc
-    else if slc.h < i || slc.w < j || h < 0 || w < 0 then
+    else if slc.rowOff < i || slc.colOff < j || h < 0 || w < 0 then
         emptySlice
     else
         let i = max 0 i
         let j = max 0 j
         let h = max 0 (min (rows slc - i) h)
         let w = max 0 (min (cols slc - j) w)
-        { slc with r = minr slc + i; c = minc slc + j; h = h; w = w }
+
+        // Keep data array and stride, adjust offsets for stride to
+        // move offset in correct direction.
+        { slc with rowOff = slc.rowOff + (i * slc.rowStride);
+                   colOff = slc.colOff + (j * slc.colStride);
+                   rows = h;
+                   cols = w }
 
 
 /// Split into four slices, each differing in size by at most one row
@@ -200,62 +204,40 @@ let isEmpty slc =
 let cat1 left right =
     if cols left <> cols right then
         invalidArg "right" "length2 must be equal."
-    let vals = Array2D.zeroCreate (rows left + rows right) (cols left)
-    Array2D.blit left.vals  left.r  left.c  vals  0          0 (rows left)  (cols left)
-    Array2D.blit right.vals right.r right.c vals (rows left) 0 (rows right) (cols right)
-    make vals
+    let data = Array2D.zeroCreate (rows left + rows right) (cols left)
+    // Two for loops are faster than lambda with conditional.
+    for j in 0 .. Array2D.length2 data - 1 do
+        for i in 0 .. left.rows - 1 do
+            data.[i, j] <- fastGet left i j
+        for i in 0 .. right.rows - 1 do
+            data.[left.rows + i, j] <- fastGet right i j
+    make data
 
 
 /// Concatenate two arrays in second dimension.
 let cat2 left right =
     if rows left <> rows right then
         invalidArg "right" "length1 must be equal."
-    let vals = Array2D.zeroCreate (rows left) (cols left + cols right)
-    Array2D.blit left.vals  left.r  left.c  vals 0  0          (rows left)  (cols left)
-    Array2D.blit right.vals right.r right.c vals 0 (cols left) (rows right) (cols right)
-    make vals
+    let data = Array2D.zeroCreate (rows left) (cols left + cols right)
+    for i in 0 .. Array2D.length1 data - 1 do
+        for j in 0 .. left.cols - 1 do
+            data.[i, j] <- fastGet left i j
+        for j in 0 .. right.cols - 1 do
+            data.[i, left.cols + j] <- fastGet right i j
+    make data
 
 
 /// Revert an array slice in first dimension.
-let rev1 slice =
-    apply Array2DExt.rev1 slice
+let hrev slc =
+    { slc with rowOff = slc.rowOff + slc.rowStride * (slc.rows - 1);
+               rowStride = -slc.rowStride }
+
 
 
 /// Revert an array slice in second dimension.
-let rev2 slice =
-    apply Array2DExt.rev2 slice
-
-
-/// Fold each column of an array slice, calling state with each column
-/// to get the corresponding state.
-let fold1 f state slc =
-    make (Array2D.init 1 slc.w
-                       (fun _ y ->
-                        let mutable acc = state y
-                        for x in slc.r .. slc.r + slc.h - 1 do
-                            acc <- f acc slc.vals.[x, slc.c + y]
-                        acc))
-
-
-/// Fold each row of an array slice, calling state with each row to
-/// get the corresponding state.
-let fold2 f state slc =
-    make (Array2D.init slc.h 1
-                       (fun x _ ->
-                        let mutable acc = state x
-                        for y in slc.c .. slc.c + slc.w - 1 do
-                            acc <- f acc slc.vals.[slc.r + x, y]
-                        acc))
-
-
-/// Compute the column-wise prefix sum for f.
-let scan1 f state slice =
-    apply (Array2DExt.scan1 f state) slice
-
-
-/// Compute the row-wise prefix sum for f.
-let scan2 f state slice =
-    apply (Array2DExt.scan2 f state) slice
+let vrev slc =
+    { slc with colOff = slc.colOff + slc.colStride * (slc.cols - 1);
+               colStride = -slc.colStride }
 
 
 /// Map a function f to all values in the array and combine the
@@ -272,29 +254,13 @@ let mapreduce f g epsilon slc =
 let reduce f arr = mapreduce id f arr
 
 
-let sort1 p slice =
-    apply (Array2DExt.sort1 p) slice
-
-
-let sort2 p slice =
-    apply (Array2DExt.sort2 p) slice
-
-
 /// Initialize a 2D array with all zeros.
 let initZeros h w =
     make (Array2DExt.initZeros h w)
 
 
 let transpose slc =
-    make (Array2D.init slc.w slc.h (fun i j -> fastGet slc j i))
-
-
-let filter1 p slice =
-    apply (Array2DExt.filter1 p) slice
-
-
-let filter2 p slice =
-    apply (Array2DExt.filter2 p) slice
+    make (Array2D.init slc.cols slc.rows (fun i j -> fastGet slc j i))
 
 
 /// Iterate over all elements in row-first order.
@@ -334,9 +300,9 @@ let iteri2 f left right =
 
 /// Initialize a hopefully empty ArraySlice.
 let internal init slc f =
-    for i in minr slc .. maxr slc do
-        for j in minc slc .. maxc slc do
-            slc.vals.[i, j] <- Functions.invoke2 f i j
+    for i in slc.rowOff .. slc.rowStride .. slc.rowOff + slc.rows - 1 do
+        for j in slc.colOff .. slc.colStride .. slc.colOff + slc.cols - 1 do
+            slc.data.[i, j] <- Functions.invoke2 f i j
 
 
 /// Convenience function to create a new empty ArraySlice that can be

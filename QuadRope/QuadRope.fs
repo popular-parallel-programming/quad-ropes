@@ -99,7 +99,7 @@ let empty = Empty
 
 /// Construct a Leaf if slc is non-empty. Otherwise, return Empty.
 let leaf slc =
-    if ArraySlice.length1 slc = 0 || ArraySlice.length2 slc = 0 then
+    if ArraySlice.rows slc = 0 || ArraySlice.rows slc = 0 then
         Empty
     else
         Leaf slc
@@ -799,43 +799,6 @@ let vmapreduce f g epsilon qr = vmap (mapreduce f g epsilon) qr
 let hreduce f epsilon qr = hmapreduce id f epsilon qr
 let vreduce f epsilon qr = vmapreduce id f epsilon qr
 
-
-/// Compute the row-wise prefix sum of the rope for f starting with
-/// states.
-let rec hscan f states = function
-    | Empty -> Empty
-    | Leaf vs -> Leaf (ArraySlice.scan2 f states vs)
-    | HCat (left = a; right = b) ->
-        let a' = hscan f states a
-        let b' = hscan f (fun i -> get a' i (cols a' - 1)) b
-        hnode a' b'
-    | VCat (left = a; right = b) ->
-        // Offset states function by rows of a; recursion does not
-        // maintain index offset.
-        vnode (hscan f states a) (hscan f (((+) (rows a)) >> states) b)
-    | Slice _ as qr -> hscan f states (materialize qr)
-    | Sparse (h, w, v) ->
-        hscan f states (init h w (fun _ _ -> v))
-
-
-/// Compute the column-wise prefix sum of the rope for f starting
-/// with states.
-let rec vscan f states = function
-    | Empty -> Empty
-    | Leaf vs -> Leaf (ArraySlice.scan1 f states vs)
-    | HCat (left = a; right = b) ->
-        // Offset states function by cols of a; recursion does not
-        // maintain index offset.
-        hnode (vscan f states a) (vscan f (((+) (cols a)) >> states) b)
-    | VCat (left = a; right = b) ->
-        let a' = vscan f states a
-        let b' = vscan f (get a' (rows a' - 1)) b
-        vnode a' b'
-    | Slice _ as qr -> vscan f states (materialize qr)
-    | Sparse (h, w, v) ->
-         vscan f states (init h w (fun _ _ -> v))
-
-
 /// Compute the generalized summed area table. All rows and columns
 /// are initialized with init. Function f will be called like this:
 /// f(I(i, j - 1), I(i - 1, j - 1), I(i - 1, j), I(i,j))
@@ -883,6 +846,16 @@ let scan f init qr =
 /// inverse. Internally, this also calls scan.
 let sumAreaTable (+) (-) =
     scan (fun row diag col s -> s + row + col - diag)
+
+
+/// Row-wise scan for binary functions.
+let hscan f epsilon =
+    hmap (scan (fun r _ _ x -> f r x) epsilon) >> reduce vcat Empty
+
+
+/// Col-wise scan for binary functions.
+let vscan f epsilon =
+    vmap (scan (fun _ _ c x -> f c x) epsilon) >> reduce hcat Empty
 
 
 /// Checks that some relation p holds between each two adjacent

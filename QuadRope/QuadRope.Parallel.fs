@@ -523,6 +523,16 @@ let scan f init qr =
     scan f qr tgt
 
 
+/// Row-wise scan for binary functions.
+let hscan f epsilon =
+    hmap (scan (fun r _ _ x -> f r x) epsilon) >> reduce QuadRope.vcat Empty
+
+
+/// Col-wise scan for binary functions.
+let vscan f epsilon =
+    vmap (scan (fun _ _ c x -> f c x) epsilon) >> reduce QuadRope.hcat Empty
+
+
 /// Compare two quad ropes element wise and return true if they are
 /// equal. False otherwise.
 let equals qr0 qr1 =

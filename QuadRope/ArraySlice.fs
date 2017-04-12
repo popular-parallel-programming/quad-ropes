@@ -105,22 +105,17 @@ let set slc i j v =
 /// Slice up an array slice. This is a constant time operation and no
 /// arrays are re-allocated.
 let slice i j h w slc =
-    if i <= 0 && j <= 0 && rows slc <= h && cols slc <= w then
-        slc
-    else if slc.rowOff < i || slc.colOff < j || h < 0 || w < 0 then
-        emptySlice
-    else
-        let i = max 0 i
-        let j = max 0 j
-        let h = max 0 (min (rows slc - i) h)
-        let w = max 0 (min (cols slc - j) w)
+    let rowOff = max 0 i
+    let colOff = max 0 j
+    let rows = max 0 (min (rows slc - rowOff) h)
+    let cols = max 0 (min (cols slc - colOff) w)
 
-        // Keep data array and stride, adjust offsets for stride to
-        // move offset in correct direction.
-        { slc with rowOff = slc.rowOff + (i * slc.rowStride);
-                   colOff = slc.colOff + (j * slc.colStride);
-                   rows = h;
-                   cols = w }
+    // Keep data array and stride, adjust offsets for stride to
+    // move offset in correct direction.
+    { slc with rowOff = slc.rowOff + (rowOff * slc.rowStride);
+               colOff = slc.colOff + (colOff * slc.colStride);
+               rows = rows;
+               cols = cols }
 
 
 /// Split into four slices, each differing in size by at most one row

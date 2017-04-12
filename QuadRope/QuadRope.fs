@@ -462,31 +462,42 @@ let hcat a b = balance (hcatnb a b)
 
 
 /// Reverse rope horizontally.
-let rec hrev qr =
-    match qr with
-        | Leaf slc ->
-            leaf (ArraySlice.hrev slc)
-        | HCat (_, _, _, _, a, b) ->
-            hnode (hrev b) (hrev a)
-        | VCat (_, _, _, _, a, b) ->
-            vnode (hrev a) (hrev b)
-        | Slice _ ->
-            hrev (materialize qr)
-        | _ -> qr
+let rec hrev = function
+    | Leaf slc ->
+        leaf (ArraySlice.hrev slc)
+    | HCat (_, _, _, _, a, b) ->
+        hnode (hrev b) (hrev a)
+    | VCat (_, _, _, _, a, b) ->
+        vnode (hrev a) (hrev b)
+    | Slice _ as qr->
+        hrev (materialize qr)
+    | qr -> qr
 
 
 /// Reverse rope vertically.
-let rec vrev qr =
-    match qr with
-        | Leaf slc ->
-            leaf (ArraySlice.vrev slc)
-        | HCat (_, _, _, _, a, b) ->
-            hnode (vrev a) (vrev b)
-        | VCat (_, _, _, _, a, b) ->
-            vnode (vrev b) (vrev a)
-        | Slice _ ->
-            vrev (materialize qr)
-        | _ -> qr
+let rec vrev = function
+    | Leaf slc ->
+        leaf (ArraySlice.vrev slc)
+    | HCat (_, _, _, _, a, b) ->
+        hnode (vrev a) (vrev b)
+    | VCat (_, _, _, _, a, b) ->
+        vnode (vrev b) (vrev a)
+    | Slice _ as qr ->
+        vrev (materialize qr)
+    | qr -> qr
+
+
+/// Reverse rope in both dimensions.
+let rec rev = function
+    | Leaf slc ->
+        leaf (ArraySlice.vrev (ArraySlice.hrev slc))
+    | HCat (_, _, _, _, a, b) ->
+        hnode (rev b) (rev a)
+    | VCat (_, _, _, _, a, b) ->
+        vnode (rev b) (rev a)
+    | Slice _ as qr ->
+        rev (materialize qr)
+    | qr -> qr
 
 
 /// Create a quad rope from an array slice instance.
@@ -844,14 +855,13 @@ let sumAreaTable (+) (-) =
     scan (fun row diag col s -> s + row + col - diag)
 
 
-/// Row-wise scan for binary functions.
-let hscan f epsilon =
-    hmap (scan (fun r _ _ x -> f r x) epsilon) >> reduce vcat Empty
+let hscan f epsilon = hmap (scan (fun r _ _ x -> f r x) epsilon) >> reduce vcat Empty
+let vscan f epsilon = vmap (scan (fun _ _ c x -> f c x) epsilon) >> reduce hcat Empty
 
 
-/// Col-wise scan for binary functions.
-let vscan f epsilon =
-    vmap (scan (fun _ _ c x -> f c x) epsilon) >> reduce hcat Empty
+let scanBack  f epsilon qr = rev (scan f epsilon (rev qr))
+let hscanBack f epsilon qr = hrev (hscan f epsilon (hrev qr))
+let vscanBack f epsilon qr = vrev (vscan f epsilon (vrev qr))
 
 
 /// Checks that some relation p holds between each two adjacent

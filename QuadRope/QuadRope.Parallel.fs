@@ -278,50 +278,6 @@ let forall p qr = mapreduce p (&&) true qr
 let exists p qr = mapreduce p (||) false qr
 
 
-/// Reverse the quad rope horizontally in parallel.
-let hrev qr =
-    let rec hrev qr tgt =
-        match qr with
-            | Leaf slc ->
-                leaf (Target.hrev slc tgt)
-            | HCat (left = a; right = b) ->
-                par2AndThen (fun () -> hrev b (Target.incrementCol tgt (cols a)))
-                            (fun () -> hrev a tgt)
-                            hnode
-
-            | VCat (left = a; right = b) ->
-                par2AndThen (fun () -> hrev a tgt)
-                            (fun () -> hrev b (Target.incrementRow tgt (rows a)))
-                            vnode
-
-            | Slice _ ->
-                hrev (QuadRope.materialize qr) tgt
-            | _ -> qr
-    hrev qr (Target.make (rows qr) (cols qr))
-
-
-/// Reverse the quad rope vertically in parallel.
-let vrev qr =
-    let rec vrev qr tgt =
-        match qr with
-            | Leaf slc ->
-                leaf (Target.vrev slc tgt)
-            | HCat (left = a; right = b) ->
-                par2AndThen (fun () -> vrev a tgt)
-                            (fun () -> vrev b (Target.incrementCol tgt (cols a)))
-                            hnode
-
-            | VCat (left = a; right = b) ->
-                par2AndThen (fun () -> vrev b (Target.incrementRow tgt (rows a)))
-                            (fun () -> vrev a tgt)
-                            vnode
-
-            | Slice _ ->
-                vrev (QuadRope.materialize qr) tgt
-            | _ -> qr
-    vrev qr (Target.make (rows qr) (cols qr))
-
-
 /// Transpose the quad rope in parallel. This is equal to swapping
 /// indices, such that get rope i j = get rope j i.
 let transpose qr =

@@ -122,17 +122,9 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
     member this.ReverseRows() =
         new QuadRope<_>(QuadRope.vrev this.qr)
 
-    /// Reverse the row order in parallel.
-    member this.ReverseRowsPar() =
-        new QuadRope<_>(Parallel.QuadRope.vrev this.qr)
-
     /// Reverse the column order.
     member this.ReverseCols() =
         new QuadRope<_>(QuadRope.hrev this.qr)
-
-    /// Reverse the column order in parallel.
-    member this.ReverseColsPar() =
-        new QuadRope<_>(Parallel.QuadRope.hrev this.qr)
 
     /// Transpose the quad rope.
     member this.Transpose() =

@@ -37,6 +37,11 @@ module Common =
             | 3 -> 1     // Live on or be born.
             | _ -> 0     // All other cases involve death.
 
+
+    /// Revert a quad rope in both directions.
+    let rev = QuadRope.hrev >> QuadRope.vrev
+
+
 open Common
 
 module QuadRope =
@@ -50,10 +55,7 @@ module QuadRope =
         let map = QuadRope.map
         let zip = QuadRope.zip
         let scan = QuadRope.scan
-        let hrev = QuadRope.hrev
-        let vrev = QuadRope.vrev
 
-        let private rev = hrev >> vrev
 
         /// Conway's Game of Life, using 2D-scan, reversal and zip.
         let rec internal gameOfLife n world =
@@ -72,10 +74,6 @@ module QuadRope =
         let map = Parallel.QuadRope.map
         let zip = Parallel.QuadRope.zip
         let scan = Parallel.QuadRope.scan
-        let hrev = Parallel.QuadRope.hrev
-        let vrev = Parallel.QuadRope.vrev
-
-        let private rev = hrev >> vrev
 
         /// Conway's Game of Life, using 2D-scan, reversal and zip.
         let rec internal gameOfLife n world =

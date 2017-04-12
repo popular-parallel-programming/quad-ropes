@@ -52,14 +52,6 @@ let ``parallel map equal to sequential`` (a : int64 QuadRope) =
     QuadRope.equals (QuadRope.map sqr a) (Parallel.QuadRope.map sqr a)
 
 
-let ``parallel hrev equal to sequential`` (a : int64 QuadRope) =
-    QuadRope.equals (QuadRope.hrev a) (Parallel.QuadRope.hrev a)
-
-
-let ``parallel vrev equal to sequential`` (a : int64 QuadRope) =
-    QuadRope.equals (QuadRope.vrev a) (Parallel.QuadRope.vrev a)
-
-
 let ``parallel transpose equal to sequential`` (a : int64 QuadRope) =
     QuadRope.equals (QuadRope.transpose a) (Parallel.QuadRope.transpose a)
 

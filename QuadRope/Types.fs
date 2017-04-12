@@ -25,17 +25,21 @@ module QuadRope.Types
 /// column-offset. Members h and w are height and width of the
 /// view. Member vals is the original array.
 type 'a ArraySlice when 'a : equality =
-    #if DEBUG
-    #else
-    internal
-    #endif
-    { rowOff : int; // Offset in the data array.
-      colOff : int;
-      rowStride : int; // Stride direction; could be different than 1 and -1.
-      colStride : int
-      rows : int; // Size of the array.
-      cols : int;
-      data : 'a [,] } // Data array.
+    internal { rowOff : int; // Offset in the data array.
+               colOff : int;
+               rowStride : int; // Stride direction; could be different than 1 and -1.
+               colStride : int
+               rows : int; // Size of the array.
+               cols : int;
+               data : 'a [,] } // Data array.
+
+    override slc.ToString() =
+        Array2D.init slc.rows
+                     slc.cols
+                     (fun i j -> slc.data.[slc.rowOff + i * slc.rowStride,
+                                           slc.colOff + j * slc.colStride])
+        |> sprintf "%A"
+
 
 
 /// The quad rope type. A quad rope is either empty, a leaf containing
@@ -43,10 +47,7 @@ type 'a ArraySlice when 'a : equality =
 /// horizontal or vertical direction.
 [<CompilationRepresentation(CompilationRepresentationFlags.UseNullAsTrueValue)>]
 type 'a QuadRope when 'a : equality =
-    #if DEBUG
-    #else
     internal
-    #endif
     | Empty
     | Leaf of vs      : 'a ArraySlice
 
@@ -73,3 +74,19 @@ type 'a QuadRope when 'a : equality =
     | Sparse of rows  : int
               * cols  : int
               * v     : 'a
+
+
+    override qr.ToString() =
+        match qr with
+            | Empty ->
+                "QuadRope.Empty"
+            | Leaf slc ->
+                sprintf "QuadRope.Leaf (%A)" (slc.ToString())
+            | HCat (_, _, _, _, a, b) ->
+                sprintf "QuadRope.HCat (%A,\n\t%A)" a b
+            | VCat (_, _, _, _, a, b) ->
+                sprintf "QuadRope.VCat (%A,\n\t%A)" a b
+            | Slice (r, c, m, n, q) ->
+                sprintf "QuadRope.Slice (r=%d, c=%d, m=%d, n=%d,\n\t%A" r c m n q
+            | Sparse (m, n, v) ->
+                sprintf "QuadRope.Sparse (m=%d, n=%d, %A)" m n v

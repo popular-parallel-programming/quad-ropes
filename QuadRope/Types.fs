@@ -76,17 +76,40 @@ type 'a QuadRope when 'a : equality =
               * v     : 'a
 
 
+
+
     override qr.ToString() =
-        match qr with
+        let pad size = String.replicate size " "
+
+        let rec print depth = function
             | Empty ->
-                "QuadRope.Empty"
+                sprintf "%sQuadRope.Empty"
+                        (pad depth)
+
             | Leaf slc ->
-                sprintf "QuadRope.Leaf (%A)" (slc.ToString())
+                sprintf "%sQuadRope.Leaf(\n%s)"
+                        (pad depth)
+                        (slc.ToString())
+
             | HCat (_, _, _, _, a, b) ->
-                sprintf "QuadRope.HCat (%A,\n\t%A)" a b
+                sprintf "%sQuadRope.HCat(\n%s,\n%s)"
+                        (pad depth)
+                        (print (depth + 1) a)
+                        (print (depth + 1) b)
+
             | VCat (_, _, _, _, a, b) ->
-                sprintf "QuadRope.VCat (%A,\n\t%A)" a b
+                sprintf "%sQuadRope.VCat(\n%s,\n\t%s)"
+                        (pad depth)
+                        (print (depth + 1) a)
+                        (print (depth + 1) b)
+
             | Slice (r, c, m, n, q) ->
-                sprintf "QuadRope.Slice (r=%d, c=%d, m=%d, n=%d,\n\t%A" r c m n q
+                sprintf "%sQuadRope.Slice(r=%d, c=%d, m=%d, n=%d,\n\t%s)"
+                        (pad depth)
+                        r c m n (print (depth + 1) q)
+
             | Sparse (m, n, v) ->
-                sprintf "QuadRope.Sparse (m=%d, n=%d, %A)" m n v
+                sprintf "%sQuadRope.Sparse(m=%d, n=%d, %s)"
+                        (pad depth) m n (v.ToString())
+
+        print 0 qr

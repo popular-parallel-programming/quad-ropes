@@ -46,36 +46,36 @@ let private smax = QuadRope.smax
 /// Generate a new quad rope in parallel.
 let init h w (f : int -> int -> _) =
     /// Build nodes by splitting underlying slices horizontally.
-    let rec hsplit f slc =
+    let rec hsplit i j f slc =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
         else if ArraySlice.cols slc <= smax && ArraySlice.rows slc <= smax then
-            ArraySlice.init slc f // Write into shared array.
+            ArraySlice.fill slc (fun x y -> f (x + i) (y + j)) // Write into shared array.
             leaf slc
         else if ArraySlice.cols slc <= smax then
-            vsplit f slc
+            vsplit i j f slc
         else
-            par2AndThen (fun () -> vsplit f (ArraySlice.leftHalf slc))
-                        (fun () -> vsplit f (ArraySlice.rightHalf slc))
+            let left, right = ArraySlice.hsplit2 slc
+            par2AndThen (fun () -> vsplit i j f left)
+                        (fun () -> vsplit i (j + ArraySlice.cols left) f right)
                         hnode
+
     /// Build nodes by splitting underlying slices vertically.
-    and vsplit f slc =
+    and vsplit i j f slc =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
         else if ArraySlice.cols slc <= smax && ArraySlice.rows slc <= smax then
-            ArraySlice.init slc f // Write into shared array.
+            ArraySlice.fill slc (fun x y -> f (x + i) (y + j)) // Write into shared array.
             leaf slc
         else if ArraySlice.rows slc <= smax then
-            hsplit f slc
+            hsplit i j f slc
         else
-            par2AndThen (fun () -> hsplit f (ArraySlice.upperHalf slc))
-                        (fun () -> hsplit f (ArraySlice.lowerHalf slc))
+            let left, right = ArraySlice.vsplit2 slc
+            par2AndThen (fun () -> hsplit i j f left)
+                        (fun () -> hsplit (i + ArraySlice.rows left) j f right)
                         vnode
 
-    // Optimizing closures makes a factor two difference in
-    // performance.
-    let f' = OptimizedClosures.FSharpFunc<_, _, _>.Adapt f
-    hsplit f' (ArraySlice.zeroCreate h w)
+    hsplit 0 0 f (ArraySlice.zeroCreate h w)
 
 
 /// Apply a function f to all scalars in parallel.
@@ -355,26 +355,7 @@ let toArray2D qr =
 
 /// Initialize a rope from a native 2D-array in parallel.
 let fromArray2D arr =
-    let rec init h0 w0 h1 w1 arr =
-        let h = h1 - h0
-        let w = w1 - w0
-        if smax < h && smax < w then
-            let hpv = h0 + (h >>> 1)
-            let wpv = w0 + (w >>> 1)
-            let ne, nw, sw, se = par4 (fun () -> init h0 wpv hpv w1 arr)
-                                      (fun () -> init h0 w0 hpv wpv arr)
-                                      (fun () -> init hpv w0 h1 wpv arr)
-                                      (fun () -> init hpv wpv h1 w1 arr)
-            hnode (vnode nw sw) (vnode ne se)
-        else if w <= QuadRope.smax && QuadRope.smax < h then
-            let hpv = h0 + (h >>> 1)
-            par2AndThen (fun () -> init h0 w0 hpv w1 arr) (fun () -> init hpv w0 h1 w1 arr) vnode
-        else if QuadRope.smax < w && h <= QuadRope.smax then
-            let wpv = w0 + (w >>> 1)
-            par2AndThen (fun () -> init h0 w0 h1 wpv arr) (fun () -> init h0 wpv h1 w1 arr) hnode
-        else
-            QuadRope.leaf (ArraySlice.makeSlice h0 w0 h w arr)
-    init 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
+    init (Array2D.length1 arr) (Array2D.length2 arr) (Array2D.get arr)
 
 
 /// Reallocate a rope form the ground up. Sometimes, this is the

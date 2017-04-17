@@ -28,25 +28,27 @@ open QuadRope.Utils
 
 /// A convenience wrapper for writing into a target array with
 /// some offset.
-type 'a Target = { i : int; j : int; vals : 'a [,] }
+type 'a Target when 'a : equality = { i : int; j : int; vals : 'a ArraySlice }
 
 
-let inline rows tgt = Array2D.length1 tgt.vals - tgt.i
-let inline cols tgt = Array2D.length2 tgt.vals - tgt.j
+let inline rows tgt = ArraySlice.rows tgt.vals - tgt.i
+let inline cols tgt = ArraySlice.cols tgt.vals - tgt.j
 
 
 /// Create a new target descriptor of size h * w.
-let inline make h w = { i = 0; j = 0; vals = Array2D.zeroCreate h w }
-let inline makeWith h w v = { i = 0; j = 0; vals = Array2D.create h w v }
+let inline make h w = { i = 0; j = 0; vals = ArraySlice.zeroCreate h w }
+
+let makeWith h w v =
+    { i = 0; j = 0; vals = ArraySlice.init h w (fun _ _ -> v)}
 
 
 /// The "empty target", a target that is not initialized.
-let empty = { i = 0; j = 0; vals = null }
+let empty = { i = 0; j = 0; vals = ArraySlice.emptySlice }
 
 
 /// True if the target is the empty target.
 let inline isEmpty tgt =
-    isNull tgt.vals
+    ArraySlice.isEmpty tgt.vals
 
 
 /// Advance the target by i and j in both dimensions.
@@ -60,9 +62,9 @@ let inline increment (tgt : _ Target) i j =
 let inline makeWithFringe h w value =
     let tgt = make (h + 1) (w + 1)
     for i in 0 .. h do
-        tgt.vals.[i, 0] <- value
+        ArraySlice.write tgt.vals i 0 value
     for j in 0 .. w do
-        tgt.vals.[0, j] <- value
+        ArraySlice.write tgt.vals 0 j value
     increment tgt 1 1
 
 
@@ -72,20 +74,20 @@ let inline incrementCol tgt j = increment tgt 0 j
 
 /// Generalized write to target.
 let inline writemap (tgt : _ Target) f r c v =
-    tgt.vals.[tgt.i + r, tgt.j + c] <- f v
+    ArraySlice.write tgt.vals (tgt.i + r) (tgt.j + c) (f v)
 
 
 let inline writemap2 (tgt : _ Target) f r c v1 v2 =
-    tgt.vals.[tgt.i + r, tgt.j + c] <- Functions.invoke2 f v1 v2
+    ArraySlice.write tgt.vals (tgt.i + r) (tgt.j + c) (Functions.invoke2 f v1 v2)
 
 
 /// Generalized write to target with index pairs.
 let inline writemapi (tgt : _ Target) f r c v =
-    tgt.vals.[tgt.i + r, tgt.j + c] <- Functions.invoke3 f r c v
+    ArraySlice.write tgt.vals (tgt.i + r) (tgt.j + c) (Functions.invoke3 f r c v)
 
 
 let inline writemapi2 (tgt : _ Target) f r c v1 v2 =
-    tgt.vals.[tgt.i + r, tgt.j + c] <- Functions.invoke4 f r c v1 v2
+    ArraySlice.write tgt.vals (tgt.i + r) (tgt.j + c) (Functions.invoke4 f r c v1 v2)
 
 
 /// Simplified write to target.
@@ -97,12 +99,12 @@ let inline write (tgt : _ Target) r c v =
 let inline fill (tgt : _ Target) h w v =
     for r in tgt.i .. tgt.i + h - 1 do
         for c in tgt.j .. tgt.j + w - 1 do
-            tgt.vals.[r, c] <- v
+            ArraySlice.write tgt.vals r c v
 
 
 /// Build a leaf node from a target for a given height and width.
 let inline toSlice (tgt : _ Target) h w =
-    ArraySlice.makeSlice tgt.i tgt.j h w tgt.vals
+    ArraySlice.slice tgt.i tgt.j h w tgt.vals
 
 
 /// Map a function to the values of a leaf and return a new leaf
@@ -155,7 +157,7 @@ let inline transpose slc (tgt : _ Target) =
 
 /// Read from target with its offset.
 let inline get (tgt : _ Target) i j =
-    tgt.vals.[tgt.i + i, tgt.j + j]
+    ArraySlice.get tgt.vals (tgt.i + i) (tgt.j + j)
 
 
 /// Generalized two-dimensional scan using a function f and a function

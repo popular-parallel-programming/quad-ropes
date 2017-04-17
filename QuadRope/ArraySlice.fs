@@ -28,10 +28,9 @@ open QuadRope.Utils
 /// This is the empty slice. It does not refer to any array and you
 /// cannot retrieve any values from it.
 let emptySlice =
-    { rowOff = 0;
-      colOff = 0;
-      rowStride = 1;
-      colStride = 1;
+    { offset = 0;
+      rowStride = 0;
+      colStride = 0;
       rows = 0;
       cols = 0;
       data = null }
@@ -39,36 +38,15 @@ let emptySlice =
 
 /// Instantiate a new array slice that allows accessing the entire
 /// array.
-let make arr =
-    if Array2DExt.isEmpty arr then
+let make rows cols arr =
+    if Array.isEmpty arr then
         emptySlice
     else
-        { rowOff = 0;
-          colOff = 0;
-          rowStride = 1;
+        { offset = 0;
+          rowStride = cols;
           colStride = 1;
-          rows = Array2D.length1 arr;
-          cols = Array2D.length2 arr;
-          data = arr }
-
-
-/// Instantiate a new array slice that allows accessing the array only
-/// in the specified area.
-let makeSlice i j h w arr =
-    let i' = max 0 i
-    let j' = max 0 j
-    if (Array2DExt.isEmpty arr
-        || h <= 0 || w <= 0
-        || Array2D.length1 arr <= i' || Array2D.length2 arr <= j')
-    then
-        emptySlice
-    else
-        { rowOff = max 0 i;
-          colOff = max 0 j;
-          rowStride = 1;
-          colStride = 1;
-          rows = max 0 (min h (Array2D.length1 arr));
-          cols = max 0 (min w (Array2D.length2 arr));
+          rows = rows
+          cols = cols
           data = arr }
 
 
@@ -80,9 +58,12 @@ let inline rows slc = slc.rows
 let inline cols slc = slc.cols
 
 
+let inline idx slc i j =
+    slc.offset + i * slc.rowStride + j * slc.colStride
+
+
 let inline fastGet slc i j =
-    slc.data.[slc.rowOff + i * slc.rowStride,
-              slc.colOff + j * slc.colStride]
+    slc.data.[idx slc i j]
 
 
 /// Return the value are i, j.
@@ -92,14 +73,6 @@ let get slc i j =
     if (cols slc) <= j then
         invalidArg "j" "May not access array slice outside of specified bounds."
     fastGet slc i j
-
-
-/// Copy the underlying array, set the value at i, j to v and return a
-/// new array slice from the copy.
-let set slc i j v =
-    let data = Array2D.init slc.rows slc.cols (fastGet slc)
-    data.[i, j] <- v
-    make data
 
 
 /// Slice up an array slice. This is a constant time operation and no
@@ -112,8 +85,7 @@ let slice i j h w slc =
 
     // Keep data array and stride, adjust offsets for stride to
     // move offset in correct direction.
-    { slc with rowOff = slc.rowOff + (rowOff * slc.rowStride);
-               colOff = slc.colOff + (colOff * slc.colStride);
+    { slc with offset = slc.offset + (rowOff * slc.rowStride) + (colOff * slc.colStride);
                rows = rows;
                cols = cols }
 
@@ -182,7 +154,7 @@ let inline se slc =
 
 /// Produce a singleton array slice.
 let singleton v =
-    make (Array2DExt.singleton v)
+    make 1 1 [| v |]
 
 
 /// True if array slice contains only a single element.
@@ -195,43 +167,15 @@ let isEmpty slc =
     rows slc <= 0 || cols slc <= 0
 
 
-/// Concatenate two array slices in first dimension.
-let vcat left right =
-    if cols left <> cols right then
-        invalidArg "right" "length2 must be equal."
-    let data = Array2D.zeroCreate (rows left + rows right) (cols left)
-    // Two for loops are faster than lambda with conditional.
-    for j in 0 .. Array2D.length2 data - 1 do
-        for i in 0 .. left.rows - 1 do
-            data.[i, j] <- fastGet left i j
-        for i in 0 .. right.rows - 1 do
-            data.[left.rows + i, j] <- fastGet right i j
-    make data
-
-
-/// Concatenate two arrays in second dimension.
-let hcat left right =
-    if rows left <> rows right then
-        invalidArg "right" "length1 must be equal."
-    let data = Array2D.zeroCreate (rows left) (cols left + cols right)
-    for i in 0 .. Array2D.length1 data - 1 do
-        for j in 0 .. left.cols - 1 do
-            data.[i, j] <- fastGet left i j
-        for j in 0 .. right.cols - 1 do
-            data.[i, left.cols + j] <- fastGet right i j
-    make data
-
-
 /// Revert an array slice in first dimension.
 let vrev slc =
-    { slc with rowOff = slc.rowOff + slc.rowStride * (slc.rows - 1);
-               rowStride = -slc.rowStride }
-
+    { slc with offset = slc.offset + slc.rowStride * (slc.rows - 1);
+               rowStride = -slc.rowStride; }
 
 
 /// Revert an array slice in second dimension.
 let hrev slc =
-    { slc with colOff = slc.colOff + slc.colStride * (slc.cols - 1);
+    { slc with offset = slc.offset + slc.colStride * (slc.cols - 1);
                colStride = -slc.colStride }
 
 
@@ -249,13 +193,11 @@ let mapreduce f g epsilon slc =
 let reduce f arr = mapreduce id f arr
 
 
-/// Initialize a 2D array with all zeros.
-let initZeros h w =
-    make (Array2DExt.initZeros h w)
-
-
 let transpose slc =
-    make (Array2D.init slc.cols slc.rows (fun i j -> fastGet slc j i))
+    { slc with rowStride = slc.rowStride;
+               colStride = slc.colStride;
+               rows = slc.cols;
+               cols = slc.rows; }
 
 
 /// Iterate over all elements in row-first order.
@@ -293,14 +235,67 @@ let iteri2 f left right =
     iteriOpt2 (Functions.adapt4 f) left right
 
 
-/// Initialize a hopefully empty ArraySlice.
-let internal init slc f =
-    for i in slc.rowOff .. slc.rowStride .. slc.rowOff + slc.rows - 1 do
-        for j in slc.colOff .. slc.colStride .. slc.colOff + slc.cols - 1 do
-            slc.data.[i, j] <- Functions.invoke2 f i j
+/// Just write imperatively.
+let write slc i j v =
+    slc.data.[idx slc i j] <- v
 
+
+/// Same as fill but for optimized closures.
+let internal fillOpt slc f =
+    for i in 0 .. slc.rows - 1 do
+        for j in 0 .. slc.cols - 1 do
+            write slc i j (Functions.invoke2 f i j)
+
+
+/// Initialize a hopefully empty ArraySlice.
+let internal fill slc f =
+    fillOpt slc (Functions.adapt2 f)
+
+
+let internal fillOffset slc i j f =
+    fill slc (fun x y -> f (i + x) (j + y))
 
 /// Convenience function to create a new empty ArraySlice that can be
 /// initialized using init.
 let internal zeroCreate h w =
-    make (Array2D.zeroCreate h w)
+    make h w (Array.zeroCreate (h * w))
+
+
+let internal init h w f =
+    let slc = zeroCreate h w
+    fill slc f;
+    slc
+
+
+/// Copy the underlying array, set the value at i, j to v and return a
+/// new array slice from the copy.
+let set slc i j v =
+    let slc' = zeroCreate slc.rows slc.cols
+    slc'.data.[idx slc' i j] <- v;
+    slc'
+
+
+let fromArray2D arr =
+    let slc = zeroCreate (Array2D.length1 arr) (Array2D.length2 arr)
+    Array2D.iteri (write slc) arr;
+    slc
+
+
+/// Concatenate two array slices in first dimension.
+let vcat left right =
+    if cols left <> cols right then
+        invalidArg "right" "length2 must be equal."
+    let slc = zeroCreate (rows left + rows right) (cols left)
+    iteri (write slc) left;
+    iteri (fun i j v -> write slc (i + rows left) j v) right;
+    slc
+
+
+/// Concatenate two arrays in second dimension.
+let hcat left right =
+    if rows left <> rows right then
+        invalidArg "right" "length1 must be equal."
+    let slc = zeroCreate (rows left) (cols left + cols right)
+    iteri (write slc) left;
+    iteri (fun i j v -> write slc i (j + cols left) v) right;
+    slc

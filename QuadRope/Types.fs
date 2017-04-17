@@ -25,19 +25,17 @@ module QuadRope.Types
 /// column-offset. Members h and w are height and width of the
 /// view. Member vals is the original array.
 type 'a ArraySlice when 'a : equality =
-    internal { rowOff : int; // Offset in the data array.
-               colOff : int;
-               rowStride : int; // Stride direction; could be different than 1 and -1.
+    internal { offset : int;
+               rowStride : int; // Stride direction; could be other than 1 and -1.
                colStride : int
                rows : int; // Size of the array.
                cols : int;
-               data : 'a [,] } // Data array.
+               data : 'a [] } // Data array.
 
     override slc.ToString() =
         Array2D.init slc.rows
                      slc.cols
-                     (fun i j -> slc.data.[slc.rowOff + i * slc.rowStride,
-                                           slc.colOff + j * slc.colStride])
+                     (fun i j -> slc.data.[slc.offset + i * slc.rowStride + j * slc.colStride])
         |> sprintf "%A"
 
 

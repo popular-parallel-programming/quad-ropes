@@ -305,9 +305,9 @@ let set root i j v =
 
             // Initialize and set.
             | Sparse (h, w, v') ->
-                let vals = Array2D.create h w v'
-                vals.[i, j] <- v
-                leaf (ArraySlice.make vals)
+                let slc = ArraySlice.init h w (fun _ _ -> v')
+                ArraySlice.write slc i j v
+                leaf slc
 
     checkBounds root i j
     set root i j v
@@ -529,7 +529,7 @@ let internal fromArraySlice slc =
 
 /// Initialize a rope from a native 2D-array.
 let fromArray2D arr =
-    fromArraySlice (ArraySlice.make arr)
+    fromArraySlice (ArraySlice.fromArray2D arr)
 
 
 /// Generate a new tree without any intermediate values.
@@ -537,7 +537,7 @@ let init h w f =
     if h <= 0 || w <= 0 then
         Empty
     else
-        fromArray2D (Array2D.init h w f)
+        fromArraySlice (ArraySlice.init h w f)
 
 
 /// Generate a singleton quad rope.

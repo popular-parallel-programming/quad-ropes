@@ -30,33 +30,45 @@ module Gen =
     let size = Gen.choose (1, maxSize)
 
 
+    /// Construct a quad rope of size h * w that is either of
+    /// arbitrary integers of a sparse quad rope of 0s or 1s.
     let genRopeOf h w =
         Gen.oneof [ Gen.map QuadRope.fromArray2D (Gen.array2DOfDim (h, w) Arb.generate<int>)
                     Gen.constant (QuadRope.create h w 0)
                     Gen.constant (QuadRope.create h w 1) ]
 
 
+    /// Generate an arbitrary quad rope of max size * size elements.
     let genRope =
         gen { let! h = size
               let! w = size
               return! genRopeOf h w }
 
 
-    let genRevRope =
-        Gen.oneof [ genRope
-                    Gen.map QuadRope.hrev genRope
-                    Gen.map QuadRope.vrev genRope
-                    Gen.map (QuadRope.hrev >> QuadRope.vrev) genRope
-                    Gen.map (QuadRope.vrev >> QuadRope.hrev) genRope ]
+    /// Generate a transformation (e.g. hrev, vrev or transpose) that
+    /// can directly be applied to a quad rope to modify its shape.
+    let genTransform : Gen<_ QuadRope -> _ QuadRope> =
+        Gen.oneof [ Gen.constant QuadRope.hrev
+                    Gen.constant QuadRope.vrev
+                    Gen.constant QuadRope.transpose ]
 
 
+    /// Generate a quad rope that has possibly been transformed by
+    /// reversal or similar.
+    let genTransRope =
+        gen { let! trans = Gen.listOf genTransform |> Gen.map (List.fold (>>) id)
+              let! qr = genRope
+              return trans qr }
+
+
+    /// Generate a possibly sliced quad rope.
     let genSliceRope =
-        Gen.oneof [ genRevRope
+        Gen.oneof [ genTransRope
                     gen { let! i = size
                           let! j = size
                           let! h = size
                           let! w = size
-                          let! qr = genRevRope
+                          let! qr = genTransRope
                           return QuadRope.slice i j h w qr } ]
 
 
@@ -69,12 +81,16 @@ module Gen =
     let canVCat = canCat QuadRope.cols QuadRope.rows
 
 
+    /// Generate concatenated quad ropes. This is interesting, because
+    /// somehow transformed quad ropes combined together result in
+    /// more complicated internal structures.
     let genCatRope =
-        Gen.oneof [ genRevRope
-                    Gen.map ((<||) QuadRope.hcat) (Gen.where canHCat (Gen.two genRevRope))
-                    Gen.map ((<||) QuadRope.vcat) (Gen.where canVCat (Gen.two genRevRope)) ]
+        Gen.oneof [ genSliceRope
+                    Gen.map ((<||) QuadRope.hcat) (Gen.where canHCat (Gen.two genSliceRope))
+                    Gen.map ((<||) QuadRope.vcat) (Gen.where canVCat (Gen.two genSliceRope)) ]
 
 
+    /// Deconstruct a quad rope if it consists of concatenation nodes.
     let shrink qr =
         let a = QuadRope.leftBranch qr
         let b = QuadRope.rightBranch qr

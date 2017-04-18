@@ -44,7 +44,7 @@ module QuadRope =
         if pc < QuadRope.rows ns then
             enumerate p (c + 1) (QuadRope.set ns pc 0 0)
         else
-                ns
+            ns
 
 
     /// The sieve of Erastothenes

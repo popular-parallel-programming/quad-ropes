@@ -545,10 +545,13 @@ let isSingleton qr =
 
 /// Initialize a rope from a native array for a given width.
 let fromArray vs w =
-    if Array.length vs % w <> 0 then
+    if w = 0 then
+        empty
+    else if Array.length vs % w <> 0 then
         invalidArg "w" "Must be evenly divisible by array length."
-    let h = Array.length vs / w
-    init h w (fun i j -> vs.[i * w + j])
+    else
+        let h = Array.length vs / w
+        init h w (fun i j -> vs.[i * w + j])
 
 
 /// Apply a function with side effects to all elements of the rope.

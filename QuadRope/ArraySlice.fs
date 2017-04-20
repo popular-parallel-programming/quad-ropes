@@ -25,6 +25,9 @@ open QuadRope
 open QuadRope.Types
 open QuadRope.Utils
 
+// The code in this module is based on
+// http://archive.vector.org.uk/art10501160.
+
 /// This is the empty slice. It does not refer to any array and you
 /// cannot retrieve any values from it.
 let emptySlice =
@@ -58,15 +61,18 @@ let inline rows slc = slc.rows
 let inline cols slc = slc.cols
 
 
+/// Compute the one-dimensional index for a given index pair.
 let inline idx slc i j =
     slc.offset + i * slc.rowStride + j * slc.colStride
 
 
+/// Return the value that is logically placed at i, j without
+/// performing bounds check.
 let inline fastGet slc i j =
     slc.data.[idx slc i j]
 
 
-/// Return the value are i, j.
+/// Return the value at i, j.
 let get slc i j =
     if (rows slc) <= i then
         invalidArg "i" "May not access array slice outside of specified bounds."

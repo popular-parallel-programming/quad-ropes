@@ -21,6 +21,10 @@
 
 module QuadRope.Types
 
+open System.Threading.Tasks
+
+
+
 /// A simple view on 2D arrays. Members r and c are row- and
 /// column-offset. Members h and w are height and width of the
 /// view. Member vals is the original array.
@@ -36,6 +40,10 @@ type 'a QuadRope when 'a : equality =
     internal
     | Empty
     | Leaf of vs      : 'a ArraySlice
+
+    | Soon of rows : int
+            * cols : int
+            * t    : 'a ArraySlice Task
 
     | HCat of sparse  : bool
             * depth   : int

@@ -24,28 +24,12 @@ module QuadRope.Utils
 module Tasks =
     open System.Threading.Tasks
 
-    let inline private task (f : unit -> 'a) =
+    let inline task (f : unit -> 'a) =
         Task<'a>.Factory.StartNew(System.Func<'a>(f))
 
 
-    let inline private result (t : _ Task) =
-        t.Result
-
-
-    let inline private await  (t0 : _ Task) =
-        Task.WaitAll(t0)
-
-
-    let inline private await2 (t0 : _ Task) t1 =
-        Task.WaitAll(t0, t1)
-
-
-    let inline private await3 (t0 : _ Task) t1 t2 =
-        Task.WaitAll(t0, t1, t2)
-
-
-    let inline private await4 (t0 : _ Task) t1 t2 t3 =
-        Task.WaitAll(t0, t1, t2, t3)
+    let inline result (t : _ Task) =
+        Task.WaitAll t; t.Result
 
 
     /// Eagerly execute two functions f and g in parallel. This
@@ -54,7 +38,6 @@ module Tasks =
     let inline par2AndThen f g h =
         let ft = task f
         let gres = g()
-        await ft
         h (result ft) gres
 
 
@@ -64,7 +47,6 @@ module Tasks =
     let inline par2 f g =
         let ft = task f
         let gres = g()
-        await ft
         result ft, gres
 
 
@@ -76,8 +58,12 @@ module Tasks =
         let gt = task g
         let ht = task h
         let kres = k()
-        await3 ft gt ht
         result ft, result gt, result ht, kres
+
+
+    /// Queue a continuation to execute after the completion of t.
+    let map (t : 'a Task) (f : 'a -> _) =
+        t.ContinueWith (result >> f)
 
 
     /// Get the number of maximum threads set0.

@@ -35,8 +35,28 @@ type 'a ArraySlice when 'a : equality =
 type 'a QuadRope when 'a : equality =
     internal
     | Empty
-    | Leaf of 'a ArraySlice
-    | HCat of bool * int * int * int * 'a QuadRope * 'a QuadRope // rows a = rows b
-    | VCat of bool * int * int * int * 'a QuadRope * 'a QuadRope // cols a = cols b
-    | Slice of int * int * int * int * 'a QuadRope
-    | Sparse of int * int * 'a
+    | Leaf of vs      : 'a ArraySlice
+
+    | HCat of sparse  : bool
+            * depth   : int
+            * rows    : int // rows a = rows b
+            * cols    : int
+            * left    : 'a QuadRope
+            * right   : 'a QuadRope
+
+    | VCat of sparse  : bool
+            * depth   : int
+            * rows    : int
+            * cols    : int // cols a = cols b
+            * left    : 'a QuadRope
+            * right   : 'a QuadRope
+
+    | Slice of rowOff : int
+             * colOff : int
+             * rows   : int
+             * cols   : int
+             * qr     : 'a QuadRope
+
+    | Sparse of rows  : int
+              * cols  : int
+              * v     : 'a

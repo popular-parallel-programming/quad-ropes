@@ -93,12 +93,12 @@ let map f qr =
                 leaf (Target.map f slc tgt)
 
             // Parallel recursive cases, adjust target descriptor.
-            | HCat (_, _, _, _, a, b) ->
+            | HCat (left = a; right = b) ->
                 par2AndThen (fun () -> map a tgt)
                             (fun () -> map b (Target.incrementCol tgt (cols a)))
                             hnode
 
-            | VCat (_, _, _, _, a, b) ->
+            | VCat (left = a; right = b) ->
                 par2AndThen (fun () -> map a tgt)
                             (fun () -> map b (Target.incrementRow tgt (rows a)))
                             vnode
@@ -123,12 +123,12 @@ let mapi f qr =
                 let f' = Functions.adapt3 f
                 Leaf (Target.mapi (fun i' j' v -> Functions.invoke3 f' (i + i') (j + j') v) slc tgt)
 
-            | HCat (_, _, _, _, a, b) ->
+            | HCat (left = a; right = b) ->
                 par2AndThen (fun () -> mapi i j a tgt)
                             (fun () -> mapi i (j + cols a) b (Target.incrementCol tgt (cols a)))
                             hnode
 
-            | VCat (_, _, _, _, a, b) ->
+            | VCat (left = a; right = b) ->
                 par2AndThen (fun () -> mapi i j a tgt)
                             (fun () -> mapi (i + rows a) j  b (Target.incrementRow tgt (rows a)))
                             vnode
@@ -245,7 +245,7 @@ let zip f lqr rqr =
 /// neutral element for g. We assume that g epsilon x = g x epsilon =
 /// x.
 let rec mapreduce f g epsilon = function
-    | HCat (_, _, _, _, a, b) | VCat (_, _, _, _, a, b) ->
+    | HCat (left = a; right = b) | VCat (left = a; right = b) ->
         par2AndThen (fun () -> mapreduce f g epsilon a)
                     (fun () -> mapreduce f g epsilon b)
                     g
@@ -302,12 +302,12 @@ let hrev qr =
         match qr with
             | Leaf slc ->
                 leaf (Target.hrev slc tgt)
-            | HCat (_, _, _, _, a, b) ->
+            | HCat (left = a; right = b) ->
                 par2AndThen (fun () -> hrev b (Target.incrementCol tgt (cols a)))
                             (fun () -> hrev a tgt)
                             hnode
 
-            | VCat (_, _, _, _, a, b) ->
+            | VCat (left = a; right = b) ->
                 par2AndThen (fun () -> hrev a tgt)
                             (fun () -> hrev b (Target.incrementRow tgt (rows a)))
                             vnode
@@ -324,12 +324,12 @@ let vrev qr =
         match qr with
             | Leaf slc ->
                 leaf (Target.vrev slc tgt)
-            | HCat (_, _, _, _, a, b) ->
+            | HCat (left = a; right = b) ->
                 par2AndThen (fun () -> vrev a tgt)
                             (fun () -> vrev b (Target.incrementCol tgt (cols a)))
                             hnode
 
-            | VCat (_, _, _, _, a, b) ->
+            | VCat (left = a; right = b) ->
                 par2AndThen (fun () -> vrev b (Target.incrementRow tgt (rows a)))
                             (fun () -> vrev a tgt)
                             vnode
@@ -348,12 +348,12 @@ let transpose qr =
             | Empty -> Empty
             | Leaf slc ->
                 leaf (Target.transpose slc tgt)
-            | HCat (_, _, _, _, a, b) ->
+            | HCat (left = a; right = b) ->
                 par2AndThen (fun () -> transpose a tgt)
                             (fun () -> transpose b (Target.incrementCol tgt (cols a)))
                             vnode
 
-            | VCat (_, _, _, _, a, b) ->
+            | VCat (left = a; right = b) ->
                 par2AndThen (fun () -> transpose a tgt)
                             (fun () -> transpose b (Target.incrementRow tgt (rows a)))
                             hnode
@@ -371,10 +371,10 @@ let iteri f qr =
         | Empty -> ()
         | Leaf vs -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
 
-        | HCat (_, _, _, _, a, b) ->
+        | HCat (left = a; right = b) ->
             par2AndThen (fun () -> iteri f i j a) (fun () -> iteri f i (j + cols a) b) (fun _ _ -> ())
 
-        | VCat (_, _, _, _, a, b) ->
+        | VCat (left = a; right = b) ->
             par2AndThen (fun () -> iteri f i j a) (fun () -> iteri f (i + rows a) j b) (fun _ _ -> ())
 
         | Slice _ as qr -> iteri f i j (QuadRope.materialize qr)
@@ -493,7 +493,7 @@ let scan f init qr =
             // Parallel cases: b and c depend only on a, d
             // depends on all other children. Scan b and c in
             // parallel.
-            | HCat (_, _, _, _, VCat (_, _, _, _, a, b), VCat (_, _, _, _, c, d))
+            | HCat (_, _, _, _, VCat (left = a; right = b), VCat (_, _, _, _, c, d))
                 when parCond a b c d ->
                     let a', b', c', d' = parScan f a b c d tgt
                     hnode (vnode a' b') (vnode c' d')
@@ -505,13 +505,13 @@ let scan f init qr =
                     vnode (hnode a' c') (hnode b' d')
 
             // Sequential cases.
-            | HCat (_, _, _, _, a, b) ->
+            | HCat (left = a; right = b) ->
                 let a' = scan f a tgt
                 let tgt' = Target.incrementCol tgt (cols a)
                 let b' = scan f b tgt'
                 hnode a' b'
 
-            | VCat (_, _, _, _, a, b) ->
+            | VCat (left = a; right = b) ->
                 let a' = scan f a tgt
                 let tgt' = Target.incrementRow tgt (rows a)
                 let b' = scan f b tgt'
@@ -559,22 +559,22 @@ module SparseDouble =
     /// parallel. This function short-circuits the computation where
     /// possible, but it does not stop already running computations.
     let rec prod = function
-        | HCat (_, _, _, _, Sparse (_, _, 0.0), _)
-        | HCat (_, _, _, _, _, Sparse (_, _, 0.0))
-        | VCat (_, _, _, _, Sparse (_, _, 0.0), _)
-        | VCat (_, _, _, _, _, Sparse (_, _, 0.0))
+        | HCat (left = Sparse (_, _, 0.0))
+        | VCat (left = Sparse (_, _, 0.0))
+        | HCat (right = Sparse (_, _, 0.0))
+        | VCat (right = Sparse (_, _, 0.0))
         | Sparse (_, _, 0.0) -> 0.0
         | Sparse (_, _, 1.0) -> 1.0
-        | HCat (_, _, _, _, VCat (_, _, _, _, a, b), VCat (_, _, _, _, c, d))
-        | VCat (_, _, _, _, HCat (_, _, _, _, a, c), HCat (_, _, _, _, b, d)) ->
+        | HCat (left = VCat (left = a; right = b); right = VCat (left = c; right = d))
+        | VCat (left = HCat (left = a; right = c); right = HCat (left = b; right = d)) ->
             let ab = par2AndThen (fun () -> prod a) (fun () -> prod b) (*)
             if ab = 0.0 then
                 0.0
             else
                 ab * (par2AndThen (fun () -> prod c) (fun () -> prod d) (*))
-        | HCat (_, _, _, _, a, b) ->
+        | HCat (left = a; right = b) ->
             par2AndThen (fun () -> prod a) (fun () -> prod b) (*)
-        | VCat (_, _, _, _, a, b) ->
+        | VCat (left = a; right = b) ->
             par2AndThen (fun () -> prod a) (fun () -> prod b) (*)
         | Slice _ as qr -> prod (QuadRope.materialize qr)
         | qr -> reduce (*) 1.0 qr
@@ -591,13 +591,13 @@ module SparseDouble =
                 | _ ->
                     match lqr with
                         // Flat node.
-                        | HCat (true, _, _, _, aa, ab) ->
+                        | HCat (sparse = true; left = aa; right = ab) ->
                             par2AndThen (fun () -> gen aa (QuadRope.hslice 0 (cols aa) rqr))
                                         (fun () -> gen ab (QuadRope.hslice (cols aa) (cols ab) rqr))
                                         hnode
 
                         // Thin node.
-                        | VCat (true, _, _, _, aa, ab) ->
+                        | VCat (sparse = true; left = aa; right = ab) ->
                             par2AndThen (fun () -> gen aa (QuadRope.vslice 0 (rows aa) rqr))
                                         (fun () -> gen ab (QuadRope.vslice (rows aa) (rows ab) rqr))
                                         vnode
@@ -611,14 +611,14 @@ module SparseDouble =
         let rec fast lqr rqr =
             match lqr, rqr with
                 // Flat node.
-                | HCat (true, _, _, _, aa, ab), HCat (_,    _, _, _, ba, bb)
-                | HCat (_,    _, _, _, aa, ab), HCat (true, _, _, _, ba, bb)
+                | HCat (sparse = true; left = aa; right = ab), HCat (left = ba; right = bb)
+                | HCat (left = aa; right = ab), HCat (sparse = true; left = ba; right = bb)
                     when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
                         par2AndThen (fun () -> fast aa ba) (fun () -> fast ab bb) hnode
 
                 // Thin node.
-                | VCat (true, _, _, _, aa, ab), VCat (_,    _, _, _, ba, bb)
-                | VCat (_,    _, _, _, aa, ab), VCat (true, _, _, _, ba, bb)
+                | VCat (sparse = true; left = aa; right = ab), VCat (left = ba; right = bb)
+                | VCat (left = aa; right = ab), VCat (sparse = true; left = ba; right = bb)
                     when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
                         par2AndThen (fun () -> fast aa ba) (fun () -> fast ab bb) vnode
 

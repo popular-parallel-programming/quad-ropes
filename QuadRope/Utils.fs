@@ -62,7 +62,7 @@ module Tasks =
 
 
     /// Queue a continuation to execute after the completion of t.
-    let map (t : 'a Task) (f : 'a -> _) =
+    let map (f : 'a -> _) (t : 'a Task) =
         t.ContinueWith (result >> f)
 
 

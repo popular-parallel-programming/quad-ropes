@@ -28,16 +28,20 @@ open QuadRope.Types
 open QuadRope.Utils
 open QuadRope.Utils.Tasks
 
-let private rows = QuadRope.rows
-let private cols = QuadRope.cols
-let private depth = QuadRope.depth
+let private rows    = QuadRope.rows
+let private cols    = QuadRope.cols
+let private depth   = QuadRope.depth
 let private isEmpty = QuadRope.isEmpty
 
 
 let private isSparse = QuadRope.isSparse
-let private leaf = QuadRope.leaf
-let private hnode = QuadRope.hnode
-let private vnode = QuadRope.vnode
+let private leaf     = QuadRope.leaf
+let private hnode    = QuadRope.hnode
+let private vnode    = QuadRope.vnode
+
+
+let private materialize = QuadRope.materialize
+let private fastGet     = QuadRope.fastGet
 
 
 let private smax = QuadRope.smax
@@ -50,8 +54,10 @@ let init h w (f : int -> int -> _) =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
         else if ArraySlice.cols slc <= smax && ArraySlice.rows slc <= smax then
-            ArraySlice.init slc f // Write into shared array.
-            leaf slc
+            Soon (ArraySlice.rows slc,
+                  ArraySlice.cols slc,
+                  Tasks.task (fun () -> ArraySlice.init slc f; // Write into shared array.
+                                        slc))
         else if ArraySlice.cols slc <= smax then
             vsplit f slc
         else
@@ -63,8 +69,10 @@ let init h w (f : int -> int -> _) =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
         else if ArraySlice.cols slc <= smax && ArraySlice.rows slc <= smax then
-            ArraySlice.init slc f // Write into shared array.
-            leaf slc
+            Soon (ArraySlice.rows slc,
+                  ArraySlice.cols slc,
+                  Tasks.task (fun () -> ArraySlice.init slc f; // Write into shared array.
+                                        slc))
         else if ArraySlice.rows slc <= smax then
             hsplit f slc
         else
@@ -89,8 +97,11 @@ let map f qr =
                 map qr (Target.make (rows qr) (cols qr))
 
             // Write into target and construct new leaf.
-            | Leaf slc ->
-                leaf (Target.map f slc tgt)
+            | Leaf vs ->
+                leaf (Target.map f vs tgt)
+
+            | Soon (r, c, t) ->
+                Soon (r, c, Tasks.map (fun vs -> Target.map f vs tgt) t)
 
             // Parallel recursive cases, adjust target descriptor.
             | HCat (left = a; right = b) ->
@@ -116,12 +127,15 @@ let map f qr =
 
 /// Map a function over a quad rope's values and its indexes.
 let mapi f qr =
+    let f' = Functions.adapt3 f
     let rec mapi i j qr tgt =
         match qr with
             | Empty -> Empty
-            | Leaf slc ->
-                let f' = Functions.adapt3 f
-                Leaf (Target.mapi (fun i' j' v -> Functions.invoke3 f' (i + i') (j + j') v) slc tgt)
+            | Leaf vs ->
+                Leaf (Target.mapi (fun i' j' v -> Functions.invoke3 f' (i + i') (j + j') v) vs tgt)
+
+            | Soon (r, c, t) ->
+                Soon (r, c, Tasks.map (fun vs -> Target.mapi (fun i' j' v -> Functions.invoke3 f' (i + i') (j + j') v) vs tgt) t)
 
             | HCat (left = a; right = b) ->
                 par2AndThen (fun () -> mapi i j a tgt)
@@ -169,6 +183,16 @@ let rec private genZip f lqr rqr tgt =
                 | _ when Target.isEmpty tgt && not (isSparse lqr) ->
                     genZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
+                | Soon (r, c, t) ->
+                    let f' = Functions.adapt2 f
+                    let zip vs =
+                        match materialize rqr with
+                            | Sparse (_, _, v') ->
+                                Target.map (fun v -> Functions.invoke2 f' v v') vs tgt
+                            | rqr ->
+                                Target.mapi (fun i j v -> Functions.invoke2 f' v (fastGet rqr i j)) vs tgt
+                    Soon (r, c, Tasks.map zip t)
+
                 | HCat (_, _, _, _, aa, ab) ->
                     par2AndThen (fun () ->
                                  let ba = QuadRope.hslice 0 (cols aa) rqr
@@ -203,6 +227,12 @@ let rec private fastZip f lqr rqr tgt =
 
         | Leaf _, Leaf _ when QuadRope.shapesMatch lqr rqr ->
             QuadRope.fastZip f lqr rqr tgt
+
+        | Soon (r, c, t), Leaf vs' ->
+            Soon (r, c, Tasks.map (fun vs  -> Target.map2 f vs vs' tgt) t)
+
+        | Leaf vs, Soon (r, c, t) ->
+            Soon (r, c, Tasks.map (fun vs' -> Target.map2 f vs vs' tgt) t)
 
         | HCat (_, _, _, _, aa, ab), HCat (_, _, _, _, ba, bb)
              when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
@@ -282,8 +312,9 @@ let exists p qr = mapreduce p (||) false qr
 let hrev qr =
     let rec hrev qr tgt =
         match qr with
-            | Leaf slc ->
-                leaf (Target.hrev slc tgt)
+            | Leaf vs -> leaf (Target.hrev vs tgt)
+            | Soon (r, c, t) -> Soon (r, c, Tasks.map (fun vs -> Target.hrev vs tgt) t)
+
             | HCat (left = a; right = b) ->
                 par2AndThen (fun () -> hrev b (Target.incrementCol tgt (cols a)))
                             (fun () -> hrev a tgt)
@@ -304,8 +335,9 @@ let hrev qr =
 let vrev qr =
     let rec vrev qr tgt =
         match qr with
-            | Leaf slc ->
-                leaf (Target.vrev slc tgt)
+            | Leaf vs -> leaf (Target.vrev vs tgt)
+            | Soon (r, c, t) -> Soon (r, c, Tasks.map (fun vs -> Target.vrev vs tgt) t)
+
             | HCat (left = a; right = b) ->
                 par2AndThen (fun () -> vrev a tgt)
                             (fun () -> vrev b (Target.incrementCol tgt (cols a)))
@@ -327,9 +359,10 @@ let vrev qr =
 let transpose qr =
     let rec transpose qr tgt =
         match qr with
-            | Empty -> Empty
-            | Leaf slc ->
-                leaf (Target.transpose slc tgt)
+            | Empty          -> Empty
+            | Leaf vs        -> leaf (Target.transpose vs tgt)
+            | Soon (r, c, t) -> Soon (r, c, Tasks.map (fun vs -> Target.transpose vs tgt) t)
+
             | HCat (left = a; right = b) ->
                 par2AndThen (fun () -> transpose a tgt)
                             (fun () -> transpose b (Target.incrementCol tgt (cols a)))
@@ -350,8 +383,9 @@ let transpose qr =
 /// corresponding index pair in parallel.
 let iteri f qr =
     let rec iteri f i j = function
-        | Empty -> ()
-        | Leaf vs -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
+        | Empty          -> ()
+        | Leaf vs        -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
+        | Soon (_, _, t) -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) (Tasks.result t)
 
         | HCat (left = a; right = b) ->
             par2AndThen (fun () -> iteri f i j a) (fun () -> iteri f i (j + cols a) b) (fun _ _ -> ())
@@ -417,7 +451,7 @@ let fromArray2D arr =
             let wpv = w0 + (w >>> 1)
             par2AndThen (fun () -> init h0 w0 h1 wpv arr) (fun () -> init h0 wpv h1 w1 arr) hnode
         else
-            QuadRope.leaf (ArraySlice.makeSlice h0 w0 h w arr)
+            Soon (h, w, Tasks.task (fun () -> ArraySlice.makeSlice h0 w0 h w arr))
     init 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
 
 
@@ -471,6 +505,9 @@ let scan f init qr =
             | Leaf slc ->
                 Target.scan f slc tgt
                 Leaf (Target.toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc))
+
+            // Memory writing effects must occur before continuing.
+            | Soon (_, _, t) -> scan f (Tasks.result >> leaf <| t) tgt
 
             // Parallel cases: b and c depend only on a, d
             // depends on all other children. Scan b and c in

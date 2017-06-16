@@ -54,6 +54,8 @@ type Options = {
   [<Option('s', "size", Default = 100, HelpText = "Input size.")>] size : int;
   [<Option('t', "threads", Default = 1, HelpText = "Number of threads.")>] threads : int }
 
+let wait qr =
+    QuadRope.get qr (QuadRope.rows qr - 1) (QuadRope.cols qr - 1) |> ignore; qr
 
 /// Benchmark base functions.
 let all (opts : Options) =
@@ -61,13 +63,13 @@ let all (opts : Options) =
     let allSeq (opts : Options) =
         let rope = QuadRope.init opts.size opts.size (*)
 
-        benchmark ("QuadRope.init",   fun () -> QuadRope.init opts.size opts.size (*))
-               &> ("QuadRope.map",    fun () -> QuadRope.map (fun x -> x * x) rope)
-               &> ("QuadRope.zip",    fun () -> QuadRope.zip (+) rope rope)
-               &> ("QuadRope.scan",   fun () -> QuadRope.scan (fun a b c d -> a + b + c + d) 0 rope)
-               &> ("QuadRope.hrev",   fun () -> QuadRope.hrev rope)
-               &> ("QuadRope.vrev",   fun () -> QuadRope.vrev rope)
-               &> ("QuadRope.transpose", fun () -> QuadRope.transpose rope)
+        benchmark ("QuadRope.init",   fun () -> QuadRope.init opts.size opts.size (*) |> wait)
+               &> ("QuadRope.map",    fun () -> QuadRope.map (fun x -> x * x) rope |> wait)
+               &> ("QuadRope.zip",    fun () -> QuadRope.zip (+) rope rope |> wait)
+               &> ("QuadRope.scan",   fun () -> QuadRope.scan (fun a b c d -> a + b + c + d) 0 rope |> wait)
+               &> ("QuadRope.hrev",   fun () -> QuadRope.hrev rope |> wait)
+               &> ("QuadRope.vrev",   fun () -> QuadRope.vrev rope |> wait)
+               &> ("QuadRope.transpose", fun () -> QuadRope.transpose rope |> wait)
                |> runWithHead
         benchmark ("QuadRope.reduce", fun () -> QuadRope.reduce (+) 0 rope) |> run
 
@@ -86,13 +88,13 @@ let all (opts : Options) =
     /// Benchmark parallel functions.
     let allPar (opts : Options) =
         let rope = QuadRope.init opts.size opts.size (*)
-        benchmark ("QuadRope.init",   fun () -> Parallel.QuadRope.init opts.size opts.size (*))
-               &> ("QuadRope.map",    fun () -> Parallel.QuadRope.map (fun x -> x * x) rope)
-               &> ("QuadRope.zip",    fun () -> Parallel.QuadRope.zip (+) rope rope)
-               &> ("QuadRope.scan",   fun () -> Parallel.QuadRope.scan (fun a b c d -> a + b + c + d) 0 rope)
-               &> ("QuadRope.hrev",   fun () -> Parallel.QuadRope.hrev rope)
-               &> ("QuadRope.vrev",   fun () -> Parallel.QuadRope.vrev rope)
-               &> ("QuadRope.transpose", fun () -> Parallel.QuadRope.transpose rope)
+        benchmark ("QuadRope.init",   fun () -> Parallel.QuadRope.init opts.size opts.size (*) |> wait)
+               &> ("QuadRope.map",    fun () -> Parallel.QuadRope.map (fun x -> x * x) rope |> wait)
+               &> ("QuadRope.zip",    fun () -> Parallel.QuadRope.zip (+) rope rope |> wait)
+               &> ("QuadRope.scan",   fun () -> Parallel.QuadRope.scan (fun a b c d -> a + b + c + d) 0 rope |> wait)
+               &> ("QuadRope.hrev",   fun () -> Parallel.QuadRope.hrev rope |> wait)
+               &> ("QuadRope.vrev",   fun () -> Parallel.QuadRope.vrev rope |> wait)
+               &> ("QuadRope.transpose", fun () -> Parallel.QuadRope.transpose rope |> wait)
                |> runWithHead
         benchmark ("QuadRope.reduce", fun () -> Parallel.QuadRope.reduce (+) 0 rope) |> run
 
@@ -117,10 +119,10 @@ let all (opts : Options) =
 /// Benchmark van Der Corput sequence computation.
 let vanDerCorput (opts : Options) =
     if opts.threads = 1 then
-        benchmark ("QuadRope.vdc", fun () -> VanDerCorput.QuadRope.vanDerCorput opts.size) |> runWithHead
+        benchmark ("QuadRope.vdc", fun () -> VanDerCorput.QuadRope.vanDerCorput opts.size |> wait) |> runWithHead
         benchmark ("Array2D.vdc",  fun () -> VanDerCorput.Array2D.vanDerCorput opts.size) |> run
     else
-        benchmark ("QuadRope.vdc", fun () -> VanDerCorput.QuadRope.vanDerCorputPar opts.size) |> runWithHead
+        benchmark ("QuadRope.vdc", fun () -> VanDerCorput.QuadRope.vanDerCorputPar opts.size |> wait) |> runWithHead
         benchmark ("Array2D.vdc",  fun () -> VanDerCorput.Array2D.vanDerCorputPar opts.size) |> run
 
 
@@ -136,17 +138,17 @@ let matMult (opts: Options) =
     let qr = QuadRope.init opts.size opts.size (fun i j -> float (i * j))
 
     if opts.threads = 1 then
-        benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmult ud qr)
-               &> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmult us qr)
-               &> ("QuadRope.mmult imp",    fun () -> MatMult.ImperativeQuadRope.mmult ud qr)|> runWithHead
+        benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmult ud qr |> wait)
+               &> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmult us qr |> wait)
+               &> ("QuadRope.mmult imp",    fun () -> MatMult.ImperativeQuadRope.mmult ud qr |> wait)|> runWithHead
         benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmult arr1 arr2)
                &> ("Array2D.imperative", fun () -> MatMult.Imperative.mmult arr1 arr2) |> run
     else
-        benchmark ("QuadRope.mmult dense",      fun () -> MatMult.QuadRope.mmultPar ud qr)
-               &> ("QuadRope.mmult dense opt",  fun () -> MatMult.QuadRope.mmultOpt ud qr)
-               &> ("QuadRope.mmult sparse",     fun () -> MatMult.QuadRope.mmultPar us qr)
-               &> ("QuadRope.mmult sparse opt", fun () -> MatMult.QuadRope.mmultOpt us qr)
-               &> ("QuadRope.mmult imp",        fun () -> MatMult.ImperativeQuadRope.mmultPar ud qr)
+        benchmark ("QuadRope.mmult dense",      fun () -> MatMult.QuadRope.mmultPar ud qr |> wait)
+               &> ("QuadRope.mmult dense opt",  fun () -> MatMult.QuadRope.mmultOpt ud qr |> wait)
+               &> ("QuadRope.mmult sparse",     fun () -> MatMult.QuadRope.mmultPar us qr |> wait)
+               &> ("QuadRope.mmult sparse opt", fun () -> MatMult.QuadRope.mmultOpt us qr |> wait)
+               &> ("QuadRope.mmult imp",        fun () -> MatMult.ImperativeQuadRope.mmultPar ud qr |> wait)
                |> runWithHead
         benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmultPar arr1 arr2)
                &> ("Array2D.imperative", fun () -> MatMult.Imperative.mmultPar arr1 arr2) |> run
@@ -154,7 +156,7 @@ let matMult (opts: Options) =
 
 /// Benchmark computing Fibonacci sequences.
 let fibonacci (opts : Options) =
-    benchmark ("QuadRope.fibonacci", fun () -> Fibonacci.QuadRope.fibseq opts.size) |> runWithHead
+    benchmark ("QuadRope.fibonacci", fun () -> Fibonacci.QuadRope.fibseq opts.size |> wait) |> runWithHead
     benchmark ("Array2D.fibonacci", fun () -> Fibonacci.Array2D.fibseq opts.size) |> run
 
 
@@ -163,10 +165,10 @@ let factorize (opts : Options) =
     let qr = QuadRope.init opts.size opts.size (fun i j -> 1000 + i * j)
     let arr = Array2D.init opts.size opts.size (fun i j -> 1000 + i * j)
     if opts.threads = 1 then
-        benchmark ("QuadRope.factorize", fun () -> Factorize.QuadRope.factorize qr) |> runWithHead
+        benchmark ("QuadRope.factorize", fun () -> Factorize.QuadRope.factorize qr |> wait) |> runWithHead
         benchmark ("Array2D.factorize",  fun () -> Factorize.Array2D.factorize arr) |> run
     else
-        benchmark ("QuadRope.factorize", fun () -> Factorize.QuadRope.factorizePar qr) |> runWithHead
+        benchmark ("QuadRope.factorize", fun () -> Factorize.QuadRope.factorizePar qr |> wait) |> runWithHead
         benchmark ("Array2D.factorize",  fun () -> Factorize.Array2D.factorizePar arr) |> run
 
 
@@ -208,13 +210,13 @@ let gameOfLife (opts : Options) =
     let rnd = System.Random(987)
     let world = QuadRope.init opts.size opts.size (fun _ _ -> rnd.Next(0, 2))
     if opts.threads = 1 then
-        benchmark ("QuadRope.gameOfLife x 100", fun () -> GameOfLife.QuadRope.gameOfLife 100 world)
+        benchmark ("QuadRope.gameOfLife x 100", fun () -> GameOfLife.QuadRope.gameOfLife 100 world |> wait)
         |> runWithHead
         let arrayWorld = QuadRope.toArray2D world
         benchmark ("Array2D.gameOfLife x 100", fun () -> GameOfLife.Array2D.gameOfLife 100 arrayWorld)
         |> run
     else
-        benchmark ("QuadRope.gameOfLife x 100", fun () -> GameOfLife.QuadRope.gameOfLifePar 100 world)
+        benchmark ("QuadRope.gameOfLife x 100", fun () -> GameOfLife.QuadRope.gameOfLifePar 100 world |> wait)
         |> runWithHead
 
 

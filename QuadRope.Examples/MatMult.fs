@@ -19,9 +19,9 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-module QuadRopes.Examples.MatMult
+module QuadRope.Examples.MatMult
 
-open QuadRopes
+open QuadRope
 
 module QuadRope =
 

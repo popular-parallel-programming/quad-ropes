@@ -19,11 +19,11 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-module internal QuadRopes.ArraySlice
+module internal QuadRope.ArraySlice
 
-open QuadRopes
-open QuadRopes.Types
-open QuadRopes.Utils
+open QuadRope
+open QuadRope.Types
+open QuadRope.Utils
 
 /// This is the empty slice. It does not refer to any array and you
 /// cannot retrieve any values from it.

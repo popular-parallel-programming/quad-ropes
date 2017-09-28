@@ -19,12 +19,12 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-namespace QuadRopes.Test
+namespace QuadRope.Test
 
 module Gen =
     open FsCheck
-    open QuadRopes
-    open QuadRopes.Types
+    open QuadRope
+    open QuadRope.Types
 
     let maxSize = 14
     let size = Gen.choose (1, maxSize)

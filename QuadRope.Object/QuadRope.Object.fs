@@ -19,13 +19,13 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-namespace QuadRopes.QuadRope.Object
+namespace QuadRope.QuadRope.Object
 
 open System
 
-open QuadRopes
-open QuadRopes.Types
-open QuadRopes.Utils
+open QuadRope
+open QuadRope.Types
+open QuadRope.Utils
 
 /// An object wrapper for the functional quad rope type.
 type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =

@@ -19,10 +19,10 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-module QuadRopes.Parallel.Array2DExt
+module QuadRope.Parallel.Array2DExt
 
-open QuadRopes.Utils
-open QuadRopes.Utils.Tasks
+open QuadRope.Utils
+open QuadRope.Utils.Tasks
 
 /// Initialize a 2D array in parallel.
 let init h w f =

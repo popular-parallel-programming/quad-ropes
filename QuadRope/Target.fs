@@ -21,10 +21,10 @@
 
 [<RequireQualifiedAccessAttribute>]
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
-module internal QuadRopes.Target
+module internal QuadRope.Target
 
-open QuadRopes.Types
-open QuadRopes.Utils
+open QuadRope.Types
+open QuadRope.Utils
 
 /// A convenience wrapper for writing into a target array with
 /// some offset.

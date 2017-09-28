@@ -19,14 +19,13 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-module QuadRopes.Benchmark
+module QuadRope.Benchmark
 
 open CommandLine
 open LambdaMicrobenchmarking
 
-open QuadRopes
-open QuadRopes.Types
-open QuadRopes.Examples
+open QuadRope.Types
+open QuadRope.Examples
 
 
 /// Benchmark a thunk with a message.

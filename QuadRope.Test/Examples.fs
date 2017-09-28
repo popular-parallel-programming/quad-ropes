@@ -20,12 +20,12 @@
 //   with the software or the use or other dealings in the software.
 
 /// Interesting properties about quad ropes.
-module QuadRopes.Test.Examples
+module QuadRope.Test.Examples
 
 open FsCheck
-open QuadRopes
-open QuadRopes.Types
-open QuadRopes.Examples
+open QuadRope
+open QuadRope.Types
+open QuadRope.Examples
 
 module Utils =
     let isEmpty a =

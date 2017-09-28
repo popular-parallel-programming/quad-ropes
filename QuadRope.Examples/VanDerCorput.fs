@@ -19,9 +19,9 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-module QuadRopes.Examples.VanDerCorput
+module QuadRope.Examples.VanDerCorput
 
-open QuadRopes
+open QuadRope
 
 module private Math =
     let inline pow x y = System.Math.Pow ((float x), (float y))

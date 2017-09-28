@@ -19,9 +19,9 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-module QuadRopes.Array2DExt
+module QuadRope.Array2DExt
 
-open QuadRopes.Utils
+open QuadRope.Utils
 
 /// Return a fresh copy of arr with the value at i,j replaced with v.
 let set arr i j v =

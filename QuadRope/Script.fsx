@@ -9,8 +9,8 @@
 
 #nowarn "62"
 
-open RadTrees
-open RadTrees.Types
+open QuadRope
+open QuadRope.Types
 
 let left = function
     | HCat (_, _, _, _, qr, _)

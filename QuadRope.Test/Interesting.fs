@@ -20,11 +20,11 @@
 //   with the software or the use or other dealings in the software.
 
 /// Interesting properties about quad ropes.
-module QuadRopes.Test.Interesting.QuadRope
+module QuadRope.Test.Interesting.QuadRope
 
 open FsCheck
-open QuadRopes
-open QuadRopes.Types
+open QuadRope
+open QuadRope.Types
 
 module Utils =
 

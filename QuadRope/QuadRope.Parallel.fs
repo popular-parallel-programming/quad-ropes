@@ -21,12 +21,12 @@
 
 [<RequireQualifiedAccessAttribute>]
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
-module QuadRopes.Parallel.QuadRope
+module QuadRope.Parallel.QuadRope
 
-open QuadRopes
-open QuadRopes.Types
-open QuadRopes.Utils
-open QuadRopes.Utils.Tasks
+open QuadRope
+open QuadRope.Types
+open QuadRope.Utils
+open QuadRope.Utils.Tasks
 
 let private rows = QuadRope.rows
 let private cols = QuadRope.cols

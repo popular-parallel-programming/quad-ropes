@@ -21,10 +21,10 @@
 
 [<RequireQualifiedAccessAttribute>]
 [<CompilationRepresentationAttribute(CompilationRepresentationFlags.ModuleSuffix)>]
-module QuadRopes.QuadRope
+module QuadRope.QuadRope
 
-open QuadRopes.Types
-open QuadRopes.Utils
+open QuadRope.Types
+open QuadRope.Utils
 
 (* The maximal size of a leaf array in any direction. *)
 #if DEBUG

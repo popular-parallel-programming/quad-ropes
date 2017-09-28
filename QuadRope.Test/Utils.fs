@@ -19,11 +19,11 @@
 //   of contract, tort or otherwise, arising from, out of or in connection
 //   with the software or the use or other dealings in the software.
 
-module QuadRopes.Test.Utils
+module QuadRope.Test.Utils
 
 open FsCheck
 
-open QuadRopes.Utils
+open QuadRope.Utils
 
 type Handle = class end
 

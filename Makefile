@@ -1,20 +1,23 @@
 debug:
-	xbuild /p:Configuration=Debug /p:TargetFrameworkVersion="v4.5"
+	msbuild /p:Configuration=Debug
 
 release:
-	xbuild /p:Configuration=Release /p:TargetFrameworkVersion="v4.5"
+	msbuild /p:Configuration=Release
 
 clean:
-	xbuild /t:Clean /p:Configuration=Debug
-	xbuild /t:Clean /p:Configuration=Release
+	msbuild /t:Clean /p:Configuration=Debug
+	msbuild /t:Clean /p:Configuration=Release
 
 paket:
 	mono .paket/paket.exe install
 
+restore:
+	mono .paket/paket.exe restore
+
 update:
 	mono .paket/paket.exe update
 
-all: paket debug
+all: restore debug
 
 plots:
 	gnuplot plot.gnuplot

@@ -1,5 +1,7 @@
 source https://nuget.org/api/v2
 
+nuget FAKE
+
 nuget FsCheck
 nuget CommandLineParser >= 2.1.1-beta
 

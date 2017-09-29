@@ -185,20 +185,6 @@ let hrev slc =
                colStride = -slc.colStride }
 
 
-/// Map a function f to all values in the array and combine the
-/// results using g.
-let mapreduce f g epsilon slc =
-    let g' = Functions.adapt2 g
-    let mutable acc = epsilon
-    for i in 0 .. rows slc - 1 do
-        for j in 0 .. cols slc - 1 do
-            acc <- Functions.invoke2 g' acc (f (fastGet slc i j))
-    acc
-
-
-let reduce f arr = mapreduce id f arr
-
-
 let transpose slc =
     { slc with rowStride = slc.rowStride;
                colStride = slc.colStride;
@@ -239,6 +225,18 @@ let internal iteriOpt2 f left right =
 /// pass indices to the iteration function.
 let iteri2 f left right =
     iteriOpt2 (Functions.adapt4 f) left right
+
+
+/// Map a function f to all values in the array and combine the
+/// results using g.
+let mapreduce f g epsilon slc =
+    let g' = Functions.adapt2 g
+    let mutable acc = epsilon
+    iter (fun v -> acc <- Functions.invoke2 g' acc (f v)) slc
+    acc
+
+
+let reduce f arr = mapreduce id f arr
 
 
 /// Just write imperatively.

@@ -89,5 +89,5 @@ let ``sparse point-wise is commutative`` (a : float QuadRope) =
                         (QuadRope.SparseDouble.pointwise sparse a))
 
 
-let ``depth(q) < 2*log(k(q) + 1)`` (a : int QuadRope) =
+let ``depth(q) < 2*log(k(q) + 1)`` (a : int64 QuadRope) =
     Utils.isBalanced a

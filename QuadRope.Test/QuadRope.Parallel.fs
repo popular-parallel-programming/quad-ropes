@@ -36,43 +36,43 @@ let ``parallel init equal to sequential`` (NonNegativeInt h) (NonNegativeInt w) 
 let sqr x = x * x
 
 
-let ``parallel hmapreduce equal to sequential`` (a : int QuadRope) =
-    QuadRope.equals (QuadRope.hmapreduce sqr (*) 1 a) (Parallel.QuadRope.hmapreduce sqr (*) 1 a)
+let ``parallel hmapreduce equal to sequential`` (a : int64 QuadRope) =
+    QuadRope.equals (QuadRope.hmapreduce sqr (*) 1L a) (Parallel.QuadRope.hmapreduce sqr (*) 1L a)
 
 
-let ``parallel vmapreduce equal to sequential`` (a : int QuadRope) =
-    QuadRope.equals (QuadRope.vmapreduce sqr (*) 1 a) (Parallel.QuadRope.vmapreduce sqr (*) 1 a)
+let ``parallel vmapreduce equal to sequential`` (a : int64 QuadRope) =
+    QuadRope.equals (QuadRope.vmapreduce sqr (*) 1L a) (Parallel.QuadRope.vmapreduce sqr (*) 1L a)
 
 
-let ``parallel mapreduce equal to sequential``  (a : int QuadRope) =
-    QuadRope.mapreduce sqr (*) 1 a = Parallel.QuadRope.mapreduce sqr (*) 1 a
+let ``parallel mapreduce equal to sequential``  (a : int64 QuadRope) =
+    QuadRope.mapreduce sqr (*) 1L a = Parallel.QuadRope.mapreduce sqr (*) 1L a
 
 
-let ``parallel map equal to sequential`` (a : int QuadRope) =
+let ``parallel map equal to sequential`` (a : int64 QuadRope) =
     QuadRope.equals (QuadRope.map sqr a) (Parallel.QuadRope.map sqr a)
 
 
-let ``parallel hrev equal to sequential`` (a : int QuadRope) =
+let ``parallel hrev equal to sequential`` (a : int64 QuadRope) =
     QuadRope.equals (QuadRope.hrev a) (Parallel.QuadRope.hrev a)
 
 
-let ``parallel vrev equal to sequential`` (a : int QuadRope) =
+let ``parallel vrev equal to sequential`` (a : int64 QuadRope) =
     QuadRope.equals (QuadRope.vrev a) (Parallel.QuadRope.vrev a)
 
 
-let ``parallel transpose equal to sequential`` (a : int QuadRope) =
+let ``parallel transpose equal to sequential`` (a : int64 QuadRope) =
     QuadRope.equals (QuadRope.transpose a) (Parallel.QuadRope.transpose a)
 
 
-let ``parallel zip equal to sequential`` (a : int QuadRope) (b : int QuadRope) =
+let ``parallel zip equal to sequential`` (a : int64 QuadRope) (b : int64 QuadRope) =
     (QuadRope.rows a = QuadRope.rows b && QuadRope.cols a = QuadRope.cols b)
     ==> lazy (QuadRope.equals (QuadRope.zip (+) a b) (Parallel.QuadRope.zip (+) a b))
 
 
-let ``parallel scan equal to sequential`` (a : int QuadRope) =
+let ``parallel scan equal to sequential`` (a : int64 QuadRope) =
     let sum a b c d = a + b + c + d
-    QuadRope.equals (QuadRope.scan sum 0 a) (Parallel.QuadRope.scan sum 0 a)
+    QuadRope.equals (QuadRope.scan sum 0L a) (Parallel.QuadRope.scan sum 0L a)
 
 
-let ``parallel toArray2D equal to sequential`` (a : int QuadRope) =
+let ``parallel toArray2D equal to sequential`` (a : int64 QuadRope) =
     QuadRope.toArray2D a = Parallel.QuadRope.toArray2D a

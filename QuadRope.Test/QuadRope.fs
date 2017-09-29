@@ -64,97 +64,97 @@ let ``DEBUG leaf sizes enabled`` () =
     QuadRope.smax = 4
 
 
-let ``init produces correct height`` (NonNegativeInt h) (NonNegativeInt w) =
+let ``let q = init h w _ ==> rows q = h`` (NonNegativeInt h) (NonNegativeInt w) =
     (0 < h && 0 < w) ==>
     lazy (let qr = QuadRope.init h w (*)
           QuadRope.rows qr = h &&
           QuadRope.get (QuadRope.vmapreduce (fun _ -> 1) (+) 0 qr) 0 0 = h)
 
 
-let ``init produces correct width`` (NonNegativeInt h) (NonNegativeInt w) =
+let ``let q = init h w _ ==> cols q = w`` (NonNegativeInt h) (NonNegativeInt w) =
     (0 < h && 0 < w) ==>
     lazy (let qr = QuadRope.init h w (*)
           QuadRope.cols qr = w &&
           QuadRope.get (QuadRope.hmapreduce (fun _ -> 1) (+) 0 qr) 0 0 = w)
 
 
-let ``init produces correct values`` (NonNegativeInt h) (NonNegativeInt w) =
+let ``let q = init _ _ f ==> get q i j = f i j`` (NonNegativeInt h) (NonNegativeInt w) =
     (0 < h && 0 < w) ==>
     lazy (let qr = QuadRope.init h w (*)
           Seq.forall (fun (i, j) -> QuadRope.get qr i j = i * j) (makeIndices h w))
 
 
-let ``get is always inside bounds`` (a : int QuadRope) =
+let ``get is always inside bounds`` (a : int64 QuadRope) =
     Seq.forall (access a) (makeIndicesFrom a)
 
 
-let ``set changes correct element`` (a : int QuadRope) x =
+let ``let r = set q i j x ==> get r i j = x`` (a : int64 QuadRope) x =
     Seq.forall (fun (i, j) -> let a' = QuadRope.set a i j x in QuadRope.get a' i j = x)
                (makeIndicesFrom a)
 
 
-let ``hcat width is equal to width sum`` (a : int QuadRope) (b : int QuadRope)  =
+let ``cols (hcat a b) = cols a + cols b`` (a : int64 QuadRope) (b : int64 QuadRope)  =
     (QuadRope.rows a = QuadRope.rows b) ==>
     lazy (QuadRope.cols a + QuadRope.cols b = QuadRope.cols (QuadRope.hcat a b))
 
 
-let ``vcat height is equal to height sum`` (a : int QuadRope) (b : int QuadRope)  =
+let ``rows (vcat a b) = rows a + rows b`` (a : int64 QuadRope) (b : int64 QuadRope)  =
     (QuadRope.cols a = QuadRope.cols b) ==>
     lazy (QuadRope.rows a + QuadRope.rows b = QuadRope.rows (QuadRope.vcat a b))
 
 
-let ``hbalance maintains order`` (NonNegativeInt x) =
+let ``get (hbalance q) i j = get q i j`` (NonNegativeInt x) =
     let mutable r = QuadRope.singleton 0
     for i in 1 .. x * 10 do
         r <- QuadRope.hcat r (QuadRope.singleton i)
     QuadRope.forallRows (<) r
 
 
-let ``vbalance maintains order`` (NonNegativeInt x) =
+let ``get (vbalance q) i j = get q i j`` (NonNegativeInt x) =
     let mutable r = QuadRope.singleton 0
     for i in 1 .. x * 10 do
         r <- QuadRope.vcat r (QuadRope.singleton i)
     QuadRope.forallCols (<) r
 
 
-let ``hrev of hrev is identity`` (a : int QuadRope) =
+let ``hrev (hrev q) = q`` (a : int64 QuadRope) =
     pointWiseEqual a (QuadRope.hrev (QuadRope.hrev a))
 
 
-let ``vrev of vrev is identity`` (a : int QuadRope) =
+let ``vrev (vrev q) = q`` (a : int64 QuadRope) =
     pointWiseEqual a (QuadRope.vrev (QuadRope.vrev a))
 
 
-let ``get accesses hrev correctly`` (a: int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
+let ``get i j (hrev q) = get i (cols q - 1 - j) q`` (a: int64 QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
     let h = QuadRope.rows a
     let w = QuadRope.cols a
     (i < h && j < w) ==>
     lazy (QuadRope.get (QuadRope.hrev a) i j = QuadRope.get a i ((w - 1) - j))
 
 
-let ``get accesses vrev correctly`` (a: int QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
+let ``get i j (vrev q) = get (rows q - 1 - i) j q`` (a: int64 QuadRope) (NonNegativeInt i) (NonNegativeInt j) =
     let h = QuadRope.rows a
     let w = QuadRope.cols a
     (i < h && j < w) ==>
     lazy (QuadRope.get (QuadRope.vrev a) i j = QuadRope.get a ((h - 1) - i) j)
 
 
-let ``get accesses hcat correctly`` (a : int QuadRope) (b : int QuadRope) =
+let ``get accesses hcat correctly`` (a : int64 QuadRope) (b : int64 QuadRope) =
     (QuadRope.rows a = QuadRope.rows b) ==>
     lazy (let ab = QuadRope.hcat a b
           Seq.forall (access ab) (makeIndicesFrom ab))
 
 
-let ``get accesses vcat correctly`` (a : int QuadRope) (b : int QuadRope) =
+let ``get accesses vcat correctly`` (a : int64 QuadRope) (b : int64 QuadRope) =
     (QuadRope.cols a = QuadRope.cols b) ==>
     lazy (let ab = QuadRope.vcat a b
           Seq.forall (access ab) (makeIndicesFrom ab))
 
 
-let ``get accesses slice correctly`` (a : int QuadRope) (NonNegativeInt i)
-                                                        (NonNegativeInt j)
-                                                        (NonNegativeInt h)
-                                                        (NonNegativeInt w) =
+let ``get accesses slice correctly`` (a : int64 QuadRope) (NonNegativeInt i)
+                                                          (NonNegativeInt j)
+                                                          (NonNegativeInt h)
+                                                          (NonNegativeInt w) =
     (i < QuadRope.rows a && i < h && j < QuadRope.cols a && j < w) ==>
     lazy (let b = QuadRope.slice i j h w a
           Seq.forall
@@ -162,10 +162,10 @@ let ``get accesses slice correctly`` (a : int QuadRope) (NonNegativeInt i)
             (makeIndicesFrom b))
 
 
-let ``slice is equal to materialized slice`` (a : int QuadRope) (NonNegativeInt i)
-                                                                (NonNegativeInt j)
-                                                                (NonNegativeInt h)
-                                                                (NonNegativeInt w) =
+let ``slice is equal to materialized slice`` (a : int64 QuadRope) (NonNegativeInt i)
+                                                                  (NonNegativeInt j)
+                                                                  (NonNegativeInt h)
+                                                                  (NonNegativeInt w) =
     (i < h && j < w) ==> lazy (
         let b = QuadRope.slice i j h w a
         let c = QuadRope.materialize b
@@ -173,7 +173,7 @@ let ``slice is equal to materialized slice`` (a : int QuadRope) (NonNegativeInt 
         && pointWiseEqual c b)
 
 
-let ``recursive slice computes correct indices`` (a : int QuadRope) (d : NonNegativeInt) =
+let ``recursive slice computes correct indices`` (a : int64 QuadRope) (d : NonNegativeInt) =
     let i = 1
     let j = 1
     let h = QuadRope.rows a - 1
@@ -189,110 +189,115 @@ let ``recursive slice computes correct indices`` (a : int QuadRope) (d : NonNega
     QuadRope.cols (QuadRope.slice i j h (w - d.Get) b) <= QuadRope.cols b
 
 
-let ``hslice produces ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
+let ``let r = hslice 0 w q => cols r = w`` (a : int64 QuadRope) (NonNegativeInt w) =
     w <= QuadRope.cols a ==>
     lazy (w = QuadRope.cols (QuadRope.slice 0 0 (QuadRope.rows a) w a))
 
 
-let ``hsplit2 produces two ropes of correct width`` (a : int QuadRope) (NonNegativeInt w) =
+let ``let r, s = hsplit2 q w ==> cols r = w /\ cols s = cols q = w`` (a : int64 QuadRope) (NonNegativeInt w) =
     w <= QuadRope.cols a ==>
     lazy (let b, c = QuadRope.hsplit2 a w
           QuadRope.cols b = w && QuadRope.cols c = QuadRope.cols a - w)
 
 
-let ``vslice produces ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =
+let ``let r = vslice 0 h q => rows r = h`` (a : int64 QuadRope) (NonNegativeInt h) =
     h <= QuadRope.rows a ==>
     lazy (h = QuadRope.rows (QuadRope.slice 0 0 h (QuadRope.cols a) a))
 
 
-let ``vsplit2 produces two ropes of correct height`` (a : int QuadRope) (NonNegativeInt h) =
+let ``let r, s = vsplit2 q h ==> rows r = h /\ rows s = rows q = h`` (a : int64 QuadRope) (NonNegativeInt h) =
     h <= QuadRope.rows a ==>
     lazy (let b, c = QuadRope.vsplit2 a h
           (QuadRope.rows b = h) && (QuadRope.rows c = QuadRope.rows a - h))
 
 
-let ``reallocate results in correctly shaped quad rope`` (a : int QuadRope) =
+let ``let r = map id q ==> rows r = rows q /\ cols r = cols q`` (a : int64 QuadRope) =
     let r = QuadRope.map id a
     QuadRope.rows r = QuadRope.rows a && QuadRope.cols r = QuadRope.cols a
 
 
-let ``reallocate results in logically equal rope`` (a : int QuadRope) =
+let ``map id q = q`` (a : int64 QuadRope) =
     pointWiseEqual a (QuadRope.map id a)
 
 
-let ``map modifies all values`` (a : int QuadRope) (f : int -> int) =
+let ``let r = map f q ==> get i j r = f (get i j q)`` (a : int64 QuadRope) (f : int64 -> int64) =
     pointWiseEqualMap a (QuadRope.map f a) f id
 
 
-let ``hreduce produces thin ropes`` (a : int QuadRope) =
-    (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.cols (QuadRope.hreduce (+) 0 a) = 1)
+let ``let r = hreduce f e q ==> cols r = 1`` (a : int64 QuadRope) =
+    (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.cols (QuadRope.hreduce (+) 0L a) = 1)
 
 
-let ``vreduce produces flat ropes`` (a : int QuadRope) =
-    (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.rows (QuadRope.vreduce (+) 0 a) = 1)
+let ``let r = vreduce f e q ==> rows r = 1`` (a : int64 QuadRope) =
+    (not (QuadRope.isEmpty a)) ==> lazy (QuadRope.rows (QuadRope.vreduce (+) 0L a) = 1)
 
 
-let ``hreduce >> vreduce equals vreduce >> hreduce`` (a : int QuadRope) =
+let ``hreduce >> vreduce = vreduce >> hreduce`` (a : int64 QuadRope) =
     (not (QuadRope.isEmpty a)) ==>
-    lazy (pointWiseEqual (QuadRope.hreduce (+) 0 (QuadRope.vreduce (+) 0 a))
-                         (QuadRope.vreduce (+) 0 (QuadRope.hreduce (+) 0 a)))
+    lazy (pointWiseEqual (a |> QuadRope.hreduce (+) 0L |> QuadRope.vreduce (+) 0L)
+                         (a |> QuadRope.vreduce (+) 0L |> QuadRope.hreduce (+) 0L))
 
 
-let ``reduce equals hreduce + vreduce`` (a : int QuadRope) =
+let ``reduce = hreduce >> vreduce`` (a : int64 QuadRope) =
     (not (QuadRope.isEmpty a)) ==>
-      lazy (QuadRope.reduce (+) 0 a = QuadRope.get (QuadRope.hreduce (+) 0 (QuadRope.vreduce (+) 0 a)) 0 0)
+      lazy (QuadRope.reduce (+) 0L a = QuadRope.get (a |> QuadRope.hreduce (+) 0L |> QuadRope.vreduce (+) 0L ) 0 0)
 
-
-let ``map + reduce equals mapreduce`` (a : int QuadRope) =
+let ``reduce = vreduce >> hreduce`` (a : int64 QuadRope) =
     (not (QuadRope.isEmpty a)) ==>
-     lazy (QuadRope.mapreduce (fun x -> x * x) (+) 0 a = QuadRope.reduce (+) 0 (QuadRope.map (fun x -> x * x) a))
+      lazy (QuadRope.reduce (+) 0L a = QuadRope.get (a |> QuadRope.vreduce (+) 0L |> QuadRope.hreduce (+) 0L ) 0 0)
 
 
-let ``hfilter removes elements correctly`` (a : int QuadRope) (Fun p) =
+let ``map >> reduce = mapreduce`` (a : int64 QuadRope) =
+    (not (QuadRope.isEmpty a)) ==>
+     lazy (QuadRope.mapreduce (fun x -> x * x) (+) 0L a = QuadRope.reduce (+) 0L (QuadRope.map (fun x -> x * x) a))
+
+
+let ``hfilter removes elements correctly`` (a : int64 QuadRope) (Fun p) =
     QuadRope.rows a = 1 ==> lazy QuadRope.forall p (QuadRope.hfilter p a)
 
 
-let ``vfilter removes elements correctly`` (a : int QuadRope) (Fun p) =
+let ``vfilter removes elements correctly`` (a : int64 QuadRope) (Fun p) =
     QuadRope.cols a = 1 ==> lazy QuadRope.forall p (QuadRope.vfilter p a)
 
 
-let ``last of hscan equals hreduce`` (a : int QuadRope) =
-    let b = QuadRope.hscan (+) (fun _ -> 0) a
-    let c = QuadRope.hreduce (+) 0 a
+let ``last of hscan = hreduce`` (a : int64 QuadRope) =
+    let b = QuadRope.hscan (+) (fun _ -> 0L) a
+    let c = QuadRope.hreduce (+) 0L a
     QuadRope.equals (QuadRope.col b (QuadRope.cols b - 1)) c
 
 
-let ``last of vscan equals vreduce`` (a : int QuadRope) =
-    let b = QuadRope.vscan (+) (fun _ -> 0) a
-    let c = QuadRope.vreduce (+) 0 a
+let ``last of vscan = vreduce`` (a : int64 QuadRope) =
+    let b = QuadRope.vscan (+) (fun _ -> 0L) a
+    let c = QuadRope.vreduce (+) 0L a
     QuadRope.equals (QuadRope.row b (QuadRope.rows b - 1)) c
 
 
-let ``hscan's elements are strictly ordered`` (a : int QuadRope) =
+let ``hscan's elements are strictly ordered`` (a : int64 QuadRope) =
     let b = QuadRope.map List.singleton a
     let c = QuadRope.hscan (@) (fun _ -> []) b
     c |> QuadRope.map (List.length) |> QuadRope.forallRows (<)
 
 
-let ``vscan's elements are strictly ordered`` (a : int QuadRope) =
+let ``vscan's elements are strictly ordered`` (a : int64 QuadRope) =
     let b = QuadRope.map List.singleton a
     let c = QuadRope.vscan (@) (fun _ -> []) b
     c |> QuadRope.map (List.length) |> QuadRope.forallCols (<)
 
 
-let ``transpose of transpose is identity`` (a : int QuadRope) =
+let ``transpose (transpose q) = q`` (a : int64 QuadRope) =
     QuadRope.equals (QuadRope.transpose (QuadRope.transpose a)) a
 
 
-let ``zip ignores internal structure`` (a : int QuadRope) (b : int QuadRope) =
+let ``let s = zip f q r ==> get s i j = f (get q i j) (get r i j)`` (a : int64 QuadRope)
+                                                                    (b : int64 QuadRope) =
     (QuadRope.rows a = QuadRope.rows b && QuadRope.cols a = QuadRope.cols b) ==>
     lazy (QuadRope.equals (QuadRope.zip (+) a b)
                           (QuadRope.init (QuadRope.rows a) (QuadRope.cols b) (fun r c -> QuadRope.get a r c + QuadRope.get b r c)))
 
 
-let ``toArray -> fromArray produces equal rope`` (a : int QuadRope) =
+let ``fromArray (toArray q) = q`` (a : int64 QuadRope) =
     pointWiseEqual a (QuadRope.fromArray (QuadRope.toArray a) (QuadRope.cols a))
 
 
-let ``toArray2D -> fromArray2D produces equal rope`` (a : int QuadRope) =
+let ``fromArray2D (toArray2D q) = q`` (a : int64 QuadRope) =
     pointWiseEqual a (QuadRope.fromArray2D (QuadRope.toArray2D a))

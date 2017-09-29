@@ -33,9 +33,9 @@ module Gen =
     /// Construct a quad rope of size h * w that is either of
     /// arbitrary integers of a sparse quad rope of 0s or 1s.
     let genRopeOf h w =
-        Gen.oneof [ Gen.map QuadRope.fromArray2D (Gen.array2DOfDim (h, w) Arb.generate<int>)
-                    Gen.constant (QuadRope.create h w 0)
-                    Gen.constant (QuadRope.create h w 1) ]
+        Gen.oneof [ Gen.map QuadRope.fromArray2D (Gen.array2DOfDim (h, w) Arb.generate<int64>)
+                    Gen.constant (QuadRope.create h w 0L)
+                    Gen.constant (QuadRope.create h w 1L) ]
 
 
     /// Generate an arbitrary quad rope of max size * size elements.
@@ -102,7 +102,7 @@ module Gen =
     type QuadRopeGen =
         static member IntQuadRope () =
             {
-                new Arbitrary<int QuadRope>() with
+                new Arbitrary<int64 QuadRope>() with
                 override x.Generator = genCatRope
                 override x.Shrinker rope = shrink rope
             }

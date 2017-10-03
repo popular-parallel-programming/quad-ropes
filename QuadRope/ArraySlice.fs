@@ -186,8 +186,8 @@ let hrev slc =
 
 
 let transpose slc =
-    { slc with rowStride = slc.rowStride;
-               colStride = slc.colStride;
+    { slc with rowStride = slc.colStride;
+               colStride = slc.rowStride;
                rows = slc.cols;
                cols = slc.rows; }
 

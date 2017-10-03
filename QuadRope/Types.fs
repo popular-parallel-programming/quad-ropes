@@ -41,9 +41,9 @@ type 'a QuadRope when 'a : equality =
     | Empty
     | Leaf of vs      : 'a ArraySlice
 
-    | Soon of rows : int
-            * cols : int
-            * t    : 'a ArraySlice Task
+    | Future of rows : int
+              * cols : int
+              * t    : 'a ArraySlice Task
 
     | HCat of sparse  : bool
             * depth   : int

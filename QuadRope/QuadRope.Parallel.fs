@@ -54,7 +54,7 @@ let init h w (f : int -> int -> _) =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
         else if ArraySlice.cols slc <= smax && ArraySlice.rows slc <= smax then
-            Soon (ArraySlice.rows slc,
+            Future (ArraySlice.rows slc,
                   ArraySlice.cols slc,
                   Tasks.task (fun () -> ArraySlice.init slc f; // Write into shared array.
                                         slc))
@@ -67,7 +67,7 @@ let init h w (f : int -> int -> _) =
         if ArraySlice.rows slc <= 0 || ArraySlice.cols slc <= 0 then
             Empty
         else if ArraySlice.cols slc <= smax && ArraySlice.rows slc <= smax then
-            Soon (ArraySlice.rows slc,
+            Future (ArraySlice.rows slc,
                   ArraySlice.cols slc,
                   Tasks.task (fun () -> ArraySlice.init slc f; // Write into shared array.
                                         slc))
@@ -96,8 +96,8 @@ let map f qr =
             | Leaf vs ->
                 leaf (Target.map f vs tgt)
 
-            | Soon (r, c, t) ->
-                Soon (r, c, Tasks.map (fun vs -> Target.map f vs tgt) t)
+            | Future (r, c, t) ->
+                Future (r, c, Tasks.map (fun vs -> Target.map f vs tgt) t)
 
             // Parallel recursive cases, adjust target descriptor.
             | HCat (left = a; right = b) ->
@@ -128,8 +128,8 @@ let mapi f qr =
             | Leaf vs ->
                 Leaf (Target.mapi (fun i' j' v -> Functions.invoke3 f' (i + i') (j + j') v) vs tgt)
 
-            | Soon (r, c, t) ->
-                Soon (r, c, Tasks.map (fun vs -> Target.mapi (fun i' j' v -> Functions.invoke3 f' (i + i') (j + j') v) vs tgt) t)
+            | Future (r, c, t) ->
+                Future (r, c, Tasks.map (fun vs -> Target.mapi (fun i' j' v -> Functions.invoke3 f' (i + i') (j + j') v) vs tgt) t)
 
             | HCat (left = a; right = b) ->
                 hnode (mapi i j a tgt)
@@ -175,7 +175,7 @@ let rec private genZip f lqr rqr tgt =
                 | _ when Target.isEmpty tgt && not (isSparse lqr) ->
                     genZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
-                | Soon (r, c, t) ->
+                | Future (r, c, t) ->
                     let f' = Functions.adapt2 f
                     let zip vs =
                         match materialize rqr with
@@ -183,7 +183,7 @@ let rec private genZip f lqr rqr tgt =
                                 Target.map (fun v -> Functions.invoke2 f' v v') vs tgt
                             | rqr ->
                                 Target.mapi (fun i j v -> Functions.invoke2 f' v (fastGet rqr i j)) vs tgt
-                    Soon (r, c, Tasks.map zip t)
+                    Future (r, c, Tasks.map zip t)
 
                 | HCat (_, _, _, _, aa, ab) ->
                     let ba, bb = QuadRope.hsplit2 rqr (cols aa)
@@ -212,11 +212,11 @@ let rec private fastZip f lqr rqr tgt =
         | Leaf _, Leaf _ when QuadRope.shapesMatch lqr rqr ->
             QuadRope.fastZip f lqr rqr tgt
 
-        | Soon (r, c, t), Leaf vs' ->
-            Soon (r, c, Tasks.map (fun vs  -> Target.map2 f vs vs' tgt) t)
+        | Future (r, c, t), Leaf vs' ->
+            Future (r, c, Tasks.map (fun vs  -> Target.map2 f vs vs' tgt) t)
 
-        | Leaf vs, Soon (r, c, t) ->
-            Soon (r, c, Tasks.map (fun vs' -> Target.map2 f vs vs' tgt) t)
+        | Leaf vs, Future (r, c, t) ->
+            Future (r, c, Tasks.map (fun vs' -> Target.map2 f vs vs' tgt) t)
 
         | HCat (_, _, _, _, aa, ab), HCat (_, _, _, _, ba, bb)
              when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
@@ -295,7 +295,7 @@ let hrev qr =
     let rec hrev qr tgt =
         match qr with
             | Leaf vs -> leaf (Target.hrev vs tgt)
-            | Soon (r, c, t) -> Soon (r, c, Tasks.map (fun vs -> Target.hrev vs tgt) t)
+            | Future (r, c, t) -> Future (r, c, Tasks.map (fun vs -> Target.hrev vs tgt) t)
 
             | HCat (left = a; right = b) ->
                 hnode (hrev b (Target.incrementCol tgt (cols a)))
@@ -316,7 +316,7 @@ let vrev qr =
     let rec vrev qr tgt =
         match qr with
             | Leaf vs -> leaf (Target.vrev vs tgt)
-            | Soon (r, c, t) -> Soon (r, c, Tasks.map (fun vs -> Target.vrev vs tgt) t)
+            | Future (r, c, t) -> Future (r, c, Tasks.map (fun vs -> Target.vrev vs tgt) t)
 
             | HCat (left = a; right = b) ->
                 hnode (vrev a tgt)
@@ -339,7 +339,7 @@ let transpose qr =
         match qr with
             | Empty          -> Empty
             | Leaf vs        -> leaf (Target.transpose vs tgt)
-            | Soon (r, c, t) -> Soon (r, c, Tasks.map (fun vs -> Target.transpose vs tgt) t)
+            | Future (r, c, t) -> Future (r, c, Tasks.map (fun vs -> Target.transpose vs tgt) t)
 
             | HCat (left = a; right = b) ->
                 vnode (transpose a tgt)
@@ -361,7 +361,7 @@ let iteri f qr =
     let rec iteri f i j = function
         | Empty          -> ()
         | Leaf vs        -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
-        | Soon (_, _, t) -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) (Tasks.result t)
+        | Future (_, _, t) -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) (Tasks.result t)
 
         | HCat (left = a; right = b) ->
             par2AndThen (fun () -> iteri f i j a) (fun () -> iteri f i (j + cols a) b) (fun _ _ -> ())
@@ -427,7 +427,7 @@ let fromArray2D arr =
             let wpv = w0 + (w >>> 1)
             hnode (init h0 w0 h1 wpv arr) (init h0 wpv h1 w1 arr)
         else
-            Soon (h, w, Tasks.task (fun () -> ArraySlice.makeSlice h0 w0 h w arr))
+            Future (h, w, Tasks.task (fun () -> ArraySlice.makeSlice h0 w0 h w arr))
     init 0 0 (Array2D.length1 arr) (Array2D.length2 arr) arr
 
 
@@ -483,7 +483,7 @@ let scan f init qr =
                 Leaf (Target.toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc))
 
             // Memory writing effects must occur before continuing.
-            | Soon (_, _, t) -> scan f (Tasks.result >> leaf <| t) tgt
+            | Future (_, _, t) -> scan f (Tasks.result >> leaf <| t) tgt
 
             // Parallel cases: b and c depend only on a, d
             // depends on all other children. Scan b and c in

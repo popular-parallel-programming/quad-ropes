@@ -38,10 +38,10 @@ let smax = 32
 let rows = function
     | Empty             -> 0
     | Leaf slc          -> ArraySlice.rows slc
-    | Soon (rows = r)
-    | HCat (rows = r)
-    | VCat (rows = r)
-    | Slice (rows = r)
+    | Future (rows = r)
+    | HCat   (rows = r)
+    | VCat   (rows = r)
+    | Slice  (rows = r)
     | Sparse (rows = r) -> r
 
 
@@ -49,10 +49,10 @@ let rows = function
 let cols = function
     | Empty             -> 0
     | Leaf slc          -> ArraySlice.cols slc
-    | Soon (cols = c)
-    | HCat (cols = c)
-    | VCat (cols = c)
-    | Slice (cols = c)
+    | Future (cols = c)
+    | HCat   (cols = c)
+    | VCat   (cols = c)
+    | Slice  (cols = c)
     | Sparse (cols = c) -> c
 
 
@@ -146,7 +146,7 @@ let rec internal fastGet qr i j =
     match qr with
         | Empty -> invalidArg "qr" "Empty quad rope contains no values."
         | Leaf vs -> ArraySlice.get vs i j
-        | Soon (t = vs) -> ArraySlice.get (Tasks.result vs) i j
+        | Future (t = vs) -> ArraySlice.get (Tasks.result vs) i j
         | HCat (left = a; right = b) ->
             if withinRange a i j then
                 fastGet a i j
@@ -189,7 +189,7 @@ let slice i j h w qr =
         // indirection.
         | Leaf vals ->
             leaf (ArraySlice.slice i0 j0 h0 w0 vals)
-        | Soon (t = vs) ->
+        | Future (t = vs) ->
             leaf (ArraySlice.slice i0 j0 h0 w0 (Tasks.result vs))
         // Avoid directly nested slices, unpack the original slice.
         | Slice (i1, j1, _, _, qr) ->
@@ -263,7 +263,7 @@ let materialize qr =
                 Empty
             | Leaf vs ->
                 leaf (ArraySlice.slice i j h w vs)
-            | Soon (_, _, t) ->
+            | Future (_, _, t) ->
                 leaf (ArraySlice.slice i j h w (Tasks.result t))
             | HCat (left = a; right = b) ->
                 let a' = materialize i j h w a
@@ -296,7 +296,7 @@ let set root i j v =
         match qr with
             | Empty -> invalidArg "qr" "Empty quad rope cannot be set."
             | Leaf vs -> Leaf (ArraySlice.set vs i j v)
-            | Soon (_, _, t) ->
+            | Future (_, _, t) ->
                 leaf (ArraySlice.set (Tasks.result t) i j v)
 
             | HCat (left = a; right = b) when withinRange a i j ->
@@ -475,7 +475,7 @@ let hrev qr =
     let rec hrev qr tgt =
         match qr with
             | Leaf vs        -> leaf (Target.hrev vs tgt)
-            | Soon (_, _, t) -> leaf (Target.hrev (Tasks.result t) tgt)
+            | Future (_, _, t) -> leaf (Target.hrev (Tasks.result t) tgt)
             | HCat (left = a; right = b) ->
                 hnode (hrev b (Target.incrementCol tgt (cols a))) (hrev a tgt)
             | VCat (left = a; right = b) ->
@@ -491,7 +491,7 @@ let vrev qr =
     let rec vrev qr tgt =
         match qr with
             | Leaf vs        -> leaf (Target.vrev vs tgt)
-            | Soon (_, _, t) -> leaf (Target.vrev (Tasks.result t) tgt)
+            | Future (_, _, t) -> leaf (Target.vrev (Tasks.result t) tgt)
             | HCat (left = a; right = b) ->
                 hnode (vrev a tgt) (vrev b (Target.incrementCol tgt (cols a)))
             | VCat (left = a; right = b) ->
@@ -567,7 +567,7 @@ let fromArray vs w =
 let rec iter f = function
     | Empty          -> ()
     | Leaf vs        -> ArraySlice.iter f vs
-    | Soon (_, _, t) -> ArraySlice.iter f (Tasks.result t)
+    | Future (_, _, t) -> ArraySlice.iter f (Tasks.result t)
     | HCat (left = a; right = b) ->
         iter f a;
         iter f b;
@@ -586,7 +586,7 @@ let iteri f qr =
     let rec iteri f i j = function
         | Empty          -> ()
         | Leaf vs        -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) vs
-        | Soon (_, _, t) -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) (Tasks.result t)
+        | Future (_, _, t) -> ArraySlice.iteri (fun i0 j0 v -> f (i + i0) (j + j0) v) (Tasks.result t)
         | HCat (left = a; right = b) ->
             iteri f i j a;
             iteri f i (j + cols a) b;
@@ -644,7 +644,7 @@ let map f qr =
                 map qr (Target.make (rows qr) (cols qr))
             // Write into target and construct new leaf.
             | Leaf vs        -> Leaf (Target.map f vs tgt)
-            | Soon (_, _, t) -> Leaf (Target.map f (Tasks.result t) tgt)
+            | Future (_, _, t) -> Leaf (Target.map f (Tasks.result t) tgt)
 
             // Adjust target descriptor horizontally.
             | HCat (left = a; right = b) ->
@@ -669,7 +669,7 @@ let mapi f qr =
             | Leaf vs ->
                 let f' = Functions.adapt3 f
                 Leaf (Target.mapi (fun i' j' v -> Functions.invoke3 f' (i + i') (j + j') v) vs tgt)
-            | Soon (_, _, t) ->
+            | Future (_, _, t) ->
                 mapi i j (leaf (Tasks.result t)) tgt
             | HCat (left = a; right = b) ->
                 hnode (mapi i j a tgt) (mapi i (j + cols a) b (Target.incrementCol tgt (cols a)))
@@ -715,7 +715,7 @@ let rec internal genZip f lqr rqr tgt =
                         | rqr ->
                             leaf (Target.mapi (fun i j v -> Functions.invoke2 f' v (fastGet rqr i j)) slc tgt)
 
-                | Soon (_, _, t) ->
+                | Future (_, _, t) ->
                     genZip f (leaf (Tasks.result t)) rqr tgt
 
                 | HCat (left = aa; right = ab) ->
@@ -748,8 +748,8 @@ let rec internal fastZip f lqr rqr tgt =
         | Leaf ls, Leaf rs when shapesMatch lqr rqr ->
             leaf (Target.map2 f ls rs tgt)
 
-        | Soon (_, _, t), _ -> fastZip f (leaf (Tasks.result t)) rqr tgt
-        | _, Soon (_, _, t) -> fastZip f lqr (leaf (Tasks.result t)) tgt
+        | Future (_, _, t), _ -> fastZip f (leaf (Tasks.result t)) rqr tgt
+        | _, Future (_, _, t) -> fastZip f lqr (leaf (Tasks.result t)) tgt
 
         | HCat (left = aa; right = ab), HCat (left = ba; right = bb)
             when shapesMatch aa ba && shapesMatch ab bb ->
@@ -789,7 +789,7 @@ let zip f lqr rqr =
 let rec mapreduce f g epsilon = function
     | Empty          -> epsilon
     | Leaf vs        -> ArraySlice.mapreduce f g epsilon vs
-    | Soon (_, _, t) -> ArraySlice.mapreduce f g epsilon (Tasks.result t)
+    | Future (_, _, t) -> ArraySlice.mapreduce f g epsilon (Tasks.result t)
 
     | HCat (left = a; right = b) | VCat (left = a; right = b) ->
         g (mapreduce f g epsilon a) (mapreduce f g epsilon b)
@@ -823,9 +823,9 @@ let vreduce f epsilon qr = vmapreduce id f epsilon qr
 /// Compute the row-wise prefix sum of the rope for f starting with
 /// states.
 let rec hscan f states = function
-    | Empty          -> Empty
-    | Leaf vs        -> Leaf (ArraySlice.scan2 f states vs)
-    | Soon (_, _, t) -> Leaf (ArraySlice.scan2 f states (Tasks.result t))
+    | Empty            -> Empty
+    | Leaf vs          -> Leaf (ArraySlice.scan2 f states vs)
+    | Future (_, _, t) -> Leaf (ArraySlice.scan2 f states (Tasks.result t))
     | HCat (left = a; right = b) ->
         let a' = hscan f states a
         let b' = hscan f (fun i -> get a' i (cols a' - 1)) b
@@ -842,9 +842,9 @@ let rec hscan f states = function
 /// Compute the column-wise prefix sum of the rope for f starting
 /// with states.
 let rec vscan f states = function
-    | Empty          -> Empty
-    | Leaf vs        -> Leaf (ArraySlice.scan1 f states vs)
-    | Soon (_, _, t) -> Leaf (ArraySlice.scan1 f states (Tasks.result t))
+    | Empty            -> Empty
+    | Leaf vs          -> Leaf (ArraySlice.scan1 f states vs)
+    | Future (_, _, t) -> Leaf (ArraySlice.scan1 f states (Tasks.result t))
     | HCat (left = a; right = b) ->
         // Offset states function by cols of a; recursion does not
         // maintain index offset.
@@ -871,7 +871,7 @@ let scan f init qr =
                 Target.scan f slc tgt
                 Leaf (Target.toSlice tgt (ArraySlice.rows slc) (ArraySlice.cols slc))
 
-            | Soon (_, _, t) -> scan f (leaf (Tasks.result t)) tgt
+            | Future (_, _, t) -> scan f (leaf (Tasks.result t)) tgt
 
             // Scanning b depends on scanning a; a resides "above" b.
             | HCat (left = a; right = b) ->
@@ -944,7 +944,7 @@ let transpose qr =
         match qr with
             | Empty          -> Empty
             | Leaf vs        -> leaf (Target.transpose vs tgt)
-            | Soon (_, _, t) -> leaf (Target.transpose (Tasks.result t) tgt)
+            | Future (_, _, t) -> leaf (Target.transpose (Tasks.result t) tgt)
 
             | HCat (left = a; right = b) ->
                 vnode (transpose a tgt) (transpose b (Target.incrementCol tgt (cols a)))
@@ -966,7 +966,7 @@ let equals qr0 qr1 =
 let rec compress = function
     | Leaf slc as qr when forall ((=) (get qr 0 0)) qr ->
         create (ArraySlice.rows slc) (ArraySlice.cols slc) (ArraySlice.get slc 0 0)
-    | Soon (_, _, t) -> Tasks.result >> leaf >> compress <| t
+    | Future (_, _, t) -> Tasks.result >> leaf >> compress <| t
     | HCat (left = a; right = b) ->
         hcat (compress a) (compress b)
     | VCat (left = a; right = b) ->

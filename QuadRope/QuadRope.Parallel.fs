@@ -94,7 +94,7 @@ let map f qr =
 
             // Write into target and construct new leaf.
             | Leaf vs ->
-                leaf (Target.map f vs tgt)
+                Future (rows qr, cols qr, Tasks.task (fun () -> Target.map f vs tgt))
 
             | Future (r, c, t) ->
                 Future (r, c, Tasks.map (fun vs -> Target.map f vs tgt) t)
@@ -126,7 +126,9 @@ let mapi f qr =
         match qr with
             | Empty -> Empty
             | Leaf vs ->
-                Leaf (Target.mapi (fun i' j' v -> Functions.invoke3 f' (i + i') (j + j') v) vs tgt)
+                Future (rows qr,
+                        cols qr,
+                        Tasks.task (fun () -> Target.mapi (fun i' j' v -> Functions.invoke3 f' (i + i') (j + j') v) vs tgt))
 
             | Future (r, c, t) ->
                 Future (r, c, Tasks.map (fun vs -> Target.mapi (fun i' j' v -> Functions.invoke3 f' (i + i') (j + j') v) vs tgt) t)

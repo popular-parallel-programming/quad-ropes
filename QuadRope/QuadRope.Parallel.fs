@@ -278,30 +278,6 @@ let forall p qr = mapreduce p (&&) true qr
 let exists p qr = mapreduce p (||) false qr
 
 
-/// Transpose the quad rope in parallel. This is equal to swapping
-/// indices, such that get rope i j = get rope j i.
-let transpose qr =
-    let rec transpose qr tgt =
-        match qr with
-            | Empty -> Empty
-            | Leaf slc ->
-                leaf (Target.transpose slc tgt)
-            | HCat (left = a; right = b) ->
-                par2AndThen (fun () -> transpose a tgt)
-                            (fun () -> transpose b (Target.incrementCol tgt (cols a)))
-                            vnode
-
-            | VCat (left = a; right = b) ->
-                par2AndThen (fun () -> transpose a tgt)
-                            (fun () -> transpose b (Target.incrementRow tgt (rows a)))
-                            hnode
-
-            | Slice _ ->
-                transpose (QuadRope.materialize qr) tgt
-            | Sparse (h, w, v) -> Sparse (w, h, v)
-    transpose qr (Target.make (cols qr) (rows qr))
-
-
 /// Apply a function with side effects to all elements and their
 /// corresponding index pair in parallel.
 let iteri f qr =

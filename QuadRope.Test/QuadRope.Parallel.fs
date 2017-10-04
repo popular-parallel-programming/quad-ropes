@@ -52,10 +52,6 @@ let ``parallel map equal to sequential`` (a : int64 QuadRope) =
     QuadRope.equals (QuadRope.map sqr a) (Parallel.QuadRope.map sqr a)
 
 
-let ``parallel transpose equal to sequential`` (a : int64 QuadRope) =
-    QuadRope.equals (QuadRope.transpose a) (Parallel.QuadRope.transpose a)
-
-
 let ``parallel zip equal to sequential`` (a : int64 QuadRope) (b : int64 QuadRope) =
     (QuadRope.rows a = QuadRope.rows b && QuadRope.cols a = QuadRope.cols b)
     ==> lazy (QuadRope.equals (QuadRope.zip (+) a b) (Parallel.QuadRope.zip (+) a b))

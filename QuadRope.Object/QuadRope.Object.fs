@@ -130,12 +130,6 @@ type QuadRope<'a when 'a : equality> internal (qr : 'a Types.QuadRope) =
     member this.Transpose() =
         new QuadRope<_>(QuadRope.transpose this.qr)
 
-    /// Transpose the quad rope.
-    member this.TransposePar() =
-        new QuadRope<_>(Parallel.QuadRope.transpose this.qr)
-
-
-
     /// Apply function f to all elements.
     member this.Map f =
         new QuadRope<_>(QuadRope.map f this.qr)

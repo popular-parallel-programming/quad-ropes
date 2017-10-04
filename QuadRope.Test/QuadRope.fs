@@ -276,6 +276,11 @@ let ``vscan's elements are strictly ordered`` (a : int64 QuadRope) =
     c |> QuadRope.map (List.length) |> QuadRope.forallCols (<)
 
 
+let ``get i j (transpose q) = get j i q`` (q : int64 QuadRope) =
+    let q' = QuadRope.init (QuadRope.cols q) (QuadRope.rows q) (fun i j -> QuadRope.get q j i)
+    pointWiseEqual (QuadRope.transpose q) q'
+
+
 let ``transpose (transpose q) = q`` (a : int64 QuadRope) =
     QuadRope.equals (QuadRope.transpose (QuadRope.transpose a)) a
 

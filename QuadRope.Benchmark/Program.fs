@@ -90,7 +90,6 @@ let all (opts : Options) =
                &> ("QuadRope.map",    fun () -> Parallel.QuadRope.map (fun x -> x * x) rope)
                &> ("QuadRope.zip",    fun () -> Parallel.QuadRope.zip (+) rope rope)
                &> ("QuadRope.scan",   fun () -> Parallel.QuadRope.scan (fun a b c d -> a + b + c + d) 0 rope)
-               &> ("QuadRope.transpose", fun () -> Parallel.QuadRope.transpose rope)
                |> runWithHead
         benchmark ("QuadRope.reduce", fun () -> Parallel.QuadRope.reduce (+) 0 rope) |> run
 
@@ -98,7 +97,6 @@ let all (opts : Options) =
         benchmark ("Array2D.init",    fun () -> Parallel.Array2DExt.init opts.size opts.size (*))
                &> ("Array2D.map",     fun () -> Parallel.Array2DExt.map (fun x -> x * x) arr)
                &> ("Array2D.zip",     fun () -> Parallel.Array2DExt.map2 (+) arr arr)
-               &> ("Array2D.transpose", fun () -> Array2DExt.transpose arr)
                |> run
         benchmark ("Array2D.reduce",  fun () -> Parallel.Array2DExt.reduce (+) arr) |> run
 

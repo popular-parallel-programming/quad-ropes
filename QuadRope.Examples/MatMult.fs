@@ -25,9 +25,9 @@ open QuadRope
 
 module QuadRope =
 
-    let private mmultBuilder pointwise transpose init sum =
+    let private mmultBuilder pointwise init sum =
         let mmult lm rm =
-            let trm = transpose rm
+            let trm = QuadRope.transpose rm
             init (QuadRope.rows lm)
                  (QuadRope.cols rm)
                  (fun i j ->
@@ -38,18 +38,15 @@ module QuadRope =
 
 
     let mmult = mmultBuilder QuadRope.SparseDouble.pointwise
-                             QuadRope.transpose
                              QuadRope.init
                              QuadRope.SparseDouble.sum
 
 
     let mmultPar = mmultBuilder Parallel.QuadRope.SparseDouble.pointwise
-                                Parallel.QuadRope.transpose
                                 Parallel.QuadRope.init
                                 Parallel.QuadRope.SparseDouble.sum
 
     let mmultOpt = mmultBuilder QuadRope.SparseDouble.pointwise
-                                Parallel.QuadRope.transpose
                                 Parallel.QuadRope.init
                                 QuadRope.SparseDouble.sum
 

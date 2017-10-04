@@ -895,20 +895,13 @@ let exists p qr = mapreduce p (||) false qr
 
 /// Transpose the quad rope. This is equal to swapping indices,
 /// such that get qr i j = get (transpose qr) j i.
-let transpose qr =
-    let rec transpose qr tgt =
-        match qr with
-            | Empty -> Empty
-            | Leaf slc ->
-                leaf (Target.transpose slc tgt)
-            | HCat (left = a; right = b) ->
-                vnode (transpose a tgt) (transpose b (Target.incrementCol tgt (cols a)))
-            | VCat (left = a; right = b) ->
-                hnode (transpose a tgt) (transpose b (Target.incrementRow tgt (rows a)))
-            | Slice _ ->
-                transpose (materialize qr) tgt
-            | Sparse (h, w, v) -> Sparse (w, h, v)
-    transpose qr (Target.make (cols qr) (rows qr))
+let rec transpose = function
+    | Empty -> Empty
+    | Leaf slc                   -> leaf (ArraySlice.transpose slc)
+    | HCat (left = a; right = b) -> vnode (transpose a) (transpose b)
+    | VCat (left = a; right = b) -> hnode (transpose a) (transpose b)
+    | Slice _ as s               -> transpose (materialize s)
+    | Sparse (h, w, v)           -> Sparse (w, h, v)
 
 
 /// Compare two quad ropes element wise and return true if they are

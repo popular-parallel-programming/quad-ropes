@@ -164,6 +164,15 @@ let vmap f qr =
     init 1 (cols qr) (fun _ j -> QuadRope.slice 0 j (rows qr) 1 qr |> f)
 
 
+/// Helper function for genZip -- Move to a different scope?
+let private leafZip f qr tgt vs =
+    match materialize qr with
+        | Sparse (_, _, v') ->
+            Target.map (fun v -> Functions.invoke2 f v v') vs tgt
+        | _ ->
+            Target.mapi (fun i j v -> Functions.invoke2 f v (fastGet qr i j)) vs tgt
+
+
 /// Zip implementation for the general case where we do not assume
 /// that both ropes have the same internal structure.
 let rec private genZip f lqr rqr tgt =
@@ -177,15 +186,13 @@ let rec private genZip f lqr rqr tgt =
                 | _ when Target.isEmpty tgt && not (isSparse lqr) ->
                     genZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
+                | Leaf (vs) ->
+                    Future (rows lqr,
+                            cols lqr,
+                            Tasks.task (fun () -> leafZip (Functions.adapt2 f) rqr tgt vs))
+
                 | Future (r, c, t) ->
-                    let f' = Functions.adapt2 f
-                    let zip vs =
-                        match materialize rqr with
-                            | Sparse (_, _, v') ->
-                                Target.map (fun v -> Functions.invoke2 f' v v') vs tgt
-                            | rqr ->
-                                Target.mapi (fun i j v -> Functions.invoke2 f' v (fastGet rqr i j)) vs tgt
-                    Future (r, c, Tasks.map zip t)
+                    Future (r, c, Tasks.map (leafZip (Functions.adapt2 f) rqr tgt) t)
 
                 | HCat (_, _, _, _, aa, ab) ->
                     let ba, bb = QuadRope.hsplit2 rqr (cols aa)
@@ -211,24 +218,27 @@ let rec private fastZip f lqr rqr tgt =
         | _ when Target.isEmpty tgt && not (isSparse lqr) ->
             fastZip f lqr rqr (Target.make (rows lqr) (cols lqr))
 
-        | Leaf _, Leaf _ when QuadRope.shapesMatch lqr rqr ->
-            QuadRope.fastZip f lqr rqr tgt
+        | Leaf lvs, Leaf rvs when QuadRope.shapesMatch lqr rqr ->
+            Future (rows lqr, cols lqr, Tasks.task (fun ()  -> Target.map2 f lvs rvs tgt))
 
-        | Future (r, c, t), Leaf vs' ->
+        | Future (lr, lc, lt), Future (rr, rc, rt) when lr = rr && lc = rc ->
+            Future (lr, lc, Tasks.task (fun () -> Target.map2 f (Tasks.result lt) (Tasks.result rt) tgt))
+
+        | Future (r, c, t), Leaf vs' when QuadRope.shapesMatch lqr rqr ->
             Future (r, c, Tasks.map (fun vs  -> Target.map2 f vs vs' tgt) t)
 
-        | Leaf vs, Future (r, c, t) ->
+        | Leaf vs, Future (r, c, t) when QuadRope.shapesMatch lqr rqr ->
             Future (r, c, Tasks.map (fun vs' -> Target.map2 f vs vs' tgt) t)
 
         | HCat (_, _, _, _, aa, ab), HCat (_, _, _, _, ba, bb)
              when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
                  hnode (fastZip f aa ba tgt)
-                             (fastZip f ab bb (Target.incrementCol tgt (cols aa)))
+                       (fastZip f ab bb (Target.incrementCol tgt (cols aa)))
 
         | VCat (_, _, _, _, aa, ab), VCat (_, _, _, _, ba, bb)
              when QuadRope.shapesMatch aa ba && QuadRope.shapesMatch ab bb ->
                  vnode (fastZip f aa ba tgt)
-                             (fastZip f ab bb (Target.incrementRow tgt (rows aa)))
+                       (fastZip f ab bb (Target.incrementRow tgt (rows aa)))
 
         // It may pay off to reallocate first if both reallocated quad
         // ropes have the same internal shape. This might be

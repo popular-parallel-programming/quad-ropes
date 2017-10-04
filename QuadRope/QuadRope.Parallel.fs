@@ -341,7 +341,7 @@ let transpose qr =
         match qr with
             | Empty          -> Empty
             | Leaf vs        -> leaf (Target.transpose vs tgt)
-            | Future (r, c, t) -> Future (r, c, Tasks.map (fun vs -> Target.transpose vs tgt) t)
+            | Future (r, c, t) -> Future (c, r, Tasks.map (fun vs -> Target.transpose vs tgt) t)
 
             | HCat (left = a; right = b) ->
                 vnode (transpose a tgt)

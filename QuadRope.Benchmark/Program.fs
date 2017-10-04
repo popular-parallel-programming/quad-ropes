@@ -87,7 +87,7 @@ let all (opts : Options) =
 
     /// Benchmark parallel functions.
     let allPar (opts : Options) =
-        let rope = QuadRope.init opts.size opts.size (*)
+        let rope = Parallel.QuadRope.init opts.size opts.size (*)
         benchmark ("QuadRope.init",   fun () -> Parallel.QuadRope.init opts.size opts.size (*) |> wait)
                &> ("QuadRope.map",    fun () -> Parallel.QuadRope.map (fun x -> x * x) rope |> wait)
                &> ("QuadRope.zip",    fun () -> Parallel.QuadRope.zip (+) rope rope |> wait)

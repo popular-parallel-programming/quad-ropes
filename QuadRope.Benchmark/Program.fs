@@ -133,9 +133,9 @@ let matMult (opts: Options) =
     let arr2 = Array2D.init opts.size opts.size (fun i j -> float (i * j))
 
     // Quad rope matrices
-    let ud = QuadRope.init opts.size opts.size (fun i j -> if i < j then 0.0 else 1.0)
-    let us = QuadRope.SparseDouble.upperDiagonal opts.size 1.0
-    let qr = QuadRope.init opts.size opts.size (fun i j -> float (i * j))
+    let ud = Parallel.QuadRope.init opts.size opts.size (fun i j -> if i < j then 0.0 else 1.0) |> wait
+    let us = QuadRope.SparseDouble.upperDiagonal opts.size 1.0 |> wait
+    let qr = Parallel.QuadRope.init opts.size opts.size (fun i j -> float (i * j)) |> wait
 
     if opts.threads = 1 then
         benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmult ud qr |> wait)

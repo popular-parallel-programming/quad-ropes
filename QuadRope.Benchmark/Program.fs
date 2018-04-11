@@ -218,6 +218,18 @@ let gameOfLife (opts : Options) =
         |> runWithHead
 
 
+let batcher (opts : Options) =
+    let rnd = System.Random(987) in
+    let numbers = QuadRope.init (pown 2 opts.size) 1 (fun _ _ -> rnd.Next(0, System.Int32.MaxValue)) in
+    let array_numbers = QuadRope.toArray2D numbers in
+    if opts.threads = 1 then
+        benchmark ("QuadRope.batcher", fun () -> Batcher.QuadRope.batcher numbers)         |> runWithHead;
+        benchmark ("Array2D.batcher",  fun () -> Batcher.Array2D.batcher array_numbers)    |> run
+    else
+        benchmark ("QuadRope.batcher", fun () -> Batcher.QuadRope.batcherPar numbers)      |> runWithHead;
+        benchmark ("Array2D.batcher",  fun () -> Batcher.Array2D.batcherPar array_numbers) |> run
+
+
 /// A map of benchmark functions and their names. If I had time, this
 /// could be done with attributes instead.
 let benchmarks =
@@ -229,7 +241,8 @@ let benchmarks =
       "sieve", sieve;
       "index", index;
       "align", alignment;
-      "gol", gameOfLife] |> Collections.Map
+      "gol", gameOfLife;
+      "batcher", batcher] |> Collections.Map
 
 
 /// Print all registered benchmarks.

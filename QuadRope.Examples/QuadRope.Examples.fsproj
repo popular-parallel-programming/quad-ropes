@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Batcher.fs" />
     <Compile Include="MatMult.fs" />
     <Compile Include="Fibonacci.fs" />
     <Compile Include="VanDerCorput.fs" />

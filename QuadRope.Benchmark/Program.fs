@@ -138,18 +138,21 @@ let matMult (opts: Options) =
     if opts.threads = 1 then
         benchmark ("QuadRope.mmult dense",  fun () -> MatMult.QuadRope.mmult ud qr)
                &> ("QuadRope.mmult sparse", fun () -> MatMult.QuadRope.mmult us qr)
-               &> ("QuadRope.mmult imp",    fun () -> MatMult.ImperativeQuadRope.mmult ud qr)|> runWithHead
+               // &> ("QuadRope.mmult imp",    fun () -> MatMult.ImperativeQuadRope.mmult ud qr)
+               |> runWithHead
         benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmult arr1 arr2)
-               &> ("Array2D.imperative", fun () -> MatMult.Imperative.mmult arr1 arr2) |> run
+               // &> ("Array2D.imperative", fun () -> MatMult.Imperative.mmult arr1 arr2)
+               | run
     else
         benchmark ("QuadRope.mmult dense",      fun () -> MatMult.QuadRope.mmultPar ud qr)
-               &> ("QuadRope.mmult dense opt",  fun () -> MatMult.QuadRope.mmultOpt ud qr)
+               // &> ("QuadRope.mmult dense opt",  fun () -> MatMult.QuadRope.mmultOpt ud qr)
                &> ("QuadRope.mmult sparse",     fun () -> MatMult.QuadRope.mmultPar us qr)
-               &> ("QuadRope.mmult sparse opt", fun () -> MatMult.QuadRope.mmultOpt us qr)
-               &> ("QuadRope.mmult imp",        fun () -> MatMult.ImperativeQuadRope.mmultPar ud qr)
+               // &> ("QuadRope.mmult sparse opt", fun () -> MatMult.QuadRope.mmultOpt us qr)
+               // &> ("QuadRope.mmult imp",        fun () -> MatMult.ImperativeQuadRope.mmultPar ud qr)
                |> runWithHead
-        benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmultPar arr1 arr2)
-               &> ("Array2D.imperative", fun () -> MatMult.Imperative.mmultPar arr1 arr2) |> run
+        // benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmultPar arr1 arr2)
+               // &> ("Array2D.imperative", fun () -> MatMult.Imperative.mmultPar arr1 arr2)
+               // |> run
 
 
 /// Benchmark computing Fibonacci sequences.
@@ -167,7 +170,7 @@ let factorize (opts : Options) =
         benchmark ("Array2D.factorize",  fun () -> Factorize.Array2D.factorize arr) |> run
     else
         benchmark ("QuadRope.factorize", fun () -> Factorize.QuadRope.factorizePar qr) |> runWithHead
-        benchmark ("Array2D.factorize",  fun () -> Factorize.Array2D.factorizePar arr) |> run
+        // benchmark ("Array2D.factorize",  fun () -> Factorize.Array2D.factorizePar arr) |> run
 
 
 /// Benchmark the sieve of Erastothenes.
@@ -200,7 +203,7 @@ let alignment (opts : Options) =
         benchmark ("Array2D.align",  fun () -> SmithWaterman.Array2D.align a b) |> run
     else
         benchmark ("QuadRope.align", fun () -> SmithWaterman.QuadRope.alignPar a b) |> runWithHead
-        printfn "Array2D.align #Not available."
+        // printfn "Array2D.align #Not available."
 
 
 /// Benchmark Conway's Game of Life.

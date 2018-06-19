@@ -254,8 +254,11 @@ let printBenchmarks () =
 /// Set the number of thread pool threads to t.
 let setThreads t =
     // Set min threads first, otherwise setting max threads might fail.
-    System.Threading.ThreadPool.SetMinThreads(1, 1) |> ignore
-    if not (System.Threading.ThreadPool.SetMaxThreads(t, t)) then
+    let bits = (1L <<< t) - 1L;
+    System.Diagnostics.Process.GetCurrentProcess().ProcessorAffinity <- System.IntPtr(bits);
+    let threads = t * 2 in
+    System.Threading.ThreadPool.SetMinThreads(threads, threads) |> ignore
+    if not (System.Threading.ThreadPool.SetMaxThreads(threads, threads)) then
         failwith "# Error: could not change the number of thread pool threads."
 
 

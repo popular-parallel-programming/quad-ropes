@@ -142,7 +142,7 @@ let matMult (opts: Options) =
                |> runWithHead
         benchmark ("Array2D.mmult",      fun () -> MatMult.Array2D.mmult arr1 arr2)
                // &> ("Array2D.imperative", fun () -> MatMult.Imperative.mmult arr1 arr2)
-               | run
+               |> run
     else
         benchmark ("QuadRope.mmult dense",      fun () -> MatMult.QuadRope.mmultPar ud qr)
                // &> ("QuadRope.mmult dense opt",  fun () -> MatMult.QuadRope.mmultOpt ud qr)

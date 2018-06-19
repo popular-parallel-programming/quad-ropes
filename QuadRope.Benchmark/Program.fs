@@ -263,6 +263,7 @@ let setThreads t =
     System.Threading.ThreadPool.SetMinThreads(threads, threads) |> ignore
     if not (System.Threading.ThreadPool.SetMaxThreads(threads, threads)) then
         failwith "# Error: could not change the number of thread pool threads."
+    printfn "# Word size: %d bits" <| System.IntPtr.Size * 8
 
 
 /// True if we are running on mono.

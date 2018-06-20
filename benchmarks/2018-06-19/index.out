@@ -1,0 +1,42 @@
+# Word size: 32 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.get             	  0,000045      0,000  0,000 ms/op 8388608
+Array2D.get              	  0,000020      0,000  0,000 ms/op 16777216
+QuadRope.set             	  0,000088      0,000  0,000 ms/op 4194304
+Array2D.set              	  0,000988      0,000  0,000 ms/op 262144
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.get             	  0,000018      0,000  0,000 ms/op 16777216
+Array2D.get              	  0,000007      0,000  0,000 ms/op 67108864
+QuadRope.set             	  0,000059      0,000  0,000 ms/op 8388608
+Array2D.set              	  0,000758      0,000  0,000 ms/op 524288
+# Word size: 32 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.get             	  0,000090      0,000  0,000 ms/op 4194304
+Array2D.get              	  0,000020      0,000  0,000 ms/op 16777216
+QuadRope.set             	  0,000434      0,000  0,000 ms/op 1048576
+Array2D.set              	  0,058031      0,000  0,000 ms/op   8192
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.get             	  0,000058      0,000  0,000 ms/op 8388608
+Array2D.get              	  0,000007      0,000  0,000 ms/op 67108864
+QuadRope.set             	  0,000387      0,000  0,000 ms/op 1048576
+Array2D.set              	  0,041012      0,000  0,000 ms/op   8192
+# Word size: 32 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.get             	  0,000157      0,000  0,000 ms/op 2097152
+Array2D.get              	  0,000020      0,000  0,000 ms/op 16777216
+QuadRope.set             	  0,000885      0,000  0,000 ms/op 524288
+Array2D.set              	  6,912495      0,011  0,007 ms/op     64
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.get             	  0,000108      0,000  0,000 ms/op 4194304
+Array2D.get              	  0,000007      0,000  0,000 ms/op 67108864
+QuadRope.set             	  0,000779      0,000  0,000 ms/op 524288
+Array2D.set              	  5,055027      0,025  0,017 ms/op     64

@@ -1,0 +1,70 @@
+# Word size: 32 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 22,970249      0,108  0,071 ms/op     16
+Array2D.vdc              	 52,554256      0,163  0,108 ms/op      8
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 22,034516      0,966  0,639 ms/op     16
+Array2D.vdc              	 25,044626      0,090  0,060 ms/op     16
+# Word size: 32 bits
+# Processors: 2
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 60,176013      3,763  2,489 ms/op      8
+Array2D.vdc              	 78,148028      0,645  0,426 ms/op      4
+# Word size: 64 bits
+# Processors: 2
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 57,022698      1,632  1,080 ms/op      8
+Array2D.vdc              	 59,015299      0,845  0,559 ms/op      8
+# Word size: 32 bits
+# Processors: 4
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 43,147676      2,530  1,674 ms/op      8
+Array2D.vdc              	 54,072424      0,223  0,147 ms/op      8
+# Word size: 64 bits
+# Processors: 4
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 43,006426      1,323  0,875 ms/op      8
+Array2D.vdc              	 44,530875      0,548  0,362 ms/op      8
+# Word size: 32 bits
+# Processors: 8
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 33,079321      3,095  2,047 ms/op      8
+Array2D.vdc              	 41,530981      1,388  0,918 ms/op      8
+# Word size: 64 bits
+# Processors: 8
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 36,614270      0,959  0,634 ms/op      8
+Array2D.vdc              	 38,049686      0,791  0,523 ms/op      8
+# Word size: 32 bits
+# Processors: 16
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 31,673441      4,283  2,833 ms/op     16
+Array2D.vdc              	 33,655615      1,620  1,071 ms/op      8
+# Word size: 64 bits
+# Processors: 16
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 51,112544      6,453  4,268 ms/op      8
+Array2D.vdc              	 33,285580      0,447  0,295 ms/op      8
+# Word size: 32 bits
+# Processors: 32
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 53,242804      2,044  1,352 ms/op      8
+Array2D.vdc              	 27,375931      0,843  0,557 ms/op     16
+# Word size: 64 bits
+# Processors: 32
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 47,220589      3,898  2,578 ms/op      8
+Array2D.vdc              	 43,032100      1,209  0,799 ms/op      8
+# Word size: 32 bits
+# Processors: 48
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 69,260930      4,549  3,009 ms/op      4
+Array2D.vdc              	 26,605618      0,848  0,561 ms/op     16
+# Word size: 64 bits
+# Processors: 48
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.vdc             	 79,015365     19,778 13,082 ms/op      4
+Array2D.vdc              	 29,187428      0,823  0,544 ms/op     16

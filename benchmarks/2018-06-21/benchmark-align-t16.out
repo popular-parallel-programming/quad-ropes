@@ -1,0 +1,58 @@
+# Word size: 32 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	962,309710     13,628  9,014 ms/op      2
+Array2D.align            	839,871335      4,309  2,850 ms/op      2
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	478,832710      5,497  3,636 ms/op      2
+Array2D.align            	404,805625      1,356  0,897 ms/op      2
+# Word size: 32 bits
+# Processors: 2
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	814,220340     12,964  8,575 ms/op      2
+# Word size: 64 bits
+# Processors: 2
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	493,825410     12,851  8,500 ms/op      2
+# Word size: 32 bits
+# Processors: 4
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	546,700180      8,781  5,808 ms/op      2
+# Word size: 64 bits
+# Processors: 4
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	340,607705      5,601  3,704 ms/op      2
+# Word size: 32 bits
+# Processors: 8
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	518,270830     40,064 26,500 ms/op      2
+# Word size: 64 bits
+# Processors: 8
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	330,070515     36,371 24,057 ms/op      2
+# Word size: 32 bits
+# Processors: 16
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	881,684585     37,720 24,950 ms/op      2
+# Word size: 64 bits
+# Processors: 16
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	781,817950     76,522 50,615 ms/op      2
+# Word size: 32 bits
+# Processors: 32
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	967,847070    152,372 100,785 ms/op      2
+# Word size: 64 bits
+# Processors: 32
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	966,823375     62,607 41,411 ms/op      2
+# Word size: 32 bits
+# Processors: 48
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	872,215025    111,857 73,986 ms/op      2
+# Word size: 64 bits
+# Processors: 48
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	1067,974875    105,472 69,763 ms/op      2

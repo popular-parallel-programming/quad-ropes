@@ -1,0 +1,182 @@
+# Word size: 32 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	  6,914571      0,198  0,131 ms/op     64
+QuadRope.map             	 25,227816      0,066  0,043 ms/op     16
+QuadRope.zip             	 29,050753      0,413  0,273 ms/op     16
+QuadRope.scan            	 38,505238      0,081  0,054 ms/op      8
+QuadRope.hrev            	  0,057315      0,000  0,000 ms/op   8192
+QuadRope.vrev            	  0,056141      0,000  0,000 ms/op   8192
+QuadRope.transpose       	  0,055732      0,000  0,000 ms/op   8192
+QuadRope.reduce          	130,063450      0,081  0,053 ms/op      2
+Array2D.init             	  7,528602      0,253  0,167 ms/op     64
+Array2D.map              	 23,382864      0,652  0,431 ms/op     16
+Array2D.zip              	 26,612558      0,168  0,111 ms/op     16
+Array2D.scan             	 15,033413      0,340  0,225 ms/op     32
+Array2D.hrev             	  8,507883      0,378  0,250 ms/op     32
+Array2D.vrev             	  8,541354      0,414  0,274 ms/op     32
+Array2D.transpose        	 12,400637      0,417  0,276 ms/op     32
+Array2D.reduce           	  5,799603      0,004  0,002 ms/op     64
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	  5,804385      0,105  0,069 ms/op     64
+QuadRope.map             	 20,209156      0,166  0,110 ms/op     16
+QuadRope.zip             	 21,589262      0,031  0,020 ms/op     16
+QuadRope.scan            	 29,541743      0,020  0,013 ms/op     16
+QuadRope.hrev            	  0,066595      0,000  0,000 ms/op   4096
+QuadRope.vrev            	  0,066100      0,000  0,000 ms/op   4096
+QuadRope.transpose       	  0,063474      0,000  0,000 ms/op   4096
+QuadRope.reduce          	  5,900972      0,006  0,004 ms/op     64
+Array2D.init             	  5,503056      0,030  0,020 ms/op     64
+Array2D.map              	  6,813897      0,035  0,023 ms/op     64
+Array2D.zip              	  8,040465      0,053  0,035 ms/op     32
+Array2D.scan             	  9,597622      0,034  0,022 ms/op     32
+Array2D.hrev             	  6,277933      0,040  0,027 ms/op     64
+Array2D.vrev             	  6,299318      0,038  0,025 ms/op     64
+Array2D.transpose        	  9,636482      0,066  0,043 ms/op     32
+Array2D.reduce           	  3,658980      0,001  0,000 ms/op    128
+# Word size: 32 bits
+# Processors: 2
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	 32,332305      0,098  0,065 ms/op      8
+QuadRope.map             	 16,511131      0,176  0,117 ms/op     16
+QuadRope.zip             	 17,646801      0,250  0,165 ms/op     16
+QuadRope.scan            	 30,462097      0,134  0,088 ms/op     16
+QuadRope.reduce          	 76,908220      0,240  0,159 ms/op      4
+Array2D.init             	  7,025586      0,228  0,151 ms/op     64
+Array2D.map              	 17,904245      0,679  0,449 ms/op     16
+Array2D.zip              	 19,505437      0,256  0,170 ms/op     16
+Array2D.reduce           	  4,733358      0,013  0,009 ms/op     64
+# Word size: 64 bits
+# Processors: 2
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	 13,157256      0,089  0,059 ms/op     32
+QuadRope.map             	 13,902771      0,107  0,071 ms/op     32
+QuadRope.zip             	 14,984779      0,062  0,041 ms/op     32
+QuadRope.scan            	 24,435399      0,208  0,138 ms/op     16
+QuadRope.reduce          	  6,285316      0,014  0,009 ms/op     64
+Array2D.init             	  4,525542      0,236  0,156 ms/op     64
+Array2D.map              	  6,460072      0,252  0,167 ms/op     64
+Array2D.zip              	  7,655261      0,298  0,197 ms/op     64
+Array2D.reduce           	  3,958917      0,006  0,004 ms/op     64
+# Word size: 32 bits
+# Processors: 4
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	 18,033164      0,052  0,034 ms/op     16
+QuadRope.map             	  9,280905      0,120  0,079 ms/op     32
+QuadRope.zip             	  9,775401      0,101  0,067 ms/op     32
+QuadRope.scan            	 19,382143      0,077  0,051 ms/op     16
+QuadRope.reduce          	 38,647708      0,054  0,036 ms/op      8
+Array2D.init             	  4,701585      0,218  0,144 ms/op     64
+Array2D.map              	  9,697708      0,082  0,054 ms/op     32
+Array2D.zip              	 10,666281      0,209  0,138 ms/op     32
+Array2D.reduce           	  2,454073      0,008  0,005 ms/op    128
+# Word size: 64 bits
+# Processors: 4
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	  7,499417      0,059  0,039 ms/op     64
+QuadRope.map             	  7,894906      0,080  0,053 ms/op     64
+QuadRope.zip             	  8,224289      0,044  0,029 ms/op     32
+QuadRope.scan            	 15,757533      0,085  0,056 ms/op     16
+QuadRope.reduce          	  3,284530      0,004  0,003 ms/op    128
+Array2D.init             	  2,569124      0,248  0,164 ms/op    128
+Array2D.map              	  3,811837      0,144  0,095 ms/op     64
+Array2D.zip              	  4,557107      0,105  0,069 ms/op     64
+Array2D.reduce           	  2,013139      0,002  0,001 ms/op    128
+# Word size: 32 bits
+# Processors: 8
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	 10,477606      0,034  0,022 ms/op     32
+QuadRope.map             	  5,997063      0,120  0,079 ms/op     64
+QuadRope.zip             	  6,279960      0,051  0,034 ms/op     64
+QuadRope.scan            	 16,573633      0,121  0,080 ms/op     16
+QuadRope.reduce          	 21,349273      0,021  0,014 ms/op     16
+Array2D.init             	  3,756606      0,128  0,085 ms/op    128
+Array2D.map              	  6,015426      0,049  0,032 ms/op     64
+Array2D.zip              	  6,543875      0,064  0,042 ms/op     64
+Array2D.reduce           	  1,382516      0,012  0,008 ms/op    256
+# Word size: 64 bits
+# Processors: 8
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	  4,741155      0,049  0,032 ms/op     64
+QuadRope.map             	  4,993752      0,043  0,028 ms/op     64
+QuadRope.zip             	  5,228002      0,025  0,016 ms/op     64
+QuadRope.scan            	 13,723713      0,074  0,049 ms/op     32
+QuadRope.reduce          	  1,867835      0,002  0,002 ms/op    256
+Array2D.init             	  1,931808      0,160  0,106 ms/op    128
+Array2D.map              	  2,766460      0,105  0,070 ms/op    128
+Array2D.zip              	  3,230804      0,133  0,088 ms/op    128
+Array2D.reduce           	  1,112784      0,005  0,003 ms/op    256
+# Word size: 32 bits
+# Processors: 16
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	  6,492393      0,215  0,142 ms/op     64
+QuadRope.map             	  4,355315      0,186  0,123 ms/op     64
+QuadRope.zip             	  4,541922      0,032  0,021 ms/op     64
+QuadRope.scan            	 14,639430      0,189  0,125 ms/op     32
+QuadRope.reduce          	 11,222321      0,011  0,008 ms/op     32
+Array2D.init             	  2,804259      0,102  0,067 ms/op    128
+Array2D.map              	  4,028106      0,030  0,020 ms/op    128
+Array2D.zip              	  4,192458      0,078  0,051 ms/op     64
+Array2D.reduce           	  0,790789      0,009  0,006 ms/op    512
+# Word size: 64 bits
+# Processors: 16
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	  3,678672      0,139  0,092 ms/op    128
+QuadRope.map             	  3,714726      0,212  0,140 ms/op    128
+QuadRope.zip             	  3,899295      0,049  0,032 ms/op    128
+QuadRope.scan            	 11,662982      0,146  0,097 ms/op     32
+QuadRope.reduce          	  1,062074      0,004  0,003 ms/op    256
+Array2D.init             	  1,377036      0,126  0,083 ms/op    256
+Array2D.map              	  1,981382      0,069  0,046 ms/op    256
+Array2D.zip              	  2,207425      0,053  0,035 ms/op    128
+Array2D.reduce           	  0,611716      0,003  0,002 ms/op    512
+# Word size: 32 bits
+# Processors: 32
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	  6,465887      0,118  0,078 ms/op     64
+QuadRope.map             	  5,881130      0,092  0,061 ms/op     64
+QuadRope.zip             	  5,881516      0,048  0,032 ms/op     64
+QuadRope.scan            	 18,227829      0,792  0,524 ms/op     16
+QuadRope.reduce          	  5,839600      0,009  0,006 ms/op     64
+Array2D.init             	  3,626298      0,058  0,038 ms/op    128
+Array2D.map              	  3,949442      0,062  0,041 ms/op     64
+Array2D.zip              	  4,014923      0,066  0,044 ms/op     64
+Array2D.reduce           	  0,507499      0,002  0,001 ms/op    512
+# Word size: 64 bits
+# Processors: 32
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	  4,986857      0,559  0,370 ms/op     64
+QuadRope.map             	  5,182267      0,173  0,115 ms/op     64
+QuadRope.zip             	  5,294853      0,051  0,034 ms/op     64
+QuadRope.scan            	 12,833957      1,503  0,994 ms/op     32
+QuadRope.reduce          	  0,723731      0,007  0,005 ms/op    512
+Array2D.init             	  2,458290      0,318  0,210 ms/op    128
+Array2D.map              	  2,247852      0,074  0,049 ms/op    128
+Array2D.zip              	  2,301274      0,075  0,050 ms/op    128
+Array2D.reduce           	  0,396251      0,001  0,000 ms/op   1024
+# Word size: 32 bits
+# Processors: 48
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	  6,495832      0,192  0,127 ms/op     64
+QuadRope.map             	  5,788989      0,037  0,025 ms/op     64
+QuadRope.zip             	  5,734345      0,040  0,026 ms/op     64
+QuadRope.scan            	 18,174913      0,712  0,471 ms/op     16
+QuadRope.reduce          	  6,063359      0,573  0,379 ms/op     64
+Array2D.init             	  3,534866      0,032  0,021 ms/op    128
+Array2D.map              	  3,885356      0,086  0,057 ms/op     64
+Array2D.zip              	  3,966565      0,082  0,054 ms/op     64
+Array2D.reduce           	  0,530346      0,002  0,001 ms/op    512
+# Word size: 64 bits
+# Processors: 48
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.init            	  6,165515      0,638  0,422 ms/op     64
+QuadRope.map             	  6,714622      0,166  0,110 ms/op     64
+QuadRope.zip             	  6,503384      0,375  0,248 ms/op     64
+QuadRope.scan            	 12,241721      0,391  0,259 ms/op     32
+QuadRope.reduce          	  0,722699      0,009  0,006 ms/op    512
+Array2D.init             	  2,121315      0,326  0,216 ms/op    256
+Array2D.map              	  2,299349      0,221  0,146 ms/op    128
+Array2D.zip              	  2,430578      0,236  0,156 ms/op    128
+Array2D.reduce           	  0,333675      0,002  0,001 ms/op   1024

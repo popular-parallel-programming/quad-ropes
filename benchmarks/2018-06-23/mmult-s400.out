@@ -1,0 +1,36 @@
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	1236,617560      4,993  3,302 ms/op      2
+QuadRope.mmult sparse    	637,359030      0,583  0,385 ms/op      2
+Array2D.mmult            	1376,142225      1,867  1,235 ms/op      2
+# Word size: 64 bits
+# Processors: 2
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	1984,647255     12,540  8,294 ms/op      2
+QuadRope.mmult sparse    	1182,673150     16,619 10,992 ms/op      2
+# Word size: 64 bits
+# Processors: 4
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	1181,280595     37,383 24,727 ms/op      2
+QuadRope.mmult sparse    	716,998910     14,816  9,800 ms/op      2
+# Word size: 64 bits
+# Processors: 8
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	814,343285     17,563 11,617 ms/op      2
+QuadRope.mmult sparse    	525,819645      5,883  3,892 ms/op      2
+# Word size: 64 bits
+# Processors: 16
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	912,190320      8,777  5,805 ms/op      2
+QuadRope.mmult sparse    	607,816340     12,342  8,163 ms/op      2
+# Word size: 64 bits
+# Processors: 32
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	1711,794205     20,144 13,324 ms/op      2
+QuadRope.mmult sparse    	1271,046065     12,002  7,939 ms/op      2
+# Word size: 64 bits
+# Processors: 48
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.mmult dense     	2127,367010     40,542 26,816 ms/op      2
+QuadRope.mmult sparse    	1713,504765     42,765 28,287 ms/op      2

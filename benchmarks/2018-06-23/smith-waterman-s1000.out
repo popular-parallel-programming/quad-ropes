@@ -1,0 +1,29 @@
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	457,167880      2,686  1,776 ms/op      2
+Array2D.align            	405,015030      2,220  1,469 ms/op      2
+# Word size: 64 bits
+# Processors: 2
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	471,710500      6,127  4,053 ms/op      2
+# Word size: 64 bits
+# Processors: 4
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	328,112875     14,557  9,629 ms/op      2
+# Word size: 64 bits
+# Processors: 8
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	281,925905      7,663  5,069 ms/op      2
+# Word size: 64 bits
+# Processors: 16
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	703,524850     42,714 28,253 ms/op      2
+# Word size: 64 bits
+# Processors: 32
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	686,900220     92,647 61,280 ms/op      2
+# Word size: 64 bits
+# Processors: 48
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.align           	731,618815     92,770 61,362 ms/op      2

@@ -1,0 +1,21 @@
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.get             	  0,000017      0,000  0,000 ms/op 16777216
+Array2D.get              	  0,000007      0,000  0,000 ms/op 67108864
+QuadRope.set             	  0,000059      0,000  0,000 ms/op 8388608
+Array2D.set              	  0,000757      0,000  0,000 ms/op 524288
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.get             	  0,000017      0,000  0,000 ms/op 16777216
+Array2D.get              	  0,000007      0,000  0,000 ms/op 67108864
+QuadRope.set             	  0,001804      0,000  0,000 ms/op 262144
+Array2D.set              	  0,045229      0,003  0,002 ms/op   8192
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.get             	  0,000071      0,000  0,000 ms/op 4194304
+Array2D.get              	  0,000007      0,000  0,000 ms/op 67108864
+QuadRope.set             	  0,003036      0,000  0,000 ms/op 131072
+Array2D.set              	  5,237714      0,080  0,053 ms/op     64

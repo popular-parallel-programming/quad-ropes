@@ -1,0 +1,25 @@
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.fibonacci       	  0,039011      0,000  0,000 ms/op   8192
+Array2D.fibonacci        	  0,115411      0,000  0,000 ms/op   4096
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.fibonacci       	  0,087159      0,000  0,000 ms/op   4096
+Array2D.fibonacci        	  0,278670      0,000  0,000 ms/op   1024
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.fibonacci       	  0,203669      0,001  0,001 ms/op   2048
+Array2D.fibonacci        	  0,738923      0,000  0,000 ms/op    512
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.fibonacci       	  0,454848      0,000  0,000 ms/op   1024
+Array2D.fibonacci        	  2,239122      0,005  0,003 ms/op    128
+# Word size: 64 bits
+# Processors: 1
+Benchmark                	      Mean Mean-Error   Sdev  Unit  Count
+QuadRope.fibonacci       	  1,078978      0,001  0,001 ms/op    256
+Array2D.fibonacci        	  7,726974      0,006  0,004 ms/op     64

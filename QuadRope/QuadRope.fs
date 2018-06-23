@@ -30,7 +30,7 @@ open QuadRope.Utils
 #if DEBUG
 let smax = 4
 #else
-let smax = 32
+let smax = 64
 #endif
 
 
